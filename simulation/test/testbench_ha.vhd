@@ -2,10 +2,10 @@
 library IEEE;
 use IEEE.std_logic_1164.all;
 
-entity testb_file is
-end testb_file;
+entity testbench_ha is
+end testbench_ha;
 
-architecture stimulus of testb_file is 
+architecture stimulus of testbench_ha is 
 component HA
     port (
             A, B : in std_logic;

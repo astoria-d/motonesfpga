@@ -1,14 +1,18 @@
 
+FILES=ha.vhd testbench.vhd
 
-all:
-	ghdl -a ha.vhdl
-	ghdl -a testb_file.vhdl
-	ghdl -e testb_file
+all: eraborate
+
+analyze:
+	ghdl -a $(FILES)
+
+eraborate: analyze
+	ghdl -e testbench
 
 run:
-	ghdl -r testb_file --stop-time=500ns --vcd=testb_file.vcd
-	gtkwave testb_file.vcd
+	ghdl -r testbench --stop-time=500ns --vcd=testb_file.vcd
+	gtkwave testbench.vcd
 
 clean:
-	rm *.o *.cf *.vcd testb_file
+	rm *.o *.cf *.vcd testbench
 
