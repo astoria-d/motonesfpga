@@ -32,7 +32,7 @@ begin
     p3 : process
     begin
         cc <= '0'; wait for 40 ns;
-        cc <= '1'; wait for 80 ns;
+        cc <= '1'; wait for 40 ns;
     end process;
 
 end stimulus ;
