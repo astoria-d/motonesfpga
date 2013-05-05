@@ -1,19 +1,20 @@
 
-FILES=ha.vhd fa.vhd testbench_fa.vhd
-TEST=testbench_fa
+TEST_FILES=testbench_ha.vhd testbench_fa.vhd
+FILES=ha.vhd fa.vhd $(TEST_FILES)
+TEST_BIN=testbench_fa
 
-all: eraborate
+all: elaborate
 
 analyze:
 	ghdl -a $(FILES)
 
-eraborate: analyze
-	ghdl -e $(TEST)
+elaborate: analyze
+	ghdl -e $(TEST_BIN)
 
-run:
-	ghdl -r testbench --stop-time=500ns --vcd=testb_file.vcd
-	gtkwave testbench.vcd
+run: elaborate
+	ghdl -r $(TEST_BIN) --stop-time=500ns --vcd=testbench.vcd
+#	gtkwave testbench.vcd
 
 clean:
-	rm *.o *.cf *.vcd $(TEST)
+	rm *.o *.cf *.vcd $(TEST_BIN)
 
