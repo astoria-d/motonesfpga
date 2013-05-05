@@ -2,10 +2,10 @@
 library IEEE;
 use IEEE.std_logic_1164.all;
 
-entity testbench is
-end testbench;
+entity testbench_fa is
+end testbench_fa;
 
-architecture stimulus of testbench is 
+architecture stimulus of testbench_fa is 
     component fa
         port (
                 a, b, c : in std_logic;
