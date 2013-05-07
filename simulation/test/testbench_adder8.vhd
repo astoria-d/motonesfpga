@@ -29,9 +29,11 @@ begin
     begin
         for i in 0 to 255 loop
             aa <= conv_std_logic_vector(i, 8);
+            --aa <= i;
             for j in 0 to 255 loop
 
                 bb <= conv_std_logic_vector(j, 8);
+                --bb <= j;
                 write(out_line, string'("test "));
                 write(out_line, i);
                 write(out_line, string'(", "));
