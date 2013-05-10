@@ -3,7 +3,7 @@ TEST_FILES=testbench_adc.vhd
 FILES=adc.vhd alu.vhd $(TEST_FILES)
 TEST_BIN=testbench_adc
 
-GHDL_OPTION=--ieee=synopsys #-fexplicit
+GHDL_OPTION=--ieee=synopsys -fexplicit
 
 
 all: elaborate

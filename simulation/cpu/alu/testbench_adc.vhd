@@ -11,17 +11,17 @@ end testbench_adc;
 
 architecture stimulus of testbench_adc is 
     component adc
-        port (  a, b    : in std_logic_vector (7 downto 0);
-                s       : out std_logic_vector (7 downto 0);
-                cin       : in std_logic;
-                cout      : out std_logic;
-                n, v, z : out std_logic
-                );
+    port (  a, b    : in std_logic_vector (7 downto 0);
+            sum       : out std_logic_vector (7 downto 0);
+            cin         : in std_logic;
+            cout        : out std_logic;
+            n, v, z : out std_logic
+            );
     end component;
-    signal aa, bb, ss: std_logic_vector (7 downto 0);
+    signal aa, bb, ssum: std_logic_vector (7 downto 0);
     signal ccin, ccout, nn, vv, zz : std_logic;
 begin
-    dut : adc port map (aa, bb, ss, ccin, ccout, nn, vv, zz);
+    dut : adc port map (aa, bb, ssum, ccin, ccout, nn, vv, zz);
     ccin <= '0';
 
     p : process
