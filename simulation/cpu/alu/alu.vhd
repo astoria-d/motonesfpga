@@ -1,18 +1,40 @@
 library ieee;
 use ieee.std_logic_1164.all;
-
+use ieee.std_logic_unsigned.all;
 
 entity alu is 
-    generic (NN : integer := 8);
-    port (  a, b    : in std_logic_vector (NN - 1 downto 0);
-            o       : out std_logic_vector (NN - 1 downto 0);
-            n, v, z, c   :   out std_logic
+    port (  a, b, m     : in std_logic_vector (7 downto 0);
+            o           : out std_logic_vector (7 downto 0);
+            cin         : in std_logic;
+            cout        : out std_logic;
+            n, v, z     :   out std_logic
         );
 end alu;
 
-architecture rtl of alu is
-signal alu : std_logic_vector (NN downto 0);
+architecture structure of alu is
+    component adc
+        port (  a, b    : in std_logic_vector (7 downto 0);
+                sum       : out std_logic_vector (7 downto 0);
+                cin         : in std_logic;
+                cout        : out std_logic;
+                n, v, z : out std_logic
+                );
+    end component;
+    signal adc_o : std_logic_vector (7 downto 0);
+    signal adc_cout, adc_n, adc_v, adc_z : std_logic;
 begin
+    adc_port : adc port map (a, b, adc_o, cin, adc_cout, adc_n, adc_v, adc_z);
+    
+    p : process
+    begin
+    if m(7 downto 5) = "011" then
+        ---case adc.
+        o <= adc_o;
+        n <= adc_n;
+        v <= adc_v;
+        z <= adc_z;
+    end if;
+    end process;
 
-end rtl;
+end structure;
 
