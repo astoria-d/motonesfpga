@@ -11,7 +11,7 @@ entity alu is
         );
 end alu;
 
-architecture structure of alu is
+architecture rtl of alu is
     component adc
         port (  a, b    : in std_logic_vector (7 downto 0);
                 sum       : out std_logic_vector (7 downto 0);
@@ -36,5 +36,5 @@ begin
     end if;
     end process;
 
-end structure;
+end rtl;
 
