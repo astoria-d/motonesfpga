@@ -60,6 +60,30 @@ begin
         ccin <= '0';
         wait for interval;
 
+        write(out_line, string'("adc test 4"));
+        writeline(output, out_line);
+        aa <= conv_std_logic_vector(10#40#, 8);
+        bb <= conv_std_logic_vector(10#120#, 8);
+        mm <= "01111111";
+        ccin <= '0';
+        wait for interval;
+
+        write(out_line, string'("adc test 5"));
+        writeline(output, out_line);
+        aa <= conv_std_logic_vector(10#40#, 8);
+        bb <= conv_std_logic_vector(10#51#, 8);
+        mm <= "01111111";
+        ccin <= '0';
+        wait for interval;
+
+        write(out_line, string'("adc test 6"));
+        writeline(output, out_line);
+        aa <= x"f5";
+        bb <= x"14";
+        mm <= "01111111";
+        ccin <= '0';
+        wait for interval;
+
         write(out_line, string'("test done"));
         writeline(output, out_line);
         wait;

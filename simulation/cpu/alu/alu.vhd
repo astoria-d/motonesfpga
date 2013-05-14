@@ -26,7 +26,7 @@ architecture rtl of alu is
 begin
     adc_port : adc port map (a, b, adc_o, cin, adc_cout, adc_n, adc_v, adc_z);
 
-    p : process (adc_o)
+    p : process (a, b, m, cin, adc_o)
     begin
     case m(7 downto 5) is
         when "011" =>
