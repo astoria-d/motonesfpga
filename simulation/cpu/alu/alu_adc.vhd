@@ -8,16 +8,16 @@ use ieee.std_logic_unsigned.all;
 --* A + M + C -> A
 --* Flags: N, V, Z, C
 
-entity adc is
+entity alu_adc is
     port (  a, b    : in std_logic_vector (7 downto 0);
             sum       : out std_logic_vector (7 downto 0);
             cin         : in std_logic;
             cout        : out std_logic;
             n, v, z : out std_logic
             );
-end adc;
+end alu_adc;
 
-architecture rtl of adc is
+architecture rtl of alu_adc is
 signal adc_work : std_logic_vector (8 downto 0);
 begin
     adc_work <= ('0' & a) + ('0' & b) + ("0000000" & cin);

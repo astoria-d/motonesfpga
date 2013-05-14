@@ -1,6 +1,6 @@
 
 TEST_FILES=testbench_alu.vhd testbench_adc.vhd 
-FILES=alu.vhd adc.vhd $(TEST_FILES)
+FILES=alu.vhd alu_adc.vhd alu_and.vhd $(TEST_FILES)
 TEST_BIN=testbench_alu
 
 GHDL_OPTION=--ieee=synopsys -fexplicit

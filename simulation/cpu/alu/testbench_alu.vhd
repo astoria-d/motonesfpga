@@ -40,7 +40,7 @@ begin
         writeline(output, out_line);
         aa <= x"74";
         bb <= x"70";
-        mm <= "01100111";
+        mm <= "01100101";
         ccin <= '0';
         wait for interval;
 
@@ -48,7 +48,7 @@ begin
         writeline(output, out_line);
         aa <= x"80";
         bb <= x"84";
-        mm <= "01100000";
+        mm <= "01100001";
         ccin <= '0';
         wait for interval;
 
@@ -56,7 +56,7 @@ begin
         writeline(output, out_line);
         aa <= x"a0";
         bb <= x"cf";
-        mm <= "01100000";
+        mm <= "01100001";
         ccin <= '0';
         wait for interval;
 
@@ -64,7 +64,7 @@ begin
         writeline(output, out_line);
         aa <= conv_std_logic_vector(10#40#, 8);
         bb <= conv_std_logic_vector(10#120#, 8);
-        mm <= "01111111";
+        mm <= "01111101";
         ccin <= '0';
         wait for interval;
 
@@ -72,7 +72,7 @@ begin
         writeline(output, out_line);
         aa <= conv_std_logic_vector(10#40#, 8);
         bb <= conv_std_logic_vector(10#51#, 8);
-        mm <= "01111111";
+        mm <= "01111101";
         ccin <= '0';
         wait for interval;
 
@@ -80,7 +80,31 @@ begin
         writeline(output, out_line);
         aa <= x"f5";
         bb <= x"14";
-        mm <= "01111111";
+        mm <= "01111101";
+        ccin <= '0';
+        wait for interval;
+
+        write(out_line, string'("and test 1"));
+        writeline(output, out_line);
+        aa <= x"55";
+        bb <= x"f0";
+        mm <= "00100001";
+        ccin <= '0';
+        wait for interval;
+
+        write(out_line, string'("and test 2"));
+        writeline(output, out_line);
+        aa <= x"55";
+        bb <= x"aa";
+        mm <= "00100001";
+        ccin <= '0';
+        wait for interval;
+
+        write(out_line, string'("and test 3"));
+        writeline(output, out_line);
+        aa <= x"ef";
+        bb <= x"aa";
+        mm <= "00100001";
         ccin <= '0';
         wait for interval;
 

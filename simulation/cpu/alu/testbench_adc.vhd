@@ -10,7 +10,7 @@ entity testbench_adc is
 end testbench_adc;
 
 architecture stimulus of testbench_adc is 
-    component adc
+    component alu_adc
     port (  a, b    : in std_logic_vector (7 downto 0);
             sum       : out std_logic_vector (7 downto 0);
             cin         : in std_logic;
@@ -21,7 +21,7 @@ architecture stimulus of testbench_adc is
     signal aa, bb, ssum: std_logic_vector (7 downto 0);
     signal ccin, ccout, nn, vv, zz : std_logic;
 begin
-    dut : adc port map (aa, bb, ssum, ccin, ccout, nn, vv, zz);
+    dut : alu_adc port map (aa, bb, ssum, ccin, ccout, nn, vv, zz);
     ccin <= '0';
 
     p : process
