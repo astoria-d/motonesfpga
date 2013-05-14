@@ -15,14 +15,15 @@ architecture stimulus of testbench_alu is
             o           : out std_logic_vector (7 downto 0);
             cin         : in std_logic;
             cout        : out std_logic;
-            n, v, z     :   out std_logic
+            n, v, z     :   out std_logic;
+            reset       :   out std_logic
         );
     end component;
     signal aa, bb, oo, mm : std_logic_vector (7 downto 0);
-    signal ccin, ccout, nn, vv, zz : std_logic;
+    signal ccin, ccout, nn, vv, zz, rreset : std_logic;
     constant interval : time := 20 ns;
 begin
-    dut : alu port map (aa, bb, mm, oo, ccin, ccout, nn, vv, zz);
+    dut : alu port map (aa, bb, mm, oo, ccin, ccout, nn, vv, zz, rreset);
 
     --aa <= "00000000";
     --bb <= "00000000";
