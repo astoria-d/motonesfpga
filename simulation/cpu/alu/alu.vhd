@@ -35,7 +35,7 @@ begin
     adc_port : alu_adc port map (a, b, adc_o, cin, adc_cout, adc_n, adc_v, adc_z);
     and_port : alu_and port map (a, b, and_o, and_n, and_z);
 
-    p : process (a, b, m, cin, adc_o, and_o)
+    p : process (adc_o, adc_cout, adc_n, adc_v, adc_z, and_o, and_n, and_z)
     begin
     -- m is form of  "aaabbbcc"
     if m(1 downto 0) = "01" then
