@@ -1,9 +1,9 @@
 
-TEST_FILES=testbench_alu.vhd testbench_adc.vhd 
-FILES=alu.vhd alu_adc.vhd alu_and.vhd $(TEST_FILES)
-TEST_BIN=testbench_alu
+TEST_FILES=testbench_nbit_reg.vhd 
+FILES=nbit_reg.vhd $(TEST_FILES)
+TEST_BIN=testbench_nbit_reg
 
-GHDL_OPTION=--ieee=synopsys -fexplicit --workdir=../../work
+GHDL_OPTION=--ieee=synopsys -fexplicit --workdir=../work
 
 
 all: elaborate
