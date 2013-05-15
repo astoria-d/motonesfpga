@@ -94,6 +94,15 @@ begin
             wait for interval * 2;
         end loop;
 
+        een <= '0';
+
+        for i in 0 to loopcnt * 3 loop
+            rr1 <= conv_std_logic_vector(i, dsize1);
+            rr8 <= conv_std_logic_vector(i, dsize8);
+            rr16 <= conv_std_logic_vector(i, dsize16);
+            wait for interval / 3;
+        end loop;
+
         wait;
     end process;
 
