@@ -1,7 +1,7 @@
 
-TEST_FILES=testbench_nbit_reg.vhd 
-FILES=nbit_reg.vhd $(TEST_FILES)
-TEST_BIN=testbench_nbit_reg
+TEST_FILES=testbench_regn.vhd 
+FILES=regn.vhd $(TEST_FILES)
+TEST_BIN=testbench_regn
 
 GHDL_OPTION=--ieee=synopsys -fexplicit --workdir=../work
 
