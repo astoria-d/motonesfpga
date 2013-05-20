@@ -9,16 +9,16 @@ end testbench_prg_rom;
 
 architecture stimulus of testbench_prg_rom is 
     component prg_rom
-        generic (addr_size : integer := 16; data_size : integer := 8);
+        generic (abus_size : integer := 16; dbus_size : integer := 8);
         port (  clk, ce         : in std_logic;
-                addr            : in std_logic_vector (addr_size - 1 downto 0);
-                data            : out std_logic_vector (data_size - 1 downto 0)
+                addr            : in std_logic_vector (abus_size - 1 downto 0);
+                data            : out std_logic_vector (dbus_size - 1 downto 0)
             );
     end component;
     constant interval : time := 15 ns;
     constant dsize : integer := 8;
     --constant asize : integer := 16#8000#;
-    constant asize : integer := 15;
+    constant asize : integer := 15;     --32k rom
     signal cclk, cce : std_logic;
     signal aa       : std_logic_vector (asize - 1 downto 0);
     signal dd       : std_logic_vector (dsize - 1 downto 0);

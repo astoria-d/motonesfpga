@@ -3,17 +3,17 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.conv_integer;
 
 entity prg_rom is 
-    generic (addr_size : integer := 16; data_size : integer := 8);
+    generic (abus_size : integer := 15; dbus_size : integer := 8);
     port (  clk, ce         : in std_logic;
-            addr            : in std_logic_vector (addr_size - 1 downto 0);
-            data            : out std_logic_vector (data_size - 1 downto 0)
+            addr            : in std_logic_vector (abus_size - 1 downto 0);
+            data            : out std_logic_vector (dbus_size - 1 downto 0)
         );
 end prg_rom;
 
 architecture rtl of prg_rom is
 
-subtype rom_data is std_logic_vector (data_size -1 downto 0);
-type rom_array is array (0 to 2**addr_size) of rom_data;
+subtype rom_data is std_logic_vector (dbus_size -1 downto 0);
+type rom_array is array (0 to 2**abus_size) of rom_data;
 
 constant p_rom : rom_array := rom_array'(
         x"01",

@@ -1,7 +1,7 @@
 
-TEST_FILES=testbench_prg_rom.vhd 
-FILES=prg_rom.vhd $(TEST_FILES)
-TEST_BIN=testbench_prg_rom
+TEST_FILES=testbench_prg_rom.vhd testbench_ram.vhd 
+FILES=ram.vhd prg_rom.vhd $(TEST_FILES)
+TEST_BIN=testbench_ram
 
 GHDL_OPTION=--ieee=synopsys -fexplicit --workdir=../work
 
