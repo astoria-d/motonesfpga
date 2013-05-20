@@ -13,7 +13,7 @@ end prg_rom;
 architecture rtl of prg_rom is
 
 subtype rom_data is std_logic_vector (dbus_size -1 downto 0);
-type rom_array is array (0 to 2**abus_size) of rom_data;
+type rom_array is array (0 to 2**abus_size - 1) of rom_data;
 
 constant p_rom : rom_array := rom_array'(
         x"01",

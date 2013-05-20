@@ -16,7 +16,7 @@ end ram;
 architecture rtl of ram is
 
 subtype ram_data is std_logic_vector (dbus_size -1 downto 0);
-type ram_array is array (0 to 2**abus_size) of ram_data;
+type ram_array is array (0 to 2**abus_size - 1) of ram_data;
 --type ram_array is array (0 to 16#0800#) of ram_data;
 
 signal work_ram : ram_array;
