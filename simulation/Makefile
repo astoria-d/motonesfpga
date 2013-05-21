@@ -1,5 +1,5 @@
 
-DIRS=cpu/alu cpu mem
+DIRS=mem cpu/alu cpu 
 WORKDIR=work
 
 ROOT_DIR=$(CURDIR)
