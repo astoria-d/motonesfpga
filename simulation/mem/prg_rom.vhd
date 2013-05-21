@@ -2,9 +2,10 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.conv_integer;
 
+--asyncronous rom
 entity prg_rom is 
     generic (abus_size : integer := 15; dbus_size : integer := 8);
-    port (  clk, ce         : in std_logic;
+    port (  ce_n            : in std_logic;     --active low.
             addr            : in std_logic_vector (abus_size - 1 downto 0);
             data            : out std_logic_vector (dbus_size - 1 downto 0)
         );
@@ -27,16 +28,14 @@ constant p_rom : rom_array := rom_array'(
         x"ff",
         x"aa",
         x"11",
-        others=>x"00"
+        others=>x"55"
         );
 
 begin
-    p : process (clk, ce, addr)
+    p : process (ce_n, addr)
     begin
-    if (clk'event and clk = '1') then
-        if (ce = '1') then
-           data <= p_rom(conv_integer(addr));
-        end if;
+    if (ce_n = '0') then
+       data <= p_rom(conv_integer(addr));
     end if;
     end process;
 end rtl;

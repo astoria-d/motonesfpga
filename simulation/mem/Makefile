@@ -1,23 +1,26 @@
 
-TEST_FILES=testbench_prg_rom.vhd testbench_ram.vhd 
-FILES=ram.vhd prg_rom.vhd $(TEST_FILES)
-TEST_BIN=testbench_ram
+MODULES=ram.vhd prg_rom.vhd
 
-GHDL_OPTION=--ieee=synopsys -fexplicit --workdir=../work
+WORKDIR=../work
+
+GHDL_OPTION=--ieee=synopsys -fexplicit --workdir=$(WORKDIR)
 
 
-all: elaborate
+OBJS = $(MODULES:.vhd=.o)
+TEST_MODULES = $(addprefix testbench_, $(MODULES))
 
-analyze:
-	ghdl -a $(GHDL_OPTION) $(FILES)
+all: $(addprefix $(WORKDIR)/, $(OBJS))
 
-elaborate: analyze
-	ghdl -e $(GHDL_OPTION) $(TEST_BIN)
-
-run: elaborate
-	ghdl -r $(TEST_BIN) --stop-time=500ns --vcd=testbench.vcd
-#	gtkwave testbench.vcd
+.SUFFIXES: .vhd .o
+$(addprefix $(WORKDIR)/, $(OBJS)): $(MODULES) $(TEST_MODULES)
+	ghdl -a $(GHDL_OPTION) $(subst .o,.vhd, $(subst $(WORKDIR)/,, $@))
+	ghdl -a $(GHDL_OPTION) $(subst .o,.vhd, $(subst $(WORKDIR)/,, testbench_$@))
+	ghdl -e $(GHDL_OPTION) $(subst .o,, $(subst $(WORKDIR)/,, testbench_$@))
 
 clean:
-	rm *.o *.cf *.vcd $(TEST_BIN)
+	-rm $(addprefix $(WORKDIR)/, $(OBJS))
+	-rm $(addprefix $(WORKDIR)/testbench_, $(OBJS))
+	-rm $(addprefix $(WORKDIR)/e~testbench_, $(OBJS))
+	-rm $(addprefix testbench_, $(subst .o,, $(OBJS)))
+	-rm *.o *.cf *.vcd
 
