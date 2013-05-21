@@ -1,6 +1,9 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
+-- oe_n : active low on read.
+-- rw_n : active low on write.
+
 entity cpu_bus is
 generic (abus_size : integer := 16; dbus_size : integer := 8);
     port (  oe_n, rw_n      : in std_logic;
