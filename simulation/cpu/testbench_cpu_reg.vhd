@@ -6,11 +6,11 @@ use ieee.std_logic_arith.all;
 use std.textio.all;
 
 
-entity testbench_regn is
-end testbench_regn;
+entity testbench_cpu_reg is
+end testbench_cpu_reg;
 
-architecture stimulus of testbench_regn is 
-    component regn
+architecture stimulus of testbench_cpu_reg is 
+    component cpu_reg
         generic (dsize : integer := 8);
         port (  clk, en     : in std_logic;
                 d           : in std_logic_vector (dsize - 1 downto 0);
@@ -26,9 +26,9 @@ architecture stimulus of testbench_regn is
     signal dd8, qq8    : std_logic_vector (dsize8 - 1 downto 0);
     signal dd16, qq16    : std_logic_vector (dsize16 - 1 downto 0);
 begin
-    dut0 : regn generic map (dsize1) port map (cclk, een, dd1, qq1);
-    dut1 : regn generic map (dsize8) port map (cclk, een, dd8, qq8);
-    dut2 : regn generic map (dsize16) port map (cclk, een, dd16, qq16);
+    dut0 : cpu_reg generic map (dsize1) port map (cclk, een, dd1, qq1);
+    dut1 : cpu_reg generic map (dsize8) port map (cclk, een, dd8, qq8);
+    dut2 : cpu_reg generic map (dsize16) port map (cclk, een, dd16, qq16);
 
     p1 : process
     variable i : integer := 0;

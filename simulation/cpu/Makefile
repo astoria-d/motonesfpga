@@ -1,5 +1,5 @@
 
-MODULES=regn.vhd
+MODULES=cpu_reg.vhd cpu_bus.vhd
 
 WORKDIR=../work
 
