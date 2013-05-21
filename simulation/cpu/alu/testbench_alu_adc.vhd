@@ -6,16 +6,16 @@ use ieee.std_logic_arith.all;
 use std.textio.all;
 
 
-entity testbench_adc is
-end testbench_adc;
+entity testbench_alu_adc is
+end testbench_alu_adc;
 
-architecture stimulus of testbench_adc is 
+architecture stimulus of testbench_alu_adc is 
     component alu_adc
-    port (  a, b    : in std_logic_vector (7 downto 0);
-            sum       : out std_logic_vector (7 downto 0);
-            cin         : in std_logic;
-            cout        : out std_logic;
-            n, v, z : out std_logic
+    port (  d1, d2      : in std_logic_vector (7 downto 0);
+            q           : out std_logic_vector (7 downto 0);
+            cry_in          : in std_logic;
+            cry_out         : out std_logic;
+            neg, ovf, zero  : out std_logic
             );
     end component;
     signal aa, bb, ssum: std_logic_vector (7 downto 0);

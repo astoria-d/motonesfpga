@@ -9,29 +9,29 @@ use ieee.std_logic_unsigned.all;
 --* Flags: N, V, Z, C
 
 entity alu_adc is
-    port (  a, b    : in std_logic_vector (7 downto 0);
-            sum       : out std_logic_vector (7 downto 0);
-            cin         : in std_logic;
-            cout        : out std_logic;
-            n, v, z : out std_logic
+    port (  d1, d2      : in std_logic_vector (7 downto 0);
+            q           : out std_logic_vector (7 downto 0);
+            cry_in          : in std_logic;
+            cry_out         : out std_logic;
+            neg, ovf, zero  : out std_logic
             );
 end alu_adc;
 
 architecture rtl of alu_adc is
 signal adc_work : std_logic_vector (8 downto 0);
 begin
-    adc_work <= ('0' & a) + ('0' & b) + ("0000000" & cin);
+    adc_work <= ('0' & d1) + ('0' & d2) + ("0000000" & cry_in);
 
-    sum <= adc_work(7 downto 0);
+    q <= adc_work(7 downto 0);
 
-    cout <= adc_work(8);
-    v <= '1' when (a(7) = '0' and b(7) = '0' and adc_work(7) = '1') else
-         '1' when (a(7) = '1' and b(7) = '1' and adc_work(7) = '0') else
+    cry_out <= adc_work(8);
+    ovf <= '1' when (d1(7) = '0' and d2(7) = '0' and adc_work(7) = '1') else
+         '1' when (d1(7) = '1' and d2(7) = '1' and adc_work(7) = '0') else
          '0';
 
-    n <= '1' when (adc_work(7) = '1') else
+    neg <= '1' when (adc_work(7) = '1') else
          '0';
-    z <= '1' when (adc_work(7 downto 0) = "00000000") else
+    zero <= '1' when (adc_work(7 downto 0) = "00000000") else
          '0';
 
 end rtl;

@@ -9,9 +9,9 @@ use ieee.std_logic_unsigned.all;
 --* Flags: N, Z
 
 entity alu_and is
-    port (  a, b    : in std_logic_vector (7 downto 0);
-            and_o     : out std_logic_vector (7 downto 0);
-            n, z    : out std_logic
+    port (  d1, d2      : in std_logic_vector (7 downto 0);
+            q           : out std_logic_vector (7 downto 0);
+            neg, zero        : out std_logic
             );
 end alu_and;
 
@@ -19,13 +19,13 @@ architecture rtl of alu_and is
 signal and_work : std_logic_vector (7 downto 0);
 begin
 
-    and_work <= a and b;
+    and_work <= d1 and d2;
 
-    n <= '1' when (and_work(7) = '1') else
+    neg <= '1' when (and_work(7) = '1') else
          '0';
-    z <= '1' when (and_work(7 downto 0) = "00000000") else
+    zero <= '1' when (and_work(7 downto 0) = "00000000") else
          '0';
-    and_o <= and_work;
+    q <= and_work;
 
 end rtl;
 

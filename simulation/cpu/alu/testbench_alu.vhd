@@ -11,19 +11,18 @@ end testbench_alu;
 
 architecture stimulus of testbench_alu is 
     component alu
-    port (  a, b, m     : in std_logic_vector (7 downto 0);
-            o           : out std_logic_vector (7 downto 0);
-            cin         : in std_logic;
-            cout        : out std_logic;
-            n, v, z     :   out std_logic;
-            reset       :   out std_logic
+    port (  d1, d2, mode    : in std_logic_vector (7 downto 0);
+            q               : out std_logic_vector (7 downto 0);
+            cry_in          : in std_logic;
+            cry_out         : out std_logic;
+            neg, ovf, zero  :   out std_logic
         );
     end component;
     signal aa, bb, oo, mm : std_logic_vector (7 downto 0);
-    signal ccin, ccout, nn, vv, zz, rreset : std_logic;
+    signal ccin, ccout, nn, vv, zz : std_logic;
     constant interval : time := 1 ns;
 begin
-    dut : alu port map (aa, bb, mm, oo, ccin, ccout, nn, vv, zz, rreset);
+    dut : alu port map (aa, bb, mm, oo, ccin, ccout, nn, vv, zz);
 
     --aa <= "00000000";
     --bb <= "00000000";
@@ -34,6 +33,14 @@ begin
     variable out_line : line;
     variable i,j : integer;
     begin
+        wait for interval;
+
+        write(out_line, string'("mode test"));
+        writeline(output, out_line);
+        aa <= x"11";
+        bb <= x"22";
+        mm <= "11100000";
+        ccin <= '0';
         wait for interval;
 
         write(out_line, string'("adc test 1"));
