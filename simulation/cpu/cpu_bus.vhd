@@ -64,6 +64,6 @@ begin
 
     d_out <= rom_out when rom_ce_n = '0' else
             ram_out when ram_ce_n = '0' else
-            (others => '-');
+            (others => 'Z');
 end rtl;
 

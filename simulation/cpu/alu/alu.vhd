@@ -20,22 +20,25 @@ architecture rtl of alu is
                 neg, ovf, zero  : out std_logic
                 );
     end component;
+
     component alu_and
         port (  d1, d2      : in std_logic_vector (7 downto 0);
                 q           : out std_logic_vector (7 downto 0);
                 neg, zero   : out std_logic
                 );
     end component;
-    signal adc_o : std_logic_vector (7 downto 0);
-    signal adc_cout, adc_n, adc_v, adc_z : std_logic;
-    signal and_o : std_logic_vector (7 downto 0);
-    signal and_n, and_z : std_logic;
-begin
-    adc_port : alu_adc port map (d1, d2, adc_o, cry_in, 
-            adc_cout, adc_n, adc_v, adc_z);
-    and_port : alu_and port map (d1, d2, and_o, and_n, and_z);
 
-    p : process (adc_o, adc_cout, adc_n, adc_v, adc_z, and_o, and_n, and_z)
+    signal adc_out : std_logic_vector (7 downto 0);
+    signal adc_cry_out, adc_n, adc_v, adc_z : std_logic;
+    signal and_out : std_logic_vector (7 downto 0);
+    signal and_n, and_z : std_logic;
+
+begin
+    adc_port : alu_adc port map (d1, d2, adc_out, cry_in, 
+            adc_cry_out, adc_n, adc_v, adc_z);
+    and_port : alu_and port map (d1, d2, and_out, and_n, and_z);
+
+    p : process (adc_out, adc_cry_out, adc_n, adc_v, adc_z, and_out, and_n, and_z)
     begin
     -- mode is form of  "aaabbbcc"
     if mode(1 downto 0) = "01" then
@@ -43,14 +46,14 @@ begin
         case mode(7 downto 5) is
             when "011" =>
               ---case adc.
-                q <= adc_o;
+                q <= adc_out;
                 neg <= adc_n;
                 ovf <= adc_v;
                 zero <= adc_z;
-                cry_out <= adc_cout;
+                cry_out <= adc_cry_out;
             when "001" =>
               ---case and.
-                q <= and_o;
+                q <= and_out;
                 neg <= and_n;
                 zero <= and_z;
             when others =>
