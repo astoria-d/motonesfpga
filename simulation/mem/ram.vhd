@@ -30,8 +30,8 @@ begin
     wait on ce_n, we_n;
     if (ce_n = '0' and we_n = '0') then
         wait until we_n'event and we_n = '1';
-        work_ram(conv_integer(addr)) <= d_in;
         wait for RAM_TOH;
+        work_ram(conv_integer(addr)) <= d_in;
     end if;
     end process;
 
