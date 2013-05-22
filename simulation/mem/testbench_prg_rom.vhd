@@ -15,13 +15,16 @@ architecture stimulus of testbench_prg_rom is
                 data            : out std_logic_vector (dbus_size - 1 downto 0)
             );
     end component;
-    constant interval : time := 15 ns;
+    constant cpu_clk : time := 589 ns;
     constant dsize : integer := 8;
     --constant asize : integer := 16#8000#;
     constant asize : integer := 15;     --32k rom
+
     signal cce_n : std_logic;
     signal aa       : std_logic_vector (asize - 1 downto 0);
     signal dd       : std_logic_vector (dsize - 1 downto 0);
+    signal clk : std_logic;
+
 begin
     dut0 : prg_rom generic map (asize, dsize) port map (cce_n, aa, dd);
 
@@ -30,36 +33,46 @@ begin
     constant loopcnt : integer := 5;
     begin
 
-        wait for interval / 4;
+        wait for cpu_clk;
 
         for i in 0 to loopcnt loop
             aa <= conv_std_logic_vector(i, asize);
-            wait for interval / 4;
+            wait for cpu_clk;
         end loop;
 
         cce_n <= '0';
 
         for i in 0 to loopcnt * 2 loop
             aa <= conv_std_logic_vector(i, asize);
-            wait for interval / 2;
+            wait for cpu_clk;
         end loop;
 
         cce_n <= '1';
 
         for i in 0 to loopcnt * 2 loop
             aa <= conv_std_logic_vector(i, asize);
-            wait for interval / 2;
+            wait for cpu_clk;
         end loop;
 
         cce_n <= '0';
         aa <= conv_std_logic_vector(16#8000#, asize);
-        wait for interval / 2;
+        wait for cpu_clk;
         aa <= conv_std_logic_vector(16#8000# - 1, asize);
-        wait for interval / 2;
+        wait for cpu_clk;
         aa <= conv_std_logic_vector(16#8000# / 2, asize);
-        wait for interval / 2;
+        wait for cpu_clk;
+
+        cce_n <= '1';
 
         wait;
+    end process;
+
+    p_clk : process
+    begin
+        clk <= '1';
+        wait for cpu_clk / 2;
+        clk <= '0';
+        wait for cpu_clk / 2;
     end process;
 
 end stimulus ;

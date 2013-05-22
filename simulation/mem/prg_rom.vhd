@@ -16,6 +16,9 @@ architecture rtl of prg_rom is
 subtype rom_data is std_logic_vector (dbus_size -1 downto 0);
 type rom_array is array (0 to 2**abus_size - 1) of rom_data;
 
+constant ROM_TACE : time := 100 ns;      --output enable access time
+constant ROM_TOH : time := 10 ns;      --output hold time
+
 constant p_rom : rom_array := rom_array'(
         x"01",
         x"02",
@@ -32,10 +35,14 @@ constant p_rom : rom_array := rom_array'(
         );
 
 begin
-    p : process (ce_n, addr)
+    p : process 
     begin
+    wait on ce_n, addr;
     if (ce_n = '0') then
-       data <= p_rom(conv_integer(addr));
+        wait for ROM_TACE;
+        data <= p_rom(conv_integer(addr));
+    else
+        data <= (others => 'Z');
     end if;
     end process;
 end rtl;

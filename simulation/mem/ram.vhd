@@ -21,27 +21,28 @@ type ram_array is array (0 to 2**abus_size - 1) of ram_data;
 
 signal work_ram : ram_array;
 
+constant RAM_TAOE : time := 25 ns;      --OE access time
+constant RAM_TOH : time := 10 ns;       --write data hold time
+
 begin
-    p_write : process (ce_n, we_n, addr, d_in)
+    p_write : process 
     begin
+    wait on ce_n, we_n;
     if (ce_n = '0' and we_n = '0') then
+        wait until we_n'event and we_n = '1';
         work_ram(conv_integer(addr)) <= d_in;
+        wait for RAM_TOH;
     end if;
     end process;
 
-    p_read : process (ce_n, we_n, oe_n, addr)
---    variable out_line : line;
---    variable index : integer;
+    p_read : process
     begin
+    wait on ce_n, oe_n, addr;
     if (ce_n= '0' and we_n = '1' and oe_n = '0') then
+        wait for RAM_TAOE;
         d_out <= work_ram(conv_integer(addr));
---                index := conv_integer(addr);
---                d_out <= work_ram(index);
---
---                write(out_line, index);
---                write(out_line, string'(", "));
---                write(out_line, conv_integer(work_ram(index)));
---                writeline(output, out_line);
+    else
+        d_out <= (others => 'Z');
     end if;
     end process;
 end rtl;
