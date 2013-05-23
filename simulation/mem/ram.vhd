@@ -27,9 +27,9 @@ constant RAM_TOH : time := 10 ns;       --write data hold time
 begin
     p_write : process 
     begin
-    wait on ce_n, we_n;
+    wait on addr, ce_n, we_n;
     if (ce_n = '0' and we_n = '0') then
-        wait until we_n'event and we_n = '1';
+        wait until d_in'event;
         wait for RAM_TOH;
         work_ram(conv_integer(addr)) <= d_in;
     end if;

@@ -55,14 +55,13 @@ begin
 
         --write test.
         ooe_n <= '1';
-
+        wwe_n <= '0';
         for i in 0 to loopcnt loop
-            wwe_n <= '0';
             aa <= conv_std_logic_vector(i, asize_2k);
+            wait for cpu_clk / 2;
             ddin <= conv_std_logic_vector(i, dsize);
-            wait for cpu_clk * 3 / 4;
-            wwe_n <= '1';
-            wait for cpu_clk / 4;
+            wait for cpu_clk / 2;
+            ddin <= (others => 'Z');
         end loop;
 
         --read check.
@@ -90,11 +89,13 @@ begin
         wwe_n <= '0';
         ooe_n <= '1';
         aa <= conv_std_logic_vector(2**(asize_2k - 1), asize_2k);
+        wait for cpu_clk / 2;
         ddin <= x"5a";
-        wait for cpu_clk;
+        wait for cpu_clk / 2;
 
         wwe_n <= '1';
         ooe_n <= '0';
+        aa <= conv_std_logic_vector(2**(asize_2k - 1), asize_2k);
         wait for cpu_clk;
         assert (ddout = x"5a")
             report "mem r/w error." severity failure;
@@ -104,11 +105,13 @@ begin
         wwe_n <= '0';
         ooe_n <= '1';
         aa <= conv_std_logic_vector(2**asize_2k - 1, asize_2k);
+        wait for cpu_clk / 2;
         ddin <= x"aa";
-        wait for cpu_clk;
+        wait for cpu_clk / 2;
 
         wwe_n <= '1';
         ooe_n <= '0';
+        aa <= conv_std_logic_vector(2**asize_2k - 1, asize_2k);
         wait for cpu_clk;
         assert (ddout = x"aa")
             report "mem r/w error." severity failure;
@@ -119,11 +122,13 @@ begin
         ooe_n <= '1';
         -- address wrapped..
         aa <= conv_std_logic_vector(2**asize_2k, asize_2k);       
+        wait for cpu_clk / 2;
         ddin <= x"ff";
-        wait for cpu_clk;
+        wait for cpu_clk / 2;
 
         wwe_n <= '1';
         ooe_n <= '0';
+        aa <= conv_std_logic_vector(2**asize_2k, asize_2k);       
         wait for cpu_clk;
         assert (ddout = x"ff")
             report "mem test error." severity failure;
@@ -131,17 +136,17 @@ begin
         write(out_line, string'("mem test4"));
         writeline(output, out_line);
         ooe_n <= '1';
+        wwe_n <= '0';
         for i in 0 to 50 loop
-            wwe_n <= '0';
             aa <= conv_std_logic_vector(100 + i * 2, asize_2k);
-            ddin <= conv_std_logic_vector(i * 3, dsize);
             wait for cpu_clk / 2;
-            wwe_n <= '1';
+            ddin <= conv_std_logic_vector(i * 3, dsize);
             wait for cpu_clk / 2;
         end loop;
 
         wwe_n <= '1';
         ooe_n <= '0';
+        ddin <= (others => 'Z');
         for i in 0 to 50 loop
             aa <= conv_std_logic_vector(100 + i * 2, asize_2k);
             wait for cpu_clk;
