@@ -7,7 +7,7 @@ entity mos6502 is
             );
     port (  input_clk   : in std_logic; --phi0 input pin.
             rdy         : in std_logic;
-            res_n       : in std_logic;
+            rst_n       : in std_logic;
             irq_n       : in std_logic;
             nmi_n       : in std_logic;
             dbe         : in std_logic;
