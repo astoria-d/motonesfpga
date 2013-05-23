@@ -148,6 +148,30 @@ begin
         end loop;
         wait for cpu_clk;
 
+        --write ram
+        rr_nw <= '0';
+        for i in 100 to 110 loop
+            --write to ram
+            aa16 <= conv_std_logic_vector(i, size16);
+            dd8_in <= conv_std_logic_vector(i, size8);
+            wait for cpu_clk;
+        end loop;
+
+        --read rom, ram, rom, ram ...
+        rr_nw <= '1';
+        aa16 <= conv_std_logic_vector(100, size16);
+        wait for cpu_clk;
+        aa16 <= conv_std_logic_vector(16#8010#, size16);
+        wait for cpu_clk;
+        aa16 <= conv_std_logic_vector(103, size16);
+        wait for cpu_clk;
+        aa16 <= conv_std_logic_vector(16#8013#, size16);
+        wait for cpu_clk;
+        aa16 <= conv_std_logic_vector(109, size16);
+        wait for cpu_clk;
+        aa16 <= conv_std_logic_vector(16#f0a3#, size16);
+        wait for cpu_clk;
+
         wait;
     end process;
 
