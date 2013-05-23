@@ -1,5 +1,5 @@
 
-MODULES=cpu_reg.vhd cpu_bus.vhd
+MODULES=cpu_reg.vhd mos6502.vhd #cpu_timing.vhd 
 
 WORKDIR=../work
 

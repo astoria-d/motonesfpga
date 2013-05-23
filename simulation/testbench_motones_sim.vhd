@@ -8,9 +8,26 @@ entity testbench_motones_sim is
 end testbench_motones_sim;
 
 architecture stimulus of testbench_motones_sim is 
-    constant cpu_clk : time := 589 ns;
-    constant dsize : integer := 8;
-
+    component motones_sim
+        port (  reset_n     : in std_logic
+             );
+    end component;
+    signal reset_input : std_logic;
+    constant reset_time : time := 100 ns;
 begin
-end stimulus ;
+
+    sim_board : motones_sim port map (reset_input);
+    --- input reset.
+    reset_p: process
+    begin
+        wait for reset_time;
+        reset_input <= '0';
+
+        wait for 100 ns;
+        reset_input <= '1';
+
+        wait;
+    end process;
+
+end stimulus;
 

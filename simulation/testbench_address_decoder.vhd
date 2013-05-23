@@ -6,11 +6,11 @@ use ieee.std_logic_arith.all;
 use std.textio.all;
 
 
-entity testbench_cpu_bus is
-end testbench_cpu_bus;
+entity testbench_address_decoder is
+end testbench_address_decoder;
 
-architecture stimulus of testbench_cpu_bus is 
-    component cpu_bus
+architecture stimulus of testbench_address_decoder is 
+    component address_decoder
     generic (abus_size : integer := 16; dbus_size : integer := 8);
         port (  phi2        : in std_logic;
                 R_nW        : in std_logic; 
@@ -30,7 +30,7 @@ architecture stimulus of testbench_cpu_bus is
     signal dd8_in       : std_logic_vector (size8 - 1 downto 0);
     signal dd8_out      : std_logic_vector (size8 - 1 downto 0);
 begin
-    dut0 : cpu_bus generic map (size16, size8) 
+    dut0 : address_decoder generic map (size16, size8) 
         port map (cclk, rr_nw, aa16, dd8_in, dd8_out);
 
     p1 : process
@@ -48,7 +48,7 @@ begin
     begin
 
         --syncronize with clock dropping edge.
-        wait for cpu_clk / 2;
+        wait for cpu_clk;
 
         for i in 0 to loopcnt loop
             dd8_in <= conv_std_logic_vector(i, size8);

@@ -1,6 +1,6 @@
 
-DIRS=mem cpu/alu cpu 
-MODULES=motones_sim.vhd
+DIRS=clock mem cpu/alu cpu 
+MODULES=motones_sim.vhd address_decoder.vhd
 WORKDIR=work
 
 ROOT_DIR=$(CURDIR)
@@ -10,7 +10,7 @@ GHDL_OPTION=--ieee=synopsys -fexplicit --workdir=$(WORKDIR)
 OBJS = $(MODULES:.vhd=.o)
 TEST_MODULES = $(addprefix testbench_, $(MODULES))
 
-all: $(addprefix $(WORKDIR)/, $(OBJS)) subdirs
+all: subdirs $(addprefix $(WORKDIR)/, $(OBJS))
 
 .SUFFIXES: .vhd .o
 $(addprefix $(WORKDIR)/, $(OBJS)): $(MODULES) $(TEST_MODULES)
