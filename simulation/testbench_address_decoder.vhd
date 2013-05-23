@@ -25,13 +25,16 @@ architecture stimulus of testbench_address_decoder is
     constant size16 : integer := 16;
 
     signal cclk         : std_logic;
+    signal phi2         : std_logic;
     signal rr_nw        : std_logic;
     signal aa16         : std_logic_vector (size16 - 1 downto 0);
     signal dd8_in       : std_logic_vector (size8 - 1 downto 0);
     signal dd8_out      : std_logic_vector (size8 - 1 downto 0);
 begin
     dut0 : address_decoder generic map (size16, size8) 
-        port map (cclk, rr_nw, aa16, dd8_in, dd8_out);
+        port map (phi2, rr_nw, aa16, dd8_in, dd8_out);
+
+    phi2 <= not cclk;
 
     p1 : process
     variable i : integer := 0;
@@ -55,6 +58,7 @@ begin
             aa16 <= conv_std_logic_vector(i, size16);
             wait for cpu_clk;
         end loop;
+        dd8_in <= (others => 'Z');
 
         ---read test.
         rr_nw <= '1';
@@ -87,6 +91,7 @@ begin
             wait for cpu_clk;
         end loop;
         rr_nw <= '1';
+        dd8_in <= (others => 'Z');
         for i in 0 to loopcnt loop
             --read ram
             aa16 <= conv_std_logic_vector(i, size16);
@@ -105,6 +110,7 @@ begin
         end loop;
 
         rr_nw <= '1';
+        dd8_in <= (others => 'Z');
         for i in 0 to loopcnt loop
             --read ram
             aa16 <= conv_std_logic_vector(16#8000# + i, size16);

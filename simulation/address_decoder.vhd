@@ -1,6 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
+-- this address decoder inserts dummy setup time on write.
 entity address_decoder is
 generic (abus_size : integer := 16; dbus_size : integer := 8);
     port (  phi2        : in std_logic; --dropping edge syncronized clock.
@@ -42,22 +43,26 @@ architecture rtl of address_decoder is
     constant ram_2k : integer := 11;      --2k = 11 bit width.
     constant rom_32k : integer := 15;     --32k = 15 bit width.
 
+    constant CPU_DST : time := 100 ns;    --write data setup time.
+
     signal rom_ce_n : std_logic;
 
     signal ram_ce_n : std_logic;
-    signal ram_oe_n : std_logic;
+    signal ram_we_n : std_logic;
 
     signal rom_out : std_logic_vector (dsize - 1 downto 0);
     signal ram_out : std_logic_vector (dsize - 1 downto 0);
+
+    signal deferred_data  : std_logic_vector (dsize - 1 downto 0);
 begin
 
     romport : prg_rom generic map (rom_32k, dsize)
             port map (rom_ce_n, addr(rom_32k - 1 downto 0), rom_out);
 
-    ram_oe_n <= R_nW;
+    ram_we_n <= not R_nW;
     ramport : ram generic map (ram_2k, dsize)
-            port map (ram_ce_n, ram_oe_n, R_nW, 
-                    addr(ram_2k - 1 downto 0), d_in, ram_out);
+            port map (ram_ce_n, ram_we_n, R_nW, 
+                    addr(ram_2k - 1 downto 0), deferred_data, ram_out);
 
     d_out <= rom_out when rom_ce_n = '0' else
             ram_out when ram_ce_n = '0' else
@@ -79,6 +84,15 @@ begin
             ram_ce_n <= '1';
         else
             ram_ce_n <= '0';
+        end if;
+    end process;
+
+    defer_out : process
+    begin
+        wait until phi2'event and phi2 = '1';
+        if (R_nW = '0') then
+            wait for CPU_DST;
+            deferred_data <= d_in;
         end if;
     end process;
 
