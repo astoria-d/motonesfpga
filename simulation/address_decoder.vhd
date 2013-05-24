@@ -52,8 +52,6 @@ architecture rtl of address_decoder is
 
     signal rom_out : std_logic_vector (dsize - 1 downto 0);
     signal ram_out : std_logic_vector (dsize - 1 downto 0);
-
-    signal deferred_data  : std_logic_vector (dsize - 1 downto 0);
 begin
 
     romport : prg_rom generic map (rom_32k, dsize)
@@ -62,7 +60,7 @@ begin
     ram_we_n <= not R_nW;
     ramport : ram generic map (ram_2k, dsize)
             port map (ram_ce_n, ram_we_n, R_nW, 
-                    addr(ram_2k - 1 downto 0), deferred_data, ram_out);
+                    addr(ram_2k - 1 downto 0), d_in, ram_out);
 
     d_out <= rom_out when rom_ce_n = '0' else
             ram_out when ram_ce_n = '0' else
@@ -84,15 +82,6 @@ begin
             ram_ce_n <= '1';
         else
             ram_ce_n <= '0';
-        end if;
-    end process;
-
-    defer_out : process
-    begin
-        wait until phi2'event and phi2 = '1';
-        if (R_nW = '0') then
-            wait for CPU_DST;
-            deferred_data <= d_in;
         end if;
     end process;
 

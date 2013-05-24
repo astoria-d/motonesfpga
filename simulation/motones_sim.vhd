@@ -40,6 +40,16 @@ architecture rtl of motones_sim is
             );
     end component;
 
+    component address_decoder
+    generic (abus_size : integer := 16; dbus_size : integer := 8);
+        port (  phi2        : in std_logic;
+                R_nW        : in std_logic; 
+                addr       : in std_logic_vector (abus_size - 1 downto 0);
+                d_in       : in std_logic_vector (dbus_size - 1 downto 0);
+                d_out      : out std_logic_vector (dbus_size - 1 downto 0)
+    );
+    end component;
+
     ---clock frequency = 21,477,270 (21 MHz)
     constant base_clock_time : time := 46 ns;
 
@@ -63,6 +73,9 @@ begin
     cpu_inst : mos6502 generic map (data_size, addr_size) 
         port map (cpu_clk, rdy, reset_n, irq_n, nmi_n, dbe, r_nw, 
                 phi1, phi2, addr, d_in, d_out);
+
+    addr_dec_inst : address_decoder generic map (addr_size, data_size) 
+        port map (phi2, r_nw, addr, d_out, d_in);
 
     --- generate base clock.
     clock_p: process

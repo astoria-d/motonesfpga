@@ -35,11 +35,9 @@ constant p_rom : rom_array := rom_array'(
         );
 
 begin
-    p : process 
+    p : process (ce_n, addr)
     begin
-    wait on ce_n, addr;
     if (ce_n = '0') then
-        wait for ROM_TACE;
         data <= p_rom(conv_integer(addr));
     else
         data <= (others => 'Z');

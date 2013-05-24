@@ -1,6 +1,6 @@
 
 DIRS=clock mem cpu/alu cpu 
-MODULES=motones_sim.vhd address_decoder.vhd
+MODULES=address_decoder.vhd motones_sim.vhd 
 WORKDIR=work
 
 ROOT_DIR=$(CURDIR)

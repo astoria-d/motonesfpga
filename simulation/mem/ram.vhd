@@ -25,21 +25,16 @@ constant RAM_TAOE : time := 25 ns;      --OE access time
 constant RAM_TOH : time := 10 ns;       --write data hold time
 
 begin
-    p_write : process 
+    p_write : process (ce_n, we_n)
     begin
-    wait on addr, ce_n, we_n;
     if (ce_n = '0' and we_n = '0') then
-        wait until d_in'event;
-        wait for RAM_TOH;
         work_ram(conv_integer(addr)) <= d_in;
     end if;
     end process;
 
-    p_read : process
+    p_read : process (ce_n, oe_n, addr)
     begin
-    wait on ce_n, oe_n, addr;
     if (ce_n= '0' and we_n = '1' and oe_n = '0') then
-        wait for RAM_TAOE;
         d_out <= work_ram(conv_integer(addr));
     else
         d_out <= (others => 'Z');
