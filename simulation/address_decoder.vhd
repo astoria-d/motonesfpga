@@ -76,12 +76,28 @@ begin
             rom_ce_n <= '1';
         end if;
 
+    end process;
+
+    ram_p : process (phi2)
+    begin
         -- ram range : 0 - 0x2000.
         -- 0x2000 is 0010_0000_0000_0000
         if ((addr(15) or addr(14) or addr(13)) = '1') then
             ram_ce_n <= '1';
         else
-            ram_ce_n <= '0';
+            if (R_nW = '0') then
+                --write
+                if (phi2'event and phi2 = '1') then
+                    ram_ce_n <= '0';
+                elsif (phi2'event and phi2 = '0') then
+                    ram_ce_n <= '1';
+                end if;
+            else 
+                --read
+                if (phi2'event and phi2 = '0') then
+                    ram_ce_n <= '0';
+                end if;
+            end if;
         end if;
     end process;
 

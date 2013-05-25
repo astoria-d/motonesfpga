@@ -172,6 +172,98 @@ begin
         aa16 <= conv_std_logic_vector(16#f0a3#, size16);
         wait for cpu_clk;
 
+        --w,r,w,r,w,r,w...
+        aa16 <= conv_std_logic_vector(100, size16);
+        dd8_in <= conv_std_logic_vector(100, size8);
+        rr_nw <= '0';
+        wait for cpu_clk;
+        rr_nw <= '1';
+        wait for cpu_clk;
+
+        aa16 <= conv_std_logic_vector(101, size16);
+        dd8_in <= conv_std_logic_vector(200, size8);
+        rr_nw <= '0';
+        wait for cpu_clk;
+        rr_nw <= '1';
+        wait for cpu_clk;
+
+        aa16 <= conv_std_logic_vector(401, size16);
+        dd8_in <= conv_std_logic_vector(30, size8);
+        rr_nw <= '0';
+        wait for cpu_clk;
+        rr_nw <= '1';
+        wait for cpu_clk;
+
+        --rom > ram > rom > ram
+        aa16 <= conv_std_logic_vector(16#f024#, size16);
+        rr_nw <= '1';
+        wait for cpu_clk;
+        aa16 <= conv_std_logic_vector(500, size16);
+        dd8_in <= dd8_out;
+        rr_nw <= '0';
+        wait for cpu_clk;
+
+        aa16 <= conv_std_logic_vector(16#8003#, size16);
+        rr_nw <= '1';
+        wait for cpu_clk;
+        aa16 <= conv_std_logic_vector(501, size16);
+        dd8_in <= dd8_out;
+        rr_nw <= '0';
+        wait for cpu_clk;
+
+        aa16 <= conv_std_logic_vector(16#8005#, size16);
+        rr_nw <= '1';
+        wait for cpu_clk;
+        aa16 <= conv_std_logic_vector(502, size16);
+        dd8_in <= dd8_out;
+        rr_nw <= '0';
+        wait for cpu_clk;
+
+        --read the written value
+        rr_nw <= '1';
+        aa16 <= conv_std_logic_vector(500, size16);
+        wait for cpu_clk;
+        rr_nw <= '1';
+        aa16 <= conv_std_logic_vector(501, size16);
+        wait for cpu_clk;
+        rr_nw <= '1';
+        aa16 <= conv_std_logic_vector(502, size16);
+        wait for cpu_clk;
+
+        --copy rom to ram.
+        for i in 0 to 50 loop
+            aa16 <= conv_std_logic_vector(16#8000# + i, size16);
+            rr_nw <= '1';
+            wait for cpu_clk;
+            aa16 <= conv_std_logic_vector(1024 + i, size16);
+            dd8_in <= dd8_out;
+            rr_nw <= '0';
+            wait for cpu_clk;
+        end loop;
+        --check the valude.
+        rr_nw <= '1';
+        for i in 0 to 50 loop
+            aa16 <= conv_std_logic_vector(1024 + i, size16);
+            wait for cpu_clk;
+        end loop;
+        
+        --copy ram to ram.
+        for i in 0 to 50 loop
+            aa16 <= conv_std_logic_vector(i, size16);
+            rr_nw <= '1';
+            wait for cpu_clk;
+            aa16 <= conv_std_logic_vector(2000 + i, size16);
+            dd8_in <= dd8_out;
+            rr_nw <= '0';
+            wait for cpu_clk;
+        end loop;
+        --check the valude.
+        rr_nw <= '1';
+        for i in 0 to 50 loop
+            aa16 <= conv_std_logic_vector(2000 + i, size16);
+            wait for cpu_clk;
+        end loop;
+        
         wait;
     end process;
 
