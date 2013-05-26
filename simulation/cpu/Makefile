@@ -1,5 +1,7 @@
 
-MODULES=cpu_reg.vhd mos6502.vhd data_latch.vhd #cpu_timing.vhd 
+MODULES=pc.vhd data_latch.vhd \
+		mos6502.vhd 
+		#cpu_timing.vhd 
 
 WORKDIR=../work
 
