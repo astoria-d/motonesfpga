@@ -13,7 +13,7 @@ architecture stimulus of testbench_motones_sim is
              );
     end component;
     signal reset_input : std_logic;
-    constant reset_time : time := 100 ns;
+    constant reset_time : time := 5000 ns;
 begin
 
     sim_board : motones_sim port map (reset_input);

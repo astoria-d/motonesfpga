@@ -22,12 +22,34 @@ end mos6502;
 
 architecture rtl of mos6502 is
 
-signal in_clk : std_logic;
+    component cpu_reg
+        generic (dsize : integer := 8);
+        port (  clk, en     : in std_logic;
+                d           : in std_logic_vector (dsize - 1 downto 0);
+                q           : out std_logic_vector (dsize - 1 downto 0)
+            );
+    end component;
+
+    signal trigger_clk : std_logic;
+    signal pc_l_en : std_logic;
+    signal internal_dbus : std_logic_vector (dsize - 1 downto 0);
+
 begin
 
-    in_clk <= input_clk;
-    phi1 <= in_clk;
-    phi2 <= not in_clk;
+    pc_l : cpu_reg generic map (dsize) 
+            port map(trigger_clk, pc_l_en, internal_dbus, internal_dbus);
+
+    -- clock generate.
+    phi1 <= input_clk;
+    phi2 <= not input_clk;
+    trigger_clk <= not input_clk;
+
+    reset_p : process (rst_n)
+    begin
+        if (rst_n'event and rst_n = '0') then
+
+        end if;
+    end process;
 
 end rtl;
 
