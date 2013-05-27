@@ -62,6 +62,16 @@ begin
         aa <= conv_std_logic_vector(16#8000# / 2, asize);
         wait for cpu_clk;
 
+        for i in 0 to 20 loop
+            aa <= conv_std_logic_vector(16#ffff# -10 + i, asize);
+            wait for cpu_clk;
+        end loop;
+
+        for i in 0 to 32 loop
+            aa <= conv_std_logic_vector(16#0060# + i, asize);
+            wait for cpu_clk;
+        end loop;
+
         cce_n <= '1';
 
         wait;
