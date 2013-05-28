@@ -3,21 +3,25 @@ MODULES=pc.vhd decoder.vhd data_latch.vhd \
 		mos6502.vhd 
 		#cpu_timing.vhd 
 
+TEST_MODULE= testbench_mos6502.vhd
+
 WORKDIR=../work
 
 GHDL_OPTION=--ieee=synopsys -fexplicit --workdir=$(WORKDIR)
 
+BIN=$(subst .vhd,, $(TEST_MODULE))
 
-OBJS = $(MODULES:.vhd=.o)
-TEST_MODULES = $(addprefix testbench_, $(MODULES))
+OBJS = $(MODULES:.vhd=.o) $(TEST_MODULE:.vhd=.o)
 
-all: $(addprefix $(WORKDIR)/, $(OBJS))
+all: $(BIN)
 
 .SUFFIXES: .vhd .o
-$(addprefix $(WORKDIR)/, $(OBJS)): $(MODULES) $(TEST_MODULES)
+
+$(addprefix $(WORKDIR)/, $(OBJS)): $(MODULES) $(TEST_MODULE)
 	ghdl -a $(GHDL_OPTION) $(subst .o,.vhd, $(subst $(WORKDIR)/,, $@))
-	ghdl -a $(GHDL_OPTION) $(subst .o,.vhd, $(subst $(WORKDIR)/,, testbench_$@))
-	ghdl -e $(GHDL_OPTION) $(subst .o,, $(subst $(WORKDIR)/,, testbench_$@))
+
+$(BIN): $(addprefix $(WORKDIR)/, $(OBJS))
+	ghdl -e $(GHDL_OPTION) $(BIN)
 
 clean:
 	-rm $(addprefix $(WORKDIR)/, $(OBJS))
