@@ -32,6 +32,8 @@ architecture rtl of mos6502 is
                 dbus_in_n       : in std_logic;
                 dbus_out_n      : in std_logic;
                 abus_out_n      : in std_logic;
+                addr_inc_n      : in std_logic;
+                addr_page_nxt_n : out std_logic;
                 int_d_bus       : inout std_logic_vector (dsize - 1 downto 0);
                 int_a_bus       : out std_logic_vector (dsize - 1 downto 0)
             );
@@ -53,7 +55,19 @@ architecture rtl of mos6502 is
                 pch_d_i_n       : out std_logic;
                 pch_d_o_n       : out std_logic;
                 pch_a_o_n       : out std_logic;
+                pc_inc_n        : out std_logic;
                 r_nw            : out std_logic
+            );
+    end component;
+
+    component instruction_reg
+        generic (
+                dsize : integer := 8
+                );
+        port (  
+                set_clk         : in std_logic;
+                cpu_d_bus       : in std_logic_vector (dsize - 1 downto 0);
+                to_decoder      : out std_logic_vector (dsize - 1 downto 0)
             );
     end component;
 
@@ -66,6 +80,9 @@ architecture rtl of mos6502 is
     signal pch_d_in_n : std_logic;
     signal pch_d_out_n : std_logic;
     signal pch_a_out_n : std_logic;
+    signal pc_inc_n : std_logic;
+    signal pc_page_nxt_n : std_logic;
+    signal dum_terminate : std_logic := 'Z';
 
     --internal bus (address hi/lo, data)
     signal internal_abus_h : std_logic_vector (dsize - 1 downto 0);
@@ -79,18 +96,21 @@ begin
     ---instances....
     pc_l : pc generic map (dsize, 16#00#) 
             port map(trigger_clk, rst_n, pcl_d_in_n, pcl_d_out_n, pcl_a_out_n, 
-                    internal_dbus, internal_abus_l);
+                    pc_inc_n, pc_page_nxt_n, internal_dbus, internal_abus_l);
     pc_h : pc generic map (dsize, 16#80#) 
             port map(trigger_clk, rst_n, pch_d_in_n, pch_d_out_n, pch_a_out_n, 
-                    internal_dbus, internal_abus_h);
+                    pc_page_nxt_n, dum_terminate, internal_dbus, internal_abus_h);
 
     dec_inst : decoder generic map (dsize) 
             port map(set_clk, trigger_clk, rst_n, irq_n, nmi_n, 
                     rdy, instruction, status_reg,
                     pcl_d_in_n, pcl_d_out_n, pcl_a_out_n,
                     pch_d_in_n, pch_d_out_n, pch_a_out_n,
-                    r_nw
+                    pc_inc_n, r_nw
                     );
+
+    instruction_register : instruction_reg generic map (dsize) 
+            port map(set_clk, d_io, instruction);
 
     -- clock generate.
     phi1 <= input_clk;

@@ -1,5 +1,5 @@
 
-MODULES=pc.vhd decoder.vhd data_latch.vhd \
+MODULES=cpu_registers.vhd decoder.vhd data_latch.vhd \
 		mos6502.vhd 
 		#cpu_timing.vhd 
 
