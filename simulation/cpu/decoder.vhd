@@ -15,6 +15,9 @@ entity decoder is
             pcl_d_i_n       : out std_logic;
             pcl_d_o_n       : out std_logic;
             pcl_a_o_n       : out std_logic;
+            pch_d_i_n       : out std_logic;
+            pch_d_o_n       : out std_logic;
+            pch_a_o_n       : out std_logic;
             r_nw            : out std_logic
         );
 end decoder;
@@ -35,8 +38,10 @@ begin
             if (set_clk'event and set_clk = '1') then
                 case cur_stat is
                     when reset0 => 
-                        pcl_d_i_n <= '0';
                     when fetch => 
+                        pcl_a_o_n <= '0';
+                        pch_a_o_n <= '0';
+                        r_nw <= '1';
                     when others => null;
                 end case;
             end if;
@@ -44,7 +49,6 @@ begin
             if (trig_clk'event and trig_clk = '1') then
                 case cur_stat is
                     when reset0 => 
-                        pcl_d_i_n <= '1';
                         cur_stat <= reset1;
                     when reset1 => 
                         cur_stat <= reset2;
@@ -57,7 +61,6 @@ begin
                     when reset5 => 
                         cur_stat <= fetch;
                     when fetch => 
-                        pcl_a_o_n <= '0';
                     when others => null;
                 end case;
             end if;
