@@ -7,9 +7,8 @@ generic (abus_size : integer := 16; dbus_size : integer := 8);
     port (  phi2        : in std_logic; --dropping edge syncronized clock.
             R_nW        : in std_logic; -- active high on read / active low on write.
             addr        : in std_logic_vector (abus_size - 1 downto 0);
-            d_in        : in std_logic_vector (dbus_size - 1 downto 0);
-            d_out       : out std_logic_vector (dbus_size - 1 downto 0)
-);
+            d_io        : inout std_logic_vector (dbus_size - 1 downto 0)
+        );
 end address_decoder;
 
 --/*
@@ -27,8 +26,7 @@ architecture rtl of address_decoder is
         generic (abus_size : integer := 16; dbus_size : integer := 8);
         port (  ce_n, oe_n, we_n  : in std_logic;   --select pin active low.
                 addr              : in std_logic_vector (abus_size - 1 downto 0);
-                d_in              : in std_logic_vector (dbus_size - 1 downto 0);
-                d_out             : out std_logic_vector (dbus_size - 1 downto 0)
+                d_io              : inout std_logic_vector (dbus_size - 1 downto 0)
         );
     end component;
     component prg_rom
@@ -51,7 +49,7 @@ architecture rtl of address_decoder is
     signal ram_we_n : std_logic;
 
     signal rom_out : std_logic_vector (dsize - 1 downto 0);
-    signal ram_out : std_logic_vector (dsize - 1 downto 0);
+    signal ram_io : std_logic_vector (dsize - 1 downto 0);
 begin
 
     romport : prg_rom generic map (rom_32k, dsize)
@@ -60,33 +58,35 @@ begin
     ram_we_n <= not R_nW;
     ramport : ram generic map (ram_2k, dsize)
             port map (ram_ce_n, ram_we_n, R_nW, 
-                    addr(ram_2k - 1 downto 0), d_in, ram_out);
+                    addr(ram_2k - 1 downto 0), ram_io);
 
-    d_out <= rom_out when rom_ce_n = '0' else
-            ram_out when ram_ce_n = '0' else
-            (others => 'Z');
+    rom_ce_n <= '0' when (addr(15) = '1' and R_nW = '1') else
+             '1' ;
+
+    --must explicitly drive to for inout port.
+    d_io <= 
+    "ZZZZZZZZ" when r_nw = '0' else
+    ram_io when ((addr(15) or addr(14) or addr(13)) = '0') else
+    rom_out when (addr(15) = '1') else
+    (others => 'Z');
+
+    ram_io <= 
+    "ZZZZZZZZ" 
+        when (r_nw = '1') else
+    d_io 
+        when (r_nw = '0' and ((addr(15) or addr(14) or addr(13)) = '0')) else
+    "ZZZZZZZZ";
 
     main_p : process (phi2)
     begin
-        -- rom range : 0x8000 - 0x1_0000
-        --rom_ce_n <= not addr(rom_32k);
-        if (addr(15) = '1' and R_nW = '1')  then
-            rom_ce_n <= '0';
-        else
-            rom_ce_n <= '1';
-        end if;
-
-    end process;
-
-    ram_p : process (phi2)
-    begin
-        -- ram range : 0 - 0x2000.
-        -- 0x2000 is 0010_0000_0000_0000
+            -- ram range : 0 - 0x2000.
+            -- 0x2000 is 0010_0000_0000_0000
         if ((addr(15) or addr(14) or addr(13)) = '1') then
             ram_ce_n <= '1';
         else
             if (R_nW = '0') then
                 --write
+                --write timing slided by half clock.
                 if (phi2'event and phi2 = '1') then
                     ram_ce_n <= '0';
                 elsif (phi2'event and phi2 = '0') then
@@ -99,6 +99,7 @@ begin
                 end if;
             end if;
         end if;
+
     end process;
 
 end rtl;

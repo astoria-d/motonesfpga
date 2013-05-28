@@ -74,8 +74,8 @@ begin
         port map (cpu_clk, rdy, reset_n, irq_n, nmi_n, dbe, r_nw, 
                 phi1, phi2, addr, d_in, d_out);
 
-    addr_dec_inst : address_decoder generic map (addr_size, data_size) 
-        port map (phi2, r_nw, addr, d_out, d_in);
+--    addr_dec_inst : address_decoder generic map (addr_size, data_size) 
+--        port map (phi2, r_nw, addr, d_out, d_in);
 
     --- generate base clock.
     clock_p: process

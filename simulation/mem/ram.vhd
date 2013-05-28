@@ -9,8 +9,6 @@ entity ram is
     port (  ce_n, oe_n, we_n : in std_logic;   --select pin active low.
             addr             : in std_logic_vector (abus_size - 1 downto 0);
             d_io             : inout std_logic_vector (dbus_size - 1 downto 0)
-            --d_in             : in std_logic_vector (dbus_size - 1 downto 0);
-            --d_out            : out std_logic_vector (dbus_size - 1 downto 0)
         );
 end ram;
 
