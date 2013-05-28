@@ -12,8 +12,9 @@ architecture stimulus of testbench_ram is
         generic (abus_size : integer := 16; dbus_size : integer := 8);
         port (  ce_n, oe_n, we_n  : in std_logic;   --select pin active low.
                 addr            : in std_logic_vector (abus_size - 1 downto 0);
-                d_in             : in std_logic_vector (dbus_size - 1 downto 0);
-                d_out            : out std_logic_vector (dbus_size - 1 downto 0)
+                d_io             : inout std_logic_vector (dbus_size - 1 downto 0)
+                --d_in             : in std_logic_vector (dbus_size - 1 downto 0);
+                --d_out            : out std_logic_vector (dbus_size - 1 downto 0)
             );
     end component;
     constant cpu_clk : time := 589 ns;
@@ -22,13 +23,14 @@ architecture stimulus of testbench_ram is
     constant asize_2k : integer := 11;      --2k = 11 bit width.
     signal cce_n, ooe_n, wwe_n : std_logic;
     signal aa       : std_logic_vector (asize_2k - 1 downto 0);
-    signal ddin         : std_logic_vector (dsize - 1 downto 0);
-    signal ddout        : std_logic_vector (dsize - 1 downto 0);
+    signal ddio         : std_logic_vector (dsize - 1 downto 0);
+    --signal ddin         : std_logic_vector (dsize - 1 downto 0);
+    --signal ddout        : std_logic_vector (dsize - 1 downto 0);
     signal clk : std_logic;
 
 begin
     dut0 : ram generic map (asize_2k, dsize) 
-        port map (cce_n, ooe_n, wwe_n, aa, ddin, ddout);
+        port map (cce_n, ooe_n, wwe_n, aa, ddio);
 
     p : process
     variable i : integer := 0;
@@ -41,7 +43,7 @@ begin
 
         for i in 0 to loopcnt loop
             aa <= conv_std_logic_vector(i, asize_2k);
-            ddin <= conv_std_logic_vector(i, dsize);
+            ddio <= conv_std_logic_vector(i, dsize);
             wait for cpu_clk;
         end loop;
 
@@ -49,7 +51,7 @@ begin
 
         for i in 0 to loopcnt loop
             aa <= conv_std_logic_vector(i, asize_2k);
-            ddin <= conv_std_logic_vector(i, dsize);
+            ddio <= conv_std_logic_vector(i, dsize);
             wait for cpu_clk;
         end loop;
 
@@ -57,16 +59,17 @@ begin
         ooe_n <= '1';
         wwe_n <= '1';
         for i in 0 to loopcnt loop
-            ddin <= conv_std_logic_vector(i, dsize);
+            ddio <= conv_std_logic_vector(i, dsize);
             aa <= conv_std_logic_vector(i, asize_2k);
             wait for cpu_clk / 2;
             wwe_n <= '0';
             wait for cpu_clk / 2;
             wwe_n <= '1';
-            --ddin <= (others => 'Z');
+            --ddio <= (others => 'Z');
         end loop;
 
         --read check.
+        ddio <= (others => 'Z');
         wwe_n <= '1';
         ooe_n <= '0';
 
@@ -91,16 +94,17 @@ begin
         wwe_n <= '1';
         ooe_n <= '1';
         aa <= conv_std_logic_vector(2**(asize_2k - 1), asize_2k);
-        ddin <= x"5a";
+        ddio <= x"5a";
         wait for cpu_clk / 2;
         wwe_n <= '0';
         wait for cpu_clk / 2;
 
+        ddio <= (others => 'Z');
         wwe_n <= '1';
         ooe_n <= '0';
         aa <= conv_std_logic_vector(2**(asize_2k - 1), asize_2k);
         wait for cpu_clk;
-        assert (ddout = x"5a")
+        assert (ddio = x"5a")
             report "mem r/w error." severity failure;
 
         write(out_line, string'("mem test2"));
@@ -108,16 +112,18 @@ begin
         wwe_n <= '1';
         ooe_n <= '1';
         aa <= conv_std_logic_vector(2**asize_2k - 1, asize_2k);
-        ddin <= x"aa";
+        ddio <= x"aa";
         wait for cpu_clk / 2;
+
         wwe_n <= '0';
         wait for cpu_clk / 2;
 
+        ddio <= (others => 'Z');
         wwe_n <= '1';
         ooe_n <= '0';
         aa <= conv_std_logic_vector(2**asize_2k - 1, asize_2k);
         wait for cpu_clk;
-        assert (ddout = x"aa")
+        assert (ddio = x"aa")
             report "mem r/w error." severity failure;
 
         write(out_line, string'("mem test3"));
@@ -126,16 +132,17 @@ begin
         ooe_n <= '1';
         -- address wrapped..
         aa <= conv_std_logic_vector(2**asize_2k, asize_2k);       
-        ddin <= x"ff";
+        ddio <= x"ff";
         wait for cpu_clk / 2;
         wwe_n <= '0';
         wait for cpu_clk / 2;
 
+        ddio <= (others => 'Z');
         wwe_n <= '1';
         ooe_n <= '0';
         aa <= conv_std_logic_vector(2**asize_2k, asize_2k);       
         wait for cpu_clk;
-        assert (ddout = x"ff")
+        assert (ddio = x"ff")
             report "mem test error." severity failure;
 
         write(out_line, string'("mem test4"));
@@ -144,7 +151,7 @@ begin
         wwe_n <= '1';
         for i in 0 to 50 loop
             aa <= conv_std_logic_vector(100 + i * 2, asize_2k);
-            ddin <= conv_std_logic_vector(i * 3, dsize);
+            ddio <= conv_std_logic_vector(i * 3, dsize);
             wait for cpu_clk / 2;
             wwe_n <= '0';
             wait for cpu_clk / 2;
@@ -153,11 +160,11 @@ begin
 
         wwe_n <= '1';
         ooe_n <= '0';
-        ddin <= (others => 'Z');
+        ddio <= (others => 'Z');
         for i in 0 to 50 loop
             aa <= conv_std_logic_vector(100 + i * 2, asize_2k);
             wait for cpu_clk;
-            assert (ddout = conv_std_logic_vector(i * 3, dsize))
+            assert (ddio = conv_std_logic_vector(i * 3, dsize))
                 report "mem test error." severity failure;
         end loop;
 
