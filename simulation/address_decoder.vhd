@@ -92,11 +92,13 @@ begin
                 elsif (phi2'event and phi2 = '0') then
                     ram_ce_n <= '1';
                 end if;
-            else 
+            elsif (R_nW = '1') then 
                 --read
                 if (phi2'event and phi2 = '0') then
                     ram_ce_n <= '0';
                 end if;
+            else
+                ram_ce_n <= '1';
             end if;
         end if;
 

@@ -27,8 +27,7 @@ architecture rtl of motones_sim is
                 phi1        : out std_logic;
                 phi2        : out std_logic;
                 addr        : out std_logic_vector ( asize - 1 downto 0);
-                d_in        : in std_logic_vector ( dsize - 1 downto 0);
-                d_out       : out std_logic_vector ( dsize - 1 downto 0)
+                d_io        : inout std_logic_vector ( dsize - 1 downto 0)
         );
     end component;
 
@@ -62,8 +61,7 @@ architecture rtl of motones_sim is
     signal rdy, irq_n, nmi_n, dbe, r_nw : std_logic;
     signal phi1, phi2 : std_logic;
     signal addr : std_logic_vector( addr_size - 1 downto 0);
-    signal d_in : std_logic_vector( data_size - 1 downto 0);
-    signal d_out : std_logic_vector( data_size - 1 downto 0);
+    signal d_io : std_logic_vector( data_size - 1 downto 0);
 
 begin
 
@@ -72,7 +70,7 @@ begin
 
     cpu_inst : mos6502 generic map (data_size, addr_size) 
         port map (cpu_clk, rdy, reset_n, irq_n, nmi_n, dbe, r_nw, 
-                phi1, phi2, addr, d_in, d_out);
+                phi1, phi2, addr, d_io);
 
 --    addr_dec_inst : address_decoder generic map (addr_size, data_size) 
 --        port map (phi2, r_nw, addr, d_out, d_in);
