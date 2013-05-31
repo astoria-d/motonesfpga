@@ -67,7 +67,7 @@ entity instruction_reg is
             dsize : integer := 8
             );
     port (  
-            set_clk         : in std_logic;
+            trig_clk        : in std_logic;
             cpu_d_bus       : in std_logic_vector (dsize - 1 downto 0);
             to_decoder      : out std_logic_vector (dsize - 1 downto 0)
         );
@@ -75,9 +75,9 @@ end instruction_reg;
 
 architecture rtl of instruction_reg is
 begin
-    process (set_clk)
+    process (trig_clk)
     begin
-        if ( set_clk'event and set_clk = '1') then
+        if ( trig_clk'event and trig_clk = '1') then
             to_decoder <= cpu_d_bus;
         end if;
     end process;

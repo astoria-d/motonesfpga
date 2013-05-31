@@ -65,7 +65,7 @@ architecture rtl of mos6502 is
                 dsize : integer := 8
                 );
         port (  
-                set_clk         : in std_logic;
+                trig_clk         : in std_logic;
                 cpu_d_bus       : in std_logic_vector (dsize - 1 downto 0);
                 to_decoder      : out std_logic_vector (dsize - 1 downto 0)
             );
@@ -110,7 +110,7 @@ begin
                     );
 
     instruction_register : instruction_reg generic map (dsize) 
-            port map(set_clk, d_io, instruction);
+            port map(trigger_clk, d_io, instruction);
 
     -- clock generate.
     phi1 <= input_clk;
