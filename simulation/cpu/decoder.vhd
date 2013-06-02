@@ -165,64 +165,6 @@ begin
                         report ("unknow status") severity failure;
                 when others => 
                     null;
---                when exec => 
---                    d_print(string'(" exec and decode "), conv_integer(instruction));
---                    ---one byte instruction decoding.
---                    if instruction = conv_std_logic_vector(16#78#, dsize) then
---                        --0x78 = 120
---                        d_print(string'("   sei"));
---                        pcl_a_oe_n <= '1';
---                        pch_a_oe_n <= '1';
---                        pc_inc_n <= '1';
---                        ---set flag operation here.
---                        cur_status <= fetch;
---                    elsif instruction = conv_std_logic_vector(16#a2#, dsize) then
---                        --0xa2 = 162 
---                        d_print(string'("   ldx 0"));
---                        pcl_a_oe_n <= '0';
---                        pch_a_oe_n <= '0';
---                        pc_inc_n <= '0';
---                        ---load X operation here.
---                        cur_status <= fetch;
---                    elsif instruction = conv_std_logic_vector(16#9a#, dsize) then
---                        --0x9a = 154
---                        d_print(string'("   txs"));
---                        pcl_a_oe_n <= '1';
---                        pch_a_oe_n <= '1';
---                        pc_inc_n <= '1';
---                        cur_status <= fetch;
---                    elsif instruction = conv_std_logic_vector(16#4c#, dsize) then
---                        --0x4c = 76
---                        cur_status <= jmp1;
---                        d_print(string'("   jmp 0"));
---                        pc_inc_n <= '0';
---                        pcl_a_oe_n <= '0';
---                        pch_a_oe_n <= '0';
---                        cur_status <= jmp1;
---
---                    else
---                        cur_status <= unknown_stat;
---                        d_print(string'("unknown inst."));
---                        pc_inc_n <= '1';
---                        pcl_a_oe_n <= '1';
---                        pch_a_oe_n <= '1';
---                    end if;
---
---                when ldx1 => 
---                    d_print(string'("   ldx 1"));
---                    cur_status <= unknown_stat;
---                when jmp1 => 
---                    d_print(string'("   jmp 1"));
---                    pc_inc_n <= '0';
---                    pcl_a_oe_n <= '1';
---                    pch_a_oe_n <= '1';
---                    cur_status <= fetch;
---                when jmp2 => 
---                    d_print(string'("   jmp 2"));
---
---                when others => null;
---                    d_print(string'("unknown status."));
---                    cur_status <= unknown_stat;
             end case; --case cur_status
 
 
