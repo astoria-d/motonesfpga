@@ -160,10 +160,10 @@ begin
                     dbuf_int_oe_n, dbuf_ext_oe_n, internal_dbus, d_io);
 
     x_reg : dff generic map (dsize) 
-            port map(set_clk, x_we_n, x_oe_n, internal_dbus, internal_dbus);
+            port map(trigger_clk, x_we_n, x_oe_n, internal_dbus, internal_dbus);
 
     y_reg : dff generic map (dsize) 
-            port map(set_clk, y_we_n, y_oe_n, internal_dbus, internal_dbus);
+            port map(trigger_clk, y_we_n, y_oe_n, internal_dbus, internal_dbus);
 
     -- clock generate.
     phi1 <= input_clk;

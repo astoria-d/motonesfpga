@@ -356,7 +356,8 @@ begin
                             pch_a_oe_n <= '0';
                             pc_inc_n <= '0';
                             inst_we_n <= '1';
-                            cur_status <= exec0;
+                            cur_status <= fetch;
+                            x_we_n <= '0';
                         elsif instruction (4 downto 2) = "001" then
                             cur_mode <= ad_zp0;
                         elsif instruction (4 downto 2) = "010" then
@@ -485,8 +486,7 @@ begin
                             if instruction (7 downto 5) = "101" then
                             --ldx
                                 --reg_x <= dbus_buffer;
-                                x_we_n <= '0';
-                                cur_status <= fetch;
+                                --cur_status <= fetch;
                             end if;
                         end if;
                     end if; --if instruction (1 downto 0) = "01"
