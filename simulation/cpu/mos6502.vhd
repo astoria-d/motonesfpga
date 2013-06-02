@@ -58,6 +58,14 @@ architecture rtl of mos6502 is
                 pc_inc_n        : out std_logic;
                 inst_we_n       : out std_logic;
                 inst_oe_n       : out std_logic;
+                dbuf_int_oe_n   : out std_logic;
+                dbuf_ext_oe_n   : out std_logic;
+                dbuf_int_we_n   : out std_logic;
+                dbuf_ext_we_n   : out std_logic;
+                x_we_n          : out std_logic;
+                x_oe_n          : out std_logic;
+                y_we_n          : out std_logic;
+                y_oe_n          : out std_logic;
                 r_nw            : out std_logic
             );
     end component;
@@ -72,6 +80,21 @@ architecture rtl of mos6502 is
                 oe_n    : in std_logic;
                 d       : in std_logic_vector (dsize - 1 downto 0);
                 q       : out std_logic_vector (dsize - 1 downto 0)
+            );
+    end component;
+
+    component dbus_buf
+        generic (
+                dsize : integer := 8
+                );
+        port (  
+                clk     : in std_logic;
+                int_we_n    : in std_logic;
+                ext_we_n    : in std_logic;
+                int_oe_n    : in std_logic;
+                ext_oe_n    : in std_logic;
+                int_dbus : inout std_logic_vector (dsize - 1 downto 0);
+                ext_dbus : inout std_logic_vector (dsize - 1 downto 0)
             );
     end component;
 
@@ -90,6 +113,15 @@ architecture rtl of mos6502 is
 
     signal inst_we_n : std_logic;
     signal inst_oe_n : std_logic;
+    signal dbuf_int_oe_n : std_logic;
+    signal dbuf_ext_oe_n : std_logic;
+    signal dbuf_int_we_n : std_logic;
+    signal dbuf_ext_we_n : std_logic;
+
+    signal x_we_n : std_logic;
+    signal x_oe_n : std_logic;
+    signal y_we_n : std_logic;
+    signal y_oe_n : std_logic;
 
     --internal bus (address hi/lo, data)
     signal internal_abus_h : std_logic_vector (dsize - 1 downto 0);
@@ -113,11 +145,25 @@ begin
                     rdy, instruction, status_reg,
                     pcl_d_we_n, pcl_d_oe_n, pcl_a_oe_n,
                     pch_d_we_n, pch_d_oe_n, pch_a_oe_n,
-                    pc_inc_n, inst_we_n, inst_oe_n, r_nw
-                    );
+                    pc_inc_n, inst_we_n, inst_oe_n, 
+                    dbuf_int_oe_n, dbuf_ext_oe_n,
+                    dbuf_int_we_n, dbuf_ext_we_n, 
+                    x_we_n, x_oe_n, 
+                    y_we_n, y_oe_n, 
+                    r_nw);
 
     instruction_register : dff generic map (dsize) 
             port map(trigger_clk, inst_we_n, inst_oe_n, d_io, instruction);
+
+    data_bus_buffer : dbus_buf generic map (dsize) 
+            port map(set_clk, dbuf_int_we_n, dbuf_ext_we_n, 
+                    dbuf_int_oe_n, dbuf_ext_oe_n, internal_dbus, d_io);
+
+    x_reg : dff generic map (dsize) 
+            port map(set_clk, x_we_n, x_oe_n, internal_dbus, internal_dbus);
+
+    y_reg : dff generic map (dsize) 
+            port map(set_clk, y_we_n, y_oe_n, internal_dbus, internal_dbus);
 
     -- clock generate.
     phi1 <= input_clk;

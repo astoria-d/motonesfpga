@@ -55,12 +55,11 @@ begin
 end rtl;
 
 ----------------------------------------
---- instruction register declaration
+--- normal d-flipflop declaration
 ----------------------------------------
 
 library ieee;
 use ieee.std_logic_1164.all;
-use ieee.std_logic_arith.conv_std_logic_vector;
 
 entity dff is 
     generic (
@@ -88,5 +87,58 @@ begin
 
     q <= val when oe_n = '0' else
         (others => 'Z');
+end rtl;
+
+----------------------------------------
+--- data bus buffer register
+----------------------------------------
+
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity dbus_buf is 
+    generic (
+            dsize : integer := 8
+            );
+    port (  
+            clk     : in std_logic;
+            int_we_n    : in std_logic;
+            ext_we_n    : in std_logic;
+            int_oe_n    : in std_logic;
+            ext_oe_n    : in std_logic;
+            int_dbus : inout std_logic_vector (dsize - 1 downto 0);
+            ext_dbus : inout std_logic_vector (dsize - 1 downto 0)
+        );
+end dbus_buf;
+
+architecture rtl of dbus_buf is
+component dff
+    generic (
+            dsize : integer := 8
+            );
+    port (  
+            clk     : in std_logic;
+            we_n    : in std_logic;
+            oe_n    : in std_logic;
+            d       : in std_logic_vector (dsize - 1 downto 0);
+            q       : out std_logic_vector (dsize - 1 downto 0)
+        );
+end component;
+signal we_n : std_logic;
+signal oe_n : std_logic;
+signal d : std_logic_vector (dsize - 1 downto 0);
+signal q : std_logic_vector (dsize - 1 downto 0);
+begin
+    oe_n <= not (int_oe_n nand ext_oe_n);
+    we_n <= not (int_we_n nand ext_we_n);
+    d <= int_dbus when int_we_n = '0' else
+         ext_dbus when ext_we_n = '0' else
+         (others => 'Z');
+    int_dbus <= q when int_oe_n = '0' else
+         (others =>'Z');
+    ext_dbus <= q when ext_oe_n = '0' else
+         (others =>'Z');
+    dff_inst : dff generic map (dsize) 
+                    port map(clk, we_n, oe_n, d, q);
 end rtl;
 
