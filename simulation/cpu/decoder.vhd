@@ -173,9 +173,6 @@ begin
                     r_nw <= '1';
                     pc_inc_n <= '0';
                     dbuf_int_oe_n <= '1';
-                    dl_int_d_oe_n <= '1';
-                    dl_int_al_oe_n <= '1';
-                    dl_int_ah_oe_n <= '1';
                     cur_status <= decode;
                 when unknown_stat => 
                     assert false 
