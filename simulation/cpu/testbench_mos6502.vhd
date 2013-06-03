@@ -45,6 +45,9 @@ architecture stimulus of testbench_mos6502 is
 
 begin
 
+    irq_n <= '0';
+    nmi_n <= '0';
+    rdy <= '1';
     cpu_inst : mos6502 generic map (dsize, asize) 
         port map (phi0, rdy, rst_n, irq_n, nmi_n, dbe, r_nw, 
                 phi1, phi2, addr, cpu_d);

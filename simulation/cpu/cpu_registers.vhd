@@ -90,6 +90,40 @@ begin
 end rtl;
 
 ----------------------------------------
+--- normal data latch declaration
+----------------------------------------
+
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity latch is 
+    generic (
+            dsize : integer := 8
+            );
+    port (  
+            we_n    : in std_logic;
+            oe_n    : in std_logic;
+            d       : in std_logic_vector (dsize - 1 downto 0);
+            q       : out std_logic_vector (dsize - 1 downto 0)
+        );
+end latch;
+
+architecture rtl of latch is
+signal val : std_logic_vector (dsize - 1 downto 0);
+begin
+
+    process (we_n, d)
+    begin
+        if ( we_n = '0') then
+            val <= d;
+        end if;
+    end process;
+
+    q <= val when oe_n = '0' else
+        (others => 'Z');
+end rtl;
+
+----------------------------------------
 --- data bus buffer register
 ----------------------------------------
 
@@ -129,8 +163,8 @@ signal oe_n : std_logic;
 signal d : std_logic_vector (dsize - 1 downto 0);
 signal q : std_logic_vector (dsize - 1 downto 0);
 begin
-    oe_n <= not (int_oe_n nand ext_oe_n);
-    we_n <= not (int_we_n nand ext_we_n);
+    oe_n <= (int_oe_n and ext_oe_n);
+    we_n <= (int_we_n and ext_we_n);
     d <= int_dbus when int_we_n = '0' else
          ext_dbus when ext_we_n = '0' else
          (others => 'Z');
@@ -140,5 +174,53 @@ begin
          (others =>'Z');
     dff_inst : dff generic map (dsize) 
                     port map(clk, we_n, oe_n, d, q);
+end rtl;
+
+----------------------------------------
+--- input data latch register
+----------------------------------------
+
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity input_dl is 
+    generic (
+            dsize : integer := 8
+            );
+    port (  
+            we_n        : in std_logic;
+            int_d_oe_n  : in std_logic;
+            int_al_oe_n : in std_logic;
+            int_ah_oe_n : in std_logic;
+            int_dbus    : inout std_logic_vector (dsize - 1 downto 0);
+            int_abus_l  : out std_logic_vector (dsize - 1 downto 0);
+            int_abus_h  : out std_logic_vector (dsize - 1 downto 0)
+        );
+end input_dl;
+
+architecture rtl of input_dl is
+component latch
+    generic (
+            dsize : integer := 8
+            );
+    port (  
+            we_n    : in std_logic;
+            oe_n    : in std_logic;
+            d       : in std_logic_vector (dsize - 1 downto 0);
+            q       : out std_logic_vector (dsize - 1 downto 0)
+        );
+end component;
+signal oe_n : std_logic;
+signal q : std_logic_vector (dsize - 1 downto 0);
+begin
+    oe_n <= (int_d_oe_n and int_al_oe_n and int_ah_oe_n);
+    int_dbus <= q when int_d_oe_n = '0' else
+         (others =>'Z');
+    int_abus_l <= q when int_al_oe_n = '0' else
+         (others =>'Z');
+    int_abus_h <= q when int_ah_oe_n = '0' else
+         (others =>'Z');
+    latch_inst : latch generic map (dsize) 
+                    port map(we_n, oe_n, int_dbus, q);
 end rtl;
 
