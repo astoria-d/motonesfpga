@@ -224,3 +224,52 @@ begin
                     port map(we_n, oe_n, int_dbus, q);
 end rtl;
 
+----------------------------------------
+--- stack pointer register
+----------------------------------------
+
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity sp is 
+    generic (
+            dsize : integer := 8
+            );
+    port (  
+            clk         : in std_logic;
+            we_n        : in std_logic;
+            int_d_oe_n  : in std_logic;
+            int_a_oe_n  : in std_logic;
+            int_dbus    : inout std_logic_vector (dsize - 1 downto 0);
+            int_abus_l  : out std_logic_vector (dsize - 1 downto 0);
+            int_abus_h  : out std_logic_vector (dsize - 1 downto 0)
+        );
+end sp;
+
+architecture rtl of sp is
+component dff
+    generic (
+            dsize : integer := 8
+            );
+    port (  
+            clk         : in std_logic;
+            we_n    : in std_logic;
+            oe_n    : in std_logic;
+            d       : in std_logic_vector (dsize - 1 downto 0);
+            q       : out std_logic_vector (dsize - 1 downto 0)
+        );
+end component;
+signal oe_n : std_logic;
+signal q : std_logic_vector (dsize - 1 downto 0);
+begin
+    oe_n <= (int_d_oe_n and int_a_oe_n);
+    int_dbus <= q when int_d_oe_n = '0' else
+         (others =>'Z');
+    int_abus_l <= q when int_a_oe_n = '0' else
+         (others =>'Z');
+    int_abus_h <= "00000001" when int_a_oe_n = '0' else
+         (others =>'Z');
+    dff_inst : dff generic map (dsize) 
+                    port map(clk, we_n, oe_n, int_dbus, q);
+end rtl;
+

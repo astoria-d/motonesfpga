@@ -31,6 +31,9 @@ entity decoder is
             dl_int_d_oe_n   : out std_logic;
             dl_int_al_oe_n  : out std_logic;
             dl_int_ah_oe_n  : out std_logic;
+            sp_we_n         : out std_logic;
+            sp_int_d_oe_n   : out std_logic;
+            sp_int_a_oe_n   : out std_logic;
             x_we_n          : out std_logic;
             x_oe_n          : out std_logic;
             y_we_n          : out std_logic;
@@ -142,6 +145,9 @@ begin
             dl_int_d_oe_n <= '1';
             dl_int_al_oe_n <= '1';
             dl_int_ah_oe_n <= '1';
+            sp_we_n <= '1';
+            sp_int_d_oe_n <= '1';
+            sp_int_a_oe_n <= '1';
             x_we_n <= '1';
             x_oe_n <= '1';
             y_we_n <= '1';
@@ -170,6 +176,8 @@ begin
                     pch_a_oe_n <= '0';
                     inst_we_n <= '0';
                     x_we_n <= '1';
+                    sp_we_n <= '1';
+                    x_oe_n <= '1';
                     r_nw <= '1';
                     pc_inc_n <= '0';
                     dbuf_int_oe_n <= '1';
@@ -185,6 +193,8 @@ begin
 
             if cur_status = decode then
                 d_print("decode inst: " & conv_hex8(conv_integer(instruction)));
+                --grab instruction register data.
+                inst_we_n <= '1';
 
                 ---single byte instruction.
                 single_inst := false;
@@ -195,7 +205,8 @@ begin
                 elsif instruction = conv_std_logic_vector(16#9a#, dsize) then
                     single_inst := true;
                     d_print("txs");
-                    --sp <= reg_x;
+                    sp_we_n <= '0';
+                    x_oe_n <= '0';
                 elsif instruction = conv_std_logic_vector(16#aa#, dsize) then
                     single_inst := true;
                     d_print("tax");
@@ -312,7 +323,6 @@ begin
                             pch_a_oe_n <= '0';
                             pc_inc_n <= '0';
                             dbuf_int_oe_n <= '0';
-                            inst_we_n <= '1';
                             cur_status <= fetch;
                         elsif instruction (4 downto 2) = "001" then
                             cur_mode <= ad_zp0;
@@ -375,7 +385,8 @@ begin
                                 pcl_a_oe_n <= '0';
                                 pch_a_oe_n <= '0';
                                 pc_inc_n <= '0';
-                                cur_status <= exec0;
+                                dbuf_int_oe_n <= '0';
+                                cur_status <= fetch;
                             elsif instruction (4 downto 2) = "001" then
                                 cur_mode <= ad_zp0;
                             elsif instruction (4 downto 2) = "011" then
@@ -384,6 +395,7 @@ begin
                                 pcl_a_oe_n <= '0';
                                 pch_a_oe_n <= '0';
                                 pc_inc_n <= '0';
+                                dbuf_int_oe_n <= '0';
                                 cur_status <= exec0;
                             elsif instruction (4 downto 2) = "101" then
                                 cur_mode <= ad_zpx0;

@@ -64,6 +64,9 @@ architecture rtl of mos6502 is
                 dl_int_d_oe_n   : out std_logic;
                 dl_int_al_oe_n  : out std_logic;
                 dl_int_ah_oe_n  : out std_logic;
+                sp_we_n         : out std_logic;
+                sp_int_d_oe_n   : out std_logic;
+                sp_int_a_oe_n   : out std_logic;
                 x_we_n          : out std_logic;
                 x_oe_n          : out std_logic;
                 y_we_n          : out std_logic;
@@ -115,6 +118,21 @@ architecture rtl of mos6502 is
             );
     end component;
 
+    component sp
+        generic (
+                dsize : integer := 8
+                );
+        port (  
+                clk         : in std_logic;
+                we_n        : in std_logic;
+                int_d_oe_n  : in std_logic;
+                int_a_oe_n  : in std_logic;
+                int_dbus    : inout std_logic_vector (dsize - 1 downto 0);
+                int_abus_l  : out std_logic_vector (dsize - 1 downto 0);
+                int_abus_h  : out std_logic_vector (dsize - 1 downto 0)
+            );
+    end component;
+
     signal set_clk : std_logic;
     signal trigger_clk : std_logic;
 
@@ -136,6 +154,10 @@ architecture rtl of mos6502 is
     signal dl_int_d_oe_n : std_logic;
     signal dl_int_al_oe_n : std_logic;
     signal dl_int_ah_oe_n : std_logic;
+
+    signal sp_we_n : std_logic;
+    signal sp_int_d_oe_n : std_logic;
+    signal sp_int_a_oe_n : std_logic;
 
     signal x_we_n : std_logic;
     signal x_oe_n : std_logic;
@@ -168,6 +190,7 @@ begin
                     inst_we_n, 
                     dbuf_int_oe_n, dbuf_ext_oe_n, dbuf_int_we_n, dbuf_ext_we_n, 
                     dl_int_d_oe_n, dl_int_al_oe_n, dl_int_ah_oe_n,
+                    sp_we_n, sp_int_d_oe_n, sp_int_a_oe_n,
                     x_we_n, x_oe_n, y_we_n, y_oe_n, 
                     r_nw);
 
@@ -180,6 +203,10 @@ begin
 
     input_data_latch : input_dl generic map (dsize) 
             port map('0', dl_int_d_oe_n, dl_int_al_oe_n, dl_int_ah_oe_n, 
+                    internal_dbus, internal_abus_l, internal_abus_h);
+
+    stack_pointer : sp generic map (dsize) 
+            port map(trigger_clk, sp_we_n, sp_int_d_oe_n, sp_int_a_oe_n, 
                     internal_dbus, internal_abus_l, internal_abus_h);
 
     x_reg : dff generic map (dsize) 
