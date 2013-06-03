@@ -57,7 +57,6 @@ architecture rtl of mos6502 is
                 pch_a_oe_n      : out std_logic;
                 pc_inc_n        : out std_logic;
                 inst_we_n       : out std_logic;
-                inst_oe_n       : out std_logic;
                 dbuf_int_oe_n   : out std_logic;
                 dbuf_ext_oe_n   : out std_logic;
                 dbuf_int_we_n   : out std_logic;
@@ -130,7 +129,6 @@ architecture rtl of mos6502 is
     signal dum_terminate : std_logic := 'Z';
 
     signal inst_we_n : std_logic;
-    signal inst_oe_n : std_logic;
     signal dbuf_int_oe_n : std_logic;
     signal dbuf_ext_oe_n : std_logic;
     signal dbuf_int_we_n : std_logic;
@@ -167,15 +165,14 @@ begin
                     pcl_d_we_n, pcl_d_oe_n, pcl_a_oe_n,
                     pch_d_we_n, pch_d_oe_n, pch_a_oe_n,
                     pc_inc_n, 
-                    inst_we_n, inst_oe_n, 
+                    inst_we_n, 
                     dbuf_int_oe_n, dbuf_ext_oe_n, dbuf_int_we_n, dbuf_ext_we_n, 
                     dl_int_d_oe_n, dl_int_al_oe_n, dl_int_ah_oe_n,
-                    x_we_n, x_oe_n, 
-                    y_we_n, y_oe_n, 
+                    x_we_n, x_oe_n, y_we_n, y_oe_n, 
                     r_nw);
 
     instruction_register : dff generic map (dsize) 
-            port map(trigger_clk, inst_we_n, inst_oe_n, d_io, instruction);
+            port map(trigger_clk, inst_we_n, '0', d_io, instruction);
 
     data_bus_buffer : dbus_buf generic map (dsize) 
             port map(set_clk, dbuf_int_we_n, dbuf_ext_we_n, 

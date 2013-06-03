@@ -24,7 +24,6 @@ entity decoder is
             pch_a_oe_n      : out std_logic;
             pc_inc_n        : out std_logic;
             inst_we_n       : out std_logic;
-            inst_oe_n       : out std_logic;
             dbuf_int_oe_n   : out std_logic;
             dbuf_ext_oe_n   : out std_logic;
             dbuf_int_we_n   : out std_logic;
@@ -127,14 +126,22 @@ begin
         if (res_n'event and res_n = '0') then
             d_print(string'("reset"));
             cur_status <= reset0;
-            pcl_d_oe_n <= '1';
-            pch_d_oe_n <= '1';
+
             pcl_we_n <= '1';
+            pcl_d_oe_n <= '1';
+            pcl_a_oe_n <= '1';
             pch_we_n <= '1';
-            dbuf_int_oe_n <= '0';
-            dbuf_ext_we_n <= '0';
+            pch_d_oe_n <= '1';
+            pch_a_oe_n <= '1';
+            pc_inc_n <= '1';
+            inst_we_n <= '1';
+            dbuf_int_oe_n <= '1';
             dbuf_ext_oe_n <= '1';
             dbuf_int_we_n <= '1';
+            dbuf_ext_we_n <= '0';
+            dl_int_d_oe_n <= '1';
+            dl_int_al_oe_n <= '1';
+            dl_int_ah_oe_n <= '1';
             x_we_n <= '1';
             x_oe_n <= '1';
             y_we_n <= '1';
@@ -162,10 +169,10 @@ begin
                     pcl_a_oe_n <= '0';
                     pch_a_oe_n <= '0';
                     inst_we_n <= '0';
-                    inst_oe_n <= '0';
                     x_we_n <= '1';
                     r_nw <= '1';
                     pc_inc_n <= '0';
+                    dbuf_int_oe_n <= '1';
                     dl_int_d_oe_n <= '1';
                     dl_int_al_oe_n <= '1';
                     dl_int_ah_oe_n <= '1';
@@ -307,6 +314,7 @@ begin
                             pcl_a_oe_n <= '0';
                             pch_a_oe_n <= '0';
                             pc_inc_n <= '0';
+                            dbuf_int_oe_n <= '0';
                             inst_we_n <= '1';
                             cur_status <= fetch;
                         elsif instruction (4 downto 2) = "001" then
