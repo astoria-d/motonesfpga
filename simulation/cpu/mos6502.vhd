@@ -33,7 +33,8 @@ architecture rtl of mos6502 is
                 dbus_oe_n       : in std_logic;
                 abus_oe_n       : in std_logic;
                 addr_inc_n      : in std_logic;
-                addr_carry_n    : out std_logic;
+                add_carry       : in std_logic;
+                inc_carry       : out std_logic;
                 int_d_bus       : inout std_logic_vector (dsize - 1 downto 0);
                 int_a_bus       : out std_logic_vector (dsize - 1 downto 0)
             );
@@ -143,6 +144,7 @@ architecture rtl of mos6502 is
     signal pch_d_oe_n : std_logic;
     signal pch_a_oe_n : std_logic;
     signal pc_inc_n : std_logic;
+    signal pc_cry : std_logic;
     signal pc_cry_n : std_logic;
     signal dum_terminate : std_logic := 'Z';
 
@@ -176,10 +178,10 @@ begin
     ---instances....
     pc_l : pc generic map (dsize, 16#00#) 
             port map(trigger_clk, rst_n, pcl_d_we_n, pcl_d_oe_n, pcl_a_oe_n, 
-                    pc_inc_n, pc_cry_n, internal_dbus, internal_abus_l);
+                    pc_inc_n, '0', pc_cry, internal_dbus, internal_abus_l);
     pc_h : pc generic map (dsize, 16#80#) 
             port map(trigger_clk, rst_n, pch_d_we_n, pch_d_oe_n, pch_a_oe_n, 
-                    pc_cry_n, dum_terminate, internal_dbus, internal_abus_h);
+                    pc_cry_n, pc_cry, dum_terminate, internal_dbus, internal_abus_h);
 
     dec_inst : decoder generic map (dsize) 
             port map(set_clk, trigger_clk, rst_n, irq_n, nmi_n, 
@@ -220,6 +222,7 @@ begin
     phi2 <= not input_clk;
     set_clk <= input_clk;
     trigger_clk <= not input_clk;
+    pc_cry_n <= not pc_cry;
 
     addr(asize - 1 downto dsize) <= internal_abus_h;
     addr(dsize - 1 downto 0) <= internal_abus_l;
