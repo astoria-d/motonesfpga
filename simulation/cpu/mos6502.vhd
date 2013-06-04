@@ -49,7 +49,7 @@ architecture rtl of mos6502 is
                 nmi_n           : in std_logic;
                 rdy             : in std_logic;
                 instruction     : in std_logic_vector (dsize - 1 downto 0);
-                status_reg      : in std_logic_vector (dsize - 1 downto 0);
+                status_reg      : inout std_logic_vector (dsize - 1 downto 0);
                 pcl_we_n        : out std_logic;
                 pcl_d_oe_n      : out std_logic;
                 pcl_a_oe_n      : out std_logic;
@@ -134,6 +134,22 @@ architecture rtl of mos6502 is
             );
     end component;
 
+    component processor_status
+        generic (
+                dsize : integer := 8
+                );
+        port (  
+                clk         : in std_logic;
+                res_n       : in std_logic;
+                dec_we_n    : in std_logic;
+                bus_we_n    : in std_logic;
+                dec_oe_n    : in std_logic;
+                bus_oe_n    : in std_logic;
+                decoder     : inout std_logic_vector (dsize - 1 downto 0);
+                int_dbus    : inout std_logic_vector (dsize - 1 downto 0)
+            );
+    end component;
+
     signal set_clk : std_logic;
     signal trigger_clk : std_logic;
 
@@ -210,6 +226,10 @@ begin
     stack_pointer : sp generic map (dsize) 
             port map(trigger_clk, sp_we_n, sp_int_d_oe_n, sp_int_a_oe_n, 
                     internal_dbus, internal_abus_l, internal_abus_h);
+
+    status_reg_component : processor_status generic map (dsize) 
+            port map(trigger_clk, rst_n, '1', '1', '0', '1', 
+                    status_reg, internal_dbus);
 
     x_reg : dff generic map (dsize) 
             port map(trigger_clk, x_we_n, x_oe_n, internal_dbus, internal_dbus);

@@ -15,7 +15,7 @@ entity decoder is
             nmi_n           : in std_logic;
             rdy             : in std_logic;
             instruction     : in std_logic_vector (dsize - 1 downto 0);
-            status_reg      : in std_logic_vector (dsize - 1 downto 0);
+            status_reg      : inout std_logic_vector (dsize - 1 downto 0);
             pcl_we_n        : out std_logic;
             pcl_d_oe_n      : out std_logic;
             pcl_a_oe_n      : out std_logic;

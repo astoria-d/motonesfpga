@@ -278,3 +278,117 @@ begin
                     port map(clk, we_n, oe_n, int_dbus, q);
 end rtl;
 
+
+----------------------------------------
+--- SR flipflop
+----------------------------------------
+
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity srff is 
+    generic (
+            dsize : integer := 8
+            );
+    port (  
+            clk     : in std_logic;
+            res_n   : in std_logic;
+            set_n   : in std_logic;
+            we_n    : in std_logic;
+            oe_n    : in std_logic;
+            d       : in std_logic_vector (dsize - 1 downto 0);
+            q       : out std_logic_vector (dsize - 1 downto 0)
+        );
+end srff;
+
+architecture rtl of srff is
+signal val : std_logic_vector (dsize - 1 downto 0);
+begin
+
+    q <= val when oe_n = '0' else
+        (others => 'Z');
+
+    main_p : process (clk, res_n, set_n, d)
+    begin
+        if ( clk'event and clk = '1'and we_n = '0') then
+            val <= d;
+        end if;
+        if (res_n'event and res_n = '0') then
+            val <= (others => '0');
+        end if;
+        if (set_n = '0') then
+            val <= d;
+        end if;
+    end process;
+end rtl;
+
+----------------------------------------
+--- status register component
+----------------------------------------
+
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity processor_status is 
+    generic (
+            dsize : integer := 8
+            );
+    port (  
+            clk         : in std_logic;
+            res_n       : in std_logic;
+            dec_we_n    : in std_logic;
+            bus_we_n    : in std_logic;
+            dec_oe_n    : in std_logic;
+            bus_oe_n    : in std_logic;
+            decoder     : inout std_logic_vector (dsize - 1 downto 0);
+            int_dbus    : inout std_logic_vector (dsize - 1 downto 0)
+        );
+end processor_status;
+
+architecture rtl of processor_status is
+component srff
+    generic (
+            dsize : integer := 8
+            );
+    port (  
+            clk     : in std_logic;
+            res_n   : in std_logic;
+            set_n   : in std_logic;
+            we_n    : in std_logic;
+            oe_n    : in std_logic;
+            d       : in std_logic_vector (dsize - 1 downto 0);
+            q       : out std_logic_vector (dsize - 1 downto 0)
+        );
+end component;
+signal we_n : std_logic;
+signal d : std_logic_vector (dsize - 1 downto 0);
+signal q : std_logic_vector (dsize - 1 downto 0);
+begin
+    we_n <= (dec_we_n and bus_we_n);
+    decoder <= q when dec_oe_n = '0' else
+                (others => 'Z');
+    int_dbus <= q when bus_oe_n = '0' else
+                (others => 'Z');
+    srff_inst : srff generic map (dsize) 
+                    port map(clk, '1', res_n, we_n, '0', d, q);
+
+    reset_p : process (res_n)
+    begin
+--        SR Flags (bit 7 to bit 0):
+--
+--        N   ....    Negative
+--        V   ....    Overflow
+--        -   ....    ignored
+--        B   ....    Break
+--        D   ....    Decimal (use BCD for arithmetics)
+--        I   ....    Interrupt (IRQ disable)
+--        Z   ....    Zero
+--        C   ....    Carry
+    
+      ---only interrupt flag is set on reset.
+        if (res_n'event and res_n = '0') then
+            d <= "00000100";
+        end if;
+    end process;
+end rtl;
+
