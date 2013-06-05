@@ -149,6 +149,8 @@ architecture rtl of mos6502 is
             bus_we_n    : in std_logic;
             dec_oe_n    : in std_logic;
             bus_oe_n    : in std_logic;
+            alu_c       : in std_logic;
+            alu_v       : in std_logic;
             decoder     : inout std_logic_vector (dsize - 1 downto 0);
             int_dbus    : inout std_logic_vector (dsize - 1 downto 0)
         );
@@ -190,6 +192,8 @@ architecture rtl of mos6502 is
     signal stat_dec_oe_n : std_logic;
     signal stat_bus_we_n : std_logic;
     signal stat_bus_oe_n : std_logic;
+    signal stat_alu_c : std_logic;
+    signal stat_alu_v : std_logic;
 
     --internal bus (address hi/lo, data)
     signal internal_abus_h : std_logic_vector (dsize - 1 downto 0);
@@ -241,6 +245,7 @@ begin
     status_reg_component : processor_status generic map (dsize) 
             port map (trigger_clk, rst_n, stat_dec_we_n, stat_bus_we_n, 
                     stat_dec_oe_n, stat_bus_oe_n, 
+                    stat_alu_c, stat_alu_v, 
                     status_reg, internal_dbus);
 
     x_reg : dff generic map (dsize) 

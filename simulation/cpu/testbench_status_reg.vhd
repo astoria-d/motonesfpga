@@ -8,41 +8,11 @@ entity testbench_status_reg is
 end testbench_status_reg;
 
 architecture stimulus of testbench_status_reg is 
-    component mos6502
-        generic (   dsize : integer := 8;
-                    asize : integer :=16
-                );
-        port (  input_clk   : in std_logic; --phi0 input pin.
-                rdy         : in std_logic;
-                rst_n       : in std_logic;
-                irq_n       : in std_logic;
-                nmi_n       : in std_logic;
-                dbe         : in std_logic;
-                r_nw        : out std_logic;
-                phi1        : out std_logic;
-                phi2        : out std_logic;
-                addr        : out std_logic_vector ( asize - 1 downto 0);
-                d_io        : inout std_logic_vector ( dsize - 1 downto 0)
-        );
-    end component;
-
-    component address_decoder
-    generic (abus_size : integer := 16; dbus_size : integer := 8);
-        port (  phi2        : in std_logic;
-                R_nW        : in std_logic; 
-                addr       : in std_logic_vector (abus_size - 1 downto 0);
-                d_io       : inout std_logic_vector (dbus_size - 1 downto 0)
-    );
-    end component;
-
-
     constant dsize : integer := 8;
     constant asize : integer := 16;
     constant cpu_clk : time := 589 ns;
     signal phi0 : std_logic;
-    signal rdy, rst_n, irq_n, nmi_n, dbe, r_nw, phi1, phi2 : std_logic;
-    signal addr : std_logic_vector( asize - 1 downto 0);
-    signal cpu_d : std_logic_vector( dsize - 1 downto 0);
+    signal rst_n : std_logic;
 
     --status reg test.
     component processor_status 
@@ -56,6 +26,8 @@ architecture stimulus of testbench_status_reg is
             bus_we_n    : in std_logic;
             dec_oe_n    : in std_logic;
             bus_oe_n    : in std_logic;
+            alu_c       : in std_logic;
+            alu_v       : in std_logic;
             decoder     : inout std_logic_vector (dsize - 1 downto 0);
             int_dbus    : inout std_logic_vector (dsize - 1 downto 0)
         );
@@ -64,20 +36,11 @@ architecture stimulus of testbench_status_reg is
     signal we2 : std_logic;
     signal oe1 : std_logic;
     signal oe2 : std_logic;
+    signal alu_c, alu_v : std_logic;
     signal dec : std_logic_vector( dsize - 1 downto 0);
     signal int_bus : std_logic_vector( dsize - 1 downto 0);
 
 begin
-
-    irq_n <= '0';
-    nmi_n <= '0';
-    rdy <= '1';
---    cpu_inst : mos6502 generic map (dsize, asize) 
---        port map (phi0, rdy, rst_n, irq_n, nmi_n, dbe, r_nw, 
---                phi1, phi2, addr, cpu_d);
---
---    addr_dec_inst : address_decoder generic map (asize, dsize) 
---        port map (phi2, r_nw, addr, cpu_d);
 
     reset_p : process
     begin
@@ -97,7 +60,7 @@ begin
     end process;
 
     status_inst : processor_status generic map (dsize) 
-        port map (phi0, rst_n, we1, we2, oe1, oe2, dec, int_bus);
+        port map (phi0, rst_n, we1, we2, oe1, oe2, alu_c, alu_v, dec, int_bus);
 
     status_test_p : process
     variable tmp : std_logic_vector(dsize -1 downto 0);
@@ -139,23 +102,38 @@ begin
         dec <= (others => 'Z');
         oe1 <= '0';
         wait for cpu_clk;
-        oe2 <= '1';
-        tmp := dec;
-        int_bus (6 downto 4) <= tmp (6 downto 4);
-        int_bus (2 downto 0) <= tmp (2 downto 0);
-        int_bus (3) <= '1';
-        int_bus (7) <= '0';
-        wait for cpu_clk;
-        we2 <= '0';
-        oe2 <= '1';
-        wait for cpu_clk;
-        we2 <= '1';
-        int_bus <= (others => 'Z');
-        oe2 <= '0';
-        wait for cpu_clk;
+--        oe2 <= '1';
+--        tmp := dec;
+--        int_bus (6 downto 4) <= tmp (6 downto 4);
+--        int_bus (2 downto 0) <= tmp (2 downto 0);
+--        int_bus (3) <= '1';
+--        int_bus (7) <= '0';
+--        wait for cpu_clk;
+--        we2 <= '0';
+--        oe2 <= '1';
+--        wait for cpu_clk;
+--        we2 <= '1';
+--        int_bus <= (others => 'Z');
+--        oe2 <= '0';
+--        wait for cpu_clk;
+
 
         ----clock edge slide half...
         wait for cpu_clk / 2;
+        oe1 <= '1';
+        oe2 <= '1';
+        int_bus <= (others => 'Z');
+        dec <= (others => 'Z');
+        
+
+        wait for 5 * cpu_clk;
+
+        dec <= "00000000";
+        we1 <= '0';
+        wait for cpu_clk;
+        we1 <= '1';
+
+        wait for cpu_clk;
         tmp := dec;
         oe1 <= '1';
         oe2 <= '1';
@@ -169,35 +147,101 @@ begin
         int_bus <= (others => 'Z');
         oe1 <= '0';
         oe2 <= '0';
+
+
+
+        --flag set test from the data bus.
         wait for cpu_clk;
-        tmp := dec;
         oe1 <= '1';
         oe2 <= '1';
-        int_bus (7) <= '1';
-        int_bus (6) <= '0';
-        int_bus (5 downto 0) <= tmp (5 downto 0);
+        --set negative and zero.
+        dec(7 downto 0) <= "10000010";
+        int_bus <= "11111111";
         we2 <= '0';
         wait for cpu_clk;
         we2 <= '1';
+
+        wait for cpu_clk;
+        --set negative and zero.
+        dec(7 downto 0) <= "10000010";
+        int_bus <= "00000000";
+        we2 <= '0';
+        wait for cpu_clk;
+        we2 <= '1';
+
+        wait for cpu_clk;
+        --set negative and zero.
+        dec(7 downto 0) <= "10000010";
+        int_bus <= conv_std_logic_vector(16#3a#, dsize);
+        we2 <= '0';
+        wait for cpu_clk;
+        we2 <= '1';
+
+        wait for cpu_clk;
+        --set negative and zero.
+        dec(7 downto 0) <= "10000010";
+        int_bus <= conv_std_logic_vector(16#e9#, dsize);
+        we2 <= '0';
+        wait for cpu_clk;
+        we2 <= '1';
+
+        wait for cpu_clk;
+        --set negative, zero overflow and carry.
+        dec(7 downto 0) <= "11000011";
+        alu_c <= '1';
+        alu_v <= '0';
+        int_bus <= conv_std_logic_vector(16#a3#, dsize);
+        we2 <= '0';
+        wait for cpu_clk;
+        we2 <= '1';
+
+        wait for cpu_clk;
+        --set negative, zero overflow and carry.
+        dec(7 downto 0) <= "11000011";
+        alu_c <= '1';
+        alu_v <= '1';
+        int_bus <= conv_std_logic_vector(16#00#, dsize);
+        we2 <= '0';
+        wait for cpu_clk;
+        we2 <= '1';
+
+        wait for cpu_clk;
+        --set negative, carry.
+        dec(7 downto 0) <= "10000001";
+        alu_c <= '0';
+        alu_v <= '0';
+        int_bus <= conv_std_logic_vector(16#b2#, dsize);
+        we2 <= '0';
+        wait for cpu_clk;
+        we2 <= '1';
+
+        wait for cpu_clk;
+        --push all
+        dec(7 downto 0) <= "11111111";
+        alu_c <= '0';
+        alu_v <= '0';
+        int_bus <= "10000010";
+        we2 <= '0';
+        wait for cpu_clk;
+        we2 <= '1';
+
+        wait for cpu_clk;
+        --set flag from decoder.
         dec <= (others => 'Z');
-        int_bus <= (others => 'Z');
         oe1 <= '0';
-        oe2 <= '0';
-        wait for 3 * cpu_clk;
-        tmp := dec;
+        --tmp := dec;
+        --interrupt disable.
+        wait for cpu_clk;
         oe1 <= '1';
-        oe2 <= '1';
-        dec (7) <= '1';
-        dec (0) <= '1';
-        dec (6 downto 1) <= tmp (6 downto 1);
+        dec (7 downto 3) <= dec (7 downto 3);
+        dec (1 downto 0) <= dec (1 downto 0);
+        dec(2) <= '1';
         we1 <= '0';
         wait for cpu_clk;
         we1 <= '1';
-        dec <= (others => 'Z');
-        int_bus <= (others => 'Z');
-        oe1 <= '0';
-        oe2 <= '0';
+
         wait;
+
     end process;
 
 end stimulus ;
