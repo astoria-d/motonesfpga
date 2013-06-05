@@ -341,8 +341,7 @@ entity processor_status is
             bus_we_n    : in std_logic;
             dec_oe_n    : in std_logic;
             bus_oe_n    : in std_logic;
-            decoder_in     : in std_logic_vector (dsize - 1 downto 0);
-            decoder_out     : out std_logic_vector (dsize - 1 downto 0);
+            decoder     : inout std_logic_vector (dsize - 1 downto 0);
             int_dbus    : inout std_logic_vector (dsize - 1 downto 0)
         );
 end processor_status;
@@ -350,12 +349,13 @@ end processor_status;
 architecture rtl of processor_status is
 signal val : std_logic_vector (dsize - 1 downto 0);
 begin
-    decoder_out <= val when dec_oe_n = '0' else
+    decoder <= val when dec_oe_n = '0' else
                 (others => 'Z');
     int_dbus <= val when bus_oe_n = '0' else
                 (others => 'Z');
+                
 
-    main_p : process (clk, res_n, decoder_in)
+    main_p : process (clk, res_n, decoder)
     begin
 --        SR Flags (bit 7 to bit 0):
 --
@@ -374,7 +374,7 @@ begin
         end if;
 
         if ( clk'event and clk = '1'and dec_we_n = '0') then
-            val <= decoder_in;
+            val <= decoder;
         end if;
         if ( clk'event and clk = '1'and bus_we_n = '0') then
             val <= int_dbus;
