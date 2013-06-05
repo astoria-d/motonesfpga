@@ -210,6 +210,7 @@ begin
                     status_reg <= (others => 'Z');
                     stat_dec_oe_n <= '0';
                     stat_dec_we_n <= '1';
+                    stat_bus_we_n <= '1';
                     cur_status <= decode;
                 when unknown_stat => 
                     assert false 
@@ -389,6 +390,10 @@ begin
                         elsif instruction (7 downto 5) = "101" then
                             d_print("ldx");
                             x_we_n <= '0';
+                            --status register n/z bit update.
+                            stat_dec_oe_n <= '1';
+                            status_reg <= "10000010";
+                            stat_bus_we_n <= '0';
                         elsif instruction (7 downto 5) = "110" then
                             d_print("dec");
                         elsif instruction (7 downto 5) = "111" then
