@@ -324,6 +324,7 @@ end rtl;
 
 ----------------------------------------
 --- status register component
+--- status register is subtype of SR FF.
 ----------------------------------------
 
 library ieee;
@@ -340,39 +341,21 @@ entity processor_status is
             bus_we_n    : in std_logic;
             dec_oe_n    : in std_logic;
             bus_oe_n    : in std_logic;
-            decoder     : inout std_logic_vector (dsize - 1 downto 0);
+            decoder_in     : in std_logic_vector (dsize - 1 downto 0);
+            decoder_out     : out std_logic_vector (dsize - 1 downto 0);
             int_dbus    : inout std_logic_vector (dsize - 1 downto 0)
         );
 end processor_status;
 
 architecture rtl of processor_status is
-component srff
-    generic (
-            dsize : integer := 8
-            );
-    port (  
-            clk     : in std_logic;
-            res_n   : in std_logic;
-            set_n   : in std_logic;
-            we_n    : in std_logic;
-            oe_n    : in std_logic;
-            d       : in std_logic_vector (dsize - 1 downto 0);
-            q       : out std_logic_vector (dsize - 1 downto 0)
-        );
-end component;
-signal we_n : std_logic;
-signal d : std_logic_vector (dsize - 1 downto 0);
-signal q : std_logic_vector (dsize - 1 downto 0);
+signal val : std_logic_vector (dsize - 1 downto 0);
 begin
-    we_n <= (dec_we_n and bus_we_n);
-    decoder <= q when dec_oe_n = '0' else
+    decoder_out <= val when dec_oe_n = '0' else
                 (others => 'Z');
-    int_dbus <= q when bus_oe_n = '0' else
+    int_dbus <= val when bus_oe_n = '0' else
                 (others => 'Z');
-    srff_inst : srff generic map (dsize) 
-                    port map(clk, '1', res_n, we_n, '0', d, q);
 
-    reset_p : process (res_n)
+    main_p : process (clk, res_n, decoder_in)
     begin
 --        SR Flags (bit 7 to bit 0):
 --
@@ -387,8 +370,16 @@ begin
     
       ---only interrupt flag is set on reset.
         if (res_n'event and res_n = '0') then
-            d <= "00000100";
+            val <= "00000100";
+        end if;
+
+        if ( clk'event and clk = '1'and dec_we_n = '0') then
+            val <= decoder_in;
+        end if;
+        if ( clk'event and clk = '1'and bus_we_n = '0') then
+            val <= int_dbus;
         end if;
     end process;
+
 end rtl;
 
