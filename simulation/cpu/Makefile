@@ -4,6 +4,7 @@ MODULES=cpu_registers.vhd decoder.vhd \
 		#cpu_timing.vhd 
 
 TEST_MODULE= testbench_mos6502.vhd
+#TEST_MODULE= testbench_status_reg.vhd
 
 WORKDIR=../work
 

@@ -72,6 +72,10 @@ architecture rtl of mos6502 is
                 x_oe_n          : out std_logic;
                 y_we_n          : out std_logic;
                 y_oe_n          : out std_logic;
+                stat_dec_we_n   : out std_logic;
+                stat_dec_oe_n   : out std_logic;
+                stat_bus_we_n   : out std_logic;
+                stat_bus_oe_n   : out std_logic;
                 r_nw            : out std_logic
             );
     end component;
@@ -134,20 +138,20 @@ architecture rtl of mos6502 is
             );
     end component;
 
-    component processor_status
-        generic (
-                dsize : integer := 8
-                );
-        port (  
-                clk         : in std_logic;
-                res_n       : in std_logic;
-                dec_we_n    : in std_logic;
-                bus_we_n    : in std_logic;
-                dec_oe_n    : in std_logic;
-                bus_oe_n    : in std_logic;
-                decoder     : inout std_logic_vector (dsize - 1 downto 0);
-                int_dbus    : inout std_logic_vector (dsize - 1 downto 0)
+    component processor_status 
+    generic (
+            dsize : integer := 8
             );
+    port (  
+            clk         : in std_logic;
+            res_n       : in std_logic;
+            dec_we_n    : in std_logic;
+            bus_we_n    : in std_logic;
+            dec_oe_n    : in std_logic;
+            bus_oe_n    : in std_logic;
+            decoder     : inout std_logic_vector (dsize - 1 downto 0);
+            int_dbus    : inout std_logic_vector (dsize - 1 downto 0)
+        );
     end component;
 
     signal set_clk : std_logic;
@@ -182,6 +186,11 @@ architecture rtl of mos6502 is
     signal y_we_n : std_logic;
     signal y_oe_n : std_logic;
 
+    signal stat_dec_we_n : std_logic;
+    signal stat_dec_oe_n : std_logic;
+    signal stat_bus_we_n : std_logic;
+    signal stat_bus_oe_n : std_logic;
+
     --internal bus (address hi/lo, data)
     signal internal_abus_h : std_logic_vector (dsize - 1 downto 0);
     signal internal_abus_l : std_logic_vector (dsize - 1 downto 0);
@@ -189,6 +198,7 @@ architecture rtl of mos6502 is
 
     signal instruction : std_logic_vector (dsize - 1 downto 0);
     signal status_reg : std_logic_vector (dsize - 1 downto 0);
+
 begin
 
     ---instances....
@@ -210,6 +220,7 @@ begin
                     dl_int_d_oe_n, dl_int_al_oe_n, dl_int_ah_oe_n,
                     sp_we_n, sp_int_d_oe_n, sp_int_a_oe_n,
                     x_we_n, x_oe_n, y_we_n, y_oe_n, 
+                    stat_dec_we_n, stat_dec_oe_n, stat_bus_we_n, stat_bus_oe_n,
                     r_nw);
 
     instruction_register : dff generic map (dsize) 
@@ -228,7 +239,8 @@ begin
                     internal_dbus, internal_abus_l, internal_abus_h);
 
     status_reg_component : processor_status generic map (dsize) 
-            port map(trigger_clk, rst_n, '1', '1', '0', '1', 
+            port map (trigger_clk, rst_n, stat_dec_we_n, stat_bus_we_n, 
+                    stat_dec_oe_n, stat_bus_oe_n, 
                     status_reg, internal_dbus);
 
     x_reg : dff generic map (dsize) 

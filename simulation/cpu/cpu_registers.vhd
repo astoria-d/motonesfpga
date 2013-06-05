@@ -355,7 +355,7 @@ begin
                 (others => 'Z');
                 
 
-    main_p : process (clk, res_n, decoder)
+    main_p : process (clk, res_n, decoder, int_dbus)
     begin
 --        SR Flags (bit 7 to bit 0):
 --

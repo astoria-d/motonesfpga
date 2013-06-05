@@ -38,6 +38,10 @@ entity decoder is
             x_oe_n          : out std_logic;
             y_we_n          : out std_logic;
             y_oe_n          : out std_logic;
+            stat_dec_we_n   : out std_logic;
+            stat_dec_oe_n   : out std_logic;
+            stat_bus_we_n   : out std_logic;
+            stat_bus_oe_n   : out std_logic;
             r_nw            : out std_logic
         );
 end decoder;
@@ -121,10 +125,28 @@ type addr_mode is ( ad_imp,
 signal cur_status : dec_status;
 signal cur_mode : addr_mode;
 
+-- SR Flags (bit 7 to bit 0):
+--  7   N   ....    Negative
+--  6   V   ....    Overflow
+--  5   -   ....    ignored
+--  4   B   ....    Break
+--  3   D   ....    Decimal (use BCD for arithmetics)
+--  2   I   ....    Interrupt (IRQ disable)
+--  1   Z   ....    Zero
+--  0   C   ....    Carry
+constant st_N : integer := 7;
+constant st_V : integer := 6;
+constant st_B : integer := 4;
+constant st_D : integer := 3;
+constant st_I : integer := 2;
+constant st_Z : integer := 1;
+constant st_C : integer := 0;
+
 begin
 
     main_p : process (set_clk, trig_clk, res_n)
     variable single_inst : boolean;
+    variable status_reg_old : std_logic_vector(dsize - 1 downto 0);
     begin
         if (res_n'event and res_n = '0') then
             d_print(string'("reset"));
@@ -152,6 +174,10 @@ begin
             x_oe_n <= '1';
             y_we_n <= '1';
             y_oe_n <= '1';
+            stat_dec_we_n <= '1';
+            stat_dec_oe_n <= '1';
+            stat_bus_we_n <= '1';
+            stat_bus_oe_n <= '1';
         end if;
 
         if (set_clk'event and set_clk = '1') then
@@ -181,6 +207,9 @@ begin
                     r_nw <= '1';
                     pc_inc_n <= '0';
                     dbuf_int_oe_n <= '1';
+                    status_reg <= (others => 'Z');
+                    stat_dec_oe_n <= '0';
+                    stat_dec_we_n <= '1';
                     cur_status <= decode;
                 when unknown_stat => 
                     assert false 
@@ -255,7 +284,14 @@ begin
                 elsif instruction = conv_std_logic_vector(16#78#, dsize) then
                     single_inst := true;
                     d_print("sei");
-                    --status_reg(st_I) <= '1';
+                    status_reg_old := status_reg;
+                    stat_dec_oe_n <= '1';
+                    stat_dec_we_n <= '0';
+                    status_reg(7 downto st_I + 1) 
+                        <= status_reg_old (7 downto st_I + 1);
+                    status_reg(st_I - 1 downto 0) 
+                        <= status_reg_old (st_I - 1 downto 0);
+                    status_reg(st_I) <= '1';
                 elsif instruction = conv_std_logic_vector(16#98#, dsize) then
                     single_inst := true;
                     d_print("tya");
