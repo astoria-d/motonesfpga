@@ -110,23 +110,23 @@ type dec_status is (reset0, reset1, reset2, reset3, reset4, reset5,
                     exec0, exec1, exec2, exec3, exec4, exec5, 
                     unknown_stat);
 
-type addr_mode is ( ad_imp,
-                    ad_imm,
-                    ad_acc, 
-                    ad_zp0, ad_zp1,
-                    ad_zpx0, ad_zpx1,
-                    ad_zpy0, ad_zpy1,
-                    ad_abs0, ad_abs1, ad_abs2, 
-                    ad_absx0, ad_absx1, ad_absx2, 
-                    ad_absy0, ad_absy1, ad_absy2,
-                    ad_indx_indir0, ad_indx_indir1, 
-                        ad_indx_indir2, ad_indx_indir3, ad_indx_indir4, 
-                    ad_indir_indx0, ad_indir_indx1, ad_indir_indx2, 
-                        ad_indir_indx3, ad_indir_indx4,
-                    ad_unknown);
+--type addr_mode is ( ad_imp,
+--                    ad_imm,
+--                    ad_acc, 
+--                    ad_zp0, ad_zp1,
+--                    ad_zpx0, ad_zpx1,
+--                    ad_zpy0, ad_zpy1,
+--                    ad_abs0, ad_abs1, ad_abs2, 
+--                    ad_absx0, ad_absx1, ad_absx2, 
+--                    ad_absy0, ad_absy1, ad_absy2,
+--                    ad_indx_indir0, ad_indx_indir1, 
+--                        ad_indx_indir2, ad_indx_indir3, ad_indx_indir4, 
+--                    ad_indir_indx0, ad_indir_indx1, ad_indir_indx2, 
+--                        ad_indir_indx3, ad_indir_indx4,
+--                    ad_unknown);
 
 signal cur_status : dec_status;
-signal cur_mode : addr_mode;
+--signal cur_mode : addr_mode;
 
 -- SR Flags (bit 7 to bit 0):
 --  7   N   ....    Negative
@@ -322,7 +322,6 @@ begin
 
                 if single_inst then
                     cur_status <= fetch;
-                    cur_mode <= ad_imp;
                     pcl_a_oe_n <= '1';
                     pch_a_oe_n <= '1';
                     pc_inc_n <= '1';
@@ -372,21 +371,14 @@ begin
                         dbuf_int_oe_n <= '0';
 
                         if instruction (4 downto 2) = "000" then
-                            cur_mode <= ad_imm;
                             d_print("immediate");
                             cur_status <= fetch;
                         elsif instruction (4 downto 2) = "001" then
-                            cur_mode <= ad_zp0;
                         elsif instruction (4 downto 2) = "010" then
-                            cur_mode <= ad_acc;
                         elsif instruction (4 downto 2) = "011" then
-                            cur_mode <= ad_abs0;
                         elsif instruction (4 downto 2) = "101" then
-                            cur_mode <= ad_zpx0;
                         elsif instruction (4 downto 2) = "111" then
-                            cur_mode <= ad_absx0;
                         else
-                            cur_mode <= ad_unknown;
                             assert false 
                                 report ("unknow addr mode") severity failure;
                         end if;
@@ -440,22 +432,16 @@ begin
                             dbuf_int_oe_n <= '0';
 
                             if instruction (4 downto 2) = "000" then
-                                cur_mode <= ad_imm;
                                 d_print("immediate");
                                 cur_status <= fetch;
                             elsif instruction (4 downto 2) = "001" then
-                                cur_mode <= ad_zp0;
                             elsif instruction (4 downto 2) = "011" then
-                                cur_mode <= ad_abs0;
                                 d_print("abs");
                                 dl_we_n <= '0';
                                 cur_status <= exec0;
                             elsif instruction (4 downto 2) = "101" then
-                                cur_mode <= ad_zpx0;
                             elsif instruction (4 downto 2) = "111" then
-                                cur_mode <= ad_absx0;
                             else
-                                cur_mode <= ad_unknown;
                                 assert false 
                                     report ("unknow addr mode") severity failure;
                             end if;
