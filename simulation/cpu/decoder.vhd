@@ -106,8 +106,8 @@ end;
 
 
 type dec_status is (reset0, reset1, reset2, reset3, reset4, reset5, 
-                    fetch, decode, 
-                    exec0, exec1, exec2, exec3, exec4, exec5, 
+                    --exec0 = fetch, exec1=decode
+                    fetch, decode, exec2, exec3, exec4, exec5,
                     unknown_stat);
 
 --type addr_mode is ( ad_imp,
@@ -203,6 +203,7 @@ begin
                 when reset5 => 
                     cur_status <= fetch;
                 when fetch => 
+                    --cycle #1
                     d_print(string'("fetch"));
                     dbuf_ext_we_n <= '0';
                     pcl_a_oe_n <= '0';
@@ -220,6 +221,7 @@ begin
                     pcl_a_we_n <= '1';
                     dl_we_n <= '1';
                     dl_int_al_oe_n <= '1';
+                    pcl_d_we_n <= '1';
                     cur_status <= decode;
 
                     ---for debug....
@@ -235,7 +237,9 @@ begin
 
 
             if cur_status = decode then
-                d_print("decode inst: " & conv_hex8(conv_integer(instruction)));
+                --cycle #2
+                d_print("decode and execute inst: " 
+                        & conv_hex8(conv_integer(instruction)));
                 --grab instruction register data.
                 inst_we_n <= '1';
 
@@ -418,6 +422,14 @@ begin
                             d_print("brk");
                         elsif instruction = conv_std_logic_vector(16#20#, dsize) then
                             d_print("jsr abs");
+                            --fetch opcode.
+                            pcl_a_oe_n <= '0';
+                            pch_a_oe_n <= '0';
+                            pc_inc_n <= '0';
+                            dbuf_int_oe_n <= '0';
+                            dl_we_n <= '0';
+                            cur_status <= exec2;
+
                         elsif instruction = conv_std_logic_vector(16#40#, dsize) then
                             d_print("40");
                         elsif instruction = conv_std_logic_vector(16#60#, dsize) then
@@ -438,7 +450,7 @@ begin
                             elsif instruction (4 downto 2) = "011" then
                                 d_print("abs");
                                 dl_we_n <= '0';
-                                cur_status <= exec0;
+                                cur_status <= exec2;
                             elsif instruction (4 downto 2) = "101" then
                             elsif instruction (4 downto 2) = "111" then
                             else
@@ -469,27 +481,128 @@ begin
 
                 end if; --if single_inst
 
-            elsif cur_status = exec0 then
+            elsif cur_status = exec2 then
+                --cycle #3
                 if instruction (1 downto 0) = "00" then
-                    if instruction (4 downto 2) = "011" then
-                        d_print("abs 1");
+                    if instruction (4 downto 0) = "10000" then
+                        ---conditional branch instruction..
+                    elsif instruction = conv_std_logic_vector(16#00#, dsize) then
+                    elsif instruction = conv_std_logic_vector(16#20#, dsize) then
+                        d_print("jsr 3");
+                        --pcl_d_oe_n <= '0';
+                        pcl_a_oe_n <= '1';
+                        pch_a_oe_n <= '1';
+                        pc_inc_n <= '1';
+                        dbuf_int_oe_n <= '1';
                         dl_we_n <= '1';
+                        --pch <= (pc + 2)
+
+                       --push return addr high into stack.
+                        pch_d_oe_n <= '0';
+                        dbuf_ext_oe_n <= '0';
+                        sp_int_a_oe_n <= '0';
+                        r_nw <= '0';
+                        cur_status <= exec3;
+                    elsif instruction = conv_std_logic_vector(16#40#, dsize) then
+                    elsif instruction = conv_std_logic_vector(16#60#, dsize) then
+                    else
+                        if instruction (4 downto 2) = "011" then
+                            d_print("abs 1");
+                            dl_we_n <= '1';
+                            pcl_a_oe_n <= '0';
+                            pch_a_oe_n <= '0';
+                            --pc_inc_n <= '0';
+                            dbuf_int_oe_n <= '0';
+                            cur_status <= fetch;
+                            if instruction (7 downto 5) = "010" then
+                            --jmp
+                                d_print("jmp");
+                                pc_inc_n <= '1';
+                                dl_int_al_oe_n <= '0';
+                                pcl_a_oe_n <= '1';
+                                pcl_a_we_n <= '0';
+                                pch_d_we_n <= '0';
+                            end if;
+                        end if; --if instruction (4 downto 2) = "011"
+                    end if; --if instruction (4 downto 0) = "10000"
+                end if; --instruction (1 downto 0) = "00" 
+            elsif cur_status = exec3 then
+                --cycle #4
+                if instruction (1 downto 0) = "00" then
+                    if instruction (4 downto 0) = "10000" then
+                        ---conditional branch instruction..
+                    elsif instruction = conv_std_logic_vector(16#00#, dsize) then
+                    elsif instruction = conv_std_logic_vector(16#20#, dsize) then
+                        d_print("jsr 4");
+                       --push return addr low into stack.
+                        pch_d_oe_n <= '1';
+
+                        pcl_d_oe_n <= '0';
+                        dbuf_ext_oe_n <= '0';
+                        sp_int_a_oe_n <= '0';
+                        r_nw <= '0';
+
+                        cur_status <= exec4;
+                    elsif instruction = conv_std_logic_vector(16#40#, dsize) then
+                    elsif instruction = conv_std_logic_vector(16#60#, dsize) then
+                    else
+                    end if; --if instruction (4 downto 0) = "10000"
+                end if; --instruction (1 downto 0) = "00" 
+            elsif cur_status = exec4 then
+                --cycle #5
+                if instruction (1 downto 0) = "00" then
+                    if instruction (4 downto 0) = "10000" then
+                        ---conditional branch instruction..
+                    elsif instruction = conv_std_logic_vector(16#00#, dsize) then
+                    elsif instruction = conv_std_logic_vector(16#20#, dsize) then
+                        d_print("jsr 5");
+                        pcl_d_oe_n <= '1';
+                        dbuf_ext_oe_n <= '1';
+                        sp_int_a_oe_n <= '1';
+                        r_nw <= '1';
+
+                        --fetch last op.
                         pcl_a_oe_n <= '0';
                         pch_a_oe_n <= '0';
-                        --pc_inc_n <= '0';
+                        dbuf_int_oe_n <= '1';
+
+                        cur_status <= exec5;
+
+                    elsif instruction = conv_std_logic_vector(16#40#, dsize) then
+                    elsif instruction = conv_std_logic_vector(16#60#, dsize) then
+                    else
+                    end if; --if instruction (4 downto 0) = "10000"
+                end if; --instruction (1 downto 0) = "00" 
+ 
+            elsif cur_status = exec5 then
+                --cycle #6
+                if instruction (1 downto 0) = "00" then
+                    if instruction (4 downto 0) = "10000" then
+                        ---conditional branch instruction..
+                    elsif instruction = conv_std_logic_vector(16#00#, dsize) then
+                    elsif instruction = conv_std_logic_vector(16#20#, dsize) then
+                        d_print("jsr 6");
+
+                        pcl_a_oe_n <= '1';
+                        pch_a_oe_n <= '1';
+
+                        dl_int_d_oe_n <= '1';
+                        pcl_d_we_n <= '1';
+
+                        --load/output  pch
+                        pch_d_we_n <= '0';
                         dbuf_int_oe_n <= '0';
+
+                        --load pcl.
+                        dl_int_al_oe_n <= '0';
+                        pcl_a_we_n <= '0';
+
                         cur_status <= fetch;
-                        if instruction (7 downto 5) = "010" then
-                        --jmp
-                            d_print("jmp");
-                            pc_inc_n <= '1';
-                            dl_int_al_oe_n <= '0';
-                            pcl_a_oe_n <= '1';
-                            pcl_a_we_n <= '0';
-                            pch_d_we_n <= '0';
-                        end if;
-                    end if;
-                end if;
+                    elsif instruction = conv_std_logic_vector(16#40#, dsize) then
+                    elsif instruction = conv_std_logic_vector(16#60#, dsize) then
+                    else
+                    end if; --if instruction (4 downto 0) = "10000"
+                end if; --instruction (1 downto 0) = "00" 
             end if; --if cur_status = decode 
         end if; --if (set_clk'event and set_clk = '1') 
 
