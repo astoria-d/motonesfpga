@@ -16,10 +16,12 @@ entity decoder is
             rdy             : in std_logic;
             instruction     : in std_logic_vector (dsize - 1 downto 0);
             status_reg      : inout std_logic_vector (dsize - 1 downto 0);
-            pcl_we_n        : out std_logic;
+            pcl_d_we_n      : out std_logic;
+            pcl_a_we_n      : out std_logic;
             pcl_d_oe_n      : out std_logic;
             pcl_a_oe_n      : out std_logic;
-            pch_we_n        : out std_logic;
+            pch_d_we_n      : out std_logic;
+            pch_a_we_n      : out std_logic;
             pch_d_oe_n      : out std_logic;
             pch_a_oe_n      : out std_logic;
             pc_inc_n        : out std_logic;
@@ -28,6 +30,7 @@ entity decoder is
             dbuf_ext_oe_n   : out std_logic;
             dbuf_int_we_n   : out std_logic;
             dbuf_ext_we_n   : out std_logic;
+            dl_we_n         : out std_logic;
             dl_int_d_oe_n   : out std_logic;
             dl_int_al_oe_n  : out std_logic;
             dl_int_ah_oe_n  : out std_logic;
@@ -152,10 +155,12 @@ begin
             d_print(string'("reset"));
             cur_status <= reset0;
 
-            pcl_we_n <= '1';
+            pcl_d_we_n <= '1';
+            pcl_a_we_n <= '1';
             pcl_d_oe_n <= '1';
             pcl_a_oe_n <= '1';
-            pch_we_n <= '1';
+            pch_d_we_n <= '1';
+            pch_a_we_n <= '1';
             pch_d_oe_n <= '1';
             pch_a_oe_n <= '1';
             pc_inc_n <= '1';
@@ -163,7 +168,8 @@ begin
             dbuf_int_oe_n <= '1';
             dbuf_ext_oe_n <= '1';
             dbuf_int_we_n <= '1';
-            dbuf_ext_we_n <= '0';
+            dbuf_ext_we_n <= '1';
+            dl_we_n <= '1';
             dl_int_d_oe_n <= '1';
             dl_int_al_oe_n <= '1';
             dl_int_ah_oe_n <= '1';
@@ -198,6 +204,7 @@ begin
                     cur_status <= fetch;
                 when fetch => 
                     d_print(string'("fetch"));
+                    dbuf_ext_we_n <= '0';
                     pcl_a_oe_n <= '0';
                     pch_a_oe_n <= '0';
                     inst_we_n <= '0';
@@ -207,11 +214,15 @@ begin
                     r_nw <= '1';
                     pc_inc_n <= '0';
                     dbuf_int_oe_n <= '1';
-                    status_reg <= (others => 'Z');
-                    stat_dec_oe_n <= '0';
                     stat_dec_we_n <= '1';
                     stat_bus_we_n <= '1';
+                    pch_d_we_n <= '1';
+                    pcl_a_we_n <= '1';
                     cur_status <= decode;
+
+                    ---for debug....
+                    status_reg <= (others => 'Z');
+                    stat_dec_oe_n <= '0';
                 when unknown_stat => 
                     assert false 
                         report ("unknow status") severity failure;
@@ -353,13 +364,14 @@ begin
                     elsif instruction (1 downto 0) = "10" then
                         --d_print("cc=10");
 
+                        pcl_a_oe_n <= '0';
+                        pch_a_oe_n <= '0';
+                        pc_inc_n <= '0';
+                        dbuf_int_oe_n <= '0';
+
                         if instruction (4 downto 2) = "000" then
                             cur_mode <= ad_imm;
                             d_print("immediate");
-                            pcl_a_oe_n <= '0';
-                            pch_a_oe_n <= '0';
-                            pc_inc_n <= '0';
-                            dbuf_int_oe_n <= '0';
                             cur_status <= fetch;
                         elsif instruction (4 downto 2) = "001" then
                             cur_mode <= ad_zp0;
@@ -420,23 +432,20 @@ begin
                             
                         ---bbb part format
                         else
+                            pcl_a_oe_n <= '0';
+                            pch_a_oe_n <= '0';
+                            pc_inc_n <= '0';
+                            dbuf_int_oe_n <= '0';
+
                             if instruction (4 downto 2) = "000" then
                                 cur_mode <= ad_imm;
                                 d_print("immediate");
-                                pcl_a_oe_n <= '0';
-                                pch_a_oe_n <= '0';
-                                pc_inc_n <= '0';
-                                dbuf_int_oe_n <= '0';
                                 cur_status <= fetch;
                             elsif instruction (4 downto 2) = "001" then
                                 cur_mode <= ad_zp0;
                             elsif instruction (4 downto 2) = "011" then
                                 cur_mode <= ad_abs0;
                                 d_print("abs");
-                                pcl_a_oe_n <= '0';
-                                pch_a_oe_n <= '0';
-                                pc_inc_n <= '0';
-                                dbuf_int_oe_n <= '0';
                                 cur_status <= exec0;
                             elsif instruction (4 downto 2) = "101" then
                                 cur_mode <= ad_zpx0;
@@ -474,47 +483,25 @@ begin
             elsif cur_status = exec0 then
                 if instruction (1 downto 0) = "00" then
                     if instruction (4 downto 2) = "011" then
-                    --abs0
---                        addr <= pc;
---                        pc <= pc + 1;
---                        input_data_latch <= dbus_buffer;
---                        cur_status <= exec1;
+                        d_print("abs 1");
+                        pcl_a_oe_n <= '0';
+                        pch_a_oe_n <= '0';
+                        --pc_inc_n <= '0';
+                        dbuf_int_oe_n <= '0';
+                        cur_status <= fetch;
+                        if instruction (7 downto 5) = "010" then
+                        --jmp
+                            d_print("jmp");
+                            pc_inc_n <= '1';
+                            pcl_a_we_n <= '0';
+                            pch_d_we_n <= '0';
+                        end if;
                     end if;
                 end if;
             end if; --if cur_status = decode 
-
         end if; --if (set_clk'event and set_clk = '1') 
 
         if (trig_clk'event and trig_clk = '1') then
-            --d_print("_");
-            case cur_status is
-                when exec0 => 
-                    if instruction (1 downto 0) = "01" then
-                    elsif instruction (1 downto 0) = "10" then
-                        if instruction (4 downto 2) = "000" then
-                        --immediate
-                            if instruction (7 downto 5) = "101" then
-                            --ldx
-                                --reg_x <= dbus_buffer;
-                                --cur_status <= fetch;
-                            end if;
-                        end if;
-                    end if; --if instruction (1 downto 0) = "01"
-                when exec1 => 
-                    if instruction (1 downto 0) = "00" then
-                        if instruction (4 downto 2) = "011" then
-                        --abs
-                            if instruction (7 downto 5) = "010" then
-                            --jmp
---                                pc <= dbus_buffer & input_data_latch;
---                                addr <= dbus_buffer & input_data_latch;
---                                cur_status <= fetch;
-                            end if;
-                        end if;
-                    end if;
-                when others => 
-                    null;
-            end case; --case cur_status
         end if; --if (trigger_clk'event and trigger_clk = '1')
 
     end process;

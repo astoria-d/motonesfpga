@@ -16,14 +16,15 @@ entity pc is
     port (  
             trig_clk        : in std_logic;
             res_n           : in std_logic;
-            we_n            : in std_logic;
+            dbus_we_n       : in std_logic;
+            abus_we_n       : in std_logic;
             dbus_oe_n       : in std_logic;
             abus_oe_n       : in std_logic;
             addr_inc_n      : in std_logic;
             add_carry       : in std_logic;
             inc_carry       : out std_logic;
             int_d_bus       : inout std_logic_vector (dsize - 1 downto 0);
-            int_a_bus       : out std_logic_vector (dsize - 1 downto 0)
+            int_a_bus       : inout std_logic_vector (dsize - 1 downto 0)
         );
 end pc;
 
@@ -32,13 +33,15 @@ architecture rtl of pc is
 signal val : std_logic_vector (dsize - 1 downto 0);
 
 begin
-    int_a_bus <= (val + add_carry) when (abus_oe_n = '0' and add_carry = '1') else
-                  val when abus_oe_n = '0' and add_carry /= '1' else
+    int_a_bus <= (val + add_carry) when 
+                    (abus_oe_n = '0' and add_carry = '1') else
+                  val when 
+                    (abus_oe_n = '0' and add_carry /= '1') else
                 (others => 'Z');
     int_d_bus <= (val + add_carry) when 
-                    (dbus_oe_n = '0' and we_n /= '0' and add_carry = '1') else
+                    (dbus_oe_n = '0' and add_carry = '1') else
                   val when 
-                    (dbus_oe_n = '0' and we_n /= '0' and add_carry /= '1') else
+                    (dbus_oe_n = '0' and add_carry /= '1') else
                 (others => 'Z');
 
     set_p : process (trig_clk, res_n)
@@ -50,8 +53,11 @@ begin
                 inc_carry <= add_val(dsize);
                 val <= add_val(dsize - 1 downto 0);
             end if;
-            if (we_n = '0') then
+            if (dbus_we_n = '0') then
                 val <= int_d_bus;
+            end if;
+            if (abus_we_n = '0') then
+                val <= int_a_bus;
             end if;
         elsif (res_n'event and res_n = '0') then
             val <= conv_std_logic_vector(reset_addr, dsize);
