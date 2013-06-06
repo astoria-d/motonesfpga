@@ -218,6 +218,8 @@ begin
                     stat_bus_we_n <= '1';
                     pch_d_we_n <= '1';
                     pcl_a_we_n <= '1';
+                    dl_we_n <= '1';
+                    dl_int_al_oe_n <= '1';
                     cur_status <= decode;
 
                     ---for debug....
@@ -446,6 +448,7 @@ begin
                             elsif instruction (4 downto 2) = "011" then
                                 cur_mode <= ad_abs0;
                                 d_print("abs");
+                                dl_we_n <= '0';
                                 cur_status <= exec0;
                             elsif instruction (4 downto 2) = "101" then
                                 cur_mode <= ad_zpx0;
@@ -484,6 +487,7 @@ begin
                 if instruction (1 downto 0) = "00" then
                     if instruction (4 downto 2) = "011" then
                         d_print("abs 1");
+                        dl_we_n <= '1';
                         pcl_a_oe_n <= '0';
                         pch_a_oe_n <= '0';
                         --pc_inc_n <= '0';
@@ -493,6 +497,8 @@ begin
                         --jmp
                             d_print("jmp");
                             pc_inc_n <= '1';
+                            dl_int_al_oe_n <= '0';
+                            pcl_a_oe_n <= '1';
                             pcl_a_we_n <= '0';
                             pch_d_we_n <= '0';
                         end if;
