@@ -70,6 +70,8 @@ architecture rtl of mos6502 is
                 dl_int_al_oe_n  : out std_logic;
                 dl_int_ah_oe_n  : out std_logic;
                 sp_we_n         : out std_logic;
+                sp_push_n       : out std_logic;
+                sp_pop_n        : out std_logic;
                 sp_int_d_oe_n   : out std_logic;
                 sp_int_a_oe_n   : out std_logic;
                 x_we_n          : out std_logic;
@@ -134,6 +136,8 @@ architecture rtl of mos6502 is
         port (  
                 clk         : in std_logic;
                 we_n        : in std_logic;
+                push_n      : in std_logic;
+                pop_n       : in std_logic;
                 int_d_oe_n  : in std_logic;
                 int_a_oe_n  : in std_logic;
                 int_dbus    : inout std_logic_vector (dsize - 1 downto 0);
@@ -187,6 +191,8 @@ architecture rtl of mos6502 is
     signal dl_int_ah_oe_n : std_logic;
 
     signal sp_we_n : std_logic;
+    signal sp_push_n : std_logic;
+    signal sp_pop_n : std_logic;
     signal sp_int_d_oe_n : std_logic;
     signal sp_int_a_oe_n : std_logic;
 
@@ -231,7 +237,7 @@ begin
                     inst_we_n, 
                     dbuf_int_oe_n, dbuf_ext_oe_n, dbuf_int_we_n, dbuf_ext_we_n, 
                     dl_we_n, dl_int_d_oe_n, dl_int_al_oe_n, dl_int_ah_oe_n,
-                    sp_we_n, sp_int_d_oe_n, sp_int_a_oe_n,
+                    sp_we_n, sp_push_n, sp_pop_n, sp_int_d_oe_n, sp_int_a_oe_n,
                     x_we_n, x_oe_n, y_we_n, y_oe_n, 
                     stat_dec_we_n, stat_dec_oe_n, stat_bus_we_n, stat_bus_oe_n,
                     r_nw);
@@ -248,7 +254,8 @@ begin
                     internal_dbus, internal_abus_l, internal_abus_h);
 
     stack_pointer : sp generic map (dsize) 
-            port map(trigger_clk, sp_we_n, sp_int_d_oe_n, sp_int_a_oe_n, 
+            port map(trigger_clk, sp_we_n, sp_push_n, sp_pop_n, 
+                    sp_int_d_oe_n, sp_int_a_oe_n, 
                     internal_dbus, internal_abus_l, internal_abus_h);
 
     status_reg_component : processor_status generic map (dsize) 

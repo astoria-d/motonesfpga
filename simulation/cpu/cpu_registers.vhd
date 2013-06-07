@@ -241,6 +241,7 @@ end rtl;
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
 
 entity sp is 
     generic (
@@ -249,6 +250,8 @@ entity sp is
     port (  
             clk         : in std_logic;
             we_n        : in std_logic;
+            push_n      : in std_logic;
+            pop_n       : in std_logic;
             int_d_oe_n  : in std_logic;
             int_a_oe_n  : in std_logic;
             int_dbus    : inout std_logic_vector (dsize - 1 downto 0);
@@ -272,16 +275,44 @@ component dff
 end component;
 signal oe_n : std_logic;
 signal q : std_logic_vector (dsize - 1 downto 0);
+signal d : std_logic_vector (dsize - 1 downto 0);
+signal q_buf : std_logic_vector (dsize - 1 downto 0);
+
 begin
     oe_n <= (int_d_oe_n and int_a_oe_n);
     int_dbus <= q when int_d_oe_n = '0' else
          (others =>'Z');
-    int_abus_l <= q when int_a_oe_n = '0' else
-         (others =>'Z');
+--    int_abus_l <= q when int_a_oe_n = '0' else
+--         (others =>'Z');
+
+    ---push: address decrement after push is done.
+    al_p : process (int_a_oe_n, push_n, clk, q_buf, q)
+    begin
+        if (int_a_oe_n = '0') then
+            if (push_n = '0') then
+                if (clk = '1') then
+                    int_abus_l <= q_buf;
+                else
+                    int_abus_l <= q;
+                end if;
+            else
+                int_abus_l <= q;
+            end if;
+        else
+            int_abus_l <= (others => 'Z');
+        end if;
+    end process;
+
     int_abus_h <= "00000001" when int_a_oe_n = '0' else
          (others =>'Z');
+    d <= int_dbus when we_n = '0' and push_n /= '0' else
+            (q - 1) when we_n = '0' and push_n = '0' else
+         (others =>'Z');
+
     dff_inst : dff generic map (dsize) 
-                    port map(clk, we_n, oe_n, int_dbus, q);
+                    port map(clk, we_n, oe_n, d, q);
+    buf : dff generic map (dsize) 
+                    port map(clk, we_n, '0', q, q_buf);
 end rtl;
 
 

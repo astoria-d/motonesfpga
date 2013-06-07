@@ -35,6 +35,8 @@ entity decoder is
             dl_int_al_oe_n  : out std_logic;
             dl_int_ah_oe_n  : out std_logic;
             sp_we_n         : out std_logic;
+            sp_push_n       : out std_logic;
+            sp_pop_n        : out std_logic;
             sp_int_d_oe_n   : out std_logic;
             sp_int_a_oe_n   : out std_logic;
             x_we_n          : out std_logic;
@@ -174,6 +176,8 @@ begin
             dl_int_al_oe_n <= '1';
             dl_int_ah_oe_n <= '1';
             sp_we_n <= '1';
+            sp_push_n <= '1';
+            sp_pop_n <= '1';
             sp_int_d_oe_n <= '1';
             sp_int_a_oe_n <= '1';
             x_we_n <= '1';
@@ -211,6 +215,8 @@ begin
                     inst_we_n <= '0';
                     x_we_n <= '1';
                     sp_we_n <= '1';
+                    sp_push_n <= '1';
+                    sp_pop_n <= '1';
                     x_oe_n <= '1';
                     r_nw <= '1';
                     pc_inc_n <= '0';
@@ -498,6 +504,8 @@ begin
                         --pch <= (pc + 2)
 
                        --push return addr high into stack.
+                        sp_we_n <= '0';
+                        sp_push_n <= '0';
                         pch_d_oe_n <= '0';
                         dbuf_ext_oe_n <= '0';
                         sp_int_a_oe_n <= '0';
@@ -537,6 +545,8 @@ begin
                        --push return addr low into stack.
                         pch_d_oe_n <= '1';
 
+                        sp_we_n <= '0';
+                        sp_push_n <= '0';
                         pcl_d_oe_n <= '0';
                         dbuf_ext_oe_n <= '0';
                         sp_int_a_oe_n <= '0';
@@ -556,6 +566,8 @@ begin
                     elsif instruction = conv_std_logic_vector(16#00#, dsize) then
                     elsif instruction = conv_std_logic_vector(16#20#, dsize) then
                         d_print("jsr 5");
+                        sp_we_n <= '1';
+                        sp_push_n <= '1';
                         pcl_d_oe_n <= '1';
                         dbuf_ext_oe_n <= '1';
                         sp_int_a_oe_n <= '1';
