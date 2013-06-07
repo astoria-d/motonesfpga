@@ -252,7 +252,7 @@ begin
             port map(trigger_clk, inst_we_n, '0', d_io, instruction);
 
     data_bus_buffer : dbus_buf generic map (dsize) 
-            port map(set_clk, dbuf_r_nw, internal_dbus, d_io);
+            port map(set_clk, dbuf_r_nw, dbuf_int_oe_n, internal_dbus, d_io);
 
     input_data_latch : input_dl generic map (dsize) 
             port map(dl_we_n, dl_int_d_oe_n, dl_int_al_oe_n, dl_int_ah_oe_n, 

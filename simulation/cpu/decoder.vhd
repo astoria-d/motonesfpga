@@ -84,13 +84,6 @@ begin
     tmp3 := (ival mod 16 ** 3) / 16 ** 2;
     tmp2 := (ival mod 16 ** 2) / 16 ** 1;
     tmp1 := ival mod 16 ** 1;
---    d_print("hex_chr");
---    d_print("ival: ", ival);
---    d_print("tmp4: ", tmp4);
---    d_print("tmp3: ", tmp3);
---    d_print("tmp2: ", tmp2);
---    d_print("tmp1: ", tmp1);
-
     return hex_chr(tmp4 + 1) & hex_chr(tmp3 + 1) 
         & hex_chr(tmp2 + 1) & hex_chr(tmp1 + 1);
 end;
@@ -109,21 +102,6 @@ type dec_status is (reset0, reset1, reset2, reset3, reset4, reset5,
                     --exec0 = fetch, exec1=decode
                     fetch, decode, exec2, exec3, exec4, exec5,
                     unknown_stat);
-
---type addr_mode is ( ad_imp,
---                    ad_imm,
---                    ad_acc, 
---                    ad_zp0, ad_zp1,
---                    ad_zpx0, ad_zpx1,
---                    ad_zpy0, ad_zpy1,
---                    ad_abs0, ad_abs1, ad_abs2, 
---                    ad_absx0, ad_absx1, ad_absx2, 
---                    ad_absy0, ad_absy1, ad_absy2,
---                    ad_indx_indir0, ad_indx_indir1, 
---                        ad_indx_indir2, ad_indx_indir3, ad_indx_indir4, 
---                    ad_indir_indx0, ad_indir_indx1, ad_indir_indx2, 
---                        ad_indir_indx3, ad_indir_indx4,
---                    ad_unknown);
 
 signal cur_status : dec_status;
 --signal cur_mode : addr_mode;
@@ -435,7 +413,7 @@ begin
                         elsif instruction = conv_std_logic_vector(16#40#, dsize) then
                             d_print("40");
                         elsif instruction = conv_std_logic_vector(16#60#, dsize) then
-                            d_print("60");
+                            d_print("rts 2");
                         
                             
                         ---bbb part format
@@ -508,6 +486,7 @@ begin
                         cur_status <= exec3;
                     elsif instruction = conv_std_logic_vector(16#40#, dsize) then
                     elsif instruction = conv_std_logic_vector(16#60#, dsize) then
+                            d_print("rts 3");
                     else
                         if instruction (4 downto 2) = "011" then
                             d_print("abs 1");
@@ -549,6 +528,7 @@ begin
                         cur_status <= exec4;
                     elsif instruction = conv_std_logic_vector(16#40#, dsize) then
                     elsif instruction = conv_std_logic_vector(16#60#, dsize) then
+                        d_print("rts 4");
                     else
                     end if; --if instruction (4 downto 0) = "10000"
                 end if; --instruction (1 downto 0) = "00" 
@@ -575,6 +555,7 @@ begin
 
                     elsif instruction = conv_std_logic_vector(16#40#, dsize) then
                     elsif instruction = conv_std_logic_vector(16#60#, dsize) then
+                            d_print("rts 5");
                     else
                     end if; --if instruction (4 downto 0) = "10000"
                 end if; --instruction (1 downto 0) = "00" 
@@ -606,6 +587,7 @@ begin
                         cur_status <= fetch;
                     elsif instruction = conv_std_logic_vector(16#40#, dsize) then
                     elsif instruction = conv_std_logic_vector(16#60#, dsize) then
+                        d_print("rts 6");
                     else
                     end if; --if instruction (4 downto 0) = "10000"
                 end if; --instruction (1 downto 0) = "00" 
