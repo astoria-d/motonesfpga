@@ -148,10 +148,7 @@ entity dbus_buf is
     port (  
             clk         : in std_logic;
             r_nw        : in std_logic;
-            int_we_n    : in std_logic;
-            ext_we_n    : in std_logic;
             int_oe_n    : in std_logic;
-            ext_oe_n    : in std_logic;
             int_dbus : inout std_logic_vector (dsize - 1 downto 0);
             ext_dbus : inout std_logic_vector (dsize - 1 downto 0)
         );
@@ -182,14 +179,18 @@ component latch
             q       : out std_logic_vector (dsize - 1 downto 0)
         );
 end component;
+
+signal not_r_nw : std_logic;
+
 begin
 
-    --read from i/o
+    not_r_nw <= not r_nw;
+    --read from i/o to cpu
     dff_r : dff generic map (dsize) 
-                    port map(clk, ext_we_n, int_oe_n, ext_dbus, int_dbus);
-    --write from cpu
+                    port map(clk, not_r_nw, int_oe_n, ext_dbus, int_dbus);
+    --write from cpu to io
     latch_w : latch generic map (dsize) 
-                    port map(int_we_n, ext_oe_n, int_dbus, ext_dbus);
+                    port map(r_nw, r_nw, int_dbus, ext_dbus);
 end rtl;
 
 ----------------------------------------

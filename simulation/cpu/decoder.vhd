@@ -28,9 +28,6 @@ entity decoder is
             pc_inc_n        : out std_logic;
             inst_we_n       : out std_logic;
             dbuf_int_oe_n   : out std_logic;
-            dbuf_ext_oe_n   : out std_logic;
-            dbuf_int_we_n   : out std_logic;
-            dbuf_ext_we_n   : out std_logic;
             dl_we_n         : out std_logic;
             dl_int_d_oe_n   : out std_logic;
             dl_int_al_oe_n  : out std_logic;
@@ -170,9 +167,6 @@ begin
             pc_inc_n <= '1';
             inst_we_n <= '1';
             dbuf_int_oe_n <= '1';
-            dbuf_ext_oe_n <= '1';
-            dbuf_int_we_n <= '1';
-            dbuf_ext_we_n <= '1';
             dl_we_n <= '1';
             dl_int_d_oe_n <= '1';
             dl_int_al_oe_n <= '1';
@@ -212,7 +206,6 @@ begin
                     --cycle #1
                     d_print(string'("fetch"));
                     ad_oe_n <= '0';
-                    dbuf_ext_we_n <= '0';
                     pcl_a_oe_n <= '0';
                     pch_a_oe_n <= '0';
                     inst_we_n <= '0';
@@ -510,9 +503,6 @@ begin
                         sp_we_n <= '0';
                         sp_push_n <= '0';
                         pch_d_oe_n <= '0';
-                        dbuf_int_we_n <= '0';
-                        dbuf_ext_we_n <= '1';
-                        dbuf_ext_oe_n <= '0';
                         sp_int_a_oe_n <= '0';
                         r_nw <= '0';
                         cur_status <= exec3;
@@ -553,8 +543,6 @@ begin
                         sp_we_n <= '0';
                         sp_push_n <= '0';
                         pcl_d_oe_n <= '0';
-                        dbuf_int_we_n <= '0';
-                        dbuf_ext_oe_n <= '0';
                         sp_int_a_oe_n <= '0';
                         r_nw <= '0';
 
@@ -575,16 +563,13 @@ begin
                         sp_we_n <= '1';
                         sp_push_n <= '1';
                         pcl_d_oe_n <= '1';
-                        dbuf_ext_oe_n <= '1';
                         sp_int_a_oe_n <= '1';
-                        dbuf_int_we_n <= '1';
                         r_nw <= '1';
 
                         --fetch last op.
                         pcl_a_oe_n <= '0';
                         pch_a_oe_n <= '0';
                         dbuf_int_oe_n <= '1';
-                        dbuf_ext_we_n <= '0';
 
                         cur_status <= exec5;
 
