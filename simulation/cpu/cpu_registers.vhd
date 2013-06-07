@@ -465,3 +465,29 @@ begin
     end process;
 end rtl;
 
+
+----------------------------------------
+--- tri-state buffer
+----------------------------------------
+
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity tsb is 
+    generic (
+            dsize : integer := 8
+            );
+    port (  
+            oe_n    : in std_logic;
+            d       : in std_logic_vector (dsize - 1 downto 0);
+            q       : out std_logic_vector (dsize - 1 downto 0)
+        );
+end tsb;
+
+architecture rtl of tsb is
+signal val : std_logic_vector (dsize - 1 downto 0);
+begin
+    q <= d when oe_n = '0' else
+        (others => 'Z');
+end rtl;
+

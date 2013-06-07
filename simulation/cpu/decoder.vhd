@@ -16,6 +16,7 @@ entity decoder is
             rdy             : in std_logic;
             instruction     : in std_logic_vector (dsize - 1 downto 0);
             status_reg      : inout std_logic_vector (dsize - 1 downto 0);
+            ad_oe_n         : out std_logic;
             pcl_d_we_n      : out std_logic;
             pcl_a_we_n      : out std_logic;
             pcl_d_oe_n      : out std_logic;
@@ -157,6 +158,7 @@ begin
             d_print(string'("reset"));
             cur_status <= reset0;
 
+            ad_oe_n <= '1';
             pcl_d_we_n <= '1';
             pcl_a_we_n <= '1';
             pcl_d_oe_n <= '1';
@@ -209,6 +211,7 @@ begin
                 when fetch => 
                     --cycle #1
                     d_print(string'("fetch"));
+                    ad_oe_n <= '0';
                     dbuf_ext_we_n <= '0';
                     pcl_a_oe_n <= '0';
                     pch_a_oe_n <= '0';
@@ -597,6 +600,7 @@ begin
 
                         pcl_a_oe_n <= '1';
                         pch_a_oe_n <= '1';
+                        ad_oe_n <= '1';
 
                         dl_int_d_oe_n <= '1';
                         pcl_d_we_n <= '1';

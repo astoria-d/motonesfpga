@@ -51,6 +51,7 @@ architecture rtl of mos6502 is
                 rdy             : in std_logic;
                 instruction     : in std_logic_vector (dsize - 1 downto 0);
                 status_reg      : inout std_logic_vector (dsize - 1 downto 0);
+                ad_oe_n         : out std_logic;
                 pcl_d_we_n      : out std_logic;
                 pcl_a_we_n      : out std_logic;
                 pcl_d_oe_n      : out std_logic;
@@ -146,6 +147,17 @@ architecture rtl of mos6502 is
             );
     end component;
 
+    component tsb
+        generic (
+                dsize : integer := 8
+                );
+        port (  
+                oe_n    : in std_logic;
+                d       : in std_logic_vector (dsize - 1 downto 0);
+                q       : out std_logic_vector (dsize - 1 downto 0)
+            );
+    end component;
+
     component processor_status 
     generic (
             dsize : integer := 8
@@ -209,6 +221,7 @@ architecture rtl of mos6502 is
     signal stat_alu_v : std_logic;
 
     --internal bus (address hi/lo, data)
+    signal ad_oe_n : std_logic;
     signal internal_abus_h : std_logic_vector (dsize - 1 downto 0);
     signal internal_abus_l : std_logic_vector (dsize - 1 downto 0);
     signal internal_dbus : std_logic_vector (dsize - 1 downto 0);
@@ -230,7 +243,7 @@ begin
 
     dec_inst : decoder generic map (dsize) 
             port map(set_clk, trigger_clk, rst_n, irq_n, nmi_n, 
-                    rdy, instruction, status_reg,
+                    rdy, instruction, status_reg, ad_oe_n, 
                     pcl_d_we_n, pcl_a_we_n, pcl_d_oe_n, pcl_a_oe_n,
                     pch_d_we_n, pch_a_we_n, pch_d_oe_n, pch_a_oe_n,
                     pc_inc_n, 
@@ -277,8 +290,11 @@ begin
     trigger_clk <= not input_clk;
     pc_cry_n <= not pc_cry;
 
-    addr(asize - 1 downto dsize) <= internal_abus_h;
-    addr(dsize - 1 downto 0) <= internal_abus_l;
+    --adh output is controlled by decoder.
+    adh_buffer : tsb generic map (dsize)
+            port map (ad_oe_n, internal_abus_h, addr(asize - 1 downto dsize));
+    adl_buffer : tsb generic map (dsize)
+            port map (ad_oe_n, internal_abus_l, addr(dsize - 1 downto 0));
 
     reset_p : process (rst_n)
     begin
