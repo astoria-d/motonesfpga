@@ -146,7 +146,8 @@ entity dbus_buf is
             dsize : integer := 8
             );
     port (  
-            clk     : in std_logic;
+            clk         : in std_logic;
+            r_nw        : in std_logic;
             int_we_n    : in std_logic;
             ext_we_n    : in std_logic;
             int_oe_n    : in std_logic;
@@ -169,22 +170,26 @@ component dff
             q       : out std_logic_vector (dsize - 1 downto 0)
         );
 end component;
-signal we_n : std_logic;
-signal oe_n : std_logic;
-signal d : std_logic_vector (dsize - 1 downto 0);
-signal q : std_logic_vector (dsize - 1 downto 0);
+
+component latch
+    generic (
+            dsize : integer := 8
+            );
+    port (  
+            we_n    : in std_logic;
+            oe_n    : in std_logic;
+            d       : in std_logic_vector (dsize - 1 downto 0);
+            q       : out std_logic_vector (dsize - 1 downto 0)
+        );
+end component;
 begin
-    oe_n <= (int_oe_n and ext_oe_n);
-    we_n <= (int_we_n and ext_we_n);
-    d <= int_dbus when int_we_n = '0' else
-         ext_dbus when ext_we_n = '0' else
-         (others => 'Z');
-    int_dbus <= q when int_oe_n = '0' else
-         (others =>'Z');
-    ext_dbus <= q when ext_oe_n = '0' else
-         (others =>'Z');
-    dff_inst : dff generic map (dsize) 
-                    port map(clk, we_n, oe_n, d, q);
+
+    --read from i/o
+    dff_r : dff generic map (dsize) 
+                    port map(clk, ext_we_n, int_oe_n, ext_dbus, int_dbus);
+    --write from cpu
+    latch_w : latch generic map (dsize) 
+                    port map(int_we_n, ext_oe_n, int_dbus, ext_dbus);
 end rtl;
 
 ----------------------------------------

@@ -510,6 +510,8 @@ begin
                         sp_we_n <= '0';
                         sp_push_n <= '0';
                         pch_d_oe_n <= '0';
+                        dbuf_int_we_n <= '0';
+                        dbuf_ext_we_n <= '1';
                         dbuf_ext_oe_n <= '0';
                         sp_int_a_oe_n <= '0';
                         r_nw <= '0';
@@ -551,6 +553,7 @@ begin
                         sp_we_n <= '0';
                         sp_push_n <= '0';
                         pcl_d_oe_n <= '0';
+                        dbuf_int_we_n <= '0';
                         dbuf_ext_oe_n <= '0';
                         sp_int_a_oe_n <= '0';
                         r_nw <= '0';
@@ -574,12 +577,14 @@ begin
                         pcl_d_oe_n <= '1';
                         dbuf_ext_oe_n <= '1';
                         sp_int_a_oe_n <= '1';
+                        dbuf_int_we_n <= '1';
                         r_nw <= '1';
 
                         --fetch last op.
                         pcl_a_oe_n <= '0';
                         pch_a_oe_n <= '0';
                         dbuf_int_oe_n <= '1';
+                        dbuf_ext_we_n <= '0';
 
                         cur_status <= exec5;
 

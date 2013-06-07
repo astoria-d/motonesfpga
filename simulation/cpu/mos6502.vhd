@@ -105,7 +105,8 @@ architecture rtl of mos6502 is
                 dsize : integer := 8
                 );
         port (  
-                clk     : in std_logic;
+                clk         : in std_logic;
+                r_nw        : in std_logic;
                 int_we_n    : in std_logic;
                 ext_we_n    : in std_logic;
                 int_oe_n    : in std_logic;
@@ -193,6 +194,7 @@ architecture rtl of mos6502 is
     signal dum_terminate : std_logic := 'Z';
 
     signal inst_we_n : std_logic;
+    signal dbuf_r_nw : std_logic;
     signal dbuf_int_oe_n : std_logic;
     signal dbuf_ext_oe_n : std_logic;
     signal dbuf_int_we_n : std_logic;
@@ -253,13 +255,13 @@ begin
                     sp_we_n, sp_push_n, sp_pop_n, sp_int_d_oe_n, sp_int_a_oe_n,
                     x_we_n, x_oe_n, y_we_n, y_oe_n, 
                     stat_dec_we_n, stat_dec_oe_n, stat_bus_we_n, stat_bus_oe_n,
-                    r_nw);
+                    dbuf_r_nw);
 
     instruction_register : dff generic map (dsize) 
             port map(trigger_clk, inst_we_n, '0', d_io, instruction);
 
     data_bus_buffer : dbus_buf generic map (dsize) 
-            port map(set_clk, dbuf_int_we_n, dbuf_ext_we_n, 
+            port map(set_clk, dbuf_r_nw, dbuf_int_we_n, dbuf_ext_we_n, 
                     dbuf_int_oe_n, dbuf_ext_oe_n, internal_dbus, d_io);
 
     input_data_latch : input_dl generic map (dsize) 
@@ -289,6 +291,7 @@ begin
     set_clk <= input_clk;
     trigger_clk <= not input_clk;
     pc_cry_n <= not pc_cry;
+    r_nw <= dbuf_r_nw;
 
     --adh output is controlled by decoder.
     adh_buffer : tsb generic map (dsize)
