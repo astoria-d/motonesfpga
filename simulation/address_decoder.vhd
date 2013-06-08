@@ -44,39 +44,35 @@ architecture rtl of address_decoder is
     constant CPU_DST : time := 100 ns;    --write data setup time.
 
     signal rom_ce_n : std_logic;
+    signal rom_out : std_logic_vector (dsize - 1 downto 0);
 
     signal ram_ce_n : std_logic;
     signal ram_oe_n : std_logic;
-
-    signal rom_out : std_logic_vector (dsize - 1 downto 0);
     signal ram_io : std_logic_vector (dsize - 1 downto 0);
 begin
 
+    rom_ce_n <= '0' when (addr(15) = '1' and R_nW = '1') else
+             '1' ;
     romport : prg_rom generic map (rom_32k, dsize)
             port map (rom_ce_n, addr(rom_32k - 1 downto 0), rom_out);
 
+    ram_io <= d_io 
+        when (r_nw = '0' and ((addr(15) or addr(14) or addr(13)) = '0')) else
+        "ZZZZZZZZ";
     ram_oe_n <= not R_nW;
     ramport : ram generic map (ram_2k, dsize)
             port map (ram_ce_n, ram_oe_n, R_nW, 
                     addr(ram_2k - 1 downto 0), ram_io);
 
-    rom_ce_n <= '0' when (addr(15) = '1' and R_nW = '1') else
-             '1' ;
-
     --must explicitly drive to for inout port.
-    d_io <= 
-    "ZZZZZZZZ" when r_nw = '0' else
-    ram_io when ((addr(15) or addr(14) or addr(13)) = '0') else
-    rom_out when (addr(15) = '1') else
-    (others => 'Z');
+    d_io <= ram_io 
+            when (((addr(15) or addr(14) or addr(13)) = '0') and r_nw = '1')  else
+        rom_out 
+            when ((addr(15) = '1') and r_nw = '1') else
+        (others => 'Z');
 
-    ram_io <= 
-    "ZZZZZZZZ" 
-        when (r_nw = '1') else
-    d_io 
-        when (r_nw = '0' and ((addr(15) or addr(14) or addr(13)) = '0')) else
-    "ZZZZZZZZ";
 
+    --ram io timing.
     main_p : process (phi2, addr, R_nW)
     begin
             -- ram range : 0 - 0x2000.
@@ -100,7 +96,6 @@ begin
         else
             ram_ce_n <= '1';
         end if;
-
     end process;
 
 end rtl;
