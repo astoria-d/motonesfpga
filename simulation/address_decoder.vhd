@@ -81,7 +81,8 @@ begin
     begin
             -- ram range : 0 - 0x2000.
             -- 0x2000 is 0010_0000_0000_0000
-        if (addr < "0010000000000000") then
+        if ((addr(15) or addr(14) or addr(13)) = '0') then
+        --if (addr < "0010000000000000") then
             if (R_nW = '0') then
                 --write
                 --write timing slided by half clock.
@@ -96,7 +97,6 @@ begin
             else
                 ram_ce_n <= '1';
             end if;
-        --if ((addr(15) or addr(14) or addr(13)) = '1') then
         else
             ram_ce_n <= '1';
         end if;
