@@ -280,18 +280,21 @@ component dff
         );
 end component;
 signal oe_n : std_logic;
+signal dff_we_n : std_logic;
 signal q : std_logic_vector (dsize - 1 downto 0);
 signal d : std_logic_vector (dsize - 1 downto 0);
 signal q_buf : std_logic_vector (dsize - 1 downto 0);
 
 begin
     oe_n <= (int_d_oe_n and int_a_oe_n);
+    dff_we_n <= (we_n and push_n and pop_n);
     int_dbus <= q when int_d_oe_n = '0' else
          (others =>'Z');
 --    int_abus_l <= q when int_a_oe_n = '0' else
 --         (others =>'Z');
 
     ---push: address decrement after push is done.
+    ---pop: address increment before pop is done.
     al_p : process (int_a_oe_n, push_n, clk, q_buf, q)
     begin
         if (int_a_oe_n = '0') then
@@ -300,6 +303,12 @@ begin
                     int_abus_l <= q_buf;
                 else
                     int_abus_l <= q;
+                end if;
+            elsif (pop_n = '0') then
+                if (clk = '1') then
+                    int_abus_l <= q;
+                else
+                    int_abus_l <= q + 1;
                 end if;
             else
                 int_abus_l <= q;
@@ -311,14 +320,15 @@ begin
 
     int_abus_h <= "00000001" when int_a_oe_n = '0' else
          (others =>'Z');
-    d <= int_dbus when we_n = '0' and push_n /= '0' else
-            (q - 1) when we_n = '0' and push_n = '0' else
+    d <= int_dbus when we_n = '0' else
+            (q - 1) when push_n = '0' else
+            (q + 1) when pop_n = '0' else
          (others =>'Z');
 
     dff_inst : dff generic map (dsize) 
-                    port map(clk, we_n, oe_n, d, q);
+                    port map(clk, dff_we_n, oe_n, d, q);
     buf : dff generic map (dsize) 
-                    port map(clk, we_n, '0', q, q_buf);
+                    port map(clk, dff_we_n, '0', q, q_buf);
 end rtl;
 
 

@@ -46,7 +46,7 @@ architecture rtl of address_decoder is
     signal rom_ce_n : std_logic;
 
     signal ram_ce_n : std_logic;
-    signal ram_we_n : std_logic;
+    signal ram_oe_n : std_logic;
 
     signal rom_out : std_logic_vector (dsize - 1 downto 0);
     signal ram_io : std_logic_vector (dsize - 1 downto 0);
@@ -55,9 +55,9 @@ begin
     romport : prg_rom generic map (rom_32k, dsize)
             port map (rom_ce_n, addr(rom_32k - 1 downto 0), rom_out);
 
-    ram_we_n <= not R_nW;
+    ram_oe_n <= not R_nW;
     ramport : ram generic map (ram_2k, dsize)
-            port map (ram_ce_n, ram_we_n, R_nW, 
+            port map (ram_ce_n, ram_oe_n, R_nW, 
                     addr(ram_2k - 1 downto 0), ram_io);
 
     rom_ce_n <= '0' when (addr(15) = '1' and R_nW = '1') else
@@ -77,13 +77,11 @@ begin
         when (r_nw = '0' and ((addr(15) or addr(14) or addr(13)) = '0')) else
     "ZZZZZZZZ";
 
-    main_p : process (phi2)
+    main_p : process (phi2, addr, R_nW)
     begin
             -- ram range : 0 - 0x2000.
             -- 0x2000 is 0010_0000_0000_0000
-        if ((addr(15) or addr(14) or addr(13)) = '1') then
-            ram_ce_n <= '1';
-        else
+        if (addr < "0010000000000000") then
             if (R_nW = '0') then
                 --write
                 --write timing slided by half clock.
@@ -94,12 +92,13 @@ begin
                 end if;
             elsif (R_nW = '1') then 
                 --read
-                if (phi2'event and phi2 = '0') then
-                    ram_ce_n <= '0';
-                end if;
+                ram_ce_n <= '0';
             else
                 ram_ce_n <= '1';
             end if;
+        --if ((addr(15) or addr(14) or addr(13)) = '1') then
+        else
+            ram_ce_n <= '1';
         end if;
 
     end process;
