@@ -276,6 +276,7 @@ begin
                 pc_inc_n <= '0';
 
                 x_we_n <= '1';
+                y_we_n <= '1';
                 sp_we_n <= '1';
                 sp_push_n <= '1';
                 sp_pop_n <= '1';
