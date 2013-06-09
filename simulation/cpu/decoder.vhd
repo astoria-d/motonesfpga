@@ -507,8 +507,8 @@ begin
                             elsif instruction (7 downto 5) = "100" then
                                 d_print("stx");
                             elsif instruction (7 downto 5) = "101" then
-                                d_print("ldx");
                                 if (cur_mode = ad_imm) then
+                                    d_print("ldx");
                                     x_we_n <= '0';
                                     --status register n/z bit update.
                                     stat_dec_oe_n <= '1';
@@ -539,7 +539,14 @@ begin
                                 elsif instruction (7 downto 5) = "100" then
                                     d_print("sty");
                                 elsif instruction (7 downto 5) = "101" then
-                                    d_print("ldy");
+                                    if (cur_mode = ad_imm) then
+                                        d_print("ldy");
+                                        y_we_n <= '0';
+                                        --status register n/z bit update.
+                                        stat_dec_oe_n <= '1';
+                                        status_reg <= "10000010";
+                                        stat_bus_we_n <= '0';
+                                    end if;
                                 elsif instruction (7 downto 5) = "110" then
                                     d_print("cpy");
                                 elsif instruction (7 downto 5) = "111" then
