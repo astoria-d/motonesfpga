@@ -290,8 +290,6 @@ begin
     dff_we_n <= (we_n and push_n and pop_n);
     int_dbus <= q when int_d_oe_n = '0' else
          (others =>'Z');
---    int_abus_l <= q when int_a_oe_n = '0' else
---         (others =>'Z');
 
     ---push: address decrement after push is done.
     ---pop: address increment before pop is done.
@@ -306,9 +304,9 @@ begin
                 end if;
             elsif (pop_n = '0') then
                 if (clk = '1') then
-                    int_abus_l <= q;
+                    int_abus_l <= q_buf;
                 else
-                    int_abus_l <= q + 1;
+                    int_abus_l <= q;
                 end if;
             else
                 int_abus_l <= q;

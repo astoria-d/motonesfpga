@@ -400,14 +400,12 @@ begin
                         pcl_a_oe_n <= '1';
                         pch_a_oe_n <= '1';
                         pc_inc_n <= '1';
-                        --pop pcl
-                        sp_int_a_oe_n <= '0';
+
+                        --pop stack (decrement only)
                         sp_pop_n <= '0';
-                        --latch data
-                        --dbuf_int_oe_n <= '0';
-                        --dl_we_n <= '0';
-                        --cur_status <= exec2;
-                        
+                        sp_int_a_oe_n <= '0';
+
+                        cur_status <= exec2;
                     elsif instruction (4 downto 0) = "10000" then
                         ---conditional branch instruction..
 
@@ -550,6 +548,11 @@ begin
                 elsif instruction = conv_std_logic_vector(16#40#, dsize) then
                 elsif instruction = conv_std_logic_vector(16#60#, dsize) then
                         d_print("rts 3");
+                        --pop pcl
+                        sp_int_a_oe_n <= '0';
+                        sp_pop_n <= '0';
+
+                        cur_status <= exec3;
                 elsif instruction (4 downto 0) = "10000" then
                     ---conditional branch instruction..
                 else
@@ -595,6 +598,16 @@ begin
                 elsif instruction = conv_std_logic_vector(16#40#, dsize) then
                 elsif instruction = conv_std_logic_vector(16#60#, dsize) then
                     d_print("rts 4");
+
+                    --load pcl
+                    dbuf_int_oe_n <= '0';
+                    pcl_d_we_n <= '0';
+
+                    --pop pcl
+                    sp_int_a_oe_n <= '0';
+                    sp_pop_n <= '0';
+
+                    cur_status <= exec4;
                 elsif instruction (4 downto 0) = "10000" then
                     ---conditional branch instruction..
                 else
@@ -621,7 +634,16 @@ begin
 
                 elsif instruction = conv_std_logic_vector(16#40#, dsize) then
                 elsif instruction = conv_std_logic_vector(16#60#, dsize) then
-                        d_print("rts 5");
+                    d_print("rts 5");
+                    sp_int_a_oe_n <= '1';
+                    sp_pop_n <= '1';
+                    pcl_d_we_n <= '1';
+
+                    --load pch
+                    dbuf_int_oe_n <= '0';
+                    pch_d_we_n <= '0';
+
+                    cur_status <= exec5;
                 elsif instruction (4 downto 0) = "10000" then
                     ---conditional branch instruction..
                 else
@@ -654,6 +676,12 @@ begin
                 elsif instruction = conv_std_logic_vector(16#40#, dsize) then
                 elsif instruction = conv_std_logic_vector(16#60#, dsize) then
                     d_print("rts 6");
+                    dbuf_int_oe_n <= '1';
+                    pch_d_we_n <= '1';
+
+                    --increment pc.
+                    pc_inc_n <= '0';
+                    cur_status <= fetch;
                 elsif instruction (4 downto 0) = "10000" then
                     ---conditional branch instruction..
                 else
