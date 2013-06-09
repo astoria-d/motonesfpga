@@ -205,7 +205,8 @@ entity input_dl is
             dsize : integer := 8
             );
     port (  
-            we_n        : in std_logic;
+            int_al_we_n : in std_logic;
+            int_ah_we_n : in std_logic;
             int_d_oe_n  : in std_logic;
             int_al_oe_n : in std_logic;
             int_ah_oe_n : in std_logic;
@@ -227,18 +228,23 @@ component latch
             q       : out std_logic_vector (dsize - 1 downto 0)
         );
 end component;
-signal oe_n : std_logic;
-signal q : std_logic_vector (dsize - 1 downto 0);
+signal ql : std_logic_vector (dsize - 1 downto 0);
+signal qh : std_logic_vector (dsize - 1 downto 0);
 begin
-    oe_n <= (int_d_oe_n and int_al_oe_n and int_ah_oe_n);
-    int_dbus <= q when int_d_oe_n = '0' else
+    --oe_n <= (int_d_oe_n and int_al_oe_n and int_ah_oe_n);
+    ----TODO: must check!! for the time being, output ql.
+    int_dbus <= ql when int_d_oe_n = '0' else
          (others =>'Z');
-    int_abus_l <= q when int_al_oe_n = '0' else
+
+    int_abus_l <= ql when int_al_oe_n = '0' else
          (others =>'Z');
-    int_abus_h <= q when int_ah_oe_n = '0' else
+    int_abus_h <= qh when int_ah_oe_n = '0' else
          (others =>'Z');
-    latch_inst : latch generic map (dsize) 
-                    port map(we_n, oe_n, int_dbus, q);
+
+    latch_l : latch generic map (dsize) 
+                    port map(int_al_we_n, int_al_oe_n, int_dbus, ql);
+    latch_h : latch generic map (dsize) 
+                    port map(int_ah_we_n, int_ah_oe_n, int_dbus, qh);
 end rtl;
 
 ----------------------------------------

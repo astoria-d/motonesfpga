@@ -28,10 +28,11 @@ entity decoder is
             pc_inc_n        : out std_logic;
             inst_we_n       : out std_logic;
             dbuf_int_oe_n   : out std_logic;
-            dl_we_n         : out std_logic;
-            dl_int_d_oe_n   : out std_logic;
-            dl_int_al_oe_n  : out std_logic;
-            dl_int_ah_oe_n  : out std_logic;
+            dl_al_we_n      : out std_logic;
+            dl_ah_we_n      : out std_logic;
+            dl_d_oe_n       : out std_logic; --no neeed????
+            dl_al_oe_n      : out std_logic;
+            dl_ah_oe_n      : out std_logic;
             sp_we_n         : out std_logic;
             sp_push_n       : out std_logic;
             sp_pop_n        : out std_logic;
@@ -224,10 +225,11 @@ begin
             pc_inc_n <= '1';
             inst_we_n <= '1';
             dbuf_int_oe_n <= '1';
-            dl_we_n <= '1';
-            dl_int_d_oe_n <= '1';
-            dl_int_al_oe_n <= '1';
-            dl_int_ah_oe_n <= '1';
+            dl_al_we_n <= '1';
+            dl_ah_we_n <= '1';
+            dl_d_oe_n <= '1';
+            dl_al_oe_n <= '1';
+            dl_ah_oe_n <= '1';
             sp_we_n <= '1';
             sp_push_n <= '1';
             sp_pop_n <= '1';
@@ -284,10 +286,12 @@ begin
                 stat_bus_we_n <= '1';
                 pch_d_we_n <= '1';
                 pcl_a_we_n <= '1';
-                dl_we_n <= '1';
-                dl_int_al_oe_n <= '1';
+                dl_al_we_n <= '1';
+                dl_al_oe_n <= '1';
+                dl_ah_oe_n <= '1';
                 pcl_d_we_n <= '1';
                 acc_d_we_n <= '1';
+                acc_d_oe_n  <= '1';
 
                 cur_status <= decode;
 
@@ -401,7 +405,7 @@ begin
                         pc_inc_n <= '0';
                         dbuf_int_oe_n <= '0';
                         --latch data
-                        dl_we_n <= '0';
+                        dl_al_we_n <= '0';
                         cur_status <= exec2;
 
                     elsif instruction = conv_std_logic_vector(16#40#, dsize) then
@@ -432,6 +436,7 @@ begin
                         if cur_mode = ad_imm then
                             d_print("immediate");
                             pc_inc_n <= '0';
+                            --send data from data bus buffer.
                             dbuf_int_oe_n <= '0';
                             cur_status <= fetch;
                         elsif cur_mode = ad_acc then
@@ -442,7 +447,8 @@ begin
                             d_print("abs 2");
                             dbuf_int_oe_n <= '0';
                             pc_inc_n <= '0';
-                            dl_we_n <= '0';
+                            --latch abs low data.
+                            dl_al_we_n <= '0';
                             cur_status <= exec2;
                         elsif cur_mode = ad_absx then
                         elsif cur_mode = ad_absy then
@@ -466,7 +472,9 @@ begin
                             elsif instruction (7 downto 5) = "011" then
                                 d_print("adc");
                             elsif instruction (7 downto 5) = "100" then
-                                d_print("sta");
+                                if (cur_mode = ad_imm) then
+                                    d_print("sta");
+                                end if;
                             elsif instruction (7 downto 5) = "101" then
                                 d_print("lda");
                                 if (cur_mode = ad_imm) then
@@ -557,7 +565,7 @@ begin
                     pch_a_oe_n <= '1';
                     pc_inc_n <= '1';
                     dbuf_int_oe_n <= '1';
-                    dl_we_n <= '1';
+                    dl_al_we_n <= '1';
                     --pch <= (pc + 2)
 
                    --push return addr high into stack.
@@ -581,12 +589,13 @@ begin
                     
                     if cur_mode = ad_abs then
                         d_print("abs 3");
-                        dl_we_n <= '1';
+                        dl_al_we_n <= '1';
                         pcl_a_oe_n <= '0';
                         pch_a_oe_n <= '0';
-                        --pc_inc_n <= '0';
+                        --send data from data bus buffer.
                         dbuf_int_oe_n <= '0';
-                        cur_status <= fetch;
+                        --latch abs hi data.
+                        dl_ah_we_n <= '0';
                     end if; --if cur_mode = ad_abs then
 
                     if instruction (1 downto 0) = "00" then
@@ -594,11 +603,17 @@ begin
                         --jmp
                             d_print("jmp");
                             pc_inc_n <= '1';
-                            dl_int_al_oe_n <= '0';
+                            dl_al_oe_n <= '0';
                             pcl_a_oe_n <= '1';
                             pcl_a_we_n <= '0';
                             pch_d_we_n <= '0';
+                            cur_status <= fetch;
                         end if; --if instruction (7 downto 5) = "010" then
+                    elsif instruction (1 downto 0) = "01" then
+                        if instruction (7 downto 5) = "100" then
+                            --d_print("sta");
+                            cur_status <= exec3;
+                        end if;
                     end if; --if instruction (1 downto 0) = "00" then
                 end if; --if instruction = conv_std_logic_vector(16#00#, dsize)
 
@@ -632,7 +647,29 @@ begin
                 elsif instruction (4 downto 0) = "10000" then
                     ---conditional branch instruction..
                 else
+                    if cur_mode = ad_abs then
+                        --d_print("abs 4");
+                        pc_inc_n <= '1';
+                        pcl_a_oe_n <= '1';
+                        pch_a_oe_n <= '1';
+                        dbuf_int_oe_n <= '1';
+                        dl_ah_we_n <= '1';
+                    end if; --if cur_mode = ad_abs then
+
                     if instruction (1 downto 0) = "00" then
+                    elsif instruction (1 downto 0) = "01" then
+                        if instruction (7 downto 5) = "100" then
+                            d_print("sta 4");
+                            --output acc memory..
+                            r_nw <= '0';
+                            acc_d_oe_n  <= '0';
+                            dbuf_int_oe_n <= '1';
+                            --latch > al/ah.
+                            dl_al_oe_n <= '0';
+                            dl_ah_oe_n <= '0';
+
+                            cur_status <= fetch;
+                        end if;
                     end if; --instruction (1 downto 0) = "00" 
                 end if; --if instruction = conv_std_logic_vector(16#00#, dsize) 
 
@@ -682,7 +719,6 @@ begin
                     pch_a_oe_n <= '1';
                     ad_oe_n <= '1';
 
-                    dl_int_d_oe_n <= '1';
                     pcl_d_we_n <= '1';
 
                     --load/output  pch
@@ -690,7 +726,7 @@ begin
                     dbuf_int_oe_n <= '0';
 
                     --load pcl.
-                    dl_int_al_oe_n <= '0';
+                    dl_al_oe_n <= '0';
                     pcl_a_we_n <= '0';
 
                     cur_status <= fetch;
@@ -712,35 +748,6 @@ begin
 
             elsif cur_status = err_stat then
                 ---stop decoding... > CPU stoo.
-                ad_oe_n <= '1';
-                pcl_d_we_n <= '1';
-                pcl_a_we_n <= '1';
-                pcl_d_oe_n <= '1';
-                pcl_a_oe_n <= '1';
-                pch_d_we_n <= '1';
-                pch_a_we_n <= '1';
-                pch_d_oe_n <= '1';
-                pch_a_oe_n <= '1';
-                pc_inc_n <= '1';
-                inst_we_n <= '1';
-                dbuf_int_oe_n <= '1';
-                dl_we_n <= '1';
-                dl_int_d_oe_n <= '1';
-                dl_int_al_oe_n <= '1';
-                dl_int_ah_oe_n <= '1';
-                sp_we_n <= '1';
-                sp_push_n <= '1';
-                sp_pop_n <= '1';
-                sp_int_d_oe_n <= '1';
-                sp_int_a_oe_n <= '1';
-                x_we_n <= '1';
-                x_oe_n <= '1';
-                y_we_n <= '1';
-                y_oe_n <= '1';
-                stat_dec_we_n <= '1';
-                stat_dec_oe_n <= '1';
-                stat_bus_we_n <= '1';
-                stat_bus_oe_n <= '1';
             else
                 assert false 
                     report ("unknow status") severity failure;

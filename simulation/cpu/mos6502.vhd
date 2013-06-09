@@ -63,10 +63,11 @@ architecture rtl of mos6502 is
                 pc_inc_n        : out std_logic;
                 inst_we_n       : out std_logic;
                 dbuf_int_oe_n   : out std_logic;
-                dl_we_n         : out std_logic;
-                dl_int_d_oe_n   : out std_logic;
-                dl_int_al_oe_n  : out std_logic;
-                dl_int_ah_oe_n  : out std_logic;
+                dl_al_we_n      : out std_logic;
+                dl_ah_we_n      : out std_logic;
+                dl_d_oe_n       : out std_logic;
+                dl_al_oe_n      : out std_logic;
+                dl_ah_oe_n      : out std_logic;
                 sp_we_n         : out std_logic;
                 sp_push_n       : out std_logic;
                 sp_pop_n        : out std_logic;
@@ -120,7 +121,8 @@ architecture rtl of mos6502 is
                 dsize : integer := 8
                 );
         port (  
-                we_n        : in std_logic;
+                int_al_we_n : in std_logic;
+                int_ah_we_n : in std_logic;
                 int_d_oe_n  : in std_logic;
                 int_al_oe_n : in std_logic;
                 int_ah_oe_n : in std_logic;
@@ -211,10 +213,11 @@ architecture rtl of mos6502 is
     signal inst_we_n : std_logic;
     signal dbuf_r_nw : std_logic;
     signal dbuf_int_oe_n : std_logic;
-    signal dl_we_n : std_logic;
-    signal dl_int_d_oe_n : std_logic;
-    signal dl_int_al_oe_n : std_logic;
-    signal dl_int_ah_oe_n : std_logic;
+    signal dl_al_we_n : std_logic;
+    signal dl_ah_we_n : std_logic;
+    signal dl_d_oe_n : std_logic;
+    signal dl_al_oe_n : std_logic;
+    signal dl_ah_oe_n : std_logic;
 
     signal sp_we_n : std_logic;
     signal sp_push_n : std_logic;
@@ -283,10 +286,11 @@ begin
                     pc_inc_n, 
                     inst_we_n, 
                     dbuf_int_oe_n, 
-                    dl_we_n, 
-                    dl_int_d_oe_n, 
-                    dl_int_al_oe_n, 
-                    dl_int_ah_oe_n,
+                    dl_al_we_n, 
+                    dl_ah_we_n, 
+                    dl_d_oe_n, 
+                    dl_al_oe_n, 
+                    dl_ah_oe_n,
                     sp_we_n, 
                     sp_push_n, 
                     sp_pop_n, 
@@ -315,7 +319,7 @@ begin
             port map(set_clk, dbuf_r_nw, dbuf_int_oe_n, internal_dbus, d_io);
 
     input_data_latch : input_dl generic map (dsize) 
-            port map(dl_we_n, dl_int_d_oe_n, dl_int_al_oe_n, dl_int_ah_oe_n, 
+            port map(dl_al_we_n, dl_ah_we_n, dl_d_oe_n, dl_al_oe_n, dl_ah_oe_n, 
                     internal_dbus, internal_abus_l, internal_abus_h);
 
     stack_pointer : sp generic map (dsize) 
