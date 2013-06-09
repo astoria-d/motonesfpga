@@ -634,6 +634,8 @@ begin
                 elsif instruction = conv_std_logic_vector(16#40#, dsize) then
                 elsif instruction = conv_std_logic_vector(16#60#, dsize) then
                     d_print("rts 4");
+                    --stack decrement stop.
+                    sp_pop_n <= '1';
 
                     --load pcl
                     dbuf_int_oe_n <= '0';
@@ -641,7 +643,6 @@ begin
 
                     --pop pcl
                     sp_int_a_oe_n <= '0';
-                    sp_pop_n <= '0';
 
                     cur_status <= exec4;
                 elsif instruction (4 downto 0) = "10000" then
@@ -694,7 +695,6 @@ begin
                 elsif instruction = conv_std_logic_vector(16#60#, dsize) then
                     d_print("rts 5");
                     sp_int_a_oe_n <= '1';
-                    sp_pop_n <= '1';
                     pcl_d_we_n <= '1';
 
                     --load pch
