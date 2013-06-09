@@ -72,6 +72,10 @@ architecture rtl of mos6502 is
                 sp_pop_n        : out std_logic;
                 sp_int_d_oe_n   : out std_logic;
                 sp_int_a_oe_n   : out std_logic;
+                acc_d_we_n      : out std_logic;
+                acc_alu_we_n    : out std_logic;
+                acc_d_oe_n      : out std_logic;
+                acc_alu_oe_n    : out std_logic;
                 x_we_n          : out std_logic;
                 x_oe_n          : out std_logic;
                 y_we_n          : out std_logic;
@@ -80,7 +84,8 @@ architecture rtl of mos6502 is
                 stat_dec_oe_n   : out std_logic;
                 stat_bus_we_n   : out std_logic;
                 stat_bus_oe_n   : out std_logic;
-                r_nw            : out std_logic
+                r_nw            : out std_logic;
+                dbg_show_pc     : out std_logic
             );
     end component;
 
@@ -201,6 +206,11 @@ architecture rtl of mos6502 is
     signal sp_int_d_oe_n : std_logic;
     signal sp_int_a_oe_n : std_logic;
 
+    signal acc_d_we_n      : std_logic;
+    signal acc_alu_we_n    : std_logic;
+    signal acc_d_oe_n      : std_logic;
+    signal acc_alu_oe_n    : std_logic;
+
     signal x_we_n : std_logic;
     signal x_oe_n : std_logic;
     signal y_we_n : std_logic;
@@ -222,6 +232,7 @@ architecture rtl of mos6502 is
     signal instruction : std_logic_vector (dsize - 1 downto 0);
     signal status_reg : std_logic_vector (dsize - 1 downto 0);
 
+    signal dbg_show_pc : std_logic;
 begin
 
     ---instances....
@@ -264,6 +275,10 @@ begin
                     sp_pop_n, 
                     sp_int_d_oe_n, 
                     sp_int_a_oe_n,
+                    acc_d_we_n,
+                    acc_alu_we_n,
+                    acc_d_oe_n,
+                    acc_alu_oe_n,
                     x_we_n, 
                     x_oe_n, 
                     y_we_n, 
@@ -272,7 +287,8 @@ begin
                     stat_dec_oe_n, 
                     stat_bus_we_n, 
                     stat_bus_oe_n,
-                    dbuf_r_nw
+                    dbuf_r_nw,
+                    dbg_show_pc
                     );
 
     instruction_register : dff generic map (dsize) 
@@ -320,6 +336,33 @@ begin
     begin
         if (rst_n'event and rst_n = '0') then
 
+        end if;
+    end process;
+
+    dbg_p : process (dbg_show_pc)
+use std.textio.all;
+use ieee.std_logic_textio.all;
+use ieee.std_logic_unsigned.conv_integer;
+
+procedure d_print(msg : string) is
+variable out_l : line;
+begin
+    write(out_l, msg);
+    writeline(output, out_l);
+end  procedure;
+
+function conv_hex8(ival : integer) return string is
+variable tmp1, tmp2 : integer;
+variable hex_chr: string (1 to 16) := "0123456789abcdef";
+begin
+    tmp2 := (ival mod 16 ** 2) / 16 ** 1;
+    tmp1 := ival mod 16 ** 1;
+    return hex_chr(tmp2 + 1) & hex_chr(tmp1 + 1);
+end;
+    begin
+        if (dbg_show_pc = '1') then
+            d_print("pc : " & conv_hex8(conv_integer(internal_abus_h)) 
+                    & conv_hex8(conv_integer(internal_abus_l)));
         end if;
     end process;
 

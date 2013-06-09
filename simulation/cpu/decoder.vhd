@@ -37,6 +37,10 @@ entity decoder is
             sp_pop_n        : out std_logic;
             sp_int_d_oe_n   : out std_logic;
             sp_int_a_oe_n   : out std_logic;
+            acc_d_we_n      : out std_logic;
+            acc_alu_we_n    : out std_logic;
+            acc_d_oe_n      : out std_logic;
+            acc_alu_oe_n    : out std_logic;
             x_we_n          : out std_logic;
             x_oe_n          : out std_logic;
             y_we_n          : out std_logic;
@@ -45,7 +49,8 @@ entity decoder is
             stat_dec_oe_n   : out std_logic;
             stat_bus_we_n   : out std_logic;
             stat_bus_oe_n   : out std_logic;
-            r_nw            : out std_logic
+            r_nw            : out std_logic;
+            dbg_show_pc     : out std_logic
         );
 end decoder;
 
@@ -228,6 +233,10 @@ begin
             sp_pop_n <= '1';
             sp_int_d_oe_n <= '1';
             sp_int_a_oe_n <= '1';
+            acc_d_we_n <= '1';
+            acc_alu_we_n <= '1';
+            acc_d_oe_n <= '1';
+            acc_alu_oe_n <= '1';
             x_we_n <= '1';
             x_oe_n <= '1';
             y_we_n <= '1';
@@ -236,6 +245,7 @@ begin
             stat_dec_oe_n <= '1';
             stat_bus_we_n <= '1';
             stat_bus_oe_n <= '1';
+
         end if;
 
         if (set_clk'event and set_clk = '1') then
@@ -277,6 +287,7 @@ begin
                 dl_we_n <= '1';
                 dl_int_al_oe_n <= '1';
                 pcl_d_we_n <= '1';
+                acc_d_we_n <= '1';
 
                 cur_status <= decode;
 
@@ -284,11 +295,11 @@ begin
                 status_reg <= (others => 'Z');
                 stat_dec_oe_n <= '0';
 
-
             elsif cur_status = decode then
                 --cycle #2
                 d_print("decode and execute inst: " 
                         & conv_hex8(conv_integer(instruction)));
+
                 --grab instruction register data.
                 inst_we_n <= '1';
 
@@ -417,11 +428,11 @@ begin
 
                         pcl_a_oe_n <= '0';
                         pch_a_oe_n <= '0';
-                        pc_inc_n <= '0';
-                        dbuf_int_oe_n <= '0';
 
                         if cur_mode = ad_imm then
                             d_print("immediate");
+                            pc_inc_n <= '0';
+                            dbuf_int_oe_n <= '0';
                             cur_status <= fetch;
                         elsif cur_mode = ad_acc then
                         elsif cur_mode = ad_zp then
@@ -429,6 +440,8 @@ begin
                         elsif cur_mode = ad_zpy then
                         elsif cur_mode = ad_abs then
                             d_print("abs 2");
+                            dbuf_int_oe_n <= '0';
+                            pc_inc_n <= '0';
                             dl_we_n <= '0';
                             cur_status <= exec2;
                         elsif cur_mode = ad_absx then
@@ -443,7 +456,6 @@ begin
 
                         if instruction (1 downto 0) = "01" then
                             --d_print("cc=01");
-                            ---all bbb part is accepted 
 
                             if instruction (7 downto 5) = "000" then
                                 d_print("ora");
@@ -457,6 +469,13 @@ begin
                                 d_print("sta");
                             elsif instruction (7 downto 5) = "101" then
                                 d_print("lda");
+                                if (cur_mode = ad_imm) then
+                                    acc_d_we_n <= '0';
+                                    --status register n/z bit update.
+                                    stat_dec_oe_n <= '1';
+                                    status_reg <= "10000010";
+                                    stat_bus_we_n <= '0';
+                                end if;
                             elsif instruction (7 downto 5) = "110" then
                                 d_print("cmp");
                             elsif instruction (7 downto 5) = "111" then
@@ -481,11 +500,13 @@ begin
                                 d_print("stx");
                             elsif instruction (7 downto 5) = "101" then
                                 d_print("ldx");
-                                x_we_n <= '0';
-                                --status register n/z bit update.
-                                stat_dec_oe_n <= '1';
-                                status_reg <= "10000010";
-                                stat_bus_we_n <= '0';
+                                if (cur_mode = ad_imm) then
+                                    x_we_n <= '0';
+                                    --status register n/z bit update.
+                                    stat_dec_oe_n <= '1';
+                                    status_reg <= "10000010";
+                                    stat_bus_we_n <= '0';
+                                end if;
                             elsif instruction (7 downto 5) = "110" then
                                 d_print("dec");
                             elsif instruction (7 downto 5) = "111" then
@@ -732,5 +753,13 @@ begin
 
     end process;
 
+    dbg_p : process (set_clk)
+    begin
+        if (set_clk'event and set_clk= '0' and cur_status = decode) then
+            dbg_show_pc <= '1';
+        else
+            dbg_show_pc <= '0';
+        end if; --if (trigger_clk'event and trigger_clk = '1')
+    end process;
 end rtl;
 
