@@ -505,3 +505,61 @@ begin
         (others => 'Z');
 end rtl;
 
+
+----------------------------------------
+--- accumulator
+----------------------------------------
+
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity accumulator is 
+    generic (
+            dsize : integer := 8
+            );
+    port (  
+            clk         : in std_logic;
+            d_we_n      : in std_logic;
+            alu_we_n    : in std_logic;
+            d_oe_n      : in std_logic;
+            alu_oe_n    : in std_logic;
+            int_dbus    : inout std_logic_vector (dsize - 1 downto 0);
+            alu_bus     : inout std_logic_vector (dsize - 1 downto 0)
+        );
+end accumulator;
+
+architecture rtl of accumulator is
+component dff
+    generic (
+            dsize : integer := 8
+            );
+    port (  
+            clk     : in std_logic;
+            we_n    : in std_logic;
+            oe_n    : in std_logic;
+            d       : in std_logic_vector (dsize - 1 downto 0);
+            q       : out std_logic_vector (dsize - 1 downto 0)
+        );
+end component;
+
+signal oe_n : std_logic;
+signal we_n : std_logic;
+signal d : std_logic_vector (dsize - 1 downto 0);
+signal q : std_logic_vector (dsize - 1 downto 0);
+
+begin
+    oe_n <= (d_oe_n and alu_oe_n);
+    we_n <= (d_we_n and alu_we_n);
+    d <= int_dbus when d_we_n = '0' else
+        alu_bus when alu_we_n = '0' else
+        (others => 'Z');
+    int_dbus <= q when d_oe_n = '0' else
+        (others => 'Z');
+    alu_bus <= q when alu_we_n = '0' else
+        (others => 'Z');
+
+    --read from i/o to cpu
+    dff_inst : dff generic map (dsize) 
+                    port map(clk, we_n, oe_n, d, q);
+end rtl;
+
