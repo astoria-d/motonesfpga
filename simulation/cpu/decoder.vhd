@@ -307,6 +307,9 @@ begin
                 pcl_d_we_n <= '1';
                 acc_d_we_n <= '1';
                 acc_d_oe_n  <= '1';
+                dl_dl_oe_n <= '1';
+                x_calc_n <= '1';
+                ea_al_oe_n <= '1';
 
                 cur_cycle <= decode;
 
@@ -708,18 +711,20 @@ begin
 
                         cur_cycle <= fetch;
                     elsif cur_mode = ad_absx then
+                        --d_print("absx 4");
                         pc_inc_n <= '1';
                         pcl_a_oe_n <= '1';
                         pch_a_oe_n <= '1';
                         dbuf_int_oe_n <= '1';
                         dl_ah_we_n <= '1';
 
-                        -----calucurate effective addr 
+                        -----calucurate and output effective addr 
                         dl_dl_oe_n <= '0';
                         x_calc_n <= '0';
                         ea_al_oe_n <= '0';
                         dl_ah_oe_n <= '0';
-                        ad_oe_n <= ea_carry;
+
+                        cur_cycle <= exec4;
                     end if; --if cur_mode = ad_abs then
 
                     if instruction (1 downto 0) = "00" then
@@ -729,6 +734,10 @@ begin
                             --output acc memory..
                             r_nw <= '0';
                             acc_d_oe_n  <= '0';
+                        elsif instruction (7 downto 5) = "101" then
+                            d_print("lda 4");
+                            --if page boundary is crossed, redo in the next cycle.
+                            acc_d_we_n  <= '0';
                         end if;
                     end if; --instruction (1 downto 0) = "00" 
                 end if; --if instruction = conv_std_logic_vector(16#00#, dsize) 
@@ -763,6 +772,25 @@ begin
                 elsif instruction (4 downto 0) = "10000" then
                     ---conditional branch instruction..
                 else
+                    if cur_mode = ad_absx then
+                        if ea_carry = '1' then
+                            --case page boundary crossed.
+                            --increment eah.
+                            d_print("absx 5");
+                        else
+                            --case page boundary not crossed. do the fetch op.
+                            d_print("absx 5 (fetch)");
+                            dl_dl_oe_n <= '1';
+                            x_calc_n <= '1';
+                            ea_al_oe_n <= '1';
+                            dl_ah_oe_n <= '1';
+                            acc_d_we_n  <= '1';
+
+                            pcl_a_oe_n <= '0';
+                            pch_a_oe_n <= '0';
+                            --cur_cycle <= decode;
+                        end if;
+                    end if;
                     if instruction (1 downto 0) = "00" then
                     end if; --instruction (1 downto 0) = "00" 
                 end if; --if instruction = conv_std_logic_vector(16#00#, dsize) 
