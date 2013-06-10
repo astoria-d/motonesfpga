@@ -431,13 +431,13 @@ begin
                         ---addressing mode identifier
                         cur_mode := decode_addr_mode(instruction);
 
-                        pcl_a_oe_n <= '0';
-                        pch_a_oe_n <= '0';
-
                         if cur_mode = ad_imm then
                             d_print("immediate");
+                            pcl_a_oe_n <= '0';
+                            pch_a_oe_n <= '0';
                             pc_inc_n <= '0';
                             --send data from data bus buffer.
+                            --receiver is instruction dependent.
                             dbuf_int_oe_n <= '0';
                             cur_status <= fetch;
                         elsif cur_mode = ad_acc then
@@ -446,9 +446,12 @@ begin
                         elsif cur_mode = ad_zpy then
                         elsif cur_mode = ad_abs then
                             d_print("abs 2");
-                            dbuf_int_oe_n <= '0';
+                            --fetch next opcode (abs low).
+                            pcl_a_oe_n <= '0';
+                            pch_a_oe_n <= '0';
                             pc_inc_n <= '0';
                             --latch abs low data.
+                            dbuf_int_oe_n <= '0';
                             dl_al_we_n <= '0';
                             cur_status <= exec2;
                         elsif cur_mode = ad_absx then
@@ -477,8 +480,8 @@ begin
                                     d_print("sta");
                                 end if;
                             elsif instruction (7 downto 5) = "101" then
-                                d_print("lda");
                                 if (cur_mode = ad_imm) then
+                                    d_print("lda");
                                     acc_d_we_n <= '0';
                                     --status register n/z bit update.
                                     stat_dec_oe_n <= '1';
@@ -529,35 +532,35 @@ begin
                         elsif instruction (1 downto 0) = "00" then
                             --d_print("cc=00 group...");
 
-                            if instruction (4 downto 0) /= "10000" then
-
-                                if instruction (7 downto 5) = "001" then
-                                    d_print("bit");
-                                elsif instruction (7 downto 5) = "010" then
-                                    d_print("jmp");
-                                elsif instruction (7 downto 5) = "011" then
-                                    d_print("jmp (abs) 2");
-                                elsif instruction (7 downto 5) = "100" then
-                                    d_print("sty");
-                                elsif instruction (7 downto 5) = "101" then
-                                    if (cur_mode = ad_imm) then
-                                        d_print("ldy");
-                                        y_we_n <= '0';
-                                        --status register n/z bit update.
-                                        stat_dec_oe_n <= '1';
-                                        status_reg <= "10000010";
-                                        stat_bus_we_n <= '0';
-                                    end if;
-                                elsif instruction (7 downto 5) = "110" then
-                                    d_print("cpy");
-                                elsif instruction (7 downto 5) = "111" then
-                                    d_print("cpx");
-                                else
-                                    assert false 
-                                        report ("unknow instruction") severity failure;
-                                    cur_status <= err_stat;
+                            if instruction (7 downto 5) = "001" then
+                                d_print("bit");
+                            elsif instruction (7 downto 5) = "010" then
+                                --jmp always absolute addressing
+                                --d_print("jmp");
+                                null;
+                            elsif instruction (7 downto 5) = "011" then
+                                --d_print("jmp (abs) 2");
+                                null;
+                            elsif instruction (7 downto 5) = "100" then
+                                d_print("sty");
+                            elsif instruction (7 downto 5) = "101" then
+                                if (cur_mode = ad_imm) then
+                                    d_print("ldy");
+                                    y_we_n <= '0';
+                                    --status register n/z bit update.
+                                    stat_dec_oe_n <= '1';
+                                    status_reg <= "10000010";
+                                    stat_bus_we_n <= '0';
                                 end if;
-                            end if; --if instruction (4 downto 0) = "10000"
+                            elsif instruction (7 downto 5) = "110" then
+                                d_print("cpy");
+                            elsif instruction (7 downto 5) = "111" then
+                                d_print("cpx");
+                            else
+                                assert false 
+                                    report ("unknow instruction") severity failure;
+                                cur_status <= err_stat;
+                            end if; --if instruction (7 downto 5) = "001" then
                         end if; --if instruction (1 downto 0) = "01"
                     end if; --if instruction = conv_std_logic_vector(16#00#, dsize) 
                 end if; --if single_inst
@@ -568,13 +571,11 @@ begin
 
                 elsif instruction = conv_std_logic_vector(16#20#, dsize) then
                     d_print("jsr 3");
-                    --pcl_d_oe_n <= '0';
                     pcl_a_oe_n <= '1';
                     pch_a_oe_n <= '1';
                     pc_inc_n <= '1';
                     dbuf_int_oe_n <= '1';
                     dl_al_we_n <= '1';
-                    --pch <= (pc + 2)
 
                    --push return addr high into stack.
                     sp_push_n <= '0';
@@ -593,17 +594,18 @@ begin
                 elsif instruction (4 downto 0) = "10000" then
                     ---conditional branch instruction..
                 else
-                    cur_mode := decode_addr_mode(instruction);
                     
                     if cur_mode = ad_abs then
                         d_print("abs 3");
                         dl_al_we_n <= '1';
+
+                        --latch abs hi data.
                         pcl_a_oe_n <= '0';
                         pch_a_oe_n <= '0';
-                        --send data from data bus buffer.
                         dbuf_int_oe_n <= '0';
-                        --latch abs hi data.
                         dl_ah_we_n <= '0';
+                        --pc_inc is '0'. only jump is '1'.
+                        --pc_inc_n <= '0';
                     end if; --if cur_mode = ad_abs then
 
                     if instruction (1 downto 0) = "00" then
@@ -611,9 +613,11 @@ begin
                         --jmp
                             d_print("jmp");
                             pc_inc_n <= '1';
+                            --pcl set from adl bus.
                             dl_al_oe_n <= '0';
                             pcl_a_oe_n <= '1';
                             pcl_a_we_n <= '0';
+                            --pch set dbus.
                             pch_d_we_n <= '0';
                             cur_status <= fetch;
                         end if; --if instruction (7 downto 5) = "010" then
@@ -630,9 +634,9 @@ begin
                 if instruction = conv_std_logic_vector(16#00#, dsize) then
                 elsif instruction = conv_std_logic_vector(16#20#, dsize) then
                     d_print("jsr 4");
-                   --push return addr low into stack.
                     pch_d_oe_n <= '1';
 
+                   --push return addr low into stack.
                     sp_push_n <= '0';
                     pcl_d_oe_n <= '0';
                     sp_int_a_oe_n <= '0';
@@ -663,6 +667,12 @@ begin
                         pch_a_oe_n <= '1';
                         dbuf_int_oe_n <= '1';
                         dl_ah_we_n <= '1';
+
+                        --latch > al/ah.
+                        dl_al_oe_n <= '0';
+                        dl_ah_oe_n <= '0';
+
+                        cur_status <= fetch;
                     end if; --if cur_mode = ad_abs then
 
                     if instruction (1 downto 0) = "00" then
@@ -672,12 +682,6 @@ begin
                             --output acc memory..
                             r_nw <= '0';
                             acc_d_oe_n  <= '0';
-                            dbuf_int_oe_n <= '1';
-                            --latch > al/ah.
-                            dl_al_oe_n <= '0';
-                            dl_ah_oe_n <= '0';
-
-                            cur_status <= fetch;
                         end if;
                     end if; --instruction (1 downto 0) = "00" 
                 end if; --if instruction = conv_std_logic_vector(16#00#, dsize) 
@@ -695,7 +699,6 @@ begin
                     --fetch last op.
                     pcl_a_oe_n <= '0';
                     pch_a_oe_n <= '0';
-                    dbuf_int_oe_n <= '1';
 
                     cur_status <= exec5;
 
@@ -725,11 +728,9 @@ begin
 
                     pcl_a_oe_n <= '1';
                     pch_a_oe_n <= '1';
-                    ad_oe_n <= '1';
-
-                    pcl_d_we_n <= '1';
 
                     --load/output  pch
+                    ad_oe_n <= '1';
                     pch_d_we_n <= '0';
                     dbuf_int_oe_n <= '0';
 
@@ -762,9 +763,6 @@ begin
                 cur_status <= err_stat;
             end if; --if cur_status = reset0 then
         end if; --if (set_clk'event and set_clk = '1') 
-
-        if (trig_clk'event and trig_clk = '1') then
-        end if; --if (trigger_clk'event and trigger_clk = '1')
 
     end process;
 
