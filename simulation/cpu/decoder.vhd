@@ -113,7 +113,7 @@ type addr_mode is ( ad_imm,
                     ad_acc,
                     ad_zp, ad_zpx, ad_zpy,
                     ad_abs, ad_absx, ad_absy,
-                    ad_indx_indir, ad_indir_indx,
+                    ad_indir_x, ad_indir_y,
                     ad_unknown);
 
 
@@ -144,7 +144,7 @@ begin
     if instruction (1 downto 0) = "01" then
         if instruction (4 downto 2) = "000" then
             --(zero page,X)
-            --return ;
+            return ad_indir_x;
         elsif instruction (4 downto 2) = "001" then
             return  ad_zp;
         elsif instruction (4 downto 2) = "010" then
@@ -153,7 +153,7 @@ begin
             return  ad_abs;
         elsif instruction (4 downto 2) = "100" then
             --(zero page),Y
-            --return ;
+            return ad_indir_y;
         elsif instruction (4 downto 2) = "101" then
             return  ad_zpx;
         elsif instruction (4 downto 2) = "110" then
@@ -456,8 +456,8 @@ begin
                             cur_cycle <= exec2;
                         elsif cur_mode = ad_absx then
                         elsif cur_mode = ad_absy then
-                        elsif cur_mode = ad_indir_indx then
-                        elsif cur_mode = ad_indx_indir then
+                        elsif cur_mode = ad_indir_x then
+                        elsif cur_mode = ad_indir_y then
                         else
                             assert false 
                                 report ("unknow addressing mode.") severity failure;
