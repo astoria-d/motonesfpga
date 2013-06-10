@@ -104,10 +104,10 @@ begin
 end;
 
 
-type dec_status is (reset0, reset1, reset2, reset3, reset4, reset5, 
+type exec_cycle is (reset0, reset1, reset2, reset3, reset4, reset5, 
                     --exec0 = fetch, exec1=decode
                     fetch, decode, exec2, exec3, exec4, exec5,
-                    unknown_stat, err_stat);
+                    err_cycle);
 
 type addr_mode is ( ad_imm,
                     ad_acc,
@@ -117,7 +117,7 @@ type addr_mode is ( ad_imm,
                     ad_unknown);
 
 
-signal cur_status : dec_status;
+signal cur_cycle : exec_cycle;
 
 -- SR Flags (bit 7 to bit 0):
 --  7   N   ....    Negative
@@ -211,7 +211,7 @@ begin
 
         if (res_n'event and res_n = '0') then
             d_print(string'("reset"));
-            cur_status <= reset0;
+            cur_cycle <= reset0;
 
             ad_oe_n <= '1';
             pcl_d_we_n <= '1';
@@ -253,20 +253,20 @@ begin
         if (set_clk'event and set_clk = '1') then
             d_print(string'("-"));
 
-            if cur_status = reset0 then
-                cur_status <= reset1;
-            elsif cur_status = reset1 then
-                cur_status <= reset2;
-            elsif cur_status = reset2 then
-                cur_status <= reset3;
-            elsif cur_status = reset3 then
-                cur_status <= reset4;
-            elsif cur_status = reset4 then
-                cur_status <= reset5;
-            elsif cur_status = reset5 then
-                cur_status <= fetch;
+            if cur_cycle = reset0 then
+                cur_cycle <= reset1;
+            elsif cur_cycle = reset1 then
+                cur_cycle <= reset2;
+            elsif cur_cycle = reset2 then
+                cur_cycle <= reset3;
+            elsif cur_cycle = reset3 then
+                cur_cycle <= reset4;
+            elsif cur_cycle = reset4 then
+                cur_cycle <= reset5;
+            elsif cur_cycle = reset5 then
+                cur_cycle <= fetch;
 
-            elsif cur_status = fetch then
+            elsif cur_cycle = fetch then
                 --cycle #1
                 d_print(string'("fetch 1"));
                 ad_oe_n <= '0';
@@ -294,13 +294,13 @@ begin
                 acc_d_we_n <= '1';
                 acc_d_oe_n  <= '1';
 
-                cur_status <= decode;
+                cur_cycle <= decode;
 
                 ---for debug....
                 status_reg <= (others => 'Z');
                 stat_dec_oe_n <= '0';
 
-            elsif cur_status = decode then
+            elsif cur_cycle = decode then
                 --cycle #2
                 d_print("decode and execute inst: " 
                         & conv_hex8(conv_integer(instruction)));
@@ -390,7 +390,7 @@ begin
                 end if;
 
                 if single_inst then
-                    cur_status <= fetch;
+                    cur_cycle <= fetch;
                     pcl_a_oe_n <= '1';
                     pch_a_oe_n <= '1';
                     pc_inc_n <= '1';
@@ -407,7 +407,7 @@ begin
                         dbuf_int_oe_n <= '0';
                         --latch data
                         dl_al_we_n <= '0';
-                        cur_status <= exec2;
+                        cur_cycle <= exec2;
 
                     elsif instruction = conv_std_logic_vector(16#40#, dsize) then
                         d_print("40");
@@ -421,7 +421,7 @@ begin
                         sp_pop_n <= '0';
                         sp_int_a_oe_n <= '0';
 
-                        cur_status <= exec2;
+                        cur_cycle <= exec2;
                     elsif instruction (4 downto 0) = "10000" then
                         ---conditional branch instruction..
 
@@ -439,7 +439,7 @@ begin
                             --send data from data bus buffer.
                             --receiver is instruction dependent.
                             dbuf_int_oe_n <= '0';
-                            cur_status <= fetch;
+                            cur_cycle <= fetch;
                         elsif cur_mode = ad_acc then
                         elsif cur_mode = ad_zp then
                         elsif cur_mode = ad_zpx then
@@ -453,7 +453,7 @@ begin
                             --latch abs low data.
                             dbuf_int_oe_n <= '0';
                             dl_al_we_n <= '0';
-                            cur_status <= exec2;
+                            cur_cycle <= exec2;
                         elsif cur_mode = ad_absx then
                         elsif cur_mode = ad_absy then
                         elsif cur_mode = ad_indir_indx then
@@ -461,7 +461,7 @@ begin
                         else
                             assert false 
                                 report ("unknow addressing mode.") severity failure;
-                            cur_status <= err_stat;
+                            cur_cycle <= err_cycle;
                         end if; --if cur_mode = ad_imm then
 
                         if instruction (1 downto 0) = "01" then
@@ -495,7 +495,7 @@ begin
                             else
                                 assert false 
                                     report ("unknow instruction") severity failure;
-                                cur_status <= err_stat;
+                                cur_cycle <= err_cycle;
                             end if;
                         elsif instruction (1 downto 0) = "10" then
                             --d_print("cc=10");
@@ -526,7 +526,7 @@ begin
                             else
                                 assert false 
                                     report ("unknow instruction") severity failure;
-                                cur_status <= err_stat;
+                                cur_cycle <= err_cycle;
                             end if;
 
                         elsif instruction (1 downto 0) = "00" then
@@ -559,13 +559,13 @@ begin
                             else
                                 assert false 
                                     report ("unknow instruction") severity failure;
-                                cur_status <= err_stat;
+                                cur_cycle <= err_cycle;
                             end if; --if instruction (7 downto 5) = "001" then
                         end if; --if instruction (1 downto 0) = "01"
                     end if; --if instruction = conv_std_logic_vector(16#00#, dsize) 
                 end if; --if single_inst
 
-            elsif cur_status = exec2 then
+            elsif cur_cycle = exec2 then
                 --cycle #3
                 if instruction = conv_std_logic_vector(16#00#, dsize) then
 
@@ -582,7 +582,7 @@ begin
                     pch_d_oe_n <= '0';
                     sp_int_a_oe_n <= '0';
                     r_nw <= '0';
-                    cur_status <= exec3;
+                    cur_cycle <= exec3;
                 elsif instruction = conv_std_logic_vector(16#40#, dsize) then
                 elsif instruction = conv_std_logic_vector(16#60#, dsize) then
                         d_print("rts 3");
@@ -590,7 +590,7 @@ begin
                         sp_int_a_oe_n <= '0';
                         sp_pop_n <= '0';
 
-                        cur_status <= exec3;
+                        cur_cycle <= exec3;
                 elsif instruction (4 downto 0) = "10000" then
                     ---conditional branch instruction..
                 else
@@ -619,17 +619,17 @@ begin
                             pcl_a_we_n <= '0';
                             --pch set dbus.
                             pch_d_we_n <= '0';
-                            cur_status <= fetch;
+                            cur_cycle <= fetch;
                         end if; --if instruction (7 downto 5) = "010" then
                     elsif instruction (1 downto 0) = "01" then
                         if instruction (7 downto 5) = "100" then
                             --d_print("sta");
-                            cur_status <= exec3;
+                            cur_cycle <= exec3;
                         end if;
                     end if; --if instruction (1 downto 0) = "00" then
                 end if; --if instruction = conv_std_logic_vector(16#00#, dsize)
 
-            elsif cur_status = exec3 then
+            elsif cur_cycle = exec3 then
                 --cycle #4
                 if instruction = conv_std_logic_vector(16#00#, dsize) then
                 elsif instruction = conv_std_logic_vector(16#20#, dsize) then
@@ -642,7 +642,7 @@ begin
                     sp_int_a_oe_n <= '0';
                     r_nw <= '0';
 
-                    cur_status <= exec4;
+                    cur_cycle <= exec4;
                 elsif instruction = conv_std_logic_vector(16#40#, dsize) then
                 elsif instruction = conv_std_logic_vector(16#60#, dsize) then
                     d_print("rts 4");
@@ -656,7 +656,7 @@ begin
                     --pop pcl
                     sp_int_a_oe_n <= '0';
 
-                    cur_status <= exec4;
+                    cur_cycle <= exec4;
                 elsif instruction (4 downto 0) = "10000" then
                     ---conditional branch instruction..
                 else
@@ -672,7 +672,7 @@ begin
                         dl_al_oe_n <= '0';
                         dl_ah_oe_n <= '0';
 
-                        cur_status <= fetch;
+                        cur_cycle <= fetch;
                     end if; --if cur_mode = ad_abs then
 
                     if instruction (1 downto 0) = "00" then
@@ -686,7 +686,7 @@ begin
                     end if; --instruction (1 downto 0) = "00" 
                 end if; --if instruction = conv_std_logic_vector(16#00#, dsize) 
 
-            elsif cur_status = exec4 then
+            elsif cur_cycle = exec4 then
                 --cycle #5
                 if instruction = conv_std_logic_vector(16#00#, dsize) then
                 elsif instruction = conv_std_logic_vector(16#20#, dsize) then
@@ -700,7 +700,7 @@ begin
                     pcl_a_oe_n <= '0';
                     pch_a_oe_n <= '0';
 
-                    cur_status <= exec5;
+                    cur_cycle <= exec5;
 
                 elsif instruction = conv_std_logic_vector(16#40#, dsize) then
                 elsif instruction = conv_std_logic_vector(16#60#, dsize) then
@@ -712,7 +712,7 @@ begin
                     dbuf_int_oe_n <= '0';
                     pch_d_we_n <= '0';
 
-                    cur_status <= exec5;
+                    cur_cycle <= exec5;
                 elsif instruction (4 downto 0) = "10000" then
                     ---conditional branch instruction..
                 else
@@ -720,7 +720,7 @@ begin
                     end if; --instruction (1 downto 0) = "00" 
                 end if; --if instruction = conv_std_logic_vector(16#00#, dsize) 
  
-            elsif cur_status = exec5 then
+            elsif cur_cycle = exec5 then
                 --cycle #6
                 if instruction = conv_std_logic_vector(16#00#, dsize) then
                 elsif instruction = conv_std_logic_vector(16#20#, dsize) then
@@ -738,7 +738,7 @@ begin
                     dl_al_oe_n <= '0';
                     pcl_a_we_n <= '0';
 
-                    cur_status <= fetch;
+                    cur_cycle <= fetch;
                 elsif instruction = conv_std_logic_vector(16#40#, dsize) then
                 elsif instruction = conv_std_logic_vector(16#60#, dsize) then
                     d_print("rts 6");
@@ -747,7 +747,7 @@ begin
 
                     --increment pc.
                     pc_inc_n <= '0';
-                    cur_status <= fetch;
+                    cur_cycle <= fetch;
                 elsif instruction (4 downto 0) = "10000" then
                     ---conditional branch instruction..
                 else
@@ -755,20 +755,20 @@ begin
                     end if; --instruction (1 downto 0) = "00" 
                 end if; --if instruction = conv_std_logic_vector(16#00#, dsize) 
 
-            elsif cur_status = err_stat then
-                ---stop decoding... > CPU stoo.
+            elsif cur_cycle = err_cycle then
+                ---stop decoding... > CPU stop.
             else
                 assert false 
                     report ("unknow status") severity failure;
-                cur_status <= err_stat;
-            end if; --if cur_status = reset0 then
+                cur_cycle <= err_cycle;
+            end if; --if cur_cycle = reset0 then
         end if; --if (set_clk'event and set_clk = '1') 
 
     end process;
 
     dbg_p : process (set_clk)
     begin
-        if (set_clk'event and set_clk= '0' and cur_status = decode) then
+        if (set_clk'event and set_clk= '0' and cur_cycle = decode) then
             dbg_show_pc <= '1';
         else
             dbg_show_pc <= '0';
