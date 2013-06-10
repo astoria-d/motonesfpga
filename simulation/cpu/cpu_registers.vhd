@@ -207,7 +207,8 @@ entity input_dl is
     port (  
             int_al_we_n : in std_logic;
             int_ah_we_n : in std_logic;
-            int_d_oe_n  : in std_logic;
+            int_dl_oe_n : in std_logic;
+            int_dh_oe_n : in std_logic;
             int_al_oe_n : in std_logic;
             int_ah_oe_n : in std_logic;
             int_dbus    : inout std_logic_vector (dsize - 1 downto 0);
@@ -233,7 +234,9 @@ signal qh : std_logic_vector (dsize - 1 downto 0);
 begin
     --oe_n <= (int_d_oe_n and int_al_oe_n and int_ah_oe_n);
     ----TODO: must check!! for the time being, output ql.
-    int_dbus <= ql when int_d_oe_n = '0' else
+    int_dbus <= ql when int_dl_oe_n = '0' else
+         (others =>'Z');
+    int_dbus <= qh when int_dh_oe_n = '0' else
          (others =>'Z');
 
     int_abus_l <= ql when int_al_oe_n = '0' else
@@ -242,9 +245,9 @@ begin
          (others =>'Z');
 
     latch_l : latch generic map (dsize) 
-                    port map(int_al_we_n, int_al_oe_n, int_dbus, ql);
+                    port map(int_al_we_n, '0', int_dbus, ql);
     latch_h : latch generic map (dsize) 
-                    port map(int_ah_we_n, int_ah_oe_n, int_dbus, qh);
+                    port map(int_ah_we_n, '0', int_dbus, qh);
 end rtl;
 
 ----------------------------------------

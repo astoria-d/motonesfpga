@@ -1,5 +1,5 @@
 
-MODULES=cpu_registers.vhd decoder.vhd \
+MODULES=cpu_registers.vhd alu.vhd decoder.vhd \
 		mos6502.vhd 
 		#cpu_timing.vhd 
 

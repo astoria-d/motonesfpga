@@ -1,9 +1,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_arith.conv_std_logic_vector;
---use ieee.std_logic_arith.all;
-use std.textio.all;
-use ieee.std_logic_textio.all;
 use ieee.std_logic_unsigned.conv_integer;
 
 entity decoder is 
@@ -30,7 +27,8 @@ entity decoder is
             dbuf_int_oe_n   : out std_logic;
             dl_al_we_n      : out std_logic;
             dl_ah_we_n      : out std_logic;
-            dl_d_oe_n       : out std_logic; --no neeed????
+            dl_dl_oe_n      : out std_logic;
+            dl_dh_oe_n      : out std_logic;
             dl_al_oe_n      : out std_logic;
             dl_ah_oe_n      : out std_logic;
             sp_we_n         : out std_logic;
@@ -44,8 +42,13 @@ entity decoder is
             acc_alu_oe_n    : out std_logic;
             x_we_n          : out std_logic;
             x_oe_n          : out std_logic;
+            x_calc_n        : out std_logic;
             y_we_n          : out std_logic;
             y_oe_n          : out std_logic;
+            y_calc_n        : out std_logic;
+            ea_ah_oe_n      : out std_logic;
+            ea_al_oe_n      : out std_logic;
+            ea_carry        : in  std_logic;
             stat_dec_we_n   : out std_logic;
             stat_dec_oe_n   : out std_logic;
             stat_bus_we_n   : out std_logic;
@@ -58,6 +61,8 @@ end decoder;
 architecture rtl of decoder is
 
 procedure d_print(msg : string) is
+use std.textio.all;
+use ieee.std_logic_textio.all;
 variable out_l : line;
 begin
     write(out_l, msg);
@@ -65,6 +70,8 @@ begin
 end  procedure;
 
 procedure d_print(msg : string; sig : std_logic_vector) is
+use std.textio.all;
+use ieee.std_logic_textio.all;
 variable out_l : line;
 begin
     write(out_l, msg);
@@ -73,6 +80,8 @@ begin
 end  procedure;
 
 procedure d_print(msg : string; ival : integer) is
+use std.textio.all;
+use ieee.std_logic_textio.all;
 variable out_l : line;
 begin
     write(out_l, msg);
@@ -227,7 +236,8 @@ begin
             dbuf_int_oe_n <= '1';
             dl_al_we_n <= '1';
             dl_ah_we_n <= '1';
-            dl_d_oe_n <= '1';
+            dl_dl_oe_n <= '1';
+            dl_dh_oe_n <= '1';
             dl_al_oe_n <= '1';
             dl_ah_oe_n <= '1';
             sp_we_n <= '1';
@@ -247,6 +257,10 @@ begin
             stat_dec_oe_n <= '1';
             stat_bus_we_n <= '1';
             stat_bus_oe_n <= '1';
+            x_calc_n <= '1';
+            y_calc_n <= '1';
+            ea_ah_oe_n <= '1';
+            ea_al_oe_n <= '1';
 
         end if;
 
@@ -455,6 +469,16 @@ begin
                             dl_al_we_n <= '0';
                             cur_cycle <= exec2;
                         elsif cur_mode = ad_absx then
+                            d_print("absx 2");
+                            --same as abs until cycle 3.
+                            pcl_a_oe_n <= '0';
+                            pch_a_oe_n <= '0';
+                            pc_inc_n <= '0';
+                            --latch abs low data.
+                            dbuf_int_oe_n <= '0';
+                            dbuf_int_oe_n <= '0';
+                            dl_al_we_n <= '0';
+                            cur_cycle <= exec2;
                         elsif cur_mode = ad_absy then
                         elsif cur_mode = ad_indir_x then
                         elsif cur_mode = ad_indir_y then
@@ -606,6 +630,16 @@ begin
                         dl_ah_we_n <= '0';
                         --pc_inc is '0'. only jump is '1'.
                         --pc_inc_n <= '0';
+                    elsif cur_mode = ad_absx then
+                        d_print("absx 3");
+                        dl_al_we_n <= '1';
+
+                        --latch abs hi data.
+                        pcl_a_oe_n <= '0';
+                        pch_a_oe_n <= '0';
+                        dbuf_int_oe_n <= '0';
+                        dl_ah_we_n <= '0';
+                        cur_cycle <= exec3;
                     end if; --if cur_mode = ad_abs then
 
                     if instruction (1 downto 0) = "00" then
@@ -673,6 +707,19 @@ begin
                         dl_ah_oe_n <= '0';
 
                         cur_cycle <= fetch;
+                    elsif cur_mode = ad_absx then
+                        pc_inc_n <= '1';
+                        pcl_a_oe_n <= '1';
+                        pch_a_oe_n <= '1';
+                        dbuf_int_oe_n <= '1';
+                        dl_ah_we_n <= '1';
+
+                        -----calucurate effective addr 
+                        dl_dl_oe_n <= '0';
+                        x_calc_n <= '0';
+                        ea_al_oe_n <= '0';
+                        dl_ah_oe_n <= '0';
+                        ad_oe_n <= ea_carry;
                     end if; --if cur_mode = ad_abs then
 
                     if instruction (1 downto 0) = "00" then
