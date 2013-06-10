@@ -45,6 +45,7 @@ entity effective_adder is
     generic (   dsize : integer := 8
             );
     port (  
+            clk         : in std_logic;
             ah_oe_n         : in std_logic;
             al_oe_n         : in std_logic;
             base            : in std_logic_vector (dsize - 1 downto 0);
@@ -56,15 +57,40 @@ entity effective_adder is
 end effective_adder;
 
 architecture rtl of effective_adder is
-signal d_out : std_logic_vector (dsize - 1 downto 0);
+    component dff
+        generic (
+                dsize : integer := 8
+                );
+        port (  
+                clk     : in std_logic;
+                we_n    : in std_logic;
+                oe_n    : in std_logic;
+                d       : in std_logic_vector (dsize - 1 downto 0);
+                q       : out std_logic_vector (dsize - 1 downto 0)
+            );
+    end component;
+
+signal al_out : std_logic_vector (dsize - 1 downto 0);
+signal ah_out : std_logic_vector (dsize - 1 downto 0);
+signal old_al : std_logic_vector (dsize - 1 downto 0);
 signal adc_work : std_logic_vector (dsize downto 0);
+
 begin
     adc_work <= ('0' & base) + ('0' & index);
     carry <= adc_work(dsize);
-    d_out <= adc_work(dsize - 1 downto 0);
-    ah_bus <= d_out when ah_oe_n = '0' else
+    al_out <= adc_work(dsize - 1 downto 0);
+    ---always remory adl.
+    al_buf : dff generic map (dsize)
+        port map (clk, '0', '0', al_out, old_al);
+
+    --both output means, page boundary crossed.
+    --output old effective addr low.
+    al_bus <= old_al when al_oe_n = '0' and ah_oe_n = '0' else
+            al_out when al_oe_n = '0' else
             (others => 'Z');
-    al_bus <= d_out when al_oe_n = '0' else
+
+    --ah output means, page boundary crossed.
+    ah_bus <= base + '1' when ah_oe_n = '0' else
             (others => 'Z');
 
 end rtl;

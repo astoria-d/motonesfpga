@@ -204,6 +204,7 @@ architecture rtl of mos6502 is
     generic (   dsize : integer := 8
             );
     port (  
+            clk         : in std_logic;
             ah_oe_n         : in std_logic;
             al_oe_n         : in std_logic;
             base            : in std_logic_vector (dsize - 1 downto 0);
@@ -387,8 +388,9 @@ begin
     y_buf_addr : tsb generic map (dsize)
             port map (y_calc_n, y_out, addr_index);
 
+    ---effective addres calcurator.
     addr_calc: effective_adder generic map (dsize)
-            port map (ea_ah_oe_n, ea_al_oe_n,
+            port map (trigger_clk, ea_ah_oe_n, ea_al_oe_n,
                     internal_dbus, addr_index, 
                     internal_abus_h, internal_abus_l, ea_carry);
 
