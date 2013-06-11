@@ -126,6 +126,7 @@ architecture rtl of mos6502 is
                 dsize : integer := 8
                 );
         port (  
+                clk         : in std_logic;
                 al_we_n     : in std_logic;
                 ah_we_n     : in std_logic;
                 al_oe_n     : in std_logic;
@@ -353,6 +354,7 @@ begin
                     dbg_show_pc
                     );
 
+    --io data buffer
     data_bus_buffer : dbus_buf generic map (dsize) 
             port map(set_clk, dbuf_r_nw, dbuf_int_oe_n, internal_dbus, d_io);
 
@@ -386,9 +388,9 @@ begin
     y_reg : index_reg generic map (dsize) 
             port map(trigger_clk, y_we_n, y_oe_n, y_ea_oe_n, internal_dbus, ea_index);
 
-    --address operand data latch.
+    --address operand data buffer.
     input_data_latch : input_dl generic map (dsize) 
-            port map(dl_al_we_n, dl_ah_we_n, dl_al_oe_n, dl_ah_oe_n, 
+            port map(set_clk, dl_al_we_n, dl_ah_we_n, dl_al_oe_n, dl_ah_oe_n, 
                     internal_dbus, ea_base_l, ea_base_h);
 
     ---effective addres calcurator.

@@ -305,6 +305,7 @@ begin
                 dl_al_oe_n <= '1';
                 dl_ah_oe_n <= '1';
                 pcl_d_we_n <= '1';
+                pch_a_we_n <= '1';
                 acc_d_we_n <= '1';
                 acc_d_oe_n  <= '1';
                 x_ea_oe_n <= '1';
@@ -320,6 +321,12 @@ begin
                 --cycle #2
                 d_print("decode and execute inst: " 
                         & conv_hex8(conv_integer(instruction)));
+
+                --disable pin for jmp/abs [xy] page boundary case.
+                dl_al_oe_n <= '1';
+                dl_ah_oe_n <= '1';
+                pcl_a_we_n <= '1';
+                pch_a_we_n <= '1';
 
                 --grab instruction register data.
                 inst_we_n <= '1';
@@ -421,7 +428,7 @@ begin
                         pch_a_oe_n <= '0';
                         pc_inc_n <= '0';
                         dbuf_int_oe_n <= '0';
-                        --latch data
+                        --latch adl
                         dl_al_we_n <= '0';
                         cur_cycle <= exec2;
 
@@ -460,8 +467,9 @@ begin
                         elsif cur_mode = ad_zp then
                         elsif cur_mode = ad_zpx then
                         elsif cur_mode = ad_zpy then
-                        elsif cur_mode = ad_abs then
-                            d_print("abs 2");
+                        elsif cur_mode = ad_abs or 
+                            cur_mode = ad_absx or cur_mode = ad_absy then
+                            d_print("abs (xy) 2");
                             --fetch next opcode (abs low).
                             pcl_a_oe_n <= '0';
                             pch_a_oe_n <= '0';
@@ -470,18 +478,6 @@ begin
                             dbuf_int_oe_n <= '0';
                             dl_al_we_n <= '0';
                             cur_cycle <= exec2;
-                        elsif cur_mode = ad_absx then
-                            d_print("absx 2");
-                            --same as abs until cycle 3.
-                            pcl_a_oe_n <= '0';
-                            pch_a_oe_n <= '0';
-                            pc_inc_n <= '0';
-                            --latch abs low data.
-                            dbuf_int_oe_n <= '0';
-                            dbuf_int_oe_n <= '0';
-                            dl_al_we_n <= '0';
-                            cur_cycle <= exec2;
-                        elsif cur_mode = ad_absy then
                         elsif cur_mode = ad_indir_x then
                         elsif cur_mode = ad_indir_y then
                         else
@@ -610,28 +606,25 @@ begin
                         --pop pcl
                         sp_int_a_oe_n <= '0';
                         sp_pop_n <= '0';
+                        --load lo addr.
+                        dbuf_int_oe_n <= '0';
+                        pcl_d_we_n <= '0';
 
                         cur_cycle <= exec3;
                 elsif instruction (4 downto 0) = "10000" then
                     ---conditional branch instruction..
                 else
                     
-                    if cur_mode = ad_abs then
-                        d_print("abs 3");
+                    if cur_mode = ad_abs or
+                        cur_mode = ad_absx or cur_mode = ad_absy then
+                        d_print("abs (xy) 3");
                         dl_al_we_n <= '1';
 
                         --latch abs hi data.
-                        pcl_a_oe_n <= '0';
-                        pch_a_oe_n <= '0';
-                        dbuf_int_oe_n <= '0';
-                        dl_ah_we_n <= '0';
-                        --pc_inc is '0'. only jump is '1'.
-                        --pc_inc_n <= '0';
-                    elsif cur_mode = ad_absx then
-                        d_print("absx 3");
-                        dl_al_we_n <= '1';
-
-                        --latch abs hi data.
+                        if instruction /= "01001100" then
+                            ---case not jmp, increment pc.
+                            pc_inc_n <= '0';
+                        end if;
                         pcl_a_oe_n <= '0';
                         pch_a_oe_n <= '0';
                         dbuf_int_oe_n <= '0';
@@ -642,15 +635,6 @@ begin
                     if instruction (1 downto 0) = "00" then
                         if instruction (7 downto 5) = "010" then
                         --jmp
-                            d_print("jmp");
-                            pc_inc_n <= '1';
-                            --pcl set from adl bus.
-                            dl_al_oe_n <= '0';
-                            pcl_a_oe_n <= '1';
-                            pcl_a_we_n <= '0';
-                            --pch set dbus.
-                            pch_d_we_n <= '0';
-                            cur_cycle <= fetch;
                         end if; --if instruction (7 downto 5) = "010" then
                     elsif instruction (1 downto 0) = "01" then
                         if instruction (7 downto 5) = "100" then
@@ -679,13 +663,13 @@ begin
                     d_print("rts 4");
                     --stack decrement stop.
                     sp_pop_n <= '1';
+                    pcl_d_we_n <= '1';
 
-                    --load pcl
-                    dbuf_int_oe_n <= '0';
-                    pcl_d_we_n <= '0';
-
-                    --pop pcl
+                    --pop pch
                     sp_int_a_oe_n <= '0';
+                    --load hi addr.
+                    dbuf_int_oe_n <= '0';
+                    pch_d_we_n <= '0';
 
                     cur_cycle <= exec4;
                 elsif instruction (4 downto 0) = "10000" then
@@ -703,7 +687,12 @@ begin
                         dl_al_oe_n <= '0';
                         dl_ah_oe_n <= '0';
 
-                        cur_cycle <= fetch;
+                        if instruction = "01001100" then
+                            ---for jmp inst.
+                            cur_cycle <= decode;
+                        else
+                            cur_cycle <= fetch;
+                        end if;
                     elsif cur_mode = ad_absx then
                         --d_print("absx 4");
                         pc_inc_n <= '1';
@@ -723,6 +712,15 @@ begin
 
                     if cur_mode = ad_abs or cur_mode = ad_absx then
                         if instruction (1 downto 0) = "00" then
+                            if instruction (7 downto 5) = "010" then
+                                d_print("jmp > decode");
+                                --jmp this cycle is same as fetch.
+                                --pcl/pch from ad bus.
+                                pcl_a_we_n <= '0';
+                                pch_a_we_n <= '0';
+                                inst_we_n <= '0';
+                                pc_inc_n <= '0';
+                            end if;
                         elsif instruction (1 downto 0) = "01" then
                             if instruction (7 downto 5) = "100" then
                                 if cur_mode = ad_abs then
@@ -762,12 +760,11 @@ begin
                 elsif instruction = conv_std_logic_vector(16#60#, dsize) then
                     d_print("rts 5");
                     sp_int_a_oe_n <= '1';
-                    pcl_d_we_n <= '1';
+                    pch_d_we_n <= '1';
+                    dbuf_int_oe_n <= '1';
 
-                    --load pch
-                    dbuf_int_oe_n <= '0';
-                    pch_d_we_n <= '0';
-
+                    --empty cycle.
+                    --complying h/w manual...
                     cur_cycle <= exec5;
                 elsif instruction (4 downto 0) = "10000" then
                     ---conditional branch instruction..
@@ -838,8 +835,8 @@ begin
 
                     --load/output  pch
                     ad_oe_n <= '1';
-                    pch_d_we_n <= '0';
-                    dbuf_int_oe_n <= '0';
+                    dl_ah_oe_n <= '0';
+                    pch_a_we_n <= '0';
 
                     --load pcl.
                     dl_al_oe_n <= '0';
@@ -849,8 +846,6 @@ begin
                 elsif instruction = conv_std_logic_vector(16#40#, dsize) then
                 elsif instruction = conv_std_logic_vector(16#60#, dsize) then
                     d_print("rts 6");
-                    dbuf_int_oe_n <= '1';
-                    pch_d_we_n <= '1';
 
                     --increment pc.
                     pc_inc_n <= '0';

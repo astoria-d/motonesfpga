@@ -48,16 +48,20 @@ begin
     variable add_val : std_logic_vector(dsize downto 0);
     begin
         if (clk'event and clk = '1') then
-            if (addr_inc_n = '0') then
+            if (addr_inc_n = '0' and abus_we_n = '0') then
+                --case increment & address set
+                --for jmp op, abs xy not page crossing case.
+                add_val := ('0' & int_a_bus) + 1;
+                inc_carry <= add_val(dsize);
+                val <= add_val(dsize - 1 downto 0);
+            elsif (addr_inc_n = '0') then
                 add_val := ('0' & val) + 1;
                 inc_carry <= add_val(dsize);
                 val <= add_val(dsize - 1 downto 0);
-            end if;
-            if (dbus_we_n = '0') then
-                val <= int_d_bus;
-            end if;
-            if (abus_we_n = '0') then
+            elsif (abus_we_n = '0') then
                 val <= int_a_bus;
+            elsif (dbus_we_n = '0') then
+                val <= int_d_bus;
             end if;
         elsif (res_n'event and res_n = '0') then
             val <= conv_std_logic_vector(reset_addr, dsize);
@@ -112,7 +116,7 @@ entity latch is
             dsize : integer := 8
             );
     port (  
-            we_n    : in std_logic;
+            clk     : in std_logic;
             oe_n    : in std_logic;
             d       : in std_logic_vector (dsize - 1 downto 0);
             q       : out std_logic_vector (dsize - 1 downto 0)
@@ -123,9 +127,10 @@ architecture rtl of latch is
 signal val : std_logic_vector (dsize - 1 downto 0);
 begin
 
-    process (we_n, d)
+    process (clk, d)
     begin
-        if ( we_n = '0') then
+        if ( clk = '1') then
+            --latch only when clock is high
             val <= d;
         end if;
     end process;
@@ -155,42 +160,30 @@ entity dbus_buf is
 end dbus_buf;
 
 architecture rtl of dbus_buf is
-component dff
-    generic (
-            dsize : integer := 8
-            );
-    port (  
-            clk     : in std_logic;
-            we_n    : in std_logic;
-            oe_n    : in std_logic;
-            d       : in std_logic_vector (dsize - 1 downto 0);
-            q       : out std_logic_vector (dsize - 1 downto 0)
-        );
-end component;
-
 component latch
     generic (
             dsize : integer := 8
             );
     port (  
-            we_n    : in std_logic;
+            clk     : in std_logic;
             oe_n    : in std_logic;
             d       : in std_logic_vector (dsize - 1 downto 0);
             q       : out std_logic_vector (dsize - 1 downto 0)
         );
 end component;
 
-signal not_r_nw : std_logic;
-
+signal rd_clk : std_logic;
+signal wr_clk : std_logic;
 begin
+    rd_clk <= r_nw and clk;
+    wr_clk <= (not r_nw) and clk;
 
-    not_r_nw <= not r_nw;
     --read from i/o to cpu
-    dff_r : dff generic map (dsize) 
-                    port map(clk, not_r_nw, int_oe_n, ext_dbus, int_dbus);
+    latch_r : latch generic map (dsize) 
+                    port map(rd_clk, int_oe_n, ext_dbus, int_dbus);
     --write from cpu to io
     latch_w : latch generic map (dsize) 
-                    port map(r_nw, r_nw, int_dbus, ext_dbus);
+                    port map(wr_clk, r_nw, int_dbus, ext_dbus);
 end rtl;
 
 ----------------------------------------
@@ -205,6 +198,7 @@ entity input_dl is
             dsize : integer := 8
             );
     port (  
+            clk         : in std_logic;
             al_we_n     : in std_logic;
             ah_we_n     : in std_logic;
             al_oe_n     : in std_logic;
@@ -221,25 +215,31 @@ component latch
             dsize : integer := 8
             );
     port (  
-            we_n    : in std_logic;
+            clk     : in std_logic;
             oe_n    : in std_logic;
             d       : in std_logic_vector (dsize - 1 downto 0);
             q       : out std_logic_vector (dsize - 1 downto 0)
         );
 end component;
+signal ll_clk : std_logic;
+signal lh_clk : std_logic;
 signal ql : std_logic_vector (dsize - 1 downto 0);
 signal qh : std_logic_vector (dsize - 1 downto 0);
 begin
 
+    ll_clk <= (not al_we_n) and clk;
+    lh_clk <= (not ah_we_n) and clk;
+    latch_l : latch generic map (dsize) 
+                    port map(ll_clk, '0', int_dbus, ql);
+    latch_h : latch generic map (dsize) 
+                    port map(lh_clk, '0', int_dbus, qh);
+
+    --tri-state buffer at the output
     ea_al <= ql when al_oe_n = '0' else
          (others =>'Z');
     ea_ah <= qh when ah_oe_n = '0' else
          (others =>'Z');
 
-    latch_l : latch generic map (dsize) 
-                    port map(al_we_n, '0', int_dbus, ql);
-    latch_h : latch generic map (dsize) 
-                    port map(ah_we_n, '0', int_dbus, qh);
 end rtl;
 
 ----------------------------------------
