@@ -301,15 +301,6 @@ architecture rtl of mos6502 is
 begin
 
     ---instances....
-    pc_l : pc generic map (dsize, 16#00#) 
-            port map(trigger_clk, rst_n, 
-                    pcl_d_we_n, pcl_a_we_n, pcl_d_oe_n, pcl_a_oe_n, 
-                    pc_inc_n, '0', pc_cry, internal_dbus, internal_abus_l);
-    pc_h : pc generic map (dsize, 16#80#) 
-            port map(trigger_clk, rst_n, 
-                    pch_d_we_n, pch_a_we_n, pch_d_oe_n, pch_a_oe_n, 
-                    pc_cry_n, pc_cry, dum_terminate, internal_dbus, internal_abus_h);
-
     dec_inst : decoder generic map (dsize) 
             port map(set_clk, 
                     trigger_clk, 
@@ -362,18 +353,27 @@ begin
                     dbg_show_pc
                     );
 
-    instruction_register : dff generic map (dsize) 
-            port map(trigger_clk, inst_we_n, '0', d_io, instruction);
-
     data_bus_buffer : dbus_buf generic map (dsize) 
             port map(set_clk, dbuf_r_nw, dbuf_int_oe_n, internal_dbus, d_io);
+
+    pc_l : pc generic map (dsize, 16#00#) 
+            port map(trigger_clk, rst_n, 
+                    pcl_d_we_n, pcl_a_we_n, pcl_d_oe_n, pcl_a_oe_n, 
+                    pc_inc_n, '0', pc_cry, internal_dbus, internal_abus_l);
+    pc_h : pc generic map (dsize, 16#80#) 
+            port map(trigger_clk, rst_n, 
+                    pch_d_we_n, pch_a_we_n, pch_d_oe_n, pch_a_oe_n, 
+                    pc_cry_n, pc_cry, dum_terminate, internal_dbus, internal_abus_h);
+
+    instruction_register : dff generic map (dsize) 
+            port map(trigger_clk, inst_we_n, '0', d_io, instruction);
 
     stack_pointer : sp generic map (dsize) 
             port map(trigger_clk, sp_we_n, sp_push_n, sp_pop_n, 
                     sp_int_d_oe_n, sp_int_a_oe_n, 
                     internal_dbus, internal_abus_l, internal_abus_h);
 
-    status_reg_component : processor_status generic map (dsize) 
+    status_register : processor_status generic map (dsize) 
             port map (trigger_clk, rst_n, stat_dec_we_n, stat_bus_we_n, 
                     stat_dec_oe_n, stat_bus_oe_n, 
                     stat_alu_c, stat_alu_v, 
