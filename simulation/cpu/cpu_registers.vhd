@@ -14,7 +14,7 @@ entity pc is
             reset_addr : integer := 0
             );
     port (  
-            trig_clk        : in std_logic;
+            clk             : in std_logic;
             res_n           : in std_logic;
             dbus_we_n       : in std_logic;
             abus_we_n       : in std_logic;
@@ -44,10 +44,10 @@ begin
                     (dbus_oe_n = '0' and add_carry /= '1') else
                 (others => 'Z');
 
-    set_p : process (trig_clk, res_n)
+    set_p : process (clk, res_n)
     variable add_val : std_logic_vector(dsize downto 0);
     begin
-        if ( trig_clk'event and trig_clk = '1') then
+        if (clk'event and clk = '1') then
             if (addr_inc_n = '0') then
                 add_val := ('0' & val) + 1;
                 inc_carry <= add_val(dsize);
@@ -431,9 +431,6 @@ begin
         if ( clk'event and clk = '1'and dec_we_n = '0') then
             val <= decoder;
         end if;
---        if ( clk'event and clk = '1'and bus_we_n = '0') then
---            val <= int_dbus;
---        end if;
 
         ---status flag set from the internal data bus.
         ---interpret the input data by the decoder input.

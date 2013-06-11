@@ -27,7 +27,7 @@ architecture rtl of mos6502 is
                 reset_addr : integer := 0
                 );
         port (  
-                trig_clk        : in std_logic;
+                clk             : in std_logic;
                 res_n           : in std_logic;
                 dbus_we_n       : in std_logic;
                 abus_we_n       : in std_logic;
