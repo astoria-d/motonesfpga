@@ -205,15 +205,13 @@ entity input_dl is
             dsize : integer := 8
             );
     port (  
-            int_al_we_n : in std_logic;
-            int_ah_we_n : in std_logic;
-            int_dl_oe_n : in std_logic;
-            int_dh_oe_n : in std_logic;
-            int_al_oe_n : in std_logic;
-            int_ah_oe_n : in std_logic;
-            int_dbus    : inout std_logic_vector (dsize - 1 downto 0);
-            int_abus_l  : out std_logic_vector (dsize - 1 downto 0);
-            int_abus_h  : out std_logic_vector (dsize - 1 downto 0)
+            al_we_n     : in std_logic;
+            ah_we_n     : in std_logic;
+            al_oe_n     : in std_logic;
+            ah_oe_n     : in std_logic;
+            int_dbus    : in std_logic_vector (dsize - 1 downto 0);
+            ea_al       : out std_logic_vector (dsize - 1 downto 0);
+            ea_ah       : out std_logic_vector (dsize - 1 downto 0)
         );
 end input_dl;
 
@@ -232,22 +230,16 @@ end component;
 signal ql : std_logic_vector (dsize - 1 downto 0);
 signal qh : std_logic_vector (dsize - 1 downto 0);
 begin
-    --oe_n <= (int_d_oe_n and int_al_oe_n and int_ah_oe_n);
-    ----TODO: must check!! for the time being, output ql.
-    int_dbus <= ql when int_dl_oe_n = '0' else
-         (others =>'Z');
-    int_dbus <= qh when int_dh_oe_n = '0' else
-         (others =>'Z');
 
-    int_abus_l <= ql when int_al_oe_n = '0' else
+    ea_al <= ql when al_oe_n = '0' else
          (others =>'Z');
-    int_abus_h <= qh when int_ah_oe_n = '0' else
+    ea_ah <= qh when ah_oe_n = '0' else
          (others =>'Z');
 
     latch_l : latch generic map (dsize) 
-                    port map(int_al_we_n, '0', int_dbus, ql);
+                    port map(al_we_n, '0', int_dbus, ql);
     latch_h : latch generic map (dsize) 
-                    port map(int_ah_we_n, '0', int_dbus, qh);
+                    port map(ah_we_n, '0', int_dbus, qh);
 end rtl;
 
 ----------------------------------------
@@ -571,4 +563,53 @@ begin
     dff_inst : dff generic map (dsize) 
                     port map(clk, we_n, oe_n, d, q);
 end rtl;
+
+----------------------------------------
+--- index register x/y
+----------------------------------------
+
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity index_reg is 
+    generic (
+            dsize : integer := 8
+            );
+    port (  
+            clk         : in std_logic;
+            d_we_n      : in std_logic;
+            d_oe_n      : in std_logic;
+            ea_oe_n     : in std_logic;
+            int_dbus    : inout std_logic_vector (dsize - 1 downto 0);
+            ea_bus      : out std_logic_vector (dsize - 1 downto 0)
+        );
+end index_reg;
+
+architecture rtl of index_reg is
+component dff
+    generic (
+            dsize : integer := 8
+            );
+    port (  
+            clk     : in std_logic;
+            we_n    : in std_logic;
+            oe_n    : in std_logic;
+            d       : in std_logic_vector (dsize - 1 downto 0);
+            q       : out std_logic_vector (dsize - 1 downto 0)
+        );
+end component;
+
+signal q : std_logic_vector (dsize - 1 downto 0);
+
+begin
+    int_dbus <= q when d_oe_n = '0' else
+        (others => 'Z');
+    ea_bus <= q when ea_oe_n = '0' else
+        (others => 'Z');
+
+    --read from i/o to cpu
+    dff_inst : dff generic map (dsize) 
+                    port map(clk, d_we_n, '0', int_dbus, q);
+end rtl;
+
 

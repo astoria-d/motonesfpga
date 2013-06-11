@@ -13,6 +13,7 @@ entity decoder is
             rdy             : in std_logic;
             instruction     : in std_logic_vector (dsize - 1 downto 0);
             status_reg      : inout std_logic_vector (dsize - 1 downto 0);
+            inst_we_n       : out std_logic;
             ad_oe_n         : out std_logic;
             pcl_d_we_n      : out std_logic;
             pcl_a_we_n      : out std_logic;
@@ -23,12 +24,9 @@ entity decoder is
             pch_d_oe_n      : out std_logic;
             pch_a_oe_n      : out std_logic;
             pc_inc_n        : out std_logic;
-            inst_we_n       : out std_logic;
             dbuf_int_oe_n   : out std_logic;
             dl_al_we_n      : out std_logic;
             dl_ah_we_n      : out std_logic;
-            dl_dl_oe_n      : out std_logic;
-            dl_dh_oe_n      : out std_logic;
             dl_al_oe_n      : out std_logic;
             dl_ah_oe_n      : out std_logic;
             sp_we_n         : out std_logic;
@@ -42,12 +40,13 @@ entity decoder is
             acc_alu_oe_n    : out std_logic;
             x_we_n          : out std_logic;
             x_oe_n          : out std_logic;
-            x_calc_n        : out std_logic;
+            x_ea_oe_n       : out std_logic;
             y_we_n          : out std_logic;
             y_oe_n          : out std_logic;
-            y_calc_n        : out std_logic;
-            ea_ah_oe_n      : out std_logic;
-            ea_al_oe_n      : out std_logic;
+            y_ea_oe_n       : out std_logic;
+            ea_calc_n       : out std_logic;
+            ea_zp_n         : out std_logic;
+            ea_pg_next_n    : out std_logic;
             ea_carry        : in  std_logic;
             stat_dec_we_n   : out std_logic;
             stat_dec_oe_n   : out std_logic;
@@ -236,8 +235,6 @@ begin
             dbuf_int_oe_n <= '1';
             dl_al_we_n <= '1';
             dl_ah_we_n <= '1';
-            dl_dl_oe_n <= '1';
-            dl_dh_oe_n <= '1';
             dl_al_oe_n <= '1';
             dl_ah_oe_n <= '1';
             sp_we_n <= '1';
@@ -257,10 +254,11 @@ begin
             stat_dec_oe_n <= '1';
             stat_bus_we_n <= '1';
             stat_bus_oe_n <= '1';
-            x_calc_n <= '1';
-            y_calc_n <= '1';
-            ea_ah_oe_n <= '1';
-            ea_al_oe_n <= '1';
+            x_ea_oe_n <= '1';
+            y_ea_oe_n <= '1';
+            ea_calc_n <= '1';
+            ea_zp_n <= '1';
+            ea_pg_next_n <= '1';
 
         end if;
 
@@ -289,12 +287,14 @@ begin
                 inst_we_n <= '0';
                 pc_inc_n <= '0';
 
+                --disable the last opration pins.
+                x_oe_n <= '1';
+                y_oe_n <= '1';
                 x_we_n <= '1';
                 y_we_n <= '1';
                 sp_we_n <= '1';
                 sp_push_n <= '1';
                 sp_pop_n <= '1';
-                x_oe_n <= '1';
                 r_nw <= '1';
                 dbuf_int_oe_n <= '1';
                 stat_dec_we_n <= '1';
@@ -307,11 +307,8 @@ begin
                 pcl_d_we_n <= '1';
                 acc_d_we_n <= '1';
                 acc_d_oe_n  <= '1';
-                dl_dl_oe_n <= '1';
-                x_calc_n <= '1';
-                ea_al_oe_n <= '1';
-                dl_dh_oe_n <= '1';
-                ea_ah_oe_n <= '1';
+                x_ea_oe_n <= '1';
+                ea_calc_n <= '1';
 
                 cur_cycle <= decode;
 
@@ -493,104 +490,99 @@ begin
                             cur_cycle <= err_cycle;
                         end if; --if cur_mode = ad_imm then
 
-                        if instruction (1 downto 0) = "01" then
-                            --d_print("cc=01");
+                        if (cur_mode = ad_imm) then
+                            if instruction (1 downto 0) = "01" then
+                                --d_print("cc=01");
 
-                            if instruction (7 downto 5) = "000" then
-                                d_print("ora");
-                            elsif instruction (7 downto 5) = "001" then
-                                d_print("and");
-                            elsif instruction (7 downto 5) = "010" then
-                                d_print("eor");
-                            elsif instruction (7 downto 5) = "011" then
-                                d_print("adc");
-                            elsif instruction (7 downto 5) = "100" then
-                                if (cur_mode = ad_imm) then
-                                    d_print("sta");
-                                end if;
-                            elsif instruction (7 downto 5) = "101" then
-                                if (cur_mode = ad_imm) then
+                                if instruction (7 downto 5) = "000" then
+                                    d_print("ora");
+                                elsif instruction (7 downto 5) = "001" then
+                                    d_print("and");
+                                elsif instruction (7 downto 5) = "010" then
+                                    d_print("eor");
+                                elsif instruction (7 downto 5) = "011" then
+                                    d_print("adc");
+                                elsif instruction (7 downto 5) = "100" then
+                                    if (cur_mode = ad_imm) then
+                                        d_print("sta");
+                                    end if;
+                                elsif instruction (7 downto 5) = "101" then
                                     d_print("lda");
                                     acc_d_we_n <= '0';
                                     --status register n/z bit update.
                                     stat_dec_oe_n <= '1';
                                     status_reg <= "10000010";
                                     stat_bus_we_n <= '0';
+                                elsif instruction (7 downto 5) = "110" then
+                                    d_print("cmp");
+                                elsif instruction (7 downto 5) = "111" then
+                                    d_print("sbc");
+                                else
+                                    assert false 
+                                        report ("unknow instruction") severity failure;
+                                    cur_cycle <= err_cycle;
                                 end if;
-                            elsif instruction (7 downto 5) = "110" then
-                                d_print("cmp");
-                            elsif instruction (7 downto 5) = "111" then
-                                d_print("sbc");
-                            else
-                                assert false 
-                                    report ("unknow instruction") severity failure;
-                                cur_cycle <= err_cycle;
-                            end if;
-                        elsif instruction (1 downto 0) = "10" then
-                            --d_print("cc=10");
+                            elsif instruction (1 downto 0) = "10" then
+                                --d_print("cc=10");
 
-                            if instruction (7 downto 5) = "000" then
-                                d_print("asl");
-                            elsif instruction (7 downto 5) = "001" then
-                                d_print("rol");
-                            elsif instruction (7 downto 5) = "010" then
-                                d_print("lsr");
-                            elsif instruction (7 downto 5) = "011" then
-                                d_print("ror");
-                            elsif instruction (7 downto 5) = "100" then
-                                d_print("stx");
-                            elsif instruction (7 downto 5) = "101" then
-                                if (cur_mode = ad_imm) then
+                                if instruction (7 downto 5) = "000" then
+                                    d_print("asl");
+                                elsif instruction (7 downto 5) = "001" then
+                                    d_print("rol");
+                                elsif instruction (7 downto 5) = "010" then
+                                    d_print("lsr");
+                                elsif instruction (7 downto 5) = "011" then
+                                    d_print("ror");
+                                elsif instruction (7 downto 5) = "100" then
+                                    d_print("stx");
+                                elsif instruction (7 downto 5) = "101" then
                                     d_print("ldx");
                                     x_we_n <= '0';
                                     --status register n/z bit update.
                                     stat_dec_oe_n <= '1';
                                     status_reg <= "10000010";
                                     stat_bus_we_n <= '0';
+                                elsif instruction (7 downto 5) = "110" then
+                                    d_print("dec");
+                                elsif instruction (7 downto 5) = "111" then
+                                    d_print("inc");
+                                else
+                                    assert false 
+                                        report ("unknow instruction") severity failure;
+                                    cur_cycle <= err_cycle;
                                 end if;
-                            elsif instruction (7 downto 5) = "110" then
-                                d_print("dec");
-                            elsif instruction (7 downto 5) = "111" then
-                                d_print("inc");
-                            else
-                                assert false 
-                                    report ("unknow instruction") severity failure;
-                                cur_cycle <= err_cycle;
-                            end if;
 
-                        elsif instruction (1 downto 0) = "00" then
-                            --d_print("cc=00 group...");
+                            elsif instruction (1 downto 0) = "00" then
+                                --d_print("cc=00 group...");
 
-                            if instruction (7 downto 5) = "001" then
-                                d_print("bit");
-                            elsif instruction (7 downto 5) = "010" then
-                                --jmp always absolute addressing
-                                --d_print("jmp");
-                                null;
-                            elsif instruction (7 downto 5) = "011" then
-                                --d_print("jmp (abs) 2");
-                                null;
-                            elsif instruction (7 downto 5) = "100" then
-                                d_print("sty");
-                            elsif instruction (7 downto 5) = "101" then
-                                if (cur_mode = ad_imm) then
+                                if instruction (7 downto 5) = "001" then
+                                    d_print("bit");
+                                elsif instruction (7 downto 5) = "010" then
+                                    --jmp always absolute addressing
+                                    null;
+                                elsif instruction (7 downto 5) = "011" then
+                                    --d_print("jmp (abs) 2");
+                                    null;
+                                elsif instruction (7 downto 5) = "100" then
+                                    d_print("sty");
+                                elsif instruction (7 downto 5) = "101" then
                                     d_print("ldy");
                                     y_we_n <= '0';
                                     --status register n/z bit update.
                                     stat_dec_oe_n <= '1';
                                     status_reg <= "10000010";
                                     stat_bus_we_n <= '0';
-                                end if;
-                            elsif instruction (7 downto 5) = "110" then
-                                d_print("cpy");
-                            elsif instruction (7 downto 5) = "111" then
-                                d_print("cpx");
-                            else
-                                assert false 
-                                    report ("unknow instruction") severity failure;
-                                cur_cycle <= err_cycle;
-                            end if; --if instruction (7 downto 5) = "001" then
-                        end if; --if instruction (1 downto 0) = "01"
+                                elsif instruction (7 downto 5) = "110" then
+                                    d_print("cpy");
+                                elsif instruction (7 downto 5) = "111" then
+                                    d_print("cpx");
+                                else
+                                    assert false 
+                                        report ("unknow instruction") severity failure;
+                                    cur_cycle <= err_cycle;
+                                end if; --if instruction (7 downto 5) = "001" then
+                            end if; --if instruction (1 downto 0) = "01"
+                        end if; --if (cur_mode = ad_imm)
                     end if; --if instruction = conv_std_logic_vector(16#00#, dsize) 
                 end if; --if single_inst
 
@@ -720,28 +712,34 @@ begin
                         dbuf_int_oe_n <= '1';
                         dl_ah_we_n <= '1';
 
-                        -----calucurate and output effective addr low
-                        dl_dl_oe_n <= '0';
-                        x_calc_n <= '0';
-                        ea_al_oe_n <= '0';
+                        -----calucurate and output effective addr
+                        x_ea_oe_n <= '0';
+                        dl_al_oe_n <= '0';
                         dl_ah_oe_n <= '0';
+                        ea_calc_n <= '0';
 
                         cur_cycle <= exec4;
                     end if; --if cur_mode = ad_abs then
 
-                    if instruction (1 downto 0) = "00" then
-                    elsif instruction (1 downto 0) = "01" then
-                        if instruction (7 downto 5) = "100" then
-                            d_print("sta 4");
-                            --output acc memory..
-                            r_nw <= '0';
-                            acc_d_oe_n  <= '0';
-                        elsif instruction (7 downto 5) = "101" then
-                            d_print("lda 4");
-                            --if page boundary is crossed, redo in the next cycle.
-                            acc_d_we_n  <= '0';
-                        end if;
-                    end if; --instruction (1 downto 0) = "00" 
+                    if cur_mode = ad_abs or cur_mode = ad_absx then
+                        if instruction (1 downto 0) = "00" then
+                        elsif instruction (1 downto 0) = "01" then
+                            if instruction (7 downto 5) = "100" then
+                                if cur_mode = ad_abs then
+                                    d_print("sta 4");
+                                    --output acc memory..
+                                    r_nw <= '0';
+                                    acc_d_oe_n  <= '0';
+                                end if;
+                            elsif instruction (7 downto 5) = "101" then
+                                d_print("lda 4");
+                                --if page boundary is crossed, redo in the next cycle.
+                                r_nw <= '1';
+                                dbuf_int_oe_n <= '0';
+                                acc_d_we_n  <= '0';
+                            end if;
+                        end if; --instruction (1 downto 0) = "00" 
+                    end if ; --if cur_mode = ad_absx then
                 end if; --if instruction = conv_std_logic_vector(16#00#, dsize) 
 
             elsif cur_cycle = exec4 then
@@ -775,47 +773,58 @@ begin
                     ---conditional branch instruction..
                 else
                     if cur_mode = ad_absx then
-                        if ea_carry = '0' then
+                        if ea_carry = '1' then
                             --case page boundary crossed.
                             d_print("absx 5 (page boudary crossed.)");
-                            dl_dl_oe_n <= '1';
+                            --dl_dl_oe_n <= '1';
                             dl_ah_oe_n <= '1';
 
                             --increment eah.
                             -----effective addr low is remorized in the calc.
-                            dl_dh_oe_n <= '0';
-                            x_calc_n <= '0';
-                            ea_al_oe_n <= '0';
-                            ea_ah_oe_n <= '0';
-                            cur_cycle <= fetch;
+                            --dl_dh_oe_n <= '0';
+                            x_ea_oe_n <= '0';
+                            --ea_al_oe_n <= '0';
+                            --ea_ah_oe_n <= '0';
+                            --cur_cycle <= fetch;
                         else
                             --case page boundary not crossed. do the fetch op.
                             d_print("absx 5 (fetch)");
-                            dl_dl_oe_n <= '1';
-                            x_calc_n <= '1';
-                            ea_al_oe_n <= '1';
+                            x_ea_oe_n <= '1';
+                            dl_al_oe_n <= '1';
                             dl_ah_oe_n <= '1';
-                            acc_d_we_n  <= '1';
-                            dl_al_we_n <= '1';
+                            ea_calc_n <= '1';
 
+                            --disable last operation pin.
+                            acc_d_we_n  <= '1';
+
+                            --fetch inst.
+                            ad_oe_n <= '0';
                             pcl_a_oe_n <= '0';
                             pch_a_oe_n <= '0';
-                            --cur_cycle <= decode;
+                            inst_we_n <= '0';
+                            pc_inc_n <= '0';
+                            cur_cycle <= decode;
                         end if;
                     end if;
-                    if instruction (1 downto 0) = "00" then
-                    elsif instruction (1 downto 0) = "01" then
-                        if instruction (7 downto 5) = "100" then
-                            d_print("sta 5");
-                            --output acc memory..
-                            r_nw <= '0';
-                            acc_d_oe_n  <= '0';
-                        elsif instruction (7 downto 5) = "101" then
-                            d_print("lda 5");
-                            --if page boundary is crossed, redo in the next cycle.
-                            acc_d_we_n  <= '0';
-                        end if;
-                    end if; --instruction (1 downto 0) = "00" 
+
+                    if cur_mode = ad_absx then
+                        --case page boundary is crossed
+                        if instruction (1 downto 0) = "00" then
+                        elsif instruction (1 downto 0) = "01" then
+                            if instruction (7 downto 5) = "100" then
+                                d_print("sta 5");
+                                --output acc memory..
+                                r_nw <= '0';
+                                acc_d_oe_n  <= '0';
+                            elsif instruction (7 downto 5) = "101" then
+                                if ea_carry = '1' then
+                                    --redo for page next.
+                                    d_print("lda 5");
+                                    acc_d_we_n  <= '0';
+                                end if;
+                            end if;
+                        end if; --instruction (1 downto 0) = "00" 
+                    end if; --if cur_mode = ad_absx and ea_carry = '1'
                 end if; --if instruction = conv_std_logic_vector(16#00#, dsize) 
  
             elsif cur_cycle = exec5 then

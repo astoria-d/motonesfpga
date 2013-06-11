@@ -45,10 +45,12 @@ entity effective_adder is
     generic (   dsize : integer := 8
             );
     port (  
-            clk         : in std_logic;
-            ah_oe_n         : in std_logic;
-            al_oe_n         : in std_logic;
-            base            : in std_logic_vector (dsize - 1 downto 0);
+            clk             : in std_logic;
+            ea_calc_n       : in std_logic;
+            zp_n            : in std_logic;
+            pg_next_n       : in std_logic;
+            base_l          : in std_logic_vector (dsize - 1 downto 0);
+            base_h          : in std_logic_vector (dsize - 1 downto 0);
             index           : in std_logic_vector (dsize - 1 downto 0);
             ah_bus          : out std_logic_vector (dsize - 1 downto 0);
             al_bus          : out std_logic_vector (dsize - 1 downto 0);
@@ -57,41 +59,20 @@ entity effective_adder is
 end effective_adder;
 
 architecture rtl of effective_adder is
-    component dff
-        generic (
-                dsize : integer := 8
-                );
-        port (  
-                clk     : in std_logic;
-                we_n    : in std_logic;
-                oe_n    : in std_logic;
-                d       : in std_logic_vector (dsize - 1 downto 0);
-                q       : out std_logic_vector (dsize - 1 downto 0)
-            );
-    end component;
 
-signal al_out : std_logic_vector (dsize - 1 downto 0);
-signal ah_out : std_logic_vector (dsize - 1 downto 0);
-signal old_al : std_logic_vector (dsize - 1 downto 0);
 signal adc_work : std_logic_vector (dsize downto 0);
 
 begin
-    adc_work <= ('0' & base) + ('0' & index);
-    carry <= adc_work(dsize);
-    al_out <= adc_work(dsize - 1 downto 0);
-    ---always remory adl.
-    al_buf : dff generic map (dsize)
-        port map (clk, '0', '0', al_out, old_al);
+    adc_work <= ('0' & base_l) + ('0' & index);
+    carry <= adc_work(dsize) when ea_calc_n = '0' else
+            'Z';
+    --if not calc effective adder, pass through input.
+    al_bus <= adc_work(dsize - 1 downto 0) when ea_calc_n = '0' else
+            base_l;
 
-    --both output means, page boundary crossed.
-    --output old effective addr low.
-    al_bus <= old_al when al_oe_n = '0' and ah_oe_n = '0' else
-            al_out when al_oe_n = '0' else
-            (others => 'Z');
-
-    --ah output means, page boundary crossed.
-    ah_bus <= base + '1' when ah_oe_n = '0' else
-            (others => 'Z');
+    ah_bus <= "00000000" when ea_calc_n = '0' and zp_n = '0' else
+            base_h + '1' when ea_calc_n = '0' and pg_next_n = '0' else
+            base_h;
 
 end rtl;
 

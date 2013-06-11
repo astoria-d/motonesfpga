@@ -51,6 +51,7 @@ architecture rtl of mos6502 is
                 rdy             : in std_logic;
                 instruction     : in std_logic_vector (dsize - 1 downto 0);
                 status_reg      : inout std_logic_vector (dsize - 1 downto 0);
+                inst_we_n       : out std_logic;
                 ad_oe_n         : out std_logic;
                 pcl_d_we_n      : out std_logic;
                 pcl_a_we_n      : out std_logic;
@@ -61,12 +62,9 @@ architecture rtl of mos6502 is
                 pch_d_oe_n      : out std_logic;
                 pch_a_oe_n      : out std_logic;
                 pc_inc_n        : out std_logic;
-                inst_we_n       : out std_logic;
                 dbuf_int_oe_n   : out std_logic;
                 dl_al_we_n      : out std_logic;
                 dl_ah_we_n      : out std_logic;
-                dl_dl_oe_n      : out std_logic;
-                dl_dh_oe_n      : out std_logic;
                 dl_al_oe_n      : out std_logic;
                 dl_ah_oe_n      : out std_logic;
                 sp_we_n         : out std_logic;
@@ -80,12 +78,13 @@ architecture rtl of mos6502 is
                 acc_alu_oe_n    : out std_logic;
                 x_we_n          : out std_logic;
                 x_oe_n          : out std_logic;
-                x_calc_n        : out std_logic;
+                x_ea_oe_n       : out std_logic;
                 y_we_n          : out std_logic;
                 y_oe_n          : out std_logic;
-                y_calc_n        : out std_logic;
-                ea_ah_oe_n      : out std_logic;
-                ea_al_oe_n      : out std_logic;
+                y_ea_oe_n       : out std_logic;
+                ea_calc_n       : out std_logic;
+                ea_zp_n         : out std_logic;
+                ea_pg_next_n    : out std_logic;
                 ea_carry        : in  std_logic;
                 stat_dec_we_n   : out std_logic;
                 stat_dec_oe_n   : out std_logic;
@@ -127,15 +126,13 @@ architecture rtl of mos6502 is
                 dsize : integer := 8
                 );
         port (  
-                int_al_we_n : in std_logic;
-                int_ah_we_n : in std_logic;
-                int_dl_oe_n : in std_logic;
-                int_dh_oe_n : in std_logic;
-                int_al_oe_n : in std_logic;
-                int_ah_oe_n : in std_logic;
-                int_dbus    : inout std_logic_vector (dsize - 1 downto 0);
-                int_abus_l  : out std_logic_vector (dsize - 1 downto 0);
-                int_abus_h  : out std_logic_vector (dsize - 1 downto 0)
+                al_we_n     : in std_logic;
+                ah_we_n     : in std_logic;
+                al_oe_n     : in std_logic;
+                ah_oe_n     : in std_logic;
+                int_dbus    : in std_logic_vector (dsize - 1 downto 0);
+                ea_al       : out std_logic_vector (dsize - 1 downto 0);
+                ea_ah       : out std_logic_vector (dsize - 1 downto 0)
             );
     end component;
 
@@ -200,14 +197,30 @@ architecture rtl of mos6502 is
         );
     end component;
 
+    component index_reg
+    generic (
+            dsize : integer := 8
+            );
+    port (  
+            clk         : in std_logic;
+            d_we_n      : in std_logic;
+            d_oe_n      : in std_logic;
+            ea_oe_n     : in std_logic;
+            int_dbus    : inout std_logic_vector (dsize - 1 downto 0);
+            ea_bus      : out std_logic_vector (dsize - 1 downto 0)
+        );
+    end component;
+
     component effective_adder
     generic (   dsize : integer := 8
             );
     port (  
-            clk         : in std_logic;
-            ah_oe_n         : in std_logic;
-            al_oe_n         : in std_logic;
-            base            : in std_logic_vector (dsize - 1 downto 0);
+            clk             : in std_logic;
+            ea_calc_n       : in std_logic;
+            zp_n            : in std_logic;
+            pg_next_n       : in std_logic;
+            base_l          : in std_logic_vector (dsize - 1 downto 0);
+            base_h          : in std_logic_vector (dsize - 1 downto 0);
             index           : in std_logic_vector (dsize - 1 downto 0);
             ah_bus          : out std_logic_vector (dsize - 1 downto 0);
             al_bus          : out std_logic_vector (dsize - 1 downto 0);
@@ -236,8 +249,6 @@ architecture rtl of mos6502 is
     signal dbuf_int_oe_n : std_logic;
     signal dl_al_we_n : std_logic;
     signal dl_ah_we_n : std_logic;
-    signal dl_dl_oe_n : std_logic;
-    signal dl_dh_oe_n : std_logic;
     signal dl_al_oe_n : std_logic;
     signal dl_ah_oe_n : std_logic;
 
@@ -255,19 +266,20 @@ architecture rtl of mos6502 is
 
     signal x_we_n : std_logic;
     signal x_oe_n : std_logic;
-    signal x_out : std_logic_vector(dsize - 1 downto 0);
 
     signal y_we_n : std_logic;
     signal y_oe_n : std_logic;
-    signal y_out : std_logic_vector(dsize - 1 downto 0);
 
-    signal ea_ah_oe_n : std_logic;
-    signal ea_al_oe_n : std_logic;
+    signal ea_base_l : std_logic_vector(dsize - 1 downto 0);
+    signal ea_base_h : std_logic_vector(dsize - 1 downto 0);
+    signal ea_calc_n : std_logic;
+    signal ea_zp_n : std_logic;
+    signal ea_pg_next_n : std_logic;
     signal ea_carry : std_logic;
-    signal x_calc_n : std_logic;
-    signal y_calc_n : std_logic;
 
-    signal addr_index : std_logic_vector(dsize - 1 downto 0);
+    signal ea_index : std_logic_vector(dsize - 1 downto 0);
+    signal x_ea_oe_n : std_logic;
+    signal y_ea_oe_n : std_logic;
 
     signal stat_dec_we_n : std_logic;
     signal stat_dec_oe_n : std_logic;
@@ -307,6 +319,7 @@ begin
                     rdy, 
                     instruction, 
                     status_reg, 
+                    inst_we_n, 
                     ad_oe_n, 
                     pcl_d_we_n, 
                     pcl_a_we_n, 
@@ -317,12 +330,9 @@ begin
                     pch_d_oe_n, 
                     pch_a_oe_n,
                     pc_inc_n, 
-                    inst_we_n, 
                     dbuf_int_oe_n, 
                     dl_al_we_n, 
                     dl_ah_we_n, 
-                    dl_dl_oe_n, 
-                    dl_dh_oe_n, 
                     dl_al_oe_n, 
                     dl_ah_oe_n,
                     sp_we_n, 
@@ -336,12 +346,13 @@ begin
                     acc_alu_oe_n,
                     x_we_n, 
                     x_oe_n, 
-                    x_calc_n,
+                    x_ea_oe_n,
                     y_we_n, 
                     y_oe_n, 
-                    y_calc_n,
-                    ea_ah_oe_n,
-                    ea_al_oe_n,
+                    y_ea_oe_n,
+                    ea_calc_n,
+                    ea_zp_n,
+                    ea_pg_next_n,
                     ea_carry,
                     stat_dec_we_n, 
                     stat_dec_oe_n, 
@@ -357,11 +368,6 @@ begin
     data_bus_buffer : dbus_buf generic map (dsize) 
             port map(set_clk, dbuf_r_nw, dbuf_int_oe_n, internal_dbus, d_io);
 
-    input_data_latch : input_dl generic map (dsize) 
-            port map(dl_al_we_n, dl_ah_we_n, dl_dl_oe_n, dl_dh_oe_n, 
-                    dl_al_oe_n, dl_ah_oe_n, 
-                    internal_dbus, internal_abus_l, internal_abus_h);
-
     stack_pointer : sp generic map (dsize) 
             port map(trigger_clk, sp_we_n, sp_push_n, sp_pop_n, 
                     sp_int_d_oe_n, sp_int_a_oe_n, 
@@ -373,25 +379,22 @@ begin
                     stat_alu_c, stat_alu_v, 
                     status_reg, internal_dbus);
 
-    --x/y output pin is connected to address calcurator
-    x_reg : dff generic map (dsize) 
-            port map(trigger_clk, x_we_n, '0', internal_dbus, x_out);
-    x_buf : tsb generic map (dsize)
-            port map (x_oe_n, x_out, internal_dbus);
-    x_buf_addr : tsb generic map (dsize)
-            port map (x_calc_n, x_out, addr_index);
+    --x/y output pin is connected to effective address calcurator
+    x_reg : index_reg generic map (dsize) 
+            port map(trigger_clk, x_we_n, x_oe_n, x_ea_oe_n, internal_dbus, ea_index);
 
-    y_reg : dff generic map (dsize) 
-            port map(trigger_clk, y_we_n, '0', internal_dbus, y_out);
-    y_buf : tsb generic map (dsize)
-            port map (y_oe_n, y_out, internal_dbus);
-    y_buf_addr : tsb generic map (dsize)
-            port map (y_calc_n, y_out, addr_index);
+    y_reg : index_reg generic map (dsize) 
+            port map(trigger_clk, y_we_n, y_oe_n, y_ea_oe_n, internal_dbus, ea_index);
+
+    --address operand data latch.
+    input_data_latch : input_dl generic map (dsize) 
+            port map(dl_al_we_n, dl_ah_we_n, dl_al_oe_n, dl_ah_oe_n, 
+                    internal_dbus, ea_base_l, ea_base_h);
 
     ---effective addres calcurator.
-    addr_calc: effective_adder generic map (dsize)
-            port map (trigger_clk, ea_ah_oe_n, ea_al_oe_n,
-                    internal_dbus, addr_index, 
+    ea_calc: effective_adder generic map (dsize)
+            port map (trigger_clk, ea_calc_n, ea_zp_n, ea_pg_next_n,
+                    ea_base_l, ea_base_h, ea_index, 
                     internal_abus_h, internal_abus_l, ea_carry);
 
     acc_reg : accumulator generic map (dsize) 
