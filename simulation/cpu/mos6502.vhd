@@ -216,7 +216,6 @@ architecture rtl of mos6502 is
     generic (   dsize : integer := 8
             );
     port (  
-            clk             : in std_logic;
             ea_calc_n       : in std_logic;
             zp_n            : in std_logic;
             pg_next_n       : in std_logic;
@@ -358,6 +357,17 @@ begin
     data_bus_buffer : dbus_buf generic map (dsize) 
             port map(set_clk, dbuf_r_nw, dbuf_int_oe_n, internal_dbus, d_io);
 
+    ---effective addres calcurator.
+    ea_calc: effective_adder generic map (dsize)
+            port map (ea_calc_n, ea_zp_n, ea_pg_next_n,
+                    ea_base_l, ea_base_h, ea_index, 
+                    internal_abus_h, internal_abus_l, ea_carry);
+
+    --address operand data buffer.
+    input_data_latch : input_dl generic map (dsize) 
+            port map(set_clk, dl_al_we_n, dl_ah_we_n, dl_al_oe_n, dl_ah_oe_n, 
+                    internal_dbus, ea_base_l, ea_base_h);
+
     pc_l : pc generic map (dsize, 16#00#) 
             port map(trigger_clk, rst_n, 
                     pcl_d_we_n, pcl_a_we_n, pcl_d_oe_n, pcl_a_oe_n, 
@@ -387,17 +397,6 @@ begin
 
     y_reg : index_reg generic map (dsize) 
             port map(trigger_clk, y_we_n, y_oe_n, y_ea_oe_n, internal_dbus, ea_index);
-
-    --address operand data buffer.
-    input_data_latch : input_dl generic map (dsize) 
-            port map(set_clk, dl_al_we_n, dl_ah_we_n, dl_al_oe_n, dl_ah_oe_n, 
-                    internal_dbus, ea_base_l, ea_base_h);
-
-    ---effective addres calcurator.
-    ea_calc: effective_adder generic map (dsize)
-            port map (trigger_clk, ea_calc_n, ea_zp_n, ea_pg_next_n,
-                    ea_base_l, ea_base_h, ea_index, 
-                    internal_abus_h, internal_abus_l, ea_carry);
 
     acc_reg : accumulator generic map (dsize) 
             port map(trigger_clk, 

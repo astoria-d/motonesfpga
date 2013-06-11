@@ -45,7 +45,6 @@ entity effective_adder is
     generic (   dsize : integer := 8
             );
     port (  
-            clk             : in std_logic;
             ea_calc_n       : in std_logic;
             zp_n            : in std_logic;
             pg_next_n       : in std_logic;
