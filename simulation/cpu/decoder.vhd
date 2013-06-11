@@ -310,6 +310,7 @@ begin
                 acc_d_oe_n  <= '1';
                 x_ea_oe_n <= '1';
                 ea_calc_n <= '1';
+                ea_pg_next_n <= '1';
 
                 cur_cycle <= decode;
 
@@ -773,16 +774,12 @@ begin
                         if ea_carry = '1' then
                             --case page boundary crossed.
                             d_print("absx 5 (page boudary crossed.)");
-                            --dl_dl_oe_n <= '1';
-                            dl_ah_oe_n <= '1';
-
-                            --increment eah.
-                            -----effective addr low is remorized in the calc.
-                            --dl_dh_oe_n <= '0';
                             x_ea_oe_n <= '0';
-                            --ea_al_oe_n <= '0';
-                            --ea_ah_oe_n <= '0';
-                            --cur_cycle <= fetch;
+                            dl_al_oe_n <= '0';
+                            dl_ah_oe_n <= '0';
+                            ea_calc_n <= '0';
+                            ea_pg_next_n <= '0';
+                            cur_cycle <= fetch;
                         else
                             --case page boundary not crossed. do the fetch op.
                             d_print("absx 5 (fetch)");
