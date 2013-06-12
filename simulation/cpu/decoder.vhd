@@ -756,6 +756,9 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#a0#, dsize) then
                     --imm
                     d_print("ldy");
+                    fetch_imm;
+                    y_we_n <= '0';
+                    set_nz;
 
                 elsif instruction  = conv_std_logic_vector(16#a4#, dsize) then
                     --zp
@@ -853,6 +856,16 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#8d#, dsize) then
                     --abs
                     d_print("sta");
+                    if exec_cycle = T1 then
+                        abs_fetch_low;
+                    elsif exec_cycle = T2 then
+                        abs_fetch_high(false);
+                    elsif exec_cycle = T3 then
+                        abs_latch_out;
+                        r_nw <= '0';
+                        acc_d_oe_n  <= '0';
+                        next_cycle <= T0;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#9d#, dsize) then
                     --abs, x
