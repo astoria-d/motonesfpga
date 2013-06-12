@@ -245,6 +245,41 @@ begin
     variable status_reg_old : std_logic_vector(dsize - 1 downto 0);
     variable cur_mode : addr_mode;
 
+procedure fetch_inst is
+begin
+    d_print(string'("fetch 1"));
+    ad_oe_n <= '0';
+    pcl_a_oe_n <= '0';
+    pch_a_oe_n <= '0';
+    inst_we_n <= '0';
+    pc_inc_n <= '0';
+
+    --disable the last opration pins.
+    x_oe_n <= '1';
+    y_oe_n <= '1';
+    x_we_n <= '1';
+    y_we_n <= '1';
+    sp_we_n <= '1';
+    sp_push_n <= '1';
+    sp_pop_n <= '1';
+    r_nw <= '1';
+    dbuf_int_oe_n <= '1';
+    stat_dec_we_n <= '1';
+    stat_bus_we_n <= '1';
+    pch_d_we_n <= '1';
+    pcl_a_we_n <= '1';
+    dl_al_we_n <= '1';
+    dl_al_oe_n <= '1';
+    dl_ah_oe_n <= '1';
+    pcl_d_we_n <= '1';
+    pch_a_we_n <= '1';
+    acc_d_we_n <= '1';
+    acc_d_oe_n  <= '1';
+    x_ea_oe_n <= '1';
+    ea_calc_n <= '1';
+    ea_pg_next_n <= '1';
+end;
+
 ---common routine for single byte instruction.
 procedure single_inst is
 begin
@@ -318,6 +353,15 @@ begin
     dl_ah_oe_n <= '0';
 end  procedure;
 
+procedure ea_x_out is
+begin
+    -----calucurate and output effective addr
+    x_ea_oe_n <= '0';
+    dl_al_oe_n <= '0';
+    dl_ah_oe_n <= '0';
+    ea_calc_n <= '0';
+end  procedure;
+
     begin
 
         if (res_n = '0') then
@@ -388,38 +432,7 @@ end  procedure;
 
             elsif exec_cycle = T0 then
                 --cycle #1
-                d_print(string'("fetch 1"));
-                ad_oe_n <= '0';
-                pcl_a_oe_n <= '0';
-                pch_a_oe_n <= '0';
-                inst_we_n <= '0';
-                pc_inc_n <= '0';
-
-                --disable the last opration pins.
-                x_oe_n <= '1';
-                y_oe_n <= '1';
-                x_we_n <= '1';
-                y_we_n <= '1';
-                sp_we_n <= '1';
-                sp_push_n <= '1';
-                sp_pop_n <= '1';
-                r_nw <= '1';
-                dbuf_int_oe_n <= '1';
-                stat_dec_we_n <= '1';
-                stat_bus_we_n <= '1';
-                pch_d_we_n <= '1';
-                pcl_a_we_n <= '1';
-                dl_al_we_n <= '1';
-                dl_al_oe_n <= '1';
-                dl_ah_oe_n <= '1';
-                pcl_d_we_n <= '1';
-                pch_a_we_n <= '1';
-                acc_d_we_n <= '1';
-                acc_d_oe_n  <= '1';
-                x_ea_oe_n <= '1';
-                ea_calc_n <= '1';
-                ea_pg_next_n <= '1';
-
+                fetch_inst;
                 next_cycle <= T1;
 
                 ---for debug....
@@ -717,6 +730,35 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#bd#, dsize) then
                     --abs, x
                     d_print("lda");
+                    if exec_cycle = T1 then
+                        abs_fetch_low;
+                    elsif exec_cycle = T2 then
+                        abs_fetch_high(false);
+                    elsif exec_cycle = T3 then
+                        abs_latch_out;
+                        ea_x_out;
+                        r_nw <= '0';
+                        acc_d_oe_n  <= '0';
+                        next_cycle <= T4;
+                    elsif exec_cycle = T4 then
+                        if ea_carry = '1' then
+                            --case page boundary crossed.
+                            d_print("absx 5 (page boudary crossed.)");
+                            x_ea_oe_n <= '0';
+                            dl_al_oe_n <= '0';
+                            dl_ah_oe_n <= '0';
+                            ea_calc_n <= '0';
+                            ea_pg_next_n <= '0';
+                            next_cycle <= T0;
+                        else
+                            --case page boundary not crossed. do the fetch op.
+                            d_print("absx 5 (fetch)");
+                            fetch_inst;
+                            next_cycle <= T1;
+                        end if;
+
+                    end if;
+
 
                 elsif instruction  = conv_std_logic_vector(16#b9#, dsize) then
                     --abs, y
