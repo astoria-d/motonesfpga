@@ -50,6 +50,8 @@ architecture rtl of mos6502 is
                 nmi_n           : in std_logic;
                 rdy             : in std_logic;
                 instruction     : in std_logic_vector (dsize - 1 downto 0);
+                exec_cycle      : in std_logic_vector (4 downto 0);
+                next_cycle      : out std_logic_vector (4 downto 0);
                 status_reg      : inout std_logic_vector (dsize - 1 downto 0);
                 inst_we_n       : out std_logic;
                 ad_oe_n         : out std_logic;
@@ -90,8 +92,7 @@ architecture rtl of mos6502 is
                 stat_dec_oe_n   : out std_logic;
                 stat_bus_we_n   : out std_logic;
                 stat_bus_oe_n   : out std_logic;
-                r_nw            : out std_logic;
-                dbg_show_pc     : out std_logic
+                r_nw            : out std_logic
             );
     end component;
 
@@ -295,9 +296,10 @@ architecture rtl of mos6502 is
     signal internal_dbus : std_logic_vector (dsize - 1 downto 0);
 
     signal instruction : std_logic_vector (dsize - 1 downto 0);
+    signal exec_cycle  : std_logic_vector (4 downto 0);
+    signal next_cycle  : std_logic_vector (4 downto 0);
     signal status_reg : std_logic_vector (dsize - 1 downto 0);
 
-    signal dbg_show_pc : std_logic;
 begin
 
     ---instances....
@@ -309,6 +311,8 @@ begin
                     nmi_n, 
                     rdy, 
                     instruction, 
+                    exec_cycle,
+                    next_cycle,
                     status_reg, 
                     inst_we_n, 
                     ad_oe_n, 
@@ -349,9 +353,12 @@ begin
                     stat_dec_oe_n, 
                     stat_bus_we_n, 
                     stat_bus_oe_n,
-                    dbuf_r_nw,
-                    dbg_show_pc
+                    dbuf_r_nw
                     );
+
+    --cpu execution cycle number
+    exec_cycle_inst : dff generic map (5) 
+            port map(trigger_clk, '0', '0', next_cycle, exec_cycle);
 
     --io data buffer
     data_bus_buffer : dbus_buf generic map (dsize) 
@@ -424,7 +431,7 @@ begin
         end if;
     end process;
 
-    dbg_p : process (dbg_show_pc)
+    dbg_p : process (set_clk)
 use std.textio.all;
 use ieee.std_logic_textio.all;
 use ieee.std_logic_unsigned.conv_integer;
@@ -445,7 +452,8 @@ begin
     return hex_chr(tmp2 + 1) & hex_chr(tmp1 + 1);
 end;
     begin
-        if (dbg_show_pc = '1') then
+        if (set_clk = '0' and exec_cycle = "00000") then
+            --show pc on the T0 (fetch) cycle.
             d_print("pc : " & conv_hex8(conv_integer(internal_abus_h)) 
                     & conv_hex8(conv_integer(internal_abus_l)));
         end if;
