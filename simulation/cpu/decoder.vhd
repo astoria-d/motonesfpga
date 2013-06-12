@@ -698,6 +698,9 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#a9#, dsize) then
                     --imm
                     d_print("lda");
+                    fetch_imm;
+                    acc_d_we_n <= '0';
+                    set_nz;
 
                 elsif instruction  = conv_std_logic_vector(16#a5#, dsize) then
                     --zp
@@ -1014,6 +1017,70 @@ end  procedure;
                 -- A.5.3 jsr
                 ----------------------------------------
                 elsif instruction = conv_std_logic_vector(16#20#, dsize) then
+                    if exec_cycle = T1 then
+                        d_print("jsr abs 2");
+                        --fetch opcode.
+                        pcl_a_oe_n <= '0';
+                        pch_a_oe_n <= '0';
+                        pc_inc_n <= '0';
+                        dbuf_int_oe_n <= '0';
+                        --latch adl
+                        dl_al_we_n <= '0';
+                        next_cycle <= T2;
+                    elsif exec_cycle = T2 then
+                        d_print("jsr 3");
+                        pcl_a_oe_n <= '1';
+                        pch_a_oe_n <= '1';
+                        pc_inc_n <= '1';
+                        dbuf_int_oe_n <= '1';
+                        dl_al_we_n <= '1';
+
+                       --push return addr high into stack.
+                        sp_push_n <= '0';
+                        pch_d_oe_n <= '0';
+                        sp_int_a_oe_n <= '0';
+                        r_nw <= '0';
+                        next_cycle <= T3;
+                    elsif exec_cycle = T3 then
+                        d_print("jsr 4");
+                        pch_d_oe_n <= '1';
+
+                       --push return addr low into stack.
+                        sp_push_n <= '0';
+                        pcl_d_oe_n <= '0';
+                        sp_int_a_oe_n <= '0';
+                        r_nw <= '0';
+
+                        next_cycle <= T4;
+                    elsif exec_cycle = T4 then
+                        d_print("jsr 5");
+                        sp_push_n <= '1';
+                        pcl_d_oe_n <= '1';
+                        sp_int_a_oe_n <= '1';
+                        r_nw <= '1';
+
+                        --fetch last op.
+                        pcl_a_oe_n <= '0';
+                        pch_a_oe_n <= '0';
+
+                        next_cycle <= T5;
+                    elsif exec_cycle = T5 then
+                        d_print("jsr 6");
+
+                        pcl_a_oe_n <= '1';
+                        pch_a_oe_n <= '1';
+
+                        --load/output  pch
+                        ad_oe_n <= '1';
+                        dl_ah_oe_n <= '0';
+                        pch_a_we_n <= '0';
+
+                        --load pcl.
+                        dl_al_oe_n <= '0';
+                        pcl_a_we_n <= '0';
+
+                        next_cycle <= T0;
+                    end if; --if exec_cycle = T1 then
 
                 -- A.5.4 break
                 elsif instruction = conv_std_logic_vector(16#00#, dsize) then
@@ -1050,6 +1117,55 @@ end  procedure;
                 -- A.5.7 return from soubroutine
                 ----------------------------------------
                 elsif instruction = conv_std_logic_vector(16#60#, dsize) then
+                    if exec_cycle = T1 then
+                        pcl_a_oe_n <= '1';
+                        pch_a_oe_n <= '1';
+                        pc_inc_n <= '1';
+
+                        --pop stack (decrement only)
+                        sp_pop_n <= '0';
+                        sp_int_a_oe_n <= '0';
+
+                        next_cycle <= T2;
+                    elsif exec_cycle = T2 then
+                        d_print("rts 3");
+                        --pop pcl
+                        sp_int_a_oe_n <= '0';
+                        sp_pop_n <= '0';
+                        --load lo addr.
+                        dbuf_int_oe_n <= '0';
+                        pcl_d_we_n <= '0';
+
+                        next_cycle <= T3;
+                    elsif exec_cycle = T3 then
+                        d_print("rts 4");
+                        --stack decrement stop.
+                        sp_pop_n <= '1';
+                        pcl_d_we_n <= '1';
+
+                        --pop pch
+                        sp_int_a_oe_n <= '0';
+                        --load hi addr.
+                        dbuf_int_oe_n <= '0';
+                        pch_d_we_n <= '0';
+
+                        next_cycle <= T4;
+                    elsif exec_cycle = T4 then
+                        d_print("rts 5");
+                        sp_int_a_oe_n <= '1';
+                        pch_d_we_n <= '1';
+                        dbuf_int_oe_n <= '1';
+
+                        --empty cycle.
+                        --complying h/w manual...
+                        next_cycle <= T5;
+                    elsif exec_cycle = T5 then
+                        d_print("rts 6");
+
+                        --increment pc.
+                        pc_inc_n <= '0';
+                        next_cycle <= T0;
+                    end if; --if exec_cycle = T1 then
 
                 ----------------------------------------
                 -- A.5.8 branch operations
