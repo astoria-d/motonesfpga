@@ -112,14 +112,6 @@ begin
     return hex_chr(tmp2 + 1) & hex_chr(tmp1 + 1);
 end;
 
-
-type addr_mode is ( ad_imm,
-                    ad_acc,
-                    ad_zp, ad_zpx, ad_zpy,
-                    ad_abs, ad_absx, ad_absy,
-                    ad_indir_x, ad_indir_y,
-                    ad_unknown);
-
 --cycle bit format
 --00xxx : exec cycle : T0 > T1 > T2 > T3 > T4 > T5 > T6 > T7 > T0
 constant T0 : std_logic_vector (4 downto 0) := "00000";
@@ -174,76 +166,10 @@ constant st_I : integer := 2;
 constant st_Z : integer := 1;
 constant st_C : integer := 0;
 
----case instruction consists of aaabbbcc form,
----return addressing mode for each opcode.
-function decode_addr_mode (instruction : in std_logic_vector (dsize - 1 downto 0))
-     return addr_mode is
-begin
-    if instruction (1 downto 0) = "01" then
-        if instruction (4 downto 2) = "000" then
-            --(zero page,X)
-            return ad_indir_x;
-        elsif instruction (4 downto 2) = "001" then
-            return  ad_zp;
-        elsif instruction (4 downto 2) = "010" then
-            return  ad_imm;
-        elsif instruction (4 downto 2) = "011" then
-            return  ad_abs;
-        elsif instruction (4 downto 2) = "100" then
-            --(zero page),Y
-            return ad_indir_y;
-        elsif instruction (4 downto 2) = "101" then
-            return  ad_zpx;
-        elsif instruction (4 downto 2) = "110" then
-            return  ad_absy;
-        elsif instruction (4 downto 2) = "111" then
-            return  ad_absx;
-        end if;
-    elsif instruction (1 downto 0) = "10" then
-        --d_print("cc=10");
-        --bbb is 000, 001, 010, 011, 101, 111 only.
-        if instruction (4 downto 2) = "000" then
-            return  ad_imm;
-        elsif instruction (4 downto 2) = "001" then
-            return  ad_zp;
-        elsif instruction (4 downto 2) = "010" then
-            return  ad_acc;
-        elsif instruction (4 downto 2) = "011" then
-            return  ad_abs;
-        elsif instruction (4 downto 2) = "101" then
-            return  ad_zpx;
-        elsif instruction (4 downto 2) = "111" then
-            return  ad_absx;
-        else
-            return  ad_unknown;
-        end if;
-
-    elsif instruction (1 downto 0) = "00" then
-        --d_print("cc=00 group...");
-        ---bbb part is 000, 001, 011, 101, 111 only.
-        if instruction (4 downto 2) = "000" then
-            return  ad_imm;
-        elsif instruction (4 downto 2) = "001" then
-            return  ad_zp;
-        elsif instruction (4 downto 2) = "011" then
-            return  ad_abs;
-        elsif instruction (4 downto 2) = "101" then
-            return  ad_zpx;
-        elsif instruction (4 downto 2) = "111" then
-            return  ad_absx;
-        else
-            return  ad_unknown;
-        end if;
-    else
-        return  ad_unknown;
-    end if; --if instruction (1 downto 0) = "01" then
-end  function;
-
 begin
 
     main_p : process (set_clk, trig_clk, res_n)
     variable status_reg_old : std_logic_vector(dsize - 1 downto 0);
-    variable cur_mode : addr_mode;
 
 procedure fetch_inst is
 begin
