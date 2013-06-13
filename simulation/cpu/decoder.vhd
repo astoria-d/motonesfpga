@@ -50,11 +50,16 @@ entity decoder is
             ea_zp_n         : out std_logic;
             ea_pg_next_n    : out std_logic;
             ea_carry        : in  std_logic;
-            stat_dec_we_n   : out std_logic;
             stat_dec_oe_n   : out std_logic;
-            stat_bus_we_n   : out std_logic;
             stat_bus_oe_n   : out std_logic;
+            stat_set_flg_n  : out std_logic;
+            stat_flg        : out std_logic;
+            stat_bus_all_n  : out std_logic;
+            stat_bus_nz_n   : out std_logic;
+            stat_alu_we_n   : out std_logic;
             r_nw            : out std_logic
+            ;---for parameter check purpose!!!
+            check_bit     : out std_logic_vector(1 to 5)
         );
 end decoder;
 
@@ -189,8 +194,6 @@ begin
     sp_pop_n <= '1';
     r_nw <= '1';
     dbuf_int_oe_n <= '1';
-    stat_dec_we_n <= '1';
-    stat_bus_we_n <= '1';
     pch_d_we_n <= '1';
     pcl_a_we_n <= '1';
     dl_al_we_n <= '1';
@@ -200,6 +203,8 @@ begin
     pch_a_we_n <= '1';
     acc_d_we_n <= '1';
     acc_d_oe_n  <= '1';
+    stat_bus_nz_n <= '1';
+    stat_set_flg_n <= '1';
     x_ea_oe_n <= '1';
     ea_calc_n <= '1';
     ea_pg_next_n <= '1';
@@ -231,33 +236,30 @@ begin
     --status register n/z bit update.
     stat_dec_oe_n <= '1';
     status_reg <= "10000010";
-    stat_bus_we_n <= '0';
+    stat_bus_nz_n <= '0';
 end  procedure;
 
 --flag on/off instruction
 procedure set_flag (int_flg : in integer; val : in std_logic) is
-variable status_reg_old : std_logic_vector(dsize - 1 downto 0);
 begin
-    status_reg_old := status_reg;
     stat_dec_oe_n <= '1';
-    stat_dec_we_n <= '0';
+    stat_set_flg_n <= '0';
+    --specify which to set.
     status_reg(7 downto int_flg + 1) 
-        <= status_reg_old (7 downto int_flg + 1);
+        <= (others =>'0');
     status_reg(int_flg - 1 downto 0) 
-        <= status_reg_old (int_flg - 1 downto 0);
-    status_reg(int_flg) <= val;
+        <= (others =>'0');
+    status_reg(int_flg) <= '1';
+    stat_flg <= val;
 end  procedure;
 
 --for sec/clc
 procedure set_flag0 (val : in std_logic) is
-variable status_reg_old : std_logic_vector(dsize - 1 downto 0);
 begin
-    status_reg_old := status_reg;
     stat_dec_oe_n <= '1';
-    stat_dec_we_n <= '0';
-    status_reg(7 downto 1) 
-        <= status_reg_old (7 downto 1);
-    status_reg(st_C) <= val;
+    stat_set_flg_n <= '0';
+    status_reg <= "00000001";
+    stat_flg <= val;
 end  procedure;
 
 procedure abs_fetch_low is
@@ -1055,8 +1057,17 @@ end  procedure;
                 elsif instruction = conv_std_logic_vector(16#4c#, dsize) then
                     --abs
                     if exec_cycle = T1 then
-                        abs_fetch_low;
+                        d_print("jmp 2");
+                        --fetch next opcode (abs low).
+                        pcl_a_oe_n <= '0';
+                        pch_a_oe_n <= '0';
+                        pc_inc_n <= '0';
+                        --latch abs low data.
+                        dbuf_int_oe_n <= '0';
+                        dl_al_we_n <= '0';
+                        next_cycle <= T2;
                     elsif exec_cycle = T2 then
+                        d_print("jmp 3");
                         dl_al_we_n <= '1';
 
                         --fetch abs hi
@@ -1066,6 +1077,7 @@ end  procedure;
                         dl_ah_we_n <= '0';
                         next_cycle <= T3;
                     elsif exec_cycle = T3 then
+                        d_print("jmp done > next fetch");
                         pcl_a_oe_n <= '1';
                         pch_a_oe_n <= '1';
                         dl_ah_we_n <= '1';
@@ -1196,10 +1208,14 @@ end  procedure;
                 x_oe_n <= '1';
                 y_we_n <= '1';
                 y_oe_n <= '1';
-                stat_dec_we_n <= '1';
+
                 stat_dec_oe_n <= '1';
-                stat_bus_we_n <= '1';
                 stat_bus_oe_n <= '1';
+                stat_set_flg_n <= '1';
+                stat_flg <= '1';
+                stat_bus_all_n <= '1';
+                stat_bus_nz_n <= '1';
+                stat_alu_we_n <= '1';
                 x_ea_oe_n <= '1';
                 y_ea_oe_n <= '1';
                 ea_calc_n <= '1';

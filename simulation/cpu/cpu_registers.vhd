@@ -376,7 +376,6 @@ end rtl;
 
 ----------------------------------------
 --- status register component
---- status register is subtype of SR FF.
 ----------------------------------------
 
 library ieee;
@@ -389,12 +388,17 @@ entity processor_status is
     port (  
             clk         : in std_logic;
             res_n       : in std_logic;
-            dec_we_n    : in std_logic;
-            bus_we_n    : in std_logic;
             dec_oe_n    : in std_logic;
             bus_oe_n    : in std_logic;
-            alu_c       : in std_logic;
+            set_flg_n   : in std_logic;
+            flg_val     : in std_logic;
+            load_bus_all_n : in std_logic;
+            load_bus_nz_n  : in std_logic;
+            alu_we_n    : in std_logic;
+            alu_n       : in std_logic;
             alu_v       : in std_logic;
+            alu_z       : in std_logic;
+            alu_c       : in std_logic;
             decoder     : inout std_logic_vector (dsize - 1 downto 0);
             int_dbus    : inout std_logic_vector (dsize - 1 downto 0)
         );
@@ -409,7 +413,7 @@ begin
                 (others => 'Z');
                 
 
-    main_p : process (clk, res_n, decoder, int_dbus, bus_we_n)
+    main_p : process (clk, res_n)
     variable tmp : std_logic_vector (dsize - 1 downto 0);
     begin
 --        SR Flags (bit 7 to bit 0):
@@ -428,26 +432,44 @@ begin
             val <= "00000100";
         end if;
 
-        if ( clk'event and clk = '1'and dec_we_n = '0') then
-            val <= decoder;
-        end if;
+        if ( clk'event and clk = '1') then
+            ---from flag set/clear instructions
+            if (set_flg_n = '0') then
+                if flg_val = '1' then
+                    tmp := (val and decoder) and ("11111111");
+                else
+                    tmp := "00000000";
+                end if;
+                val <= tmp or (val and not val);
 
-        ---status flag set from the internal data bus.
-        ---interpret the input data by the decoder input.
-        if ( clk'event and clk = '1'and bus_we_n = '0') then
-            if ((decoder(0) and decoder(1) and decoder(2) and decoder(3) and 
-                    decoder(4) and decoder(5) and decoder(6) and decoder(7)) = '1' ) 
-            then
-                ---only plp (pull status) sets the data bus data as they are.
+            ---status flag set from the data on the internal data bus.
+            ---interpret the input data by the decoder input.
+            ---load/pop/rti/ta[xy]/ts[xy]
+            elsif (load_bus_all_n = '0') then
+                ---set the data bus data as they are.
                 val <= int_dbus;
-            else
-                ---other case: n/z/c/v data must be interpreted.
+            elsif (load_bus_nz_n = '0') then
+                ---other case: n/z data must be interpreted.
+                tmp := val;
+                val (6 downto 2) <= tmp (6 downto 2);
+                val (0) <= tmp (0);
+
+                --n bit.
+                val (7) <= int_dbus(7);
+                --z bit.
+                ---nor outputs 1 when all inputs are 0.
+                val (1) <= not (int_dbus(7) or int_dbus(6) or 
+                        int_dbus(5) or int_dbus(4) or int_dbus(3) or 
+                        int_dbus(2) or int_dbus(1) or int_dbus(0));
+
+            ---status set from alu/inx/iny etc.
+            elsif (alu_we_n = '0') then
                 tmp := val;
                 val (5 downto 2) <= tmp (5 downto 2);
 
                 --n bit.
                 if (decoder(7) = '1') then
-                    val (7) <= int_dbus(7);
+                    val (7) <= alu_n;
                 else
                     val (7) <= tmp (7);
                 end if;
@@ -459,10 +481,7 @@ begin
                 end if;
                 --z bit.
                 if (decoder(1) = '1') then
-                    ---nor outputs 1 when all inputs are 0.
-                    val (1) <= not (int_dbus(7) or int_dbus(6) or 
-                            int_dbus(5) or int_dbus(4) or int_dbus(3) or 
-                            int_dbus(2) or int_dbus(1) or int_dbus(0));
+                    val (1) <= alu_z;
                 else
                     val (1) <= tmp (1);
                 end if;
@@ -472,7 +491,7 @@ begin
                 else
                     val (0) <= tmp (0);
                 end if;
-            end if;
+            end if; --if (set_flg_n = '0') then
         end if;
     end process;
 end rtl;

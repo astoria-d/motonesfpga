@@ -16,11 +16,14 @@ entity alu is
             al_oe_n         : in std_logic;
             acc_we_n        : in std_logic;
             acc_oe_n        : in std_logic;
+            carry_in        : in std_logic;
             int_d_bus       : inout std_logic_vector (dsize - 1 downto 0);
             int_ah_bus      : inout std_logic_vector (dsize - 1 downto 0);
             int_al_bus      : inout std_logic_vector (dsize - 1 downto 0);
             acc             : inout std_logic_vector (dsize - 1 downto 0);
-            carry           : inout std_logic;
+            negative        : out std_logic;
+            zero            : out std_logic;
+            carry_out       : out std_logic;
             overflow        : out std_logic
     );
 end alu;

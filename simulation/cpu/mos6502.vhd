@@ -88,11 +88,16 @@ architecture rtl of mos6502 is
                 ea_zp_n         : out std_logic;
                 ea_pg_next_n    : out std_logic;
                 ea_carry        : in  std_logic;
-                stat_dec_we_n   : out std_logic;
                 stat_dec_oe_n   : out std_logic;
-                stat_bus_we_n   : out std_logic;
                 stat_bus_oe_n   : out std_logic;
+                stat_set_flg_n  : out std_logic;
+                stat_flg        : out std_logic;
+                stat_bus_all_n  : out std_logic;
+                stat_bus_nz_n   : out std_logic;
+                stat_alu_we_n   : out std_logic;
                 r_nw            : out std_logic
+                ;---for parameter check purpose!!!
+                check_bit     : out std_logic_vector(1 to 5)
             );
     end component;
 
@@ -173,12 +178,17 @@ architecture rtl of mos6502 is
     port (  
             clk         : in std_logic;
             res_n       : in std_logic;
-            dec_we_n    : in std_logic;
-            bus_we_n    : in std_logic;
             dec_oe_n    : in std_logic;
             bus_oe_n    : in std_logic;
-            alu_c       : in std_logic;
+            set_flg_n   : in std_logic;
+            flg_val     : in std_logic;
+            load_bus_all_n : in std_logic;
+            load_bus_nz_n  : in std_logic;
+            alu_we_n    : in std_logic;
+            alu_n       : in std_logic;
             alu_v       : in std_logic;
+            alu_z       : in std_logic;
+            alu_c       : in std_logic;
             decoder     : inout std_logic_vector (dsize - 1 downto 0);
             int_dbus    : inout std_logic_vector (dsize - 1 downto 0)
         );
@@ -282,12 +292,18 @@ architecture rtl of mos6502 is
     signal x_ea_oe_n : std_logic;
     signal y_ea_oe_n : std_logic;
 
-    signal stat_dec_we_n : std_logic;
     signal stat_dec_oe_n : std_logic;
-    signal stat_bus_we_n : std_logic;
     signal stat_bus_oe_n : std_logic;
-    signal stat_alu_c : std_logic;
-    signal stat_alu_v : std_logic;
+    signal stat_set_flg_n : std_logic;
+    signal stat_flg : std_logic;
+    signal stat_bus_all_n : std_logic;
+    signal stat_bus_nz_n : std_logic;
+    signal stat_alu_we_n : std_logic;
+
+    signal alu_n : std_logic;
+    signal alu_v : std_logic;
+    signal alu_z : std_logic;
+    signal alu_c : std_logic;
 
     --internal bus (address hi/lo, data)
     signal ad_oe_n : std_logic;
@@ -300,6 +316,7 @@ architecture rtl of mos6502 is
     signal next_cycle  : std_logic_vector (4 downto 0);
     signal status_reg : std_logic_vector (dsize - 1 downto 0);
 
+    signal check_bit     : std_logic_vector(1 to 5);
 begin
 
     ---instances....
@@ -349,11 +366,16 @@ begin
                     ea_zp_n,
                     ea_pg_next_n,
                     ea_carry,
-                    stat_dec_we_n, 
                     stat_dec_oe_n, 
-                    stat_bus_we_n, 
-                    stat_bus_oe_n,
+                    stat_bus_oe_n, 
+                    stat_set_flg_n, 
+                    stat_flg, 
+                    stat_bus_all_n, 
+                    stat_bus_nz_n, 
+                    stat_alu_we_n, 
                     dbuf_r_nw
+                    --check bit.
+                    , check_bit
                     );
 
     --cpu execution cycle number
@@ -393,9 +415,10 @@ begin
                     internal_dbus, internal_abus_l, internal_abus_h);
 
     status_register : processor_status generic map (dsize) 
-            port map (trigger_clk, rst_n, stat_dec_we_n, stat_bus_we_n, 
+            port map (trigger_clk, rst_n, 
                     stat_dec_oe_n, stat_bus_oe_n, 
-                    stat_alu_c, stat_alu_v, 
+                    stat_set_flg_n, stat_flg, stat_bus_all_n, stat_bus_nz_n, 
+                    stat_alu_we_n, alu_n, alu_v, alu_z, alu_c,
                     status_reg, internal_dbus);
 
     --x/y output pin is connected to effective address calcurator
