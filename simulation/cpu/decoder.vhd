@@ -311,6 +311,56 @@ begin
     ea_calc_n <= '0';
 end  procedure;
 
+--A.2. internal execution on memory data
+procedure a2_absx is
+begin
+    if exec_cycle = T1 then
+        abs_fetch_low;
+    elsif exec_cycle = T2 then
+        abs_fetch_high;
+    elsif exec_cycle = T3 then
+        --ea calc & lda
+        abs_latch_out;
+        ea_x_out;
+        dbuf_int_oe_n <= '0';
+        --instruction specific operation wriiten in the caller position.
+        next_cycle <= T4;
+    elsif exec_cycle = T4 then
+        if ea_carry = '1' then
+            --case page boundary crossed.
+            d_print("absx 5 (page boudary crossed.)");
+            abs_latch_out;
+            ea_x_out;
+            dbuf_int_oe_n <= '0';
+            --next page.
+            ea_pg_next_n <= '0';
+            --redo inst.
+            next_cycle <= T0;
+        else
+            --case page boundary not crossed. do the fetch op.
+            d_print("absx 5 (fetch)");
+            fetch_inst;
+            next_cycle <= T1;
+        end if;
+    end if;
+end  procedure;
+
+--A.3. store operation.
+procedure a3_abs is
+begin
+    if exec_cycle = T1 then
+        abs_fetch_low;
+    elsif exec_cycle = T2 then
+        abs_fetch_high;
+    elsif exec_cycle = T3 then
+        abs_latch_out;
+        dbuf_int_oe_n <= '1';
+        r_nw <= '0';
+        next_cycle <= T0;
+    end if;
+end  procedure;
+
+
     begin
 
         if (res_n = '0') then
@@ -616,33 +666,14 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#bd#, dsize) then
                     --abs, x
                     d_print("lda");
-                    if exec_cycle = T1 then
-                        abs_fetch_low;
-                    elsif exec_cycle = T2 then
-                        abs_fetch_high;
-                    elsif exec_cycle = T3 then
-                        --ea calc & lda
-                        abs_latch_out;
-                        ea_x_out;
-                        dbuf_int_oe_n <= '0';
+                    a2_absx;
+                    if exec_cycle = T3 then
+                        --lda.
                         acc_d_we_n  <= '0';
-                        next_cycle <= T4;
                     elsif exec_cycle = T4 then
                         if ea_carry = '1' then
-                            --case page boundary crossed.
-                            d_print("absx 5 (page boudary crossed.)");
-                            abs_latch_out;
-                            ea_x_out;
-                            ea_pg_next_n <= '0';
                             --redo lda
-                            dbuf_int_oe_n <= '0';
                             acc_d_we_n  <= '0';
-                            next_cycle <= T0;
-                        else
-                            --case page boundary not crossed. do the fetch op.
-                            d_print("absx 5 (fetch)");
-                            fetch_inst;
-                            next_cycle <= T1;
                         end if;
                     end if;
 
@@ -784,16 +815,9 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#8d#, dsize) then
                     --abs
                     d_print("sta");
-                    if exec_cycle = T1 then
-                        abs_fetch_low;
-                    elsif exec_cycle = T2 then
-                        abs_fetch_high;
-                    elsif exec_cycle = T3 then
-                        abs_latch_out;
-                        dbuf_int_oe_n <= '1';
-                        r_nw <= '0';
+                    a3_abs;
+                    if exec_cycle = T3 then
                         acc_d_oe_n  <= '0';
-                        next_cycle <= T0;
                     end if;
 
                 elsif instruction  = conv_std_logic_vector(16#9d#, dsize) then
