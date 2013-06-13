@@ -43,9 +43,13 @@ entity decoder is
             x_we_n          : out std_logic;
             x_oe_n          : out std_logic;
             x_ea_oe_n       : out std_logic;
+            x_inc_n         : out std_logic;
+            x_dec_n         : out std_logic;
             y_we_n          : out std_logic;
             y_oe_n          : out std_logic;
             y_ea_oe_n       : out std_logic;
+            y_inc_n         : out std_logic;
+            y_dec_n         : out std_logic;
             ea_calc_n       : out std_logic;
             ea_zp_n         : out std_logic;
             ea_pg_next_n    : out std_logic;
@@ -205,9 +209,14 @@ begin
     acc_d_oe_n  <= '1';
     stat_bus_nz_n <= '1';
     stat_set_flg_n <= '1';
+    stat_alu_we_n <= '1';
     x_ea_oe_n <= '1';
     ea_calc_n <= '1';
     ea_pg_next_n <= '1';
+    x_inc_n <= '1';
+    x_dec_n <= '1';
+    y_inc_n <= '1';
+    y_dec_n <= '1';
 end;
 
 ---common routine for single byte instruction.
@@ -427,9 +436,21 @@ end  procedure;
 
                 elsif instruction = conv_std_logic_vector(16#88#, dsize) then
                     d_print("dey");
+                    y_dec_n <= '0';
+                    --set nz bit.
+                    stat_alu_we_n <= '0';
+                    stat_dec_oe_n <= '1';
+                    status_reg <= "10000010";
+                    single_inst;
 
                 elsif instruction = conv_std_logic_vector(16#e8#, dsize) then
                     d_print("inx");
+                    x_inc_n <= '0';
+                    --set nz bit.
+                    stat_alu_we_n <= '0';
+                    stat_dec_oe_n <= '1';
+                    status_reg <= "10000010";
+                    single_inst;
 
                 elsif instruction = conv_std_logic_vector(16#c8#, dsize) then
                     d_print("iny");
@@ -1232,6 +1253,10 @@ end  procedure;
                 x_oe_n <= '1';
                 y_we_n <= '1';
                 y_oe_n <= '1';
+                x_inc_n <= '1';
+                x_dec_n <= '1';
+                y_inc_n <= '1';
+                y_dec_n <= '1';
 
                 stat_dec_oe_n <= '1';
                 stat_bus_oe_n <= '1';

@@ -81,9 +81,13 @@ architecture rtl of mos6502 is
                 x_we_n          : out std_logic;
                 x_oe_n          : out std_logic;
                 x_ea_oe_n       : out std_logic;
+                x_inc_n         : out std_logic;
+                x_dec_n         : out std_logic;
                 y_we_n          : out std_logic;
                 y_oe_n          : out std_logic;
                 y_ea_oe_n       : out std_logic;
+                y_inc_n         : out std_logic;
+                y_dec_n         : out std_logic;
                 ea_calc_n       : out std_logic;
                 ea_zp_n         : out std_logic;
                 ea_pg_next_n    : out std_logic;
@@ -218,8 +222,12 @@ architecture rtl of mos6502 is
             d_we_n      : in std_logic;
             d_oe_n      : in std_logic;
             ea_oe_n     : in std_logic;
+            inc_n       : in std_logic;
+            dec_n       : in std_logic;
             int_dbus    : inout std_logic_vector (dsize - 1 downto 0);
-            ea_bus      : out std_logic_vector (dsize - 1 downto 0)
+            ea_bus      : out std_logic_vector (dsize - 1 downto 0);
+            n           : out std_logic;
+            z           : out std_logic
         );
     end component;
 
@@ -277,9 +285,13 @@ architecture rtl of mos6502 is
 
     signal x_we_n : std_logic;
     signal x_oe_n : std_logic;
+    signal x_inc_n : std_logic;
+    signal x_dec_n : std_logic;
 
     signal y_we_n : std_logic;
     signal y_oe_n : std_logic;
+    signal y_inc_n : std_logic;
+    signal y_dec_n : std_logic;
 
     signal ea_base_l : std_logic_vector(dsize - 1 downto 0);
     signal ea_base_h : std_logic_vector(dsize - 1 downto 0);
@@ -359,9 +371,13 @@ begin
                     x_we_n, 
                     x_oe_n, 
                     x_ea_oe_n,
+                    x_inc_n,
+                    x_dec_n,
                     y_we_n, 
                     y_oe_n, 
                     y_ea_oe_n,
+                    y_inc_n,
+                    y_dec_n,
                     ea_calc_n,
                     ea_zp_n,
                     ea_pg_next_n,
@@ -423,10 +439,14 @@ begin
 
     --x/y output pin is connected to effective address calcurator
     x_reg : index_reg generic map (dsize) 
-            port map(trigger_clk, x_we_n, x_oe_n, x_ea_oe_n, internal_dbus, ea_index);
+            port map(trigger_clk, x_we_n, x_oe_n, x_ea_oe_n, 
+                    x_inc_n, x_dec_n, internal_dbus, ea_index, 
+                    alu_n, alu_z);
 
     y_reg : index_reg generic map (dsize) 
-            port map(trigger_clk, y_we_n, y_oe_n, y_ea_oe_n, internal_dbus, ea_index);
+            port map(trigger_clk, y_we_n, y_oe_n, y_ea_oe_n, 
+                    y_inc_n, y_dec_n, internal_dbus, ea_index,
+                    alu_n, alu_z);
 
     acc_reg : accumulator generic map (dsize) 
             port map(trigger_clk, 

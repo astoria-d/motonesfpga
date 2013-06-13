@@ -450,10 +450,6 @@ begin
                 val <= int_dbus;
             elsif (load_bus_nz_n = '0') then
                 ---other case: n/z data must be interpreted.
-                tmp := val;
-                val (6 downto 2) <= tmp (6 downto 2);
-                val (0) <= tmp (0);
-
                 --n bit.
                 val (7) <= int_dbus(7);
                 --z bit.
@@ -596,8 +592,12 @@ entity index_reg is
             d_we_n      : in std_logic;
             d_oe_n      : in std_logic;
             ea_oe_n     : in std_logic;
+            inc_n       : in std_logic;
+            dec_n       : in std_logic;
             int_dbus    : inout std_logic_vector (dsize - 1 downto 0);
-            ea_bus      : out std_logic_vector (dsize - 1 downto 0)
+            ea_bus      : out std_logic_vector (dsize - 1 downto 0);
+            n           : out std_logic;
+            z           : out std_logic
         );
 end index_reg;
 
@@ -615,7 +615,12 @@ component dff
         );
 end component;
 
+use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
+
+signal we_n : std_logic;
 signal q : std_logic_vector (dsize - 1 downto 0);
+signal d : std_logic_vector (dsize - 1 downto 0);
 
 begin
     int_dbus <= q when d_oe_n = '0' else
@@ -623,9 +628,38 @@ begin
     ea_bus <= q when ea_oe_n = '0' else
         (others => 'Z');
 
+    --for inx/iny/dex/dey instructions...
+    inc_dec_p : process (clk, int_dbus, inc_n, dec_n)
+    variable inc_work : std_logic_vector (dsize downto 0);
+    variable dec_work : std_logic_vector (dsize downto 0);
+    begin
+        inc_work := ('0' & q) + 1;
+        dec_work := ('0' & q) - 1;
+        if inc_n = '0' then
+            d <= inc_work(dsize - 1 downto 0);
+            z <= not (inc_work(7) or inc_work(6) or 
+                    inc_work(5) or inc_work(4) or inc_work(3) or 
+                    inc_work(2) or inc_work(1) or inc_work(0));
+            n <= inc_work(dsize);
+        elsif dec_n = '0' then
+            d <= dec_work(dsize - 1 downto 0);
+            z <= not (dec_work(7) or dec_work(6) or 
+                dec_work(5) or dec_work(4) or dec_work(3) or 
+                dec_work(2) or dec_work(1) or dec_work(0)); 
+            n <= dec_work(dsize); 
+        else
+            d <= int_dbus;
+            z <= 'Z';
+            n <= 'Z';
+        end if;
+
+    end process;
+
     --read from i/o to cpu
+    we_n <= d_we_n and inc_n and dec_n;
     dff_inst : dff generic map (dsize) 
-                    port map(clk, d_we_n, '0', int_dbus, q);
+                    port map(clk, we_n, '0', d, q);
+
 end rtl;
 
 
