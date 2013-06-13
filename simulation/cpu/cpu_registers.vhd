@@ -444,7 +444,7 @@ begin
 
             ---status flag set from the data on the internal data bus.
             ---interpret the input data by the decoder input.
-            ---load/pop/rti/ta[xy]/ts[xy]
+            ---load/pop/rti/t[asxy]
             elsif (load_bus_all_n = '0') then
                 ---set the data bus data as they are.
                 val <= int_dbus;

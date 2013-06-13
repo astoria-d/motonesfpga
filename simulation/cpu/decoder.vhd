@@ -240,12 +240,20 @@ begin
     next_cycle <= T0;
 end  procedure;
 
-procedure set_nz is
+procedure set_nz_from_bus is
 begin
     --status register n/z bit update.
     stat_dec_oe_n <= '1';
     status_reg <= "10000010";
     stat_bus_nz_n <= '0';
+end  procedure;
+
+procedure set_nz_from_alu is
+begin
+    --status register n/z bit update.
+    stat_alu_we_n <= '0';
+    stat_dec_oe_n <= '1';
+    status_reg <= "10000010";
 end  procedure;
 
 --flag on/off instruction
@@ -438,18 +446,14 @@ end  procedure;
                     d_print("dey");
                     y_dec_n <= '0';
                     --set nz bit.
-                    stat_alu_we_n <= '0';
-                    stat_dec_oe_n <= '1';
-                    status_reg <= "10000010";
+                    set_nz_from_alu ;
                     single_inst;
 
                 elsif instruction = conv_std_logic_vector(16#e8#, dsize) then
                     d_print("inx");
                     x_inc_n <= '0';
                     --set nz bit.
-                    stat_alu_we_n <= '0';
-                    stat_dec_oe_n <= '1';
-                    status_reg <= "10000010";
+                    set_nz_from_alu ;
                     single_inst;
 
                 elsif instruction = conv_std_logic_vector(16#c8#, dsize) then
@@ -481,24 +485,30 @@ end  procedure;
 
                 elsif instruction = conv_std_logic_vector(16#aa#, dsize) then
                     d_print("tax");
+                    set_nz_from_bus;
 
                 elsif instruction = conv_std_logic_vector(16#a8#, dsize) then
                     d_print("tay");
+                    set_nz_from_bus;
 
                 elsif instruction = conv_std_logic_vector(16#ba#, dsize) then
                     d_print("tsx");
+                    set_nz_from_bus;
 
                 elsif instruction = conv_std_logic_vector(16#8a#, dsize) then
                     d_print("txa");
+                    set_nz_from_bus;
 
                 elsif instruction = conv_std_logic_vector(16#9a#, dsize) then
                     d_print("txs");
                     sp_we_n <= '0';
                     x_oe_n <= '0';
+                    set_nz_from_bus;
                     single_inst;
 
                 elsif instruction = conv_std_logic_vector(16#98#, dsize) then
                     d_print("tya");
+                    set_nz_from_bus;
 
 
 
@@ -670,7 +680,7 @@ end  procedure;
                     d_print("lda");
                     fetch_imm;
                     acc_d_we_n <= '0';
-                    set_nz;
+                    set_nz_from_bus;
 
                 elsif instruction  = conv_std_logic_vector(16#a5#, dsize) then
                     --zp
@@ -691,10 +701,12 @@ end  procedure;
                     if exec_cycle = T3 then
                         --lda.
                         acc_d_we_n  <= '0';
+                        set_nz_from_bus;
                     elsif exec_cycle = T4 then
                         if ea_carry = '1' then
                             --redo lda
                             acc_d_we_n  <= '0';
+                            set_nz_from_bus;
                         end if;
                     end if;
 
@@ -715,7 +727,7 @@ end  procedure;
                     d_print("ldx");
                     fetch_imm;
                     x_we_n <= '0';
-                    set_nz;
+                    set_nz_from_bus;
 
                 elsif instruction  = conv_std_logic_vector(16#a6#, dsize) then
                     --zp
@@ -738,7 +750,7 @@ end  procedure;
                     d_print("ldy");
                     fetch_imm;
                     y_we_n <= '0';
-                    set_nz;
+                    set_nz_from_bus;
 
                 elsif instruction  = conv_std_logic_vector(16#a4#, dsize) then
                     --zp
