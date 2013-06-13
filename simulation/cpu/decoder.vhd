@@ -169,7 +169,6 @@ constant st_C : integer := 0;
 begin
 
     main_p : process (set_clk, trig_clk, res_n)
-    variable status_reg_old : std_logic_vector(dsize - 1 downto 0);
 
 procedure fetch_inst is
 begin
@@ -235,6 +234,32 @@ begin
     stat_bus_we_n <= '0';
 end  procedure;
 
+--flag on/off instruction
+procedure set_flag (int_flg : in integer; val : in std_logic) is
+variable status_reg_old : std_logic_vector(dsize - 1 downto 0);
+begin
+    status_reg_old := status_reg;
+    stat_dec_oe_n <= '1';
+    stat_dec_we_n <= '0';
+    status_reg(7 downto int_flg + 1) 
+        <= status_reg_old (7 downto int_flg + 1);
+    status_reg(int_flg - 1 downto 0) 
+        <= status_reg_old (int_flg - 1 downto 0);
+    status_reg(int_flg) <= val;
+end  procedure;
+
+--for sec/clc
+procedure set_flag0 (val : in std_logic) is
+variable status_reg_old : std_logic_vector(dsize - 1 downto 0);
+begin
+    status_reg_old := status_reg;
+    stat_dec_oe_n <= '1';
+    stat_dec_we_n <= '0';
+    status_reg(7 downto 1) 
+        <= status_reg_old (7 downto 1);
+    status_reg(st_C) <= val;
+end  procedure;
+
 procedure abs_fetch_low is
 begin
     d_print("abs (xy) 2");
@@ -248,16 +273,13 @@ begin
     next_cycle <= T2;
 end  procedure;
 
-procedure abs_fetch_high (is_jmp : boolean) is
+procedure abs_fetch_high is
 begin
     d_print("abs (xy) 3");
     dl_al_we_n <= '1';
 
     --latch abs hi data.
-    if is_jmp /= true then
-        ---case not jmp, increment pc.
-        pc_inc_n <= '0';
-    end if;
+    pc_inc_n <= '0';
     pcl_a_oe_n <= '0';
     pch_a_oe_n <= '0';
     dbuf_int_oe_n <= '0';
@@ -271,7 +293,6 @@ begin
     pc_inc_n <= '1';
     pcl_a_oe_n <= '1';
     pch_a_oe_n <= '1';
-    dbuf_int_oe_n <= '1';
     dl_ah_we_n <= '1';
 
     --latch > al/ah.
@@ -297,66 +318,7 @@ end  procedure;
         if (set_clk'event and set_clk = '1' and res_n = '1') then
             d_print(string'("-"));
 
-            if exec_cycle = R0 then
-                d_print(string'("reset"));
-
-                ad_oe_n <= '1';
-                pcl_d_we_n <= '1';
-                pcl_a_we_n <= '1';
-                pcl_d_oe_n <= '1';
-                pcl_a_oe_n <= '1';
-                pch_d_we_n <= '1';
-                pch_a_we_n <= '1';
-                pch_d_oe_n <= '1';
-                pch_a_oe_n <= '1';
-                pc_inc_n <= '1';
-                inst_we_n <= '1';
-                dbuf_int_oe_n <= '1';
-                dl_al_we_n <= '1';
-                dl_ah_we_n <= '1';
-                dl_al_oe_n <= '1';
-                dl_ah_oe_n <= '1';
-                sp_we_n <= '1';
-                sp_push_n <= '1';
-                sp_pop_n <= '1';
-                sp_int_d_oe_n <= '1';
-                sp_int_a_oe_n <= '1';
-                acc_d_we_n <= '1';
-                acc_alu_we_n <= '1';
-                acc_d_oe_n <= '1';
-                acc_alu_oe_n <= '1';
-                x_we_n <= '1';
-                x_oe_n <= '1';
-                y_we_n <= '1';
-                y_oe_n <= '1';
-                stat_dec_we_n <= '1';
-                stat_dec_oe_n <= '1';
-                stat_bus_we_n <= '1';
-                stat_bus_oe_n <= '1';
-                x_ea_oe_n <= '1';
-                y_ea_oe_n <= '1';
-                ea_calc_n <= '1';
-                ea_zp_n <= '1';
-                ea_pg_next_n <= '1';
-
-                next_cycle <= R1;
-            elsif exec_cycle = R1 then
-                next_cycle <= R2;
-
-            elsif exec_cycle = R2 then
-                next_cycle <= R3;
-
-            elsif exec_cycle = R3 then
-                next_cycle <= R4;
-
-            elsif exec_cycle = R4 then
-                next_cycle <= R5;
-                
-            elsif exec_cycle = R5 then
-                next_cycle <= T0;
-
-
-            elsif exec_cycle = T0 then
+            if exec_cycle = T0 then
                 --cycle #1
                 fetch_inst;
                 next_cycle <= T1;
@@ -396,6 +358,8 @@ end  procedure;
 
                 elsif instruction = conv_std_logic_vector(16#18#, dsize) then
                     d_print("clc");
+                    set_flag0 ('0');
+                    single_inst;
 
                 elsif instruction = conv_std_logic_vector(16#d8#, dsize) then
                     d_print("cld");
@@ -431,21 +395,15 @@ end  procedure;
 
                 elsif instruction = conv_std_logic_vector(16#38#, dsize) then
                     d_print("sec");
+                    set_flag0 ('1');
+                    single_inst;
 
                 elsif instruction = conv_std_logic_vector(16#f8#, dsize) then
                     d_print("sed");
 
                 elsif instruction = conv_std_logic_vector(16#78#, dsize) then
                     d_print("sei");
-                    status_reg_old := status_reg;
-                    stat_dec_oe_n <= '1';
-                    stat_dec_we_n <= '0';
-                    status_reg(7 downto st_I + 1) 
-                        <= status_reg_old (7 downto st_I + 1);
-                    status_reg(st_I - 1 downto 0) 
-                        <= status_reg_old (st_I - 1 downto 0);
-                    status_reg(st_I) <= '1';
-
+                    set_flag (st_I, '1');
                     single_inst;
 
                 elsif instruction = conv_std_logic_vector(16#aa#, dsize) then
@@ -659,22 +617,24 @@ end  procedure;
                     if exec_cycle = T1 then
                         abs_fetch_low;
                     elsif exec_cycle = T2 then
-                        abs_fetch_high(false);
+                        abs_fetch_high;
                     elsif exec_cycle = T3 then
+                        --ea calc & lda
                         abs_latch_out;
                         ea_x_out;
-                        r_nw <= '0';
-                        acc_d_oe_n  <= '0';
+                        dbuf_int_oe_n <= '0';
+                        acc_d_we_n  <= '0';
                         next_cycle <= T4;
                     elsif exec_cycle = T4 then
                         if ea_carry = '1' then
                             --case page boundary crossed.
                             d_print("absx 5 (page boudary crossed.)");
-                            x_ea_oe_n <= '0';
-                            dl_al_oe_n <= '0';
-                            dl_ah_oe_n <= '0';
-                            ea_calc_n <= '0';
+                            abs_latch_out;
+                            ea_x_out;
                             ea_pg_next_n <= '0';
+                            --redo lda
+                            dbuf_int_oe_n <= '0';
+                            acc_d_we_n  <= '0';
                             next_cycle <= T0;
                         else
                             --case page boundary not crossed. do the fetch op.
@@ -682,9 +642,7 @@ end  procedure;
                             fetch_inst;
                             next_cycle <= T1;
                         end if;
-
                     end if;
-
 
                 elsif instruction  = conv_std_logic_vector(16#b9#, dsize) then
                     --abs, y
@@ -827,9 +785,10 @@ end  procedure;
                     if exec_cycle = T1 then
                         abs_fetch_low;
                     elsif exec_cycle = T2 then
-                        abs_fetch_high(false);
+                        abs_fetch_high;
                     elsif exec_cycle = T3 then
                         abs_latch_out;
+                        dbuf_int_oe_n <= '1';
                         r_nw <= '0';
                         acc_d_oe_n  <= '0';
                         next_cycle <= T0;
@@ -838,6 +797,25 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#9d#, dsize) then
                     --abs, x
                     d_print("sta");
+                    --TODO re-check !!!!
+--                    if exec_cycle = T1 then
+--                        abs_fetch_low;
+--                    elsif exec_cycle = T2 then
+--                        abs_fetch_high;
+--                    elsif exec_cycle = T3 then
+--                        abs_latch_out;
+--                        ea_x_out;
+--                        next_cycle <= T4;
+--                    elsif exec_cycle = T4 then
+--                        abs_latch_out;
+--                        dbuf_int_oe_n <= '1';
+--                        ea_x_out;
+--                        ea_pg_next_n <= not ea_carry;
+--                        --sta
+--                        r_nw <= '0';
+--                        acc_d_oe_n  <= '0';
+--                        next_cycle <= T0;
+--                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#99#, dsize) then
                     --abs, y
@@ -1079,10 +1057,25 @@ end  procedure;
                     if exec_cycle = T1 then
                         abs_fetch_low;
                     elsif exec_cycle = T2 then
-                        abs_fetch_high (true);
-                    elsif exec_cycle = T3 then
-                        abs_latch_out;
+                        dl_al_we_n <= '1';
 
+                        --fetch abs hi
+                        pcl_a_oe_n <= '0';
+                        pch_a_oe_n <= '0';
+                        dbuf_int_oe_n <= '0';
+                        dl_ah_we_n <= '0';
+                        next_cycle <= T3;
+                    elsif exec_cycle = T3 then
+                        pcl_a_oe_n <= '1';
+                        pch_a_oe_n <= '1';
+                        dl_ah_we_n <= '1';
+
+                        --latch > al/ah.
+                        dl_al_oe_n <= '0';
+                        dl_ah_oe_n <= '0';
+
+                        --fetch inst and goto decode next.
+                        dbuf_int_oe_n <= '1';
                         pcl_a_we_n <= '0';
                         pch_a_we_n <= '0';
                         inst_we_n <= '0';
@@ -1171,7 +1164,65 @@ end  procedure;
                     ---unknown instruction!!!!
                 end if; --if instruction = conv_std_logic_vector(16#0a#, dsize) 
 
-            end if; --if exec_cycle = R0 then
+            elsif exec_cycle = R0 then
+                d_print(string'("reset"));
+
+                ad_oe_n <= '1';
+                pcl_d_we_n <= '1';
+                pcl_a_we_n <= '1';
+                pcl_d_oe_n <= '1';
+                pcl_a_oe_n <= '1';
+                pch_d_we_n <= '1';
+                pch_a_we_n <= '1';
+                pch_d_oe_n <= '1';
+                pch_a_oe_n <= '1';
+                pc_inc_n <= '1';
+                inst_we_n <= '1';
+                dbuf_int_oe_n <= '1';
+                dl_al_we_n <= '1';
+                dl_ah_we_n <= '1';
+                dl_al_oe_n <= '1';
+                dl_ah_oe_n <= '1';
+                sp_we_n <= '1';
+                sp_push_n <= '1';
+                sp_pop_n <= '1';
+                sp_int_d_oe_n <= '1';
+                sp_int_a_oe_n <= '1';
+                acc_d_we_n <= '1';
+                acc_alu_we_n <= '1';
+                acc_d_oe_n <= '1';
+                acc_alu_oe_n <= '1';
+                x_we_n <= '1';
+                x_oe_n <= '1';
+                y_we_n <= '1';
+                y_oe_n <= '1';
+                stat_dec_we_n <= '1';
+                stat_dec_oe_n <= '1';
+                stat_bus_we_n <= '1';
+                stat_bus_oe_n <= '1';
+                x_ea_oe_n <= '1';
+                y_ea_oe_n <= '1';
+                ea_calc_n <= '1';
+                ea_zp_n <= '1';
+                ea_pg_next_n <= '1';
+
+                next_cycle <= R1;
+            elsif exec_cycle = R1 then
+                next_cycle <= R2;
+
+            elsif exec_cycle = R2 then
+                next_cycle <= R3;
+
+            elsif exec_cycle = R3 then
+                next_cycle <= R4;
+
+            elsif exec_cycle = R4 then
+                next_cycle <= R5;
+                
+            elsif exec_cycle = R5 then
+                next_cycle <= T0;
+
+            end if; --if exec_cycle = T0 then
 
         end if; --if (set_clk'event and set_clk = '1') 
 
