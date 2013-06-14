@@ -437,6 +437,8 @@ end  procedure;
 
                 elsif instruction = conv_std_logic_vector(16#d8#, dsize) then
                     d_print("cld");
+                    set_flag (st_D, '0');
+                    single_inst;
 
                 elsif instruction = conv_std_logic_vector(16#58#, dsize) then
                     d_print("cli");
@@ -482,6 +484,8 @@ end  procedure;
 
                 elsif instruction = conv_std_logic_vector(16#f8#, dsize) then
                     d_print("sed");
+                    set_flag (st_D, '1');
+                    single_inst;
 
                 elsif instruction = conv_std_logic_vector(16#78#, dsize) then
                     d_print("sei");

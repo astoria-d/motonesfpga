@@ -492,11 +492,11 @@ begin
             ---from flag set/clear instructions
             if (set_flg_n = '0') then
                 if flg_val = '1' then
-                    tmp := (val and decoder) and ("11111111");
+                    tmp := (decoder and "11111111");
                 else
                     tmp := "00000000";
                 end if;
-                val <= tmp or (val and not val);
+                val <= tmp or (val and not decoder);
 
             ---status flag set from the data on the internal data bus.
             ---interpret the input data by the decoder input.
