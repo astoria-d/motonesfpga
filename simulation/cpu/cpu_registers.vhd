@@ -507,12 +507,20 @@ begin
             elsif (load_bus_nz_n = '0') then
                 ---other case: n/z data must be interpreted.
                 --n bit.
-                val (7) <= int_dbus(7);
+                if int_dbus(7) = '1' then
+                    val (7) <= '1';
+                else
+                    val (7) <= '0';
+                end if;
                 --z bit.
                 ---nor outputs 1 when all inputs are 0.
-                val (1) <= not (int_dbus(7) or int_dbus(6) or 
+                if  (int_dbus(7) or int_dbus(6) or 
                         int_dbus(5) or int_dbus(4) or int_dbus(3) or 
-                        int_dbus(2) or int_dbus(1) or int_dbus(0));
+                        int_dbus(2) or int_dbus(1) or int_dbus(0)) = '0' then
+                    val (1) <= '1';
+                else
+                    val (1) <= '0';
+                end if;
 
             ---status set from alu/inx/iny etc.
             elsif (alu_we_n = '0') then
