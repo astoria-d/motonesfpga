@@ -182,6 +182,12 @@ begin
 
     main_p : process (set_clk, trig_clk, res_n)
 
+-------------------------------------------------------------
+-------------------------------------------------------------
+-------------------- comon routine fucntions ----------------
+-------------------------------------------------------------
+-------------------------------------------------------------
+
 procedure fetch_inst is
 begin
     d_print(string'("fetch 1"));
@@ -444,7 +450,11 @@ begin
 
 end  procedure;
 
-
+-------------------------------------------------------------
+-------------------------------------------------------------
+---------------- main state machine start.... ---------------
+-------------------------------------------------------------
+-------------------------------------------------------------
     begin
 
         if (res_n = '0') then
@@ -1309,8 +1319,16 @@ end  procedure;
                     d_print("bvc");
                 elsif instruction = conv_std_logic_vector(16#70#, dsize) then
                     d_print("bvs");
+
                 else
                     ---unknown instruction!!!!
+                    pcl_inc_n <= '1';
+                    pcl_a_oe_n <= '0';
+                    pch_a_oe_n <= '0';
+                    inst_we_n <= '1';
+                    assert false 
+                        report "======== unknow instruction " 
+                            & conv_hex8(conv_integer(instruction));
                 end if; --if instruction = conv_std_logic_vector(16#0a#, dsize) 
 
             elsif exec_cycle = R0 then
