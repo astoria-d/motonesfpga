@@ -17,15 +17,18 @@ entity decoder is
             status_reg      : inout std_logic_vector (dsize - 1 downto 0);
             inst_we_n       : out std_logic;
             ad_oe_n         : out std_logic;
+            pcl_inc_n       : out std_logic;
             pcl_d_we_n      : out std_logic;
             pcl_a_we_n      : out std_logic;
             pcl_d_oe_n      : out std_logic;
             pcl_a_oe_n      : out std_logic;
+            pcl_rel_we_n    : out std_logic;
+            pcl_rel_calc_n  : out std_logic;
             pch_d_we_n      : out std_logic;
             pch_a_we_n      : out std_logic;
             pch_d_oe_n      : out std_logic;
             pch_a_oe_n      : out std_logic;
-            pc_inc_n        : out std_logic;
+            rel_pg_crs_n    : in std_logic;
             dbuf_int_oe_n   : out std_logic;
             dl_al_we_n      : out std_logic;
             dl_ah_we_n      : out std_logic;
@@ -186,7 +189,7 @@ begin
     pcl_a_oe_n <= '0';
     pch_a_oe_n <= '0';
     inst_we_n <= '0';
-    pc_inc_n <= '0';
+    pcl_inc_n <= '0';
 
     --disable the last opration pins.
     x_oe_n <= '1';
@@ -200,6 +203,8 @@ begin
     dbuf_int_oe_n <= '1';
     pch_d_we_n <= '1';
     pcl_a_we_n <= '1';
+    pcl_rel_we_n <= '1';
+    pcl_rel_calc_n <= '1';
     dl_al_we_n <= '1';
     dl_al_oe_n <= '1';
     dl_ah_oe_n <= '1';
@@ -224,7 +229,7 @@ procedure single_inst is
 begin
     pcl_a_oe_n <= '1';
     pch_a_oe_n <= '1';
-    pc_inc_n <= '1';
+    pcl_inc_n <= '1';
     next_cycle <= T0;
 end  procedure;
 
@@ -233,7 +238,7 @@ begin
     d_print("immediate");
     pcl_a_oe_n <= '0';
     pch_a_oe_n <= '0';
-    pc_inc_n <= '0';
+    pcl_inc_n <= '0';
     --send data from data bus buffer.
     --receiver is instruction dependent.
     dbuf_int_oe_n <= '0';
@@ -285,7 +290,7 @@ begin
     --fetch next opcode (abs low).
     pcl_a_oe_n <= '0';
     pch_a_oe_n <= '0';
-    pc_inc_n <= '0';
+    pcl_inc_n <= '0';
     --latch abs low data.
     dbuf_int_oe_n <= '0';
     dl_al_we_n <= '0';
@@ -298,7 +303,7 @@ begin
     dl_al_we_n <= '1';
 
     --latch abs hi data.
-    pc_inc_n <= '0';
+    pcl_inc_n <= '0';
     pcl_a_oe_n <= '0';
     pch_a_oe_n <= '0';
     dbuf_int_oe_n <= '0';
@@ -309,7 +314,7 @@ end  procedure;
 procedure abs_latch_out is
 begin
     --d_print("abs 4");
-    pc_inc_n <= '1';
+    pcl_inc_n <= '1';
     pcl_a_oe_n <= '1';
     pch_a_oe_n <= '1';
     dl_ah_we_n <= '1';
@@ -1040,7 +1045,7 @@ end  procedure;
                         --fetch opcode.
                         pcl_a_oe_n <= '0';
                         pch_a_oe_n <= '0';
-                        pc_inc_n <= '0';
+                        pcl_inc_n <= '0';
                         dbuf_int_oe_n <= '0';
                         --latch adl
                         dl_al_we_n <= '0';
@@ -1049,7 +1054,7 @@ end  procedure;
                         d_print("jsr 3");
                         pcl_a_oe_n <= '1';
                         pch_a_oe_n <= '1';
-                        pc_inc_n <= '1';
+                        pcl_inc_n <= '1';
                         dbuf_int_oe_n <= '1';
                         dl_al_we_n <= '1';
 
@@ -1118,7 +1123,7 @@ end  procedure;
                         --fetch next opcode (abs low).
                         pcl_a_oe_n <= '0';
                         pch_a_oe_n <= '0';
-                        pc_inc_n <= '0';
+                        pcl_inc_n <= '0';
                         --latch abs low data.
                         dbuf_int_oe_n <= '0';
                         dl_al_we_n <= '0';
@@ -1148,7 +1153,7 @@ end  procedure;
                         pcl_a_we_n <= '0';
                         pch_a_we_n <= '0';
                         inst_we_n <= '0';
-                        pc_inc_n <= '0';
+                        pcl_inc_n <= '0';
                         next_cycle <= T1;
                     end if;
 
@@ -1163,7 +1168,7 @@ end  procedure;
                     if exec_cycle = T1 then
                         pcl_a_oe_n <= '1';
                         pch_a_oe_n <= '1';
-                        pc_inc_n <= '1';
+                        pcl_inc_n <= '1';
 
                         --pop stack (decrement only)
                         sp_pop_n <= '0';
@@ -1206,7 +1211,7 @@ end  procedure;
                         d_print("rts 6");
 
                         --increment pc.
-                        pc_inc_n <= '0';
+                        pcl_inc_n <= '0';
                         next_cycle <= T0;
                     end if; --if exec_cycle = T1 then
 
@@ -1223,6 +1228,49 @@ end  procedure;
                     d_print("bmi");
                 elsif instruction = conv_std_logic_vector(16#d0#, dsize) then
                     d_print("bne");
+                    if exec_cycle = T1 then
+                        stat_dec_oe_n <= '0';
+                        pcl_inc_n <= '0';
+                        if status_reg(st_Z) /= '1' then
+                            d_print("get rel");
+
+                            pcl_a_oe_n <= '0';
+                            pch_a_oe_n <= '0';
+                            dbuf_int_oe_n <= '0';
+                            --latch rel value.
+                            pcl_rel_we_n <= '0';
+                            next_cycle <= T2;
+                        else
+                            d_print("no branch");
+                            next_cycle <= T0;
+                        end if;
+                    elsif exec_cycle = T2 then
+                        d_print("rel ea");
+                        pcl_inc_n <= '1';
+                        pcl_a_oe_n <= '0';
+                        pch_a_oe_n <= '0';
+                        dbuf_int_oe_n <= '1';
+                        pcl_rel_we_n <= '1';
+
+                        --calcurate relative addr.
+                        pcl_rel_calc_n <= '0';
+                        next_cycle <= T3;
+                    elsif exec_cycle = T3 then
+                        --pcl_a_oe_n <= '0';
+                        --pch_a_oe_n <= '0';
+                        pcl_rel_calc_n <= '1';
+
+                        if rel_pg_crs_n = '0' then
+                        --page crossed. start from fetch.
+                            next_cycle <= T0;
+                        else
+                            --no page boundary. 
+                            --fetch cycle is done.
+                            fetch_inst;
+                            next_cycle <= T1;
+                        end if;
+                    end if;
+
                 elsif instruction = conv_std_logic_vector(16#10#, dsize) then
                     d_print("bpl");
                 elsif instruction = conv_std_logic_vector(16#50#, dsize) then
@@ -1241,11 +1289,13 @@ end  procedure;
                 pcl_a_we_n <= '1';
                 pcl_d_oe_n <= '1';
                 pcl_a_oe_n <= '1';
+                pcl_rel_we_n <= '1';
+                pcl_rel_calc_n <= '1';
                 pch_d_we_n <= '1';
                 pch_a_we_n <= '1';
                 pch_d_oe_n <= '1';
                 pch_a_oe_n <= '1';
-                pc_inc_n <= '1';
+                pcl_inc_n <= '1';
                 inst_we_n <= '1';
                 dbuf_int_oe_n <= '1';
                 dl_al_we_n <= '1';

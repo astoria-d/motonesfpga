@@ -29,13 +29,17 @@ architecture rtl of mos6502 is
         port (  
                 clk             : in std_logic;
                 res_n           : in std_logic;
+                pc_type         : in std_logic;
                 dbus_we_n       : in std_logic;
                 abus_we_n       : in std_logic;
                 dbus_oe_n       : in std_logic;
                 abus_oe_n       : in std_logic;
                 addr_inc_n      : in std_logic;
-                add_carry       : in std_logic;
-                inc_carry       : out std_logic;
+                addr_dec_n      : in std_logic;
+                add_carry       : out std_logic;
+                rel_we_n        : in std_logic;
+                rel_calc_n      : in std_logic;
+                rel_prev        : out std_logic;
                 int_d_bus       : inout std_logic_vector (dsize - 1 downto 0);
                 int_a_bus       : inout std_logic_vector (dsize - 1 downto 0)
             );
@@ -55,15 +59,18 @@ architecture rtl of mos6502 is
                 status_reg      : inout std_logic_vector (dsize - 1 downto 0);
                 inst_we_n       : out std_logic;
                 ad_oe_n         : out std_logic;
+                pcl_inc_n       : out std_logic;
                 pcl_d_we_n      : out std_logic;
                 pcl_a_we_n      : out std_logic;
                 pcl_d_oe_n      : out std_logic;
                 pcl_a_oe_n      : out std_logic;
+                pcl_rel_we_n    : out std_logic;
+                pcl_rel_calc_n  : out std_logic;
                 pch_d_we_n      : out std_logic;
                 pch_a_we_n      : out std_logic;
                 pch_d_oe_n      : out std_logic;
                 pch_a_oe_n      : out std_logic;
-                pc_inc_n        : out std_logic;
+                rel_pg_crs_n    : in std_logic;
                 dbuf_int_oe_n   : out std_logic;
                 dl_al_we_n      : out std_logic;
                 dl_ah_we_n      : out std_logic;
@@ -250,18 +257,23 @@ architecture rtl of mos6502 is
     signal set_clk : std_logic;
     signal trigger_clk : std_logic;
 
+    signal pcl_inc_n : std_logic;
     signal pcl_d_we_n : std_logic;
     signal pcl_a_we_n : std_logic;
     signal pcl_d_oe_n : std_logic;
     signal pcl_a_oe_n : std_logic;
+    signal pcl_rel_we_n : std_logic;
+    signal pcl_rel_calc_n : std_logic;
     signal pch_d_we_n : std_logic;
     signal pch_a_we_n : std_logic;
     signal pch_d_oe_n : std_logic;
     signal pch_a_oe_n : std_logic;
-    signal pc_inc_n : std_logic;
     signal pc_cry : std_logic;
     signal pc_cry_n : std_logic;
     signal dum_terminate : std_logic := 'Z';
+    signal pc_rel_prev : std_logic;
+    signal pc_rel_prev_n : std_logic;
+    signal rel_pg_crs_n : std_logic;
 
     signal inst_we_n : std_logic;
     signal dbuf_r_nw : std_logic;
@@ -345,15 +357,18 @@ begin
                     status_reg, 
                     inst_we_n, 
                     ad_oe_n, 
+                    pcl_inc_n, 
                     pcl_d_we_n, 
                     pcl_a_we_n, 
                     pcl_d_oe_n, 
                     pcl_a_oe_n,
+                    pcl_rel_we_n,
+                    pcl_rel_calc_n,
                     pch_d_we_n, 
                     pch_a_we_n, 
                     pch_d_oe_n, 
                     pch_a_oe_n,
-                    pc_inc_n, 
+                    rel_pg_crs_n,
                     dbuf_int_oe_n, 
                     dl_al_we_n, 
                     dl_ah_we_n, 
@@ -414,13 +429,17 @@ begin
                     internal_dbus, ea_base_l, ea_base_h);
 
     pc_l : pc generic map (dsize, 16#00#) 
-            port map(trigger_clk, rst_n, 
+            port map(trigger_clk, rst_n, '0', 
                     pcl_d_we_n, pcl_a_we_n, pcl_d_oe_n, pcl_a_oe_n, 
-                    pc_inc_n, '0', pc_cry, internal_dbus, internal_abus_l);
+                    pcl_inc_n, '1', pc_cry, 
+                    pcl_rel_we_n, pcl_rel_calc_n, pc_rel_prev,  
+                    internal_dbus, internal_abus_l);
     pc_h : pc generic map (dsize, 16#80#) 
-            port map(trigger_clk, rst_n, 
+            port map(trigger_clk, rst_n, '1', 
                     pch_d_we_n, pch_a_we_n, pch_d_oe_n, pch_a_oe_n, 
-                    pc_cry_n, pc_cry, dum_terminate, internal_dbus, internal_abus_h);
+                    pc_cry_n, pc_rel_prev_n, dum_terminate, 
+                    '1', '1', dum_terminate, 
+                    internal_dbus, internal_abus_h);
 
     instruction_register : dff generic map (dsize) 
             port map(trigger_clk, inst_we_n, '0', d_io, instruction);
@@ -458,8 +477,13 @@ begin
     phi2 <= not input_clk;
     set_clk <= input_clk;
     trigger_clk <= not input_clk;
+
     pc_cry_n <= not pc_cry;
+    pc_rel_prev_n <= not pc_rel_prev;
     r_nw <= dbuf_r_nw;
+
+    --branch instruction page crossed?
+    rel_pg_crs_n <= pc_cry nand pc_rel_prev;
 
     --adh output is controlled by decoder.
     adh_buffer : tsb generic map (dsize)
