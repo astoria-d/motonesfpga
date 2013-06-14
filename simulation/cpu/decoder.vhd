@@ -396,6 +396,55 @@ begin
 end  procedure;
 
 
+-- A.5.8 branch operations
+procedure a58_branch (int_flg : in integer; br_cond : in std_logic) is
+begin
+    if exec_cycle = T1 then
+        stat_dec_oe_n <= '0';
+        pcl_inc_n <= '0';
+        if status_reg(int_flg) = br_cond then
+            d_print("get rel");
+
+            pcl_a_oe_n <= '0';
+            pch_a_oe_n <= '0';
+            dbuf_int_oe_n <= '0';
+            --latch rel value.
+            pcl_rel_we_n <= '0';
+            next_cycle <= T2;
+        else
+            d_print("no branch");
+            next_cycle <= T0;
+        end if;
+    elsif exec_cycle = T2 then
+        d_print("rel ea");
+        pcl_inc_n <= '1';
+        pcl_a_oe_n <= '0';
+        pch_a_oe_n <= '0';
+        dbuf_int_oe_n <= '1';
+        pcl_rel_we_n <= '1';
+
+        --calcurate relative addr.
+        pcl_rel_calc_n <= '0';
+        next_cycle <= T3;
+    elsif exec_cycle = T3 then
+        --pcl_a_oe_n <= '0';
+        --pch_a_oe_n <= '0';
+        pcl_rel_calc_n <= '1';
+
+        if rel_pg_crs_n = '0' then
+        --page crossed. start from fetch.
+            next_cycle <= T0;
+        else
+            --no page boundary. 
+            --fetch cycle is done.
+            fetch_inst;
+            next_cycle <= T1;
+        end if;
+    end if;
+
+end  procedure;
+
+
     begin
 
         if (res_n = '0') then
@@ -1250,51 +1299,12 @@ end  procedure;
                     d_print("bmi");
                 elsif instruction = conv_std_logic_vector(16#d0#, dsize) then
                     d_print("bne");
-                    if exec_cycle = T1 then
-                        stat_dec_oe_n <= '0';
-                        pcl_inc_n <= '0';
-                        if status_reg(st_Z) /= '1' then
-                            d_print("get rel");
-
-                            pcl_a_oe_n <= '0';
-                            pch_a_oe_n <= '0';
-                            dbuf_int_oe_n <= '0';
-                            --latch rel value.
-                            pcl_rel_we_n <= '0';
-                            next_cycle <= T2;
-                        else
-                            d_print("no branch");
-                            next_cycle <= T0;
-                        end if;
-                    elsif exec_cycle = T2 then
-                        d_print("rel ea");
-                        pcl_inc_n <= '1';
-                        pcl_a_oe_n <= '0';
-                        pch_a_oe_n <= '0';
-                        dbuf_int_oe_n <= '1';
-                        pcl_rel_we_n <= '1';
-
-                        --calcurate relative addr.
-                        pcl_rel_calc_n <= '0';
-                        next_cycle <= T3;
-                    elsif exec_cycle = T3 then
-                        --pcl_a_oe_n <= '0';
-                        --pch_a_oe_n <= '0';
-                        pcl_rel_calc_n <= '1';
-
-                        if rel_pg_crs_n = '0' then
-                        --page crossed. start from fetch.
-                            next_cycle <= T0;
-                        else
-                            --no page boundary. 
-                            --fetch cycle is done.
-                            fetch_inst;
-                            next_cycle <= T1;
-                        end if;
-                    end if;
+                    a58_branch (st_Z, '0');
 
                 elsif instruction = conv_std_logic_vector(16#10#, dsize) then
                     d_print("bpl");
+                    a58_branch (st_N, '0');
+
                 elsif instruction = conv_std_logic_vector(16#50#, dsize) then
                     d_print("bvc");
                 elsif instruction = conv_std_logic_vector(16#70#, dsize) then
