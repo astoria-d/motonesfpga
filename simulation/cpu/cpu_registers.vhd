@@ -92,7 +92,7 @@ begin
                 if (rel(7) = '0') then
                     --add positive
                     add_carry <= add_val(dsize);
-                    rel_prev <= '1';
+                    rel_prev <= '0';
                 else
                     --add negative
                     add_carry <= '0';
