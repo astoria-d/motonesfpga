@@ -175,7 +175,7 @@ begin
     al_bus <= adc_work(dsize - 1 downto 0) when ea_calc_n = '0' else
             base_l;
 
-    ah_bus <= "00000000" when ea_calc_n = '0' and zp_n = '0' else
+    ah_bus <= "00000000" when zp_n = '0' else
             base_h + '1' when ea_calc_n = '0' and pg_next_n = '0' else
             base_h;
 

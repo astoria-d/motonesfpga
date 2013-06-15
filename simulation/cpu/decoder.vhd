@@ -225,6 +225,7 @@ begin
     x_ea_oe_n <= '1';
     ea_calc_n <= '1';
     ea_pg_next_n <= '1';
+    ea_zp_n <= '1';
     x_inc_n <= '1';
     x_dec_n <= '1';
     y_inc_n <= '1';
@@ -299,9 +300,9 @@ begin
     stat_flg <= val;
 end  procedure;
 
-procedure abs_fetch_low is
+procedure fetch_low is
 begin
-    d_print("abs (xy) 2");
+    d_print("fetch low 2");
     --fetch next opcode (abs low).
     pcl_a_oe_n <= '0';
     pch_a_oe_n <= '0';
@@ -352,7 +353,7 @@ end  procedure;
 procedure a2_abs is
 begin
     if exec_cycle = T1 then
-        abs_fetch_low;
+        fetch_low;
     elsif exec_cycle = T2 then
         abs_fetch_high;
     elsif exec_cycle = T3 then
@@ -365,7 +366,7 @@ end  procedure;
 procedure a2_absx is
 begin
     if exec_cycle = T1 then
-        abs_fetch_low;
+        fetch_low;
     elsif exec_cycle = T2 then
         abs_fetch_high;
     elsif exec_cycle = T3 then
@@ -395,11 +396,32 @@ begin
     end if;
 end  procedure;
 
+
 --A.3. store operation.
+
+procedure a3_zp is
+begin
+    if exec_cycle = T1 then
+        fetch_low;
+    elsif exec_cycle = T2 then
+        pcl_a_oe_n <= '1';
+        pch_a_oe_n <= '1';
+        pcl_inc_n <= '1';
+        dbuf_int_oe_n <= '1';
+        dl_al_we_n <= '1';
+
+        --calc zp.
+        dl_al_oe_n <= '0';
+        ea_zp_n <= '0';
+        r_nw <= '0';
+        next_cycle <= T0;
+    end if;
+end  procedure;
+
 procedure a3_abs is
 begin
     if exec_cycle = T1 then
-        abs_fetch_low;
+        fetch_low;
     elsif exec_cycle = T2 then
         abs_fetch_high;
     elsif exec_cycle = T3 then
@@ -942,6 +964,10 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#85#, dsize) then
                     --zp
                     d_print("sta");
+                    a3_zp;
+                    if exec_cycle = T2 then
+                        acc_d_oe_n  <= '0';
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#95#, dsize) then
                     --zp, x
@@ -960,7 +986,7 @@ end  procedure;
                     d_print("sta");
                     --TODO re-check !!!!
 --                    if exec_cycle = T1 then
---                        abs_fetch_low;
+--                        fetch_low;
 --                    elsif exec_cycle = T2 then
 --                        abs_fetch_high;
 --                    elsif exec_cycle = T3 then
@@ -993,6 +1019,10 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#86#, dsize) then
                     --zp
                     d_print("stx");
+                    a3_zp;
+                    if exec_cycle = T2 then
+                        x_oe_n  <= '0';
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#96#, dsize) then
                     --zp, y
