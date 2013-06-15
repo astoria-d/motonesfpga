@@ -120,8 +120,8 @@ architecture rtl of mos6502 is
                 alu_en_n        : in std_logic;
                 instruction     : in std_logic_vector (dsize - 1 downto 0);
                 int_d_bus       : inout std_logic_vector (dsize - 1 downto 0);
-                acc_in          : in std_logic_vector (dsize - 1 downto 0);
-                acc_out         : out std_logic_vector (dsize - 1 downto 0);
+                alu_in          : in std_logic_vector (dsize - 1 downto 0);
+                alu_out         : out std_logic_vector (dsize - 1 downto 0);
                 carry_in        : in std_logic;
                 negative        : out std_logic;
                 zero            : out std_logic;
@@ -236,8 +236,8 @@ architecture rtl of mos6502 is
             alu_we_n    : in std_logic;
             d_oe_n      : in std_logic;
             int_dbus    : inout std_logic_vector (dsize - 1 downto 0);
-            alu_in      : in std_logic_vector (dsize - 1 downto 0);
-            alu_out     : out std_logic_vector (dsize - 1 downto 0)
+            alu_out     : in std_logic_vector (dsize - 1 downto 0);
+            alu_in      : out std_logic_vector (dsize - 1 downto 0)
         );
     end component;
 
@@ -504,7 +504,7 @@ begin
     acc_reg : accumulator generic map (dsize) 
             port map(trigger_clk, 
                     acc_d_we_n, acc_alu_we_n, acc_d_oe_n, 
-                    internal_dbus, alu_in, alu_out);
+                    internal_dbus, alu_out, alu_in);
 
     -- clock generate.
     phi1 <= input_clk;

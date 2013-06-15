@@ -4,6 +4,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
+--use ieee.std_logic_arith.all;
 
 entity alu is 
     generic (   dsize : integer := 8
@@ -12,8 +13,8 @@ entity alu is
             alu_en_n        : in std_logic;
             instruction     : in std_logic_vector (dsize - 1 downto 0);
             int_d_bus       : inout std_logic_vector (dsize - 1 downto 0);
-            acc_in          : in std_logic_vector (dsize - 1 downto 0);
-            acc_out         : out std_logic_vector (dsize - 1 downto 0);
+            alu_in          : in std_logic_vector (dsize - 1 downto 0);
+            alu_out         : out std_logic_vector (dsize - 1 downto 0);
             carry_in        : in std_logic;
             negative        : out std_logic;
             zero            : out std_logic;
@@ -35,7 +36,7 @@ end  procedure;
 
 begin
 
-    alu_p : process (alu_en_n)
+    alu_p : process (alu_en_n, instruction, alu_in, int_d_bus, carry_in)
     variable res : std_logic_vector (dsize - 1 downto 0);
 
 procedure set_n (data : in std_logic_vector (dsize - 1 downto 0)) is
@@ -71,8 +72,9 @@ end procedure;
                     d_print("adc");
                 elsif instruction (7 downto 5) = "110" then
                     d_print("cmp");
+                    --cmpare A - M.
                     --set n/v/z flag
-                    res := acc_in - int_d_bus;
+                    res := alu_in - int_d_bus;
                     set_n(res);
                     set_z(res);
                     --ovf flag set when acc < mem .
@@ -84,7 +86,7 @@ end procedure;
 
                     --no register update.
                     int_d_bus <= (others => 'Z');
-                    acc_out <= (others => 'Z');
+                    alu_out <= (others => 'Z');
                     carry_out <= 'Z';
 
                 elsif instruction (7 downto 5) = "111" then
@@ -127,7 +129,7 @@ end procedure;
             end if; --if instruction (1 downto 0) = "01"
     else
         int_d_bus <= (others => 'Z');
-        acc_out <= (others => 'Z');
+        alu_out <= (others => 'Z');
         negative <= 'Z';
         zero <= 'Z';
         carry_out <= 'Z';

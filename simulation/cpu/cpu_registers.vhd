@@ -600,8 +600,8 @@ entity accumulator is
             alu_we_n    : in std_logic;
             d_oe_n      : in std_logic;
             int_dbus    : inout std_logic_vector (dsize - 1 downto 0);
-            alu_in      : in std_logic_vector (dsize - 1 downto 0);
-            alu_out     : out std_logic_vector (dsize - 1 downto 0)
+            alu_out     : in std_logic_vector (dsize - 1 downto 0);
+            alu_in      : out std_logic_vector (dsize - 1 downto 0)
         );
 end accumulator;
 
@@ -626,11 +626,11 @@ signal q : std_logic_vector (dsize - 1 downto 0);
 begin
     we_n <= (d_we_n and alu_we_n);
     d <= int_dbus when d_we_n = '0' else
-        alu_in when alu_we_n = '0' else
+        alu_out when alu_we_n = '0' else
         (others => 'Z');
     int_dbus <= q when d_oe_n = '0' else
         (others => 'Z');
-    alu_out <= q;
+    alu_in <= q;
 
     --read from i/o to cpu
     dff_inst : dff generic map (dsize) 
