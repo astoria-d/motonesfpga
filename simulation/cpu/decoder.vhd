@@ -268,12 +268,12 @@ begin
     status_reg <= "10000010";
 end  procedure;
 
-procedure set_nzv_from_alu is
+procedure set_nzc_from_alu is
 begin
-    --status register n/z/v bit update.
+    --status register n/z/c bit update.
     stat_alu_we_n <= '0';
     stat_dec_oe_n <= '1';
-    status_reg <= "11000010";
+    status_reg <= "10000011";
 end  procedure;
 
 --flag on/off instruction
@@ -682,7 +682,7 @@ end  procedure;
                     d_print("cmp");
                     fetch_imm;
                     alu_en_n <= '0';
-                    set_nzv_from_alu;
+                    set_nzc_from_alu;
 
                 elsif instruction  = conv_std_logic_vector(16#c5#, dsize) then
                     --zp
@@ -1315,6 +1315,8 @@ end  procedure;
                     d_print("bcc");
                 elsif instruction = conv_std_logic_vector(16#b0#, dsize) then
                     d_print("bcs");
+                    a58_branch (st_C, '1');
+
                 elsif instruction = conv_std_logic_vector(16#f0#, dsize) then
                     d_print("beq");
                 elsif instruction = conv_std_logic_vector(16#30#, dsize) then

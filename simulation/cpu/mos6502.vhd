@@ -120,8 +120,8 @@ architecture rtl of mos6502 is
                 alu_en_n        : in std_logic;
                 instruction     : in std_logic_vector (dsize - 1 downto 0);
                 int_d_bus       : inout std_logic_vector (dsize - 1 downto 0);
-                alu_in          : in std_logic_vector (dsize - 1 downto 0);
-                alu_out         : out std_logic_vector (dsize - 1 downto 0);
+                acc_out         : in std_logic_vector (dsize - 1 downto 0);
+                acc_in          : out std_logic_vector (dsize - 1 downto 0);
                 carry_in        : in std_logic;
                 negative        : out std_logic;
                 zero            : out std_logic;

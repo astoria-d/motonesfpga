@@ -13,8 +13,8 @@ entity alu is
             alu_en_n        : in std_logic;
             instruction     : in std_logic_vector (dsize - 1 downto 0);
             int_d_bus       : inout std_logic_vector (dsize - 1 downto 0);
-            alu_in          : in std_logic_vector (dsize - 1 downto 0);
-            alu_out         : out std_logic_vector (dsize - 1 downto 0);
+            acc_out         : in std_logic_vector (dsize - 1 downto 0);
+            acc_in          : out std_logic_vector (dsize - 1 downto 0);
             carry_in        : in std_logic;
             negative        : out std_logic;
             zero            : out std_logic;
@@ -36,7 +36,7 @@ end  procedure;
 
 begin
 
-    alu_p : process (alu_en_n, instruction, alu_in, int_d_bus, carry_in)
+    alu_p : process (alu_en_n, instruction, acc_out, int_d_bus, carry_in)
     variable res : std_logic_vector (dsize - 1 downto 0);
 
 procedure set_n (data : in std_logic_vector (dsize - 1 downto 0)) is
@@ -73,21 +73,21 @@ end procedure;
                 elsif instruction (7 downto 5) = "110" then
                     d_print("cmp");
                     --cmpare A - M.
-                    --set n/v/z flag
-                    res := alu_in - int_d_bus;
+                    --set n/z/c flag
+                    res := acc_out - int_d_bus;
                     set_n(res);
                     set_z(res);
-                    --ovf flag set when acc < mem .
-                    if (res(7) = '1') then
-                        overflow <= '1';
+                    --carry flag set when acc >= mem, namely res is positive.
+                    if (res(7) = '0') then
+                        carry_out <= '1';
                     else
-                        overflow <= '0';
+                        carry_out <= '0';
                     end if;
 
                     --no register update.
                     int_d_bus <= (others => 'Z');
-                    alu_out <= (others => 'Z');
-                    carry_out <= 'Z';
+                    acc_in <= (others => 'Z');
+                    overflow <= 'Z';
 
                 elsif instruction (7 downto 5) = "111" then
                     d_print("sbc");
@@ -129,7 +129,7 @@ end procedure;
             end if; --if instruction (1 downto 0) = "01"
     else
         int_d_bus <= (others => 'Z');
-        alu_out <= (others => 'Z');
+        acc_in <= (others => 'Z');
         negative <= 'Z';
         zero <= 'Z';
         carry_out <= 'Z';
