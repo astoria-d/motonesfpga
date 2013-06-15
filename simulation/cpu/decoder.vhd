@@ -1182,6 +1182,8 @@ end  procedure;
                         --fetch last op.
                         pcl_a_oe_n <= '0';
                         pch_a_oe_n <= '0';
+                        dbuf_int_oe_n <= '0';
+                        dl_ah_we_n <= '0';
 
                         next_cycle <= T5;
                     elsif exec_cycle = T5 then
@@ -1189,6 +1191,8 @@ end  procedure;
 
                         pcl_a_oe_n <= '1';
                         pch_a_oe_n <= '1';
+                        dbuf_int_oe_n <= '1';
+                        dl_ah_we_n <= '1';
 
                         --load/output  pch
                         ad_oe_n <= '1';
