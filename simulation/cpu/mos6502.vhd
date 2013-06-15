@@ -58,6 +58,7 @@ architecture rtl of mos6502 is
                 next_cycle      : out std_logic_vector (4 downto 0);
                 status_reg      : inout std_logic_vector (dsize - 1 downto 0);
                 inst_we_n       : out std_logic;
+                alu_en_n        : out std_logic;
                 ad_oe_n         : out std_logic;
                 pcl_inc_n       : out std_logic;
                 pcl_d_we_n      : out std_logic;
@@ -111,6 +112,27 @@ architecture rtl of mos6502 is
             );
     end component;
 
+
+    component alu
+        generic (   dsize : integer := 8
+                );
+        port (  clk             : in std_logic;
+                alu_en_n        : in std_logic;
+                instruction     : in std_logic_vector (dsize - 1 downto 0);
+                int_d_bus       : inout std_logic_vector (dsize - 1 downto 0);
+                acc_in          : in std_logic_vector (dsize - 1 downto 0);
+                acc_out         : out std_logic_vector (dsize - 1 downto 0);
+                carry_in        : in std_logic;
+                negative        : out std_logic;
+                zero            : out std_logic;
+                carry_out       : out std_logic;
+                overflow        : out std_logic
+        );
+    end component;
+
+    ----------------------------------------------
+    ---------- register declareration ------------
+    ----------------------------------------------
     component dff
         generic (
                 dsize : integer := 8
@@ -253,6 +275,9 @@ architecture rtl of mos6502 is
     );
     end component;
 
+    ----------------------------------------------
+    ------------ signal declareration ------------
+    ----------------------------------------------
     signal set_clk : std_logic;
     signal trigger_clk : std_logic;
 
@@ -291,6 +316,7 @@ architecture rtl of mos6502 is
     signal acc_d_we_n      : std_logic;
     signal acc_alu_we_n    : std_logic;
     signal acc_d_oe_n      : std_logic;
+    signal alu_en_n        : std_logic;
     signal alu_in          : std_logic_vector(dsize - 1 downto 0);
     signal alu_out         : std_logic_vector(dsize - 1 downto 0);
 
@@ -340,9 +366,12 @@ architecture rtl of mos6502 is
     signal status_reg : std_logic_vector (dsize - 1 downto 0);
 
     signal check_bit     : std_logic_vector(1 to 5);
+
 begin
 
-    ---instances....
+    ---------------------------------------
+    -------------- instances --------------
+    ---------------------------------------
     dec_inst : decoder generic map (dsize) 
             port map(set_clk, 
                     trigger_clk, 
@@ -355,6 +384,7 @@ begin
                     next_cycle,
                     status_reg, 
                     inst_we_n, 
+                    alu_en_n,
                     ad_oe_n, 
                     pcl_inc_n, 
                     pcl_d_we_n, 
@@ -405,6 +435,13 @@ begin
                     dbuf_r_nw
                     , check_bit --check bit.
                     );
+
+    alu_inst : alu generic map (dsize) 
+            port map (trigger_clk, alu_en_n, instruction, 
+                internal_dbus, alu_in, alu_out,
+                status_reg(0), 
+                alu_n, alu_z, alu_c, alu_v
+            );
 
     --cpu execution cycle number
     exec_cycle_inst : dff generic map (5) 
@@ -494,6 +531,10 @@ begin
 
         end if;
     end process;
+
+------------------------------------------------------------
+------------------------ for debug... ----------------------
+------------------------------------------------------------
 
     dbg_p : process (set_clk)
 use std.textio.all;

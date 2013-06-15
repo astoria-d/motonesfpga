@@ -3,11 +3,13 @@
 ----------------------------
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
 
 entity alu is 
     generic (   dsize : integer := 8
             );
     port (  clk             : in std_logic;
+            alu_en_n        : in std_logic;
             instruction     : in std_logic_vector (dsize - 1 downto 0);
             int_d_bus       : inout std_logic_vector (dsize - 1 downto 0);
             acc_in          : in std_logic_vector (dsize - 1 downto 0);
@@ -21,10 +23,117 @@ entity alu is
 end alu;
 
 architecture rtl of alu is
-signal d1 : std_logic_vector (dsize - 1 downto 0);
-signal d2 : std_logic_vector (dsize - 1 downto 0);
-signal d_out : std_logic_vector (dsize - 1 downto 0);
+
+procedure d_print(msg : string) is
+use std.textio.all;
+use ieee.std_logic_textio.all;
+variable out_l : line;
 begin
+    write(out_l, msg);
+    writeline(output, out_l);
+end  procedure;
+
+begin
+
+    alu_p : process (alu_en_n)
+    variable res : std_logic_vector (dsize - 1 downto 0);
+
+procedure set_n (data : in std_logic_vector (dsize - 1 downto 0)) is
+begin
+    if (data(7) = '1') then
+        negative <= '1';
+    else
+        negative <= '0';
+    end if;
+end procedure;
+
+procedure set_z (data : in std_logic_vector (dsize - 1 downto 0)) is
+begin
+    if  (data(7) or data(6) or data(5) or data(4) or 
+        data(3) or data(2) or data(1) or data(0)) = '0' then
+        zero <= '1';
+    else
+        zero <= '0';
+    end if;
+end procedure;
+
+    begin
+    if (alu_en_n = '0') then
+            --instruction is aaabbbcc format.
+            if instruction (1 downto 0) = "01" then
+                if instruction (7 downto 5) = "000" then
+                    d_print("ora");
+                elsif instruction (7 downto 5) = "001" then
+                    d_print("and");
+                elsif instruction (7 downto 5) = "010" then
+                    d_print("eor");
+                elsif instruction (7 downto 5) = "011" then
+                    d_print("adc");
+                elsif instruction (7 downto 5) = "110" then
+                    d_print("cmp");
+                    --set n/v/z flag
+                    res := acc_in - int_d_bus;
+                    set_n(res);
+                    set_z(res);
+                    --ovf flag set when acc < mem .
+                    if (res(7) = '1') then
+                        overflow <= '1';
+                    else
+                        overflow <= '0';
+                    end if;
+
+                    --no register update.
+                    int_d_bus <= (others => 'Z');
+                    acc_out <= (others => 'Z');
+                    carry_out <= 'Z';
+
+                elsif instruction (7 downto 5) = "111" then
+                    d_print("sbc");
+                end if;
+            elsif instruction (1 downto 0) = "10" then
+                if instruction (7 downto 5) = "000" then
+                    d_print("asl");
+                elsif instruction (7 downto 5) = "001" then
+                    d_print("rol");
+                elsif instruction (7 downto 5) = "010" then
+                    d_print("lsr");
+                elsif instruction (7 downto 5) = "011" then
+                    d_print("ror");
+                elsif instruction (7 downto 5) = "100" then
+                    d_print("stx");
+                elsif instruction (7 downto 5) = "101" then
+                    d_print("ldx");
+                elsif instruction (7 downto 5) = "110" then
+                    d_print("dec");
+                elsif instruction (7 downto 5) = "111" then
+                    d_print("inc");
+                end if;
+            elsif instruction (1 downto 0) = "00" then
+                if instruction (7 downto 5) = "001" then
+                    d_print("bit");
+                elsif instruction (7 downto 5) = "010" then
+                    d_print("jmp");
+                elsif instruction (7 downto 5) = "011" then
+                    d_print("jmp");
+                elsif instruction (7 downto 5) = "100" then
+                    d_print("sty");
+                elsif instruction (7 downto 5) = "101" then
+                    d_print("ldy");
+                elsif instruction (7 downto 5) = "110" then
+                    d_print("cpy");
+                elsif instruction (7 downto 5) = "111" then
+                    d_print("cpx");
+                end if; --if instruction (7 downto 5) = "001" then
+            end if; --if instruction (1 downto 0) = "01"
+    else
+        int_d_bus <= (others => 'Z');
+        acc_out <= (others => 'Z');
+        negative <= 'Z';
+        zero <= 'Z';
+        carry_out <= 'Z';
+        overflow <= 'Z';
+    end if; --if (alu_en_n = '') then
+    end process;
 
 end rtl;
 

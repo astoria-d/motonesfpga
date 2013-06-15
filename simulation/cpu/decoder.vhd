@@ -16,6 +16,7 @@ entity decoder is
             next_cycle      : out std_logic_vector (4 downto 0);
             status_reg      : inout std_logic_vector (dsize - 1 downto 0);
             inst_we_n       : out std_logic;
+            alu_en_n        : out std_logic;
             ad_oe_n         : out std_logic;
             pcl_inc_n       : out std_logic;
             pcl_d_we_n      : out std_logic;
@@ -197,6 +198,7 @@ begin
     pcl_inc_n <= '0';
 
     --disable the last opration pins.
+    alu_en_n <= '1';
     x_oe_n <= '1';
     y_oe_n <= '1';
     x_we_n <= '1';
@@ -264,6 +266,14 @@ begin
     stat_alu_we_n <= '0';
     stat_dec_oe_n <= '1';
     status_reg <= "10000010";
+end  procedure;
+
+procedure set_nzv_from_alu is
+begin
+    --status register n/z/v bit update.
+    stat_alu_we_n <= '0';
+    stat_dec_oe_n <= '1';
+    status_reg <= "11000010";
 end  procedure;
 
 --flag on/off instruction
@@ -670,6 +680,9 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#c9#, dsize) then
                     --imm
                     d_print("cmp");
+                    fetch_imm;
+                    alu_en_n <= '0';
+                    set_nzv_from_alu;
 
                 elsif instruction  = conv_std_logic_vector(16#c5#, dsize) then
                     --zp
@@ -1333,6 +1346,7 @@ end  procedure;
             elsif exec_cycle = R0 then
                 d_print(string'("reset"));
 
+                alu_en_n <= '1';
                 ad_oe_n <= '1';
                 pcl_d_we_n <= '1';
                 pcl_a_we_n <= '1';
