@@ -78,7 +78,7 @@ end procedure;
                     set_n(res);
                     set_z(res);
                     --carry flag set when acc >= mem, namely res is positive.
-                    if (res(7) = '0') then
+                    if (acc_out >= int_d_bus) then
                         carry_out <= '1';
                     else
                         carry_out <= '0';
