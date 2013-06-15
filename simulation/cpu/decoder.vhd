@@ -529,6 +529,10 @@ end  procedure;
 
                 elsif instruction = conv_std_logic_vector(16#ca#, dsize) then
                     d_print("dex");
+                    x_dec_n <= '0';
+                    --set nz bit.
+                    set_nz_from_alu ;
+                    single_inst;
 
                 elsif instruction = conv_std_logic_vector(16#88#, dsize) then
                     d_print("dey");
