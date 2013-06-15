@@ -7,20 +7,12 @@ use ieee.std_logic_1164.all;
 entity alu is 
     generic (   dsize : integer := 8
             );
-    port (  alu_sel         : in std_logic_vector (2 downto 0);
-            d_we_n          : in std_logic;
-            d_oe_n          : in std_logic;
-            ah_we_n         : in std_logic;
-            ah_oe_n         : in std_logic;
-            al_we_n         : in std_logic;
-            al_oe_n         : in std_logic;
-            acc_we_n        : in std_logic;
-            acc_oe_n        : in std_logic;
-            carry_in        : in std_logic;
+    port (  clk             : in std_logic;
+            instruction     : in std_logic_vector (dsize - 1 downto 0);
             int_d_bus       : inout std_logic_vector (dsize - 1 downto 0);
-            int_ah_bus      : inout std_logic_vector (dsize - 1 downto 0);
-            int_al_bus      : inout std_logic_vector (dsize - 1 downto 0);
-            acc             : inout std_logic_vector (dsize - 1 downto 0);
+            acc_in          : in std_logic_vector (dsize - 1 downto 0);
+            acc_out         : out std_logic_vector (dsize - 1 downto 0);
+            carry_in        : in std_logic;
             negative        : out std_logic;
             zero            : out std_logic;
             carry_out       : out std_logic;

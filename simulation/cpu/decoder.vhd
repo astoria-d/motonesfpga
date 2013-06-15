@@ -42,7 +42,6 @@ entity decoder is
             acc_d_we_n      : out std_logic;
             acc_alu_we_n    : out std_logic;
             acc_d_oe_n      : out std_logic;
-            acc_alu_oe_n    : out std_logic;
             x_we_n          : out std_logic;
             x_oe_n          : out std_logic;
             x_ea_oe_n       : out std_logic;
@@ -1360,7 +1359,6 @@ end  procedure;
                 acc_d_we_n <= '1';
                 acc_alu_we_n <= '1';
                 acc_d_oe_n <= '1';
-                acc_alu_oe_n <= '1';
                 x_we_n <= '1';
                 x_oe_n <= '1';
                 y_we_n <= '1';

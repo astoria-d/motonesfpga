@@ -84,7 +84,6 @@ architecture rtl of mos6502 is
                 acc_d_we_n      : out std_logic;
                 acc_alu_we_n    : out std_logic;
                 acc_d_oe_n      : out std_logic;
-                acc_alu_oe_n    : out std_logic;
                 x_we_n          : out std_logic;
                 x_oe_n          : out std_logic;
                 x_ea_oe_n       : out std_logic;
@@ -214,9 +213,9 @@ architecture rtl of mos6502 is
             d_we_n      : in std_logic;
             alu_we_n    : in std_logic;
             d_oe_n      : in std_logic;
-            alu_oe_n    : in std_logic;
             int_dbus    : inout std_logic_vector (dsize - 1 downto 0);
-            alu_bus     : inout std_logic_vector (dsize - 1 downto 0)
+            alu_in      : in std_logic_vector (dsize - 1 downto 0);
+            alu_out     : out std_logic_vector (dsize - 1 downto 0)
         );
     end component;
 
@@ -292,8 +291,8 @@ architecture rtl of mos6502 is
     signal acc_d_we_n      : std_logic;
     signal acc_alu_we_n    : std_logic;
     signal acc_d_oe_n      : std_logic;
-    signal acc_alu_oe_n    : std_logic;
-    signal alu_bus         : std_logic_vector(dsize - 1 downto 0);
+    signal alu_in          : std_logic_vector(dsize - 1 downto 0);
+    signal alu_out         : std_logic_vector(dsize - 1 downto 0);
 
     signal x_we_n : std_logic;
     signal x_oe_n : std_logic;
@@ -382,7 +381,6 @@ begin
                     acc_d_we_n,
                     acc_alu_we_n,
                     acc_d_oe_n,
-                    acc_alu_oe_n,
                     x_we_n, 
                     x_oe_n, 
                     x_ea_oe_n,
@@ -405,8 +403,7 @@ begin
                     stat_bus_nz_n, 
                     stat_alu_we_n, 
                     dbuf_r_nw
-                    --check bit.
-                    , check_bit
+                    , check_bit --check bit.
                     );
 
     --cpu execution cycle number
@@ -469,8 +466,8 @@ begin
 
     acc_reg : accumulator generic map (dsize) 
             port map(trigger_clk, 
-                    acc_d_we_n, acc_alu_we_n, acc_d_oe_n, acc_alu_oe_n,
-                    internal_dbus, alu_bus);
+                    acc_d_we_n, acc_alu_we_n, acc_d_oe_n, 
+                    internal_dbus, alu_in, alu_out);
 
     -- clock generate.
     phi1 <= input_clk;
