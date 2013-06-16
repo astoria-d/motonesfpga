@@ -1,16 +1,118 @@
+-----------------------------------------
+------------- ALU Core -----------------
+-----------------------------------------
+
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
+
+entity alu_core is 
+    generic (   dsize : integer := 8
+            );
+    port ( 
+            sel         : in std_logic_vector (3 downto 0);
+            d1          : in std_logic_vector (dsize - 1 downto 0);
+            d2          : in std_logic_vector (dsize - 1 downto 0);
+            d_out       : out std_logic_vector (dsize - 1 downto 0);
+            carry_in    : in std_logic;
+            negative    : out std_logic;
+            zero        : out std_logic;
+            carry_out   : out std_logic;
+            overflow    : out std_logic
+    );
+end alu_core;
+
+architecture rtl of alu_core is
+
+procedure d_print(msg : string) is
+use std.textio.all;
+use ieee.std_logic_textio.all;
+variable out_l : line;
+begin
+    write(out_l, msg);
+    writeline(output, out_l);
+end  procedure;
+
+constant ALU_AND    : std_logic_vector (3 downto 0) := "0000";
+constant ALU_EOR    : std_logic_vector (3 downto 0) := "0001";
+constant ALU_OR     : std_logic_vector (3 downto 0) := "0010";
+constant ALU_BIT    : std_logic_vector (3 downto 0) := "0011";
+constant ALU_ADC    : std_logic_vector (3 downto 0) := "0100";
+constant ALU_SBC    : std_logic_vector (3 downto 0) := "0101";
+constant ALU_CMP    : std_logic_vector (3 downto 0) := "0110";
+constant ALU_SL     : std_logic_vector (3 downto 0) := "0111";
+constant ALU_SR     : std_logic_vector (3 downto 0) := "1000";
+constant ALU_RL     : std_logic_vector (3 downto 0) := "1001";
+constant ALU_RR     : std_logic_vector (3 downto 0) := "1010";
+
+begin
+
+    alu_p : process (sel, d1, d2, carry_in)
+    variable res : std_logic_vector (dsize - 1 downto 0);
+
+procedure set_n (data : in std_logic_vector (dsize - 1 downto 0)) is
+begin
+    if (data(7) = '1') then
+        negative <= '1';
+    else
+        negative <= '0';
+    end if;
+end procedure;
+
+procedure set_z (data : in std_logic_vector (dsize - 1 downto 0)) is
+begin
+    if  (data(7) or data(6) or data(5) or data(4) or 
+        data(3) or data(2) or data(1) or data(0)) = '0' then
+        zero <= '1';
+    else
+        zero <= '0';
+    end if;
+end procedure;
+
+    begin
+    if sel = ALU_AND then
+        res := d1 and d2;
+    elsif sel = ALU_EOR then
+        res := d1 xor d2;
+    elsif sel = ALU_OR then
+        res := d1 or d2;
+    elsif sel = ALU_BIT then
+        ----
+    elsif sel = ALU_ADC then
+        res := d1 + d2 + carry_in;
+    elsif sel = ALU_SBC then
+        ----
+    elsif sel = ALU_CMP then
+    elsif sel = ALU_SL then
+        ----
+    elsif sel = ALU_SR then
+        ----
+    elsif sel = ALU_RL then
+        ----
+    elsif sel = ALU_RR then
+        ----
+    end if;
+
+    set_n(res);
+    set_z(res);
+
+    end process;
+
+end rtl;
+
+
 ----------------------------
 ---- 6502 ALU implementation
 ----------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
---use ieee.std_logic_arith.all;
 
 entity alu is 
     generic (   dsize : integer := 8
             );
     port (  clk             : in std_logic;
-            alu_en_n        : in std_logic;
+            arith_en_n      : in std_logic;
             instruction     : in std_logic_vector (dsize - 1 downto 0);
             int_d_bus       : inout std_logic_vector (dsize - 1 downto 0);
             acc_out         : in std_logic_vector (dsize - 1 downto 0);
@@ -36,7 +138,7 @@ end  procedure;
 
 begin
 
-    alu_p : process (alu_en_n, instruction, acc_out, int_d_bus, carry_in)
+    alu_p : process (arith_en_n, instruction, acc_out, int_d_bus, carry_in)
     variable res : std_logic_vector (dsize - 1 downto 0);
 
 procedure set_n (data : in std_logic_vector (dsize - 1 downto 0)) is
@@ -59,7 +161,7 @@ begin
 end procedure;
 
     begin
-    if (alu_en_n = '0') then
+    if (arith_en_n = '0') then
             --instruction is aaabbbcc format.
             if instruction (1 downto 0) = "01" then
                 if instruction (7 downto 5) = "000" then
@@ -134,7 +236,7 @@ end procedure;
         zero <= 'Z';
         carry_out <= 'Z';
         overflow <= 'Z';
-    end if; --if (alu_en_n = '') then
+    end if; --if (arith_en_n = '') then
     end process;
 
 end rtl;
@@ -180,4 +282,5 @@ begin
             base_h;
 
 end rtl;
+
 
