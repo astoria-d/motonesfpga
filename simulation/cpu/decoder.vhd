@@ -170,6 +170,15 @@ begin
     acc_cmd <= "1111";
     x_cmd <= "1111";
     y_cmd <= "1111";
+
+    stat_dec_oe_n <= '1';
+    stat_bus_oe_n <= '1';
+    stat_set_flg_n <= '1';
+    stat_flg <= '1';
+    stat_bus_all_n <= '1';
+    stat_bus_nz_n <= '1';
+    stat_alu_we_n <= '1';
+
     d_print(string'("fetch 1"));
 end;
 
@@ -185,10 +194,23 @@ end  procedure;
 procedure fetch_imm is
 begin
     d_print("immediate");
+    pcl_inc_n <= '0';
+    back_oe(pcl_cmd, '0');
+    back_oe(pch_cmd, '0');
+    back_we(pcl_cmd, '0');
+    back_we(pch_cmd, '1');
+    --send data from data bus buffer.
+    --receiver is instruction dependent.
+    dbuf_int_oe_n <= '0';
+    next_cycle <= T0;
 end  procedure;
 
 procedure set_nz_from_bus is
 begin
+    --status register n/z bit update.
+    stat_dec_oe_n <= '1';
+    status_reg <= "10000010";
+    stat_bus_nz_n <= '0';
 end  procedure;
 
 procedure set_nz_from_alu is
@@ -402,6 +424,8 @@ end  procedure;
                     d_print("txs");
                     set_nz_from_bus;
                     single_inst;
+                    front_oe(x_cmd, '0');
+                    front_we(sp_cmd, '0');
 
                 elsif instruction = conv_std_logic_vector(16#98#, dsize) then
                     d_print("tya");
@@ -623,6 +647,7 @@ end  procedure;
                     d_print("ldx");
                     fetch_imm;
                     set_nz_from_bus;
+                    front_we(x_cmd, '0');
 
                 elsif instruction  = conv_std_logic_vector(16#a6#, dsize) then
                     --zp
