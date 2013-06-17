@@ -39,11 +39,16 @@ component decoder
             inst_we_n       : out std_logic;
             ad_oe_n         : out std_logic;
             dbuf_int_oe_n   : out std_logic;
+            dl_al_we_n      : out std_logic;
+            dl_ah_we_n      : out std_logic;
+            dl_al_oe_n      : out std_logic;
+            dl_ah_oe_n      : out std_logic;
             pcl_inc_n       : out std_logic;
             pch_inc_n       : out std_logic;
             pcl_cmd         : out std_logic_vector(3 downto 0);
             pch_cmd         : out std_logic_vector(3 downto 0);
             sp_cmd          : out std_logic_vector(3 downto 0);
+            sph_oe_n        : out std_logic;
             acc_cmd         : out std_logic_vector(3 downto 0);
             x_cmd           : out std_logic_vector(3 downto 0);
             y_cmd           : out std_logic_vector(3 downto 0);
@@ -66,6 +71,7 @@ component alu
     port (  clk             : in std_logic;
             pcl_inc_n       : in std_logic;
             pch_inc_n       : in std_logic;
+            sph_oe_n        : in std_logic;
             abs_ea_n        : in std_logic;
             zp_ea_n         : in std_logic;
             arith_en_n      : in std_logic;
@@ -225,6 +231,7 @@ end component;
     signal acc_cmd : std_logic_vector(3 downto 0);
     signal x_cmd : std_logic_vector(3 downto 0);
     signal y_cmd : std_logic_vector(3 downto 0);
+    signal sph_oe_n : std_logic;
 
     ---status register
     signal stat_dec_oe_n : std_logic;
@@ -247,8 +254,6 @@ end component;
     signal acc_in : std_logic_vector(dsize - 1 downto 0);
     signal acc_out : std_logic_vector(dsize - 1 downto 0);
 
-    signal pcl_in : std_logic_vector(dsize - 1 downto 0);
-    signal pch_in : std_logic_vector(dsize - 1 downto 0);
     signal pcl_back : std_logic_vector(dsize - 1 downto 0);
     signal pch_back : std_logic_vector(dsize - 1 downto 0);
 
@@ -304,11 +309,16 @@ begin
                     inst_we_n, 
                     ad_oe_n, 
                     dbuf_int_oe_n,
+                    dl_al_we_n,
+                    dl_ah_we_n,
+                    dl_al_oe_n,
+                    dl_ah_oe_n,
                     pcl_inc_n,
                     pch_inc_n,
                     pcl_cmd,
                     pch_cmd,
                     sp_cmd,
+                    sph_oe_n,
                     acc_cmd,
                     x_cmd,
                     y_cmd,
@@ -327,6 +337,7 @@ begin
             port map (trigger_clk, 
                     pcl_inc_n,
                     pch_inc_n,
+                    sph_oe_n,
                     abs_ea_n,
                     zp_ea_n,
                     arith_en_n,
@@ -364,18 +375,18 @@ begin
 
     --address operand data buffer.
     idl_l : input_data_latch generic map (dsize) 
-            port map(set_clk, dl_al_oe_n, dl_al_we_n, bal, d_bus);
+            port map(set_clk, dl_al_oe_n, dl_al_we_n, d_bus, bal);
     idl_h : input_data_latch generic map (dsize) 
-            port map(set_clk, dl_ah_oe_n, dl_ah_we_n, bah, d_bus);
+            port map(set_clk, dl_ah_oe_n, dl_ah_we_n, d_bus, bah);
 
     -------- registers --------
     ir : d_flip_flop generic map (dsize) 
             port map(trigger_clk, '1', '1', inst_we_n, d_io, instruction);
 
-    pc_l : dual_dff generic map (dsize) 
-            port map(trigger_clk, '1', rst_n, pcl_cmd, pcl_in, pcl_back, bal);
-    pc_h : dual_dff generic map (dsize) 
-            port map(trigger_clk, '1', rst_n, pch_cmd, pch_in, pch_back, bah);
+    pcl_inst : dual_dff generic map (dsize) 
+            port map(trigger_clk, '1', rst_n, pcl_cmd, d_bus, pcl_back, bal);
+    pch_inst : dual_dff generic map (dsize) 
+            port map(trigger_clk, '1', rst_n, pch_cmd, d_bus, pch_back, bah);
 
     --status register
     status_register : processor_status generic map (dsize) 
@@ -410,11 +421,11 @@ begin
     begin
         if (rst_n = '0') then
             --reset vector set to pc.
-            pcl_in <= reset_l ;
-            pch_in <= reset_h ;
+            pcl_back <= reset_l ;
+            pch_back <= reset_h ;
         else
-            pcl_in <= d_bus;
-            pch_in <= d_bus;
+            pcl_back <= (others => 'Z');
+            pch_back <= (others => 'Z');
         end if;
     end process;
 

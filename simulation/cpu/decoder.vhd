@@ -18,11 +18,16 @@ entity decoder is
             inst_we_n       : out std_logic;
             ad_oe_n         : out std_logic;
             dbuf_int_oe_n   : out std_logic;
+            dl_al_we_n      : out std_logic;
+            dl_ah_we_n      : out std_logic;
+            dl_al_oe_n      : out std_logic;
+            dl_ah_oe_n      : out std_logic;
             pcl_inc_n       : out std_logic;
             pch_inc_n       : out std_logic;
             pcl_cmd         : out std_logic_vector(3 downto 0);
             pch_cmd         : out std_logic_vector(3 downto 0);
             sp_cmd          : out std_logic_vector(3 downto 0);
+            sph_oe_n        : out std_logic;
             acc_cmd         : out std_logic_vector(3 downto 0);
             x_cmd           : out std_logic_vector(3 downto 0);
             y_cmd           : out std_logic_vector(3 downto 0);
@@ -165,8 +170,13 @@ begin
 
     --disable the last opration pins.
     dbuf_int_oe_n <= '1';
+    dl_al_we_n <= '1';
+    dl_ah_we_n <= '1';
+    dl_al_oe_n <= '1';
+    dl_ah_oe_n <= '1';
     pch_inc_n <= '1';
     sp_cmd <= "1111";
+    sph_oe_n <= '1';
     acc_cmd <= "1111";
     x_cmd <= "1111";
     y_cmd <= "1111";
@@ -298,8 +308,8 @@ end  procedure;
 
         if (res_n = '0') then
             --pc l/h is reset vector.
-            pcl_cmd <= "1011";
-            pch_cmd <= "1011";
+            pcl_cmd <= "1110";
+            pch_cmd <= "1110";
             next_cycle <= R0;
         elsif (res_n'event and res_n = '1') then
             pcl_cmd <= "1111";
@@ -322,7 +332,9 @@ end  procedure;
                 if exec_cycle = T1 then
                     d_print("decode and execute inst: " 
                             & conv_hex8(conv_integer(instruction)));
-                    --disable pin for jmp/abs [xy] page boundary case.
+                    --disable pin for jmp
+                    dl_al_oe_n <= '1';
+                    dl_ah_oe_n <= '1';
                     back_we(pcl_cmd, '1');
                     back_we(pch_cmd, '1');
 
@@ -940,6 +952,77 @@ end  procedure;
                 -- A.5.3 jsr
                 ----------------------------------------
                 elsif instruction = conv_std_logic_vector(16#20#, dsize) then
+                    if exec_cycle = T1 then
+                        d_print("jsr abs 2");
+                        --fetch opcode.
+                        back_oe(pcl_cmd, '0');
+                        back_oe(pch_cmd, '0');
+                        back_we(pcl_cmd, '0');
+                        pcl_inc_n <= '0';
+                        dbuf_int_oe_n <= '0';
+                        --latch adl
+                        dl_al_we_n <= '0';
+                        next_cycle <= T2;
+                    elsif exec_cycle = T2 then
+                        d_print("jsr 3");
+                        back_oe(pcl_cmd, '1');
+                        back_oe(pch_cmd, '1');
+                        back_we(pcl_cmd, '1');
+                        pcl_inc_n <= '1';
+                        dbuf_int_oe_n <= '1';
+                        dl_al_we_n <= '1';
+
+                       --push return addr high into stack.
+--                        sp_push_n <= '0';
+                        sph_oe_n <= '0';
+                        front_oe(pch_cmd, '0');
+                        back_oe(sp_cmd, '0');
+                        r_nw <= '0';
+--                        next_cycle <= T3;
+--                    elsif exec_cycle = T3 then
+--                        d_print("jsr 4");
+--                        pch_d_oe_n <= '1';
+--
+--                       --push return addr low into stack.
+--                        sp_push_n <= '0';
+--                        pcl_d_oe_n <= '0';
+--                        sp_int_a_oe_n <= '0';
+--                        r_nw <= '0';
+--
+--                        next_cycle <= T4;
+--                    elsif exec_cycle = T4 then
+--                        d_print("jsr 5");
+--                        sp_push_n <= '1';
+--                        pcl_d_oe_n <= '1';
+--                        sp_int_a_oe_n <= '1';
+--                        r_nw <= '1';
+--
+--                        --fetch last op.
+--                        pcl_a_oe_n <= '0';
+--                        pch_a_oe_n <= '0';
+--                        dbuf_int_oe_n <= '0';
+--                        dl_ah_we_n <= '0';
+--
+--                        next_cycle <= T5;
+--                    elsif exec_cycle = T5 then
+--                        d_print("jsr 6");
+--
+--                        pcl_a_oe_n <= '1';
+--                        pch_a_oe_n <= '1';
+--                        dbuf_int_oe_n <= '1';
+--                        dl_ah_we_n <= '1';
+--
+--                        --load/output  pch
+--                        ad_oe_n <= '1';
+--                        dl_ah_oe_n <= '0';
+--                        pch_a_we_n <= '0';
+--
+--                        --load pcl.
+--                        dl_al_oe_n <= '0';
+--                        pcl_a_we_n <= '0';
+--
+--                        next_cycle <= T0;
+                    end if; --if exec_cycle = T1 then
 
                 -- A.5.4 break
                 elsif instruction = conv_std_logic_vector(16#00#, dsize) then
@@ -954,6 +1037,50 @@ end  procedure;
                 ----------------------------------------
                 elsif instruction = conv_std_logic_vector(16#4c#, dsize) then
                     --abs
+                    if exec_cycle = T1 then
+                        d_print("jmp 2");
+                        --fetch next opcode (abs low).
+                        back_oe(pcl_cmd, '0');
+                        back_oe(pch_cmd, '0');
+                        back_we(pcl_cmd, '0');
+                        pcl_inc_n <= '0';
+
+                        --latch abs low data.
+                        dbuf_int_oe_n <= '0';
+                        dl_al_we_n <= '0';
+                        next_cycle <= T2;
+                    elsif exec_cycle = T2 then
+                        d_print("jmp 3");
+                        dl_al_we_n <= '1';
+
+                        --fetch abs hi
+                        back_oe(pcl_cmd, '0');
+                        back_oe(pch_cmd, '0');
+                        back_we(pcl_cmd, '0');
+                        pcl_inc_n <= '0';
+
+                        --latch  in dlh
+                        dbuf_int_oe_n <= '0';
+                        dl_ah_we_n <= '0';
+                        next_cycle <= T3;
+                    elsif exec_cycle = T3 then
+                        d_print("jmp done > next fetch");
+                        back_oe(pcl_cmd, '1');
+                        back_oe(pch_cmd, '1');
+                        dbuf_int_oe_n <= '1';
+                        dl_ah_we_n <= '1';
+
+                        --latch > al/ah.
+                        dl_al_oe_n <= '0';
+                        dl_ah_oe_n <= '0';
+
+                        --fetch inst and goto decode next.
+                        back_we(pcl_cmd, '0');
+                        back_we(pch_cmd, '0');
+                        inst_we_n <= '0';
+                        pcl_inc_n <= '0';
+                        next_cycle <= T1;
+                    end if;
 
                 elsif instruction = conv_std_logic_vector(16#6c#, dsize) then
                     --(indir)
@@ -1004,11 +1131,16 @@ end  procedure;
                 inst_we_n <= '1';
                 ad_oe_n <= '1';
                 dbuf_int_oe_n <= '1';
+                dl_al_we_n <= '1';
+                dl_ah_we_n <= '1';
+                dl_al_oe_n <= '1';
+                dl_ah_oe_n <= '1';
                 pcl_inc_n <= '1';
                 pch_inc_n <= '1';
                 pcl_cmd <= "1111";
                 pch_cmd <= "1111";
                 sp_cmd <= "1111";
+                sph_oe_n <= '1';
                 acc_cmd <= "1111";
                 x_cmd <= "1111";
                 y_cmd <= "1111";

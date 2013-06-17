@@ -124,6 +124,7 @@ entity alu is
     port (  clk             : in std_logic;
             pcl_inc_n       : in std_logic;
             pch_inc_n       : in std_logic;
+            sph_oe_n        : in std_logic;
             abs_ea_n        : in std_logic;
             zp_ea_n         : in std_logic;
             arith_en_n      : in std_logic;
@@ -235,6 +236,7 @@ begin
         pcl <= d_out;
         pcl_inc_carry <= c;
 
+        pch <= bah;
         abl <= bal;
         abh <= bah;
 
@@ -247,6 +249,10 @@ begin
         abl <= bal;
         abh <= bah;
 
+    elsif (sph_oe_n = '0') then
+        --stack operation...
+        abl <= bal;
+        abh <= "00000001";
     elsif (arith_en_n = '0') then
             --instruction is aaabbbcc format.
             if instruction (1 downto 0) = "01" then
@@ -314,6 +320,8 @@ begin
 
         abl <= bal;
         abh <= bah;
+        pcl <= (others => 'Z');
+        pch <= (others => 'Z');
         pcl_inc_carry <= '0';
     end if; --if (pcl_inc_n = '0') then
     end process;
