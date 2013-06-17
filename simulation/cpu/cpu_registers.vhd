@@ -287,3 +287,155 @@ begin
 
 end rtl;
 
+----------------------------------------
+--- status register component
+----------------------------------------
+
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity processor_status is 
+    generic (
+            dsize : integer := 8
+            );
+    port (  
+            clk         : in std_logic;
+            res_n       : in std_logic;
+            dec_oe_n    : in std_logic;
+            bus_oe_n    : in std_logic;
+            set_flg_n   : in std_logic;
+            flg_val     : in std_logic;
+            load_bus_all_n      : in std_logic;
+            load_bus_nz_n       : in std_logic;
+            set_from_alu_n      : in std_logic;
+            alu_n       : in std_logic;
+            alu_v       : in std_logic;
+            alu_z       : in std_logic;
+            alu_c       : in std_logic;
+            dec_val     : inout std_logic_vector (dsize - 1 downto 0);
+            int_dbus    : inout std_logic_vector (dsize - 1 downto 0)
+        );
+end processor_status;
+
+architecture rtl of processor_status is
+
+component d_flip_flop
+    generic (
+            dsize : integer := 8
+            );
+    port (  
+            clk     : in std_logic;
+            res_n   : in std_logic;
+            set_n   : in std_logic;
+            we_n    : in std_logic;
+            d       : in std_logic_vector (dsize - 1 downto 0);
+            q       : out std_logic_vector (dsize - 1 downto 0)
+        );
+end component;
+
+signal we_n : std_logic;
+signal d : std_logic_vector (dsize - 1 downto 0);
+signal status_val : std_logic_vector (dsize - 1 downto 0);
+
+begin
+    dec_val <= status_val when dec_oe_n = '0' else
+                (others => 'Z');
+    int_dbus <= status_val when bus_oe_n = '0' else
+                (others => 'Z');
+
+    we_n <= set_flg_n and load_bus_all_n and 
+                load_bus_nz_n and set_from_alu_n;
+
+    dff_inst : d_flip_flop generic map (dsize) 
+                    port map(clk, '1', res_n, we_n, d, status_val);
+
+    main_p : process (clk, res_n, we_n, dec_val, int_dbus)
+    variable tmp : std_logic_vector (dsize - 1 downto 0);
+    begin
+--        SR Flags (bit 7 to bit 0):
+--
+--        N   ....    Negative
+--        V   ....    Overflow
+--        -   ....    ignored
+--        B   ....    Break
+--        D   ....    Decimal (use BCD for arithmetics)
+--        I   ....    Interrupt (IRQ disable)
+--        Z   ....    Zero
+--        C   ....    Carry
+    
+      ---only interrupt flag is set on reset.
+        if (res_n = '0') then
+            d <= "00000100";
+        end if;
+
+        ---from flag set/clear instructions
+        if (set_flg_n = '0') then
+            if flg_val = '1' then
+                tmp := (dec_val and "11111111");
+            else
+                tmp := "00000000";
+            end if;
+            d <= tmp or (d and not dec_val);
+
+        ---status flag set from the data on the internal data bus.
+        ---interpret the input data by the dec_val input.
+        ---load/pop/rti/t[asxy]
+        elsif (load_bus_all_n = '0') then
+            ---set the data bus data as they are.
+            d <= int_dbus;
+        elsif (load_bus_nz_n = '0') then
+            tmp := status_val;
+            d (6 downto 2) <= tmp (6 downto 2);
+            d (0) <= tmp (0);
+
+            ---other case: n/z data must be interpreted.
+            --n bit.
+            if int_dbus(7) = '1' then
+                d (7) <= '1';
+            else
+                d (7) <= '0';
+            end if;
+            --z bit.
+            ---nor outputs 1 when all inputs are 0.
+            if  (int_dbus(7) or int_dbus(6) or 
+                    int_dbus(5) or int_dbus(4) or int_dbus(3) or 
+                    int_dbus(2) or int_dbus(1) or int_dbus(0)) = '0' then
+                d (1) <= '1';
+            else
+                d (1) <= '0';
+            end if;
+
+        ---status set from alu
+        elsif (set_from_alu_n = '0') then
+            tmp := status_val;
+            d (5 downto 2) <= tmp (5 downto 2);
+
+            --n bit.
+            if (dec_val(7) = '1') then
+                d (7) <= alu_n;
+            else
+                d (7) <= tmp (7);
+            end if;
+            --v bit.
+            if (dec_val(6) = '1') then
+                d (6) <= alu_v;
+            else
+                d (6) <= tmp (6);
+            end if;
+            --z bit.
+            if (dec_val(1) = '1') then
+                d (1) <= alu_z;
+            else
+                d (1) <= tmp (1);
+            end if;
+            --c bit.
+            if (dec_val(0) = '1') then
+                d (0) <= alu_c;
+            else
+                d (0) <= tmp (0);
+            end if;
+        end if; --if (set_flg_n = '0') then
+    end process;
+end rtl;
+
+

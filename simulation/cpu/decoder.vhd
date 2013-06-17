@@ -26,6 +26,13 @@ entity decoder is
             acc_cmd         : out std_logic_vector(3 downto 0);
             x_cmd           : out std_logic_vector(3 downto 0);
             y_cmd           : out std_logic_vector(3 downto 0);
+            stat_dec_oe_n   : out std_logic;
+            stat_bus_oe_n   : out std_logic;
+            stat_set_flg_n  : out std_logic;
+            stat_flg        : out std_logic;
+            stat_bus_all_n  : out std_logic;
+            stat_bus_nz_n   : out std_logic;
+            stat_alu_we_n   : out std_logic;
             r_nw            : out std_logic
             ;---for parameter check purpose!!!
             check_bit     : out std_logic_vector(1 to 5)
@@ -195,11 +202,24 @@ end  procedure;
 --flag on/off instruction
 procedure set_flag (int_flg : in integer; val : in std_logic) is
 begin
+    stat_dec_oe_n <= '1';
+    stat_set_flg_n <= '0';
+    --specify which to set.
+    status_reg(7 downto int_flg + 1) 
+        <= (others =>'0');
+    status_reg(int_flg - 1 downto 0) 
+        <= (others =>'0');
+    status_reg(int_flg) <= '1';
+    stat_flg <= val;
 end  procedure;
 
 --for sec/clc
 procedure set_flag0 (val : in std_logic) is
 begin
+    stat_dec_oe_n <= '1';
+    stat_set_flg_n <= '0';
+    status_reg <= "00000001";
+    stat_flg <= val;
 end  procedure;
 
 procedure fetch_low is
@@ -270,7 +290,7 @@ end  procedure;
             if exec_cycle = T0 then
                 --cycle #1
                 fetch_inst;
-                --next_cycle <= T1;
+                next_cycle <= T1;
 
             elsif exec_cycle = T1 or exec_cycle = T2 or exec_cycle = T3 or 
                 exec_cycle = T4 or exec_cycle = T5 or exec_cycle = T6 or 
@@ -967,6 +987,15 @@ end  procedure;
                 acc_cmd <= "1111";
                 x_cmd <= "1111";
                 y_cmd <= "1111";
+
+                stat_dec_oe_n <= '1';
+                stat_bus_oe_n <= '1';
+                stat_set_flg_n <= '1';
+                stat_flg <= '1';
+                stat_bus_all_n <= '1';
+                stat_bus_nz_n <= '1';
+                stat_alu_we_n <= '1';
+
                 r_nw <= '1';
             elsif exec_cycle = R1 then
                 next_cycle <= R2;
