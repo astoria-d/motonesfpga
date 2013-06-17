@@ -99,6 +99,7 @@ end procedure;
     elsif sel = ALU_INC then
         res := ('0' & d1) + "000000001";
         d_out <= res(dsize - 1 downto 0);
+        carry_out <= res(dsize);
     elsif sel = ALU_DEC then
         res := ('0' & d1) - "000000001";
     end if;
@@ -121,7 +122,8 @@ entity alu is
     generic (   dsize : integer := 8
             );
     port (  clk             : in std_logic;
-            pc_inc_n        : in std_logic;
+            pcl_inc_n       : in std_logic;
+            pch_inc_n       : in std_logic;
             abs_ea_n        : in std_logic;
             zp_ea_n         : in std_logic;
             arith_en_n      : in std_logic;
@@ -136,6 +138,7 @@ entity alu is
             abh             : out std_logic_vector (dsize - 1 downto 0);
             pcl             : out std_logic_vector (dsize - 1 downto 0);
             pch             : out std_logic_vector (dsize - 1 downto 0);
+            pcl_inc_carry   : out std_logic;
             carry_in        : in std_logic;
             negative        : out std_logic;
             zero            : out std_logic;
@@ -207,6 +210,10 @@ signal d_out : std_logic_vector (dsize - 1 downto 0);
 signal bal_reg : std_logic_vector (dsize - 1 downto 0);
 signal bah_reg : std_logic_vector (dsize - 1 downto 0);
 
+signal n : std_logic;
+signal z : std_logic;
+signal c : std_logic;
+signal v : std_logic;
 begin
 
     bal_inst : d_flip_flop generic map (dsize) 
@@ -215,16 +222,27 @@ begin
             port map(clk, '1', '1', '1', bah, bah_reg);
 
     alu_inst : alu_core generic map (dsize)
-            port map (sel, d1, d2, d_out, 
-                    carry_in, negative, zero, carry_out, overflow);
+            port map (sel, d1, d2, d_out, carry_in, n, z, c, v);
 
-    alu_p : process (clk, pc_inc_n, abs_ea_n, zp_ea_n, arith_en_n, instruction, 
-                    int_d_bus, acc_out, index_bus, bal, bal, carry_in, d_out)
+    alu_p : process (clk, pcl_inc_n, pch_inc_n, abs_ea_n, zp_ea_n, arith_en_n, 
+                    instruction, 
+                    int_d_bus, acc_out, index_bus, bal, bal, carry_in, d_out, 
+                    n, z, c, v)
     begin
-    if (pc_inc_n = '0') then
+    if (pcl_inc_n = '0') then
         sel <= ALU_INC;
         d1 <= bal;
         pcl <= d_out;
+        pcl_inc_carry <= c;
+
+        abl <= bal;
+        abh <= bah;
+
+    elsif (pch_inc_n = '0') then
+        sel <= ALU_INC;
+        d1 <= bah;
+        pch <= d_out;
+        pcl_inc_carry <= '0';
 
         abl <= bal;
         abh <= bah;
@@ -296,7 +314,8 @@ begin
 
         abl <= bal;
         abh <= bah;
-    end if; --if (arith_en_n = '') then
+        pcl_inc_carry <= '0';
+    end if; --if (pcl_inc_n = '0') then
     end process;
 
 end rtl;

@@ -39,7 +39,8 @@ component decoder
             inst_we_n       : out std_logic;
             ad_oe_n         : out std_logic;
             dbuf_int_oe_n   : out std_logic;
-            pc_inc_n        : out std_logic;
+            pcl_inc_n       : out std_logic;
+            pch_inc_n       : out std_logic;
             pcl_cmd         : out std_logic_vector(3 downto 0);
             pch_cmd         : out std_logic_vector(3 downto 0);
             sp_cmd          : out std_logic_vector(3 downto 0);
@@ -56,7 +57,8 @@ component alu
     generic (   dsize : integer := 8
             );
     port (  clk             : in std_logic;
-            pc_inc_n        : in std_logic;
+            pcl_inc_n       : in std_logic;
+            pch_inc_n       : in std_logic;
             abs_ea_n        : in std_logic;
             zp_ea_n         : in std_logic;
             arith_en_n      : in std_logic;
@@ -71,6 +73,7 @@ component alu
             abh             : out std_logic_vector (dsize - 1 downto 0);
             pcl             : out std_logic_vector (dsize - 1 downto 0);
             pch             : out std_logic_vector (dsize - 1 downto 0);
+            pcl_inc_carry   : out std_logic;
             carry_in        : in std_logic;
             negative        : out std_logic;
             zero            : out std_logic;
@@ -172,7 +175,9 @@ end component;
     signal dl_al_oe_n : std_logic;
     signal dl_ah_oe_n : std_logic;
 
-    signal pc_inc_n : std_logic;
+    signal pcl_inc_n : std_logic;
+    signal pch_inc_n : std_logic;
+    signal pcl_inc_carry : std_logic_vector(0 downto 0);
     signal abs_ea_n : std_logic;
     signal zp_ea_n : std_logic;
     signal arith_en_n : std_logic;
@@ -260,7 +265,8 @@ begin
                     inst_we_n, 
                     ad_oe_n, 
                     dbuf_int_oe_n,
-                    pc_inc_n,
+                    pcl_inc_n,
+                    pch_inc_n,
                     pcl_cmd,
                     pch_cmd,
                     sp_cmd,
@@ -273,7 +279,8 @@ begin
 
     alu_inst : alu generic map (dsize) 
             port map (trigger_clk, 
-                    pc_inc_n,
+                    pcl_inc_n,
+                    pch_inc_n,
                     abs_ea_n,
                     zp_ea_n,
                     arith_en_n,
@@ -288,6 +295,7 @@ begin
                     abh,
                     pcl_back,
                     pch_back,
+                    pcl_inc_carry(0),
                     alu_c_in,
                     alu_n,
                     alu_z,
@@ -296,8 +304,13 @@ begin
                     );
 
     --cpu execution cycle number
-    exec_cycle_inst : d_flip_flop generic map (6) 
-            port map(trigger_clk, '1', '1', '0', next_cycle, exec_cycle);
+    exec_cycle_inst : d_flip_flop generic map (5) 
+            port map(trigger_clk, '1', '1', '0', 
+                    next_cycle(4 downto 0), exec_cycle(4 downto 0));
+
+    exec_cycle_carry_inst : d_flip_flop generic map (1) 
+            port map(trigger_clk, '1', '1', '0', 
+                    pcl_inc_carry, exec_cycle(5 downto 5));
 
     --io data buffer
     dbus_buf : data_bus_buffer generic map (dsize) 

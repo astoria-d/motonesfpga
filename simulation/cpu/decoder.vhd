@@ -18,7 +18,8 @@ entity decoder is
             inst_we_n       : out std_logic;
             ad_oe_n         : out std_logic;
             dbuf_int_oe_n   : out std_logic;
-            pc_inc_n        : out std_logic;
+            pcl_inc_n       : out std_logic;
+            pch_inc_n       : out std_logic;
             pcl_cmd         : out std_logic_vector(3 downto 0);
             pch_cmd         : out std_logic_vector(3 downto 0);
             sp_cmd          : out std_logic_vector(3 downto 0);
@@ -54,38 +55,38 @@ end;
 
 --cycle bit format
 --00xxx : exec cycle : T0 > T1 > T2 > T3 > T4 > T5 > T6 > T7 > T0
-constant T0 : std_logic_vector (5 downto 0) := "-00000";
-constant T1 : std_logic_vector (5 downto 0) := "-00001";
-constant T2 : std_logic_vector (5 downto 0) := "-00010";
-constant T3 : std_logic_vector (5 downto 0) := "-00011";
-constant T4 : std_logic_vector (5 downto 0) := "-00100";
-constant T5 : std_logic_vector (5 downto 0) := "-00101";
-constant T6 : std_logic_vector (5 downto 0) := "-00110";
-constant T7 : std_logic_vector (5 downto 0) := "-00111";
+constant T0 : std_logic_vector (5 downto 0) := "000000";
+constant T1 : std_logic_vector (5 downto 0) := "000001";
+constant T2 : std_logic_vector (5 downto 0) := "000010";
+constant T3 : std_logic_vector (5 downto 0) := "000011";
+constant T4 : std_logic_vector (5 downto 0) := "000100";
+constant T5 : std_logic_vector (5 downto 0) := "000101";
+constant T6 : std_logic_vector (5 downto 0) := "000110";
+constant T7 : std_logic_vector (5 downto 0) := "000111";
 
 --01xxx : reset cycle : R0 > R1 > R2 > R3 > R4 > R5 > T0
-constant R0 : std_logic_vector (5 downto 0) := "-01000";
-constant R1 : std_logic_vector (5 downto 0) := "-01001";
-constant R2 : std_logic_vector (5 downto 0) := "-01010";
-constant R3 : std_logic_vector (5 downto 0) := "-01011";
-constant R4 : std_logic_vector (5 downto 0) := "-01100";
-constant R5 : std_logic_vector (5 downto 0) := "-01101";
+constant R0 : std_logic_vector (5 downto 0) := "001000";
+constant R1 : std_logic_vector (5 downto 0) := "001001";
+constant R2 : std_logic_vector (5 downto 0) := "001010";
+constant R3 : std_logic_vector (5 downto 0) := "001011";
+constant R4 : std_logic_vector (5 downto 0) := "001100";
+constant R5 : std_logic_vector (5 downto 0) := "001101";
 
 --10xxx : nmi cycle : N0 > N1 > N2 > N3 > N4 > N5 > T0
-constant N0 : std_logic_vector (5 downto 0) := "-10000";
-constant N1 : std_logic_vector (5 downto 0) := "-10001";
-constant N2 : std_logic_vector (5 downto 0) := "-10010";
-constant N3 : std_logic_vector (5 downto 0) := "-10011";
-constant N4 : std_logic_vector (5 downto 0) := "-10100";
-constant N5 : std_logic_vector (5 downto 0) := "-10101";
+constant N0 : std_logic_vector (5 downto 0) := "010000";
+constant N1 : std_logic_vector (5 downto 0) := "010001";
+constant N2 : std_logic_vector (5 downto 0) := "010010";
+constant N3 : std_logic_vector (5 downto 0) := "010011";
+constant N4 : std_logic_vector (5 downto 0) := "010100";
+constant N5 : std_logic_vector (5 downto 0) := "010101";
 
 --11xxx : irq cycle : I0 > I1 > I2 > I3 > I4 > I5 > T0
-constant I0 : std_logic_vector (5 downto 0) := "-11000";
-constant I1 : std_logic_vector (5 downto 0) := "-11001";
-constant I2 : std_logic_vector (5 downto 0) := "-11010";
-constant I3 : std_logic_vector (5 downto 0) := "-11011";
-constant I4 : std_logic_vector (5 downto 0) := "-11100";
-constant I5 : std_logic_vector (5 downto 0) := "-11101";
+constant I0 : std_logic_vector (5 downto 0) := "011000";
+constant I1 : std_logic_vector (5 downto 0) := "011001";
+constant I2 : std_logic_vector (5 downto 0) := "011010";
+constant I3 : std_logic_vector (5 downto 0) := "011011";
+constant I4 : std_logic_vector (5 downto 0) := "011100";
+constant I5 : std_logic_vector (5 downto 0) := "011101";
 
 constant ERROR_CYCLE : std_logic_vector (5 downto 0) := "111111";
 
@@ -144,17 +145,20 @@ end;
 
 procedure fetch_inst is
 begin
+    --fetch opcode and phc increment.
     ad_oe_n <= '0';
     back_oe(pcl_cmd, '0');
     back_oe(pch_cmd, '0');
     back_we(pcl_cmd, '0');
+    back_we(pch_cmd, '1');
+
     inst_we_n <= '0';
-    pc_inc_n <= '0';
+    pcl_inc_n <= '0';
     r_nw <= '1';
-    --pcl_inc_n <= '0';
 
     --disable the last opration pins.
     dbuf_int_oe_n <= '1';
+    pch_inc_n <= '1';
     sp_cmd <= "1111";
     acc_cmd <= "1111";
     x_cmd <= "1111";
@@ -167,7 +171,7 @@ procedure single_inst is
 begin
     back_oe(pcl_cmd, '1');
     back_oe(pch_cmd, '1');
-    pc_inc_n <= '1';
+    pcl_inc_n <= '1';
     next_cycle <= T0;
 end  procedure;
 
@@ -266,7 +270,7 @@ end  procedure;
             if exec_cycle = T0 then
                 --cycle #1
                 fetch_inst;
-                next_cycle <= T1;
+                --next_cycle <= T1;
 
             elsif exec_cycle = T1 or exec_cycle = T2 or exec_cycle = T3 or 
                 exec_cycle = T4 or exec_cycle = T5 or exec_cycle = T6 or 
@@ -955,7 +959,8 @@ end  procedure;
                 inst_we_n <= '1';
                 ad_oe_n <= '1';
                 dbuf_int_oe_n <= '1';
-                pc_inc_n <= '1';
+                pcl_inc_n <= '1';
+                pch_inc_n <= '1';
                 pcl_cmd <= "1111";
                 pch_cmd <= "1111";
                 sp_cmd <= "1111";
@@ -979,6 +984,16 @@ end  procedure;
                 
             elsif exec_cycle = R5 then
                 next_cycle <= T0;
+
+            elsif exec_cycle(5) = '1' then
+                ---pc increment and next page.
+                d_print(string'("pch next page..."));
+                --pcl stop increment
+                pcl_inc_n <= '1';
+                back_we(pcl_cmd, '1');
+                --pch increment
+                pch_inc_n <= '0';
+                back_we(pch_cmd, '0');
 
             end if; --if exec_cycle = T0 then
 
