@@ -17,6 +17,8 @@ entity decoder is
             status_reg      : inout std_logic_vector (dsize - 1 downto 0);
             inst_we_n       : out std_logic;
             ad_oe_n         : out std_logic;
+            dbuf_int_oe_n   : out std_logic;
+            pc_inc_n        : out std_logic;
             pcl_cmd         : out std_logic_vector(3 downto 0);
             pch_cmd         : out std_logic_vector(3 downto 0);
             sp_cmd          : out std_logic_vector(3 downto 0);
@@ -143,18 +145,30 @@ end;
 procedure fetch_inst is
 begin
     ad_oe_n <= '0';
-    inst_we_n <= '0';
     back_oe(pcl_cmd, '0');
     back_oe(pch_cmd, '0');
+    back_we(pcl_cmd, '0');
+    inst_we_n <= '0';
+    pc_inc_n <= '0';
     r_nw <= '1';
     --pcl_inc_n <= '0';
 
+    --disable the last opration pins.
+    dbuf_int_oe_n <= '1';
+    sp_cmd <= "1111";
+    acc_cmd <= "1111";
+    x_cmd <= "1111";
+    y_cmd <= "1111";
     d_print(string'("fetch 1"));
 end;
 
 ---common routine for single byte instruction.
 procedure single_inst is
 begin
+    back_oe(pcl_cmd, '1');
+    back_oe(pch_cmd, '1');
+    pc_inc_n <= '1';
+    next_cycle <= T0;
 end  procedure;
 
 procedure fetch_imm is
@@ -238,7 +252,7 @@ end  procedure;
 
         if (res_n = '0') then
             --pc l/h is reset vector.
-            pcl_cmd <= "1110";
+            pcl_cmd <= "1011";
             pch_cmd <= "1011";
             next_cycle <= R0;
         elsif (res_n'event and res_n = '1') then
@@ -252,7 +266,7 @@ end  procedure;
             if exec_cycle = T0 then
                 --cycle #1
                 fetch_inst;
-                --next_cycle <= T1;
+                next_cycle <= T1;
 
             elsif exec_cycle = T1 or exec_cycle = T2 or exec_cycle = T3 or 
                 exec_cycle = T4 or exec_cycle = T5 or exec_cycle = T6 or 
@@ -262,6 +276,10 @@ end  procedure;
                 if exec_cycle = T1 then
                     d_print("decode and execute inst: " 
                             & conv_hex8(conv_integer(instruction)));
+                    --disable pin for jmp/abs [xy] page boundary case.
+                    back_we(pcl_cmd, '1');
+                    back_we(pch_cmd, '1');
+
                     --grab instruction register data.
                     inst_we_n <= '1';
                 end if;
@@ -933,6 +951,11 @@ end  procedure;
             elsif exec_cycle = R0 then
                 d_print(string'("reset"));
 
+                next_cycle <= R1;
+                inst_we_n <= '1';
+                ad_oe_n <= '1';
+                dbuf_int_oe_n <= '1';
+                pc_inc_n <= '1';
                 pcl_cmd <= "1111";
                 pch_cmd <= "1111";
                 sp_cmd <= "1111";
@@ -940,8 +963,6 @@ end  procedure;
                 x_cmd <= "1111";
                 y_cmd <= "1111";
                 r_nw <= '1';
-
-                next_cycle <= R1;
             elsif exec_cycle = R1 then
                 next_cycle <= R2;
                 front_we(pch_cmd, '1');

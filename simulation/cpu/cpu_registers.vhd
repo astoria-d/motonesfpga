@@ -23,11 +23,11 @@ end d_flip_flop;
 architecture rtl of d_flip_flop is
 begin
 
-    process (clk, res_n, set_n)
+    process (clk, res_n, set_n, d)
     begin
         if (res_n = '0') then
             q <= (others => '0');
-        elsif (clk'event and clk = '1' and set_n = '0') then
+        elsif (set_n = '0') then
             q <= d;
         elsif (clk'event and clk = '1') then
             if (we_n = '0') then
@@ -168,8 +168,6 @@ begin
 end rtl;
 
 
------------------
-
 ----------------------------------------
 --- data bus buffer
 ----------------------------------------
@@ -288,5 +286,4 @@ begin
                     port map(oe_n, latch_buf, alu_bus);
 
 end rtl;
-
 
