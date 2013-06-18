@@ -36,10 +36,11 @@ entity decoder is
             y_cmd           : out std_logic_vector(3 downto 0);
             abs_xy_n        : out std_logic;
             ea_carry        : in  std_logic;
-            abs_pg_next_n   : out std_logic;
+            pg_next_n       : out std_logic;
             zp_n            : out std_logic;
             zp_xy_n         : out std_logic;
             arith_en_n      : out std_logic;
+            rel_calc_n      : out std_logic;
             stat_dec_oe_n   : out std_logic;
             stat_bus_oe_n   : out std_logic;
             stat_set_flg_n  : out std_logic;
@@ -181,6 +182,12 @@ begin
     back_we(pcl_cmd, '1');
 end procedure;
 
+procedure read_status is
+begin
+    status_reg <= (others => 'Z');
+    stat_dec_oe_n <= '0';
+end  procedure;
+
 procedure fetch_inst is
 begin
     --fetch opcode and phc increment.
@@ -208,12 +215,13 @@ begin
     y_cmd <= "1111";
 
     abs_xy_n <= '1';
-    abs_pg_next_n <= '1';
+    pg_next_n <= '1';
     zp_n <= '1';
     zp_xy_n <= '1';
     arith_en_n <= '1';
+    rel_calc_n <= '1';
 
-    stat_dec_oe_n <= '1';
+    read_status;
     stat_bus_oe_n <= '1';
     stat_set_flg_n <= '1';
     stat_flg <= '1';
@@ -349,7 +357,7 @@ begin
             ea_x_out;
             dbuf_int_oe_n <= '0';
             --next page.
-            abs_pg_next_n <= '0';
+            pg_next_n <= '0';
             --redo inst.
             next_cycle <= T0;
         else
@@ -385,23 +393,16 @@ end  procedure;
 
 -- A.5.8 branch operations
 
-procedure read_status is
-begin
-    status_reg <= (others => 'Z');
-    stat_dec_oe_n <= '0';
-end  procedure;
-
 procedure a58_branch (int_flg : in integer; br_cond : in std_logic) is
 begin
     if exec_cycle = T1 then
-        read_status;
         fetch_next;
         if status_reg(int_flg) = br_cond then
             d_print("get rel");
 
-            dbuf_int_oe_n <= '0';
             --latch rel value.
-            --pcl_rel_we_n <= '0';
+            dbuf_int_oe_n <= '0';
+            dl_ah_we_n <= '0';
             next_cycle <= T2;
         else
             d_print("no branch");
@@ -410,28 +411,39 @@ begin
     elsif exec_cycle = T2 then
         d_print("rel ea");
         fetch_stop;
---        pcl_a_oe_n <= '0';
---        pch_a_oe_n <= '0';
---        dbuf_int_oe_n <= '1';
---        pcl_rel_we_n <= '1';
---
---        --calcurate relative addr.
---        pcl_rel_calc_n <= '0';
---        next_cycle <= T3;
---    elsif exec_cycle = T3 then
---        --pcl_a_oe_n <= '0';
---        --pch_a_oe_n <= '0';
---        pcl_rel_calc_n <= '1';
---
---        if rel_pg_crs_n = '0' then
---        --page crossed. start from fetch.
---            next_cycle <= T0;
---        else
---            --no page boundary. 
---            --fetch cycle is done.
---            fetch_inst;
---            next_cycle <= T1;
---        end if;
+        dbuf_int_oe_n <= '1';
+        dl_ah_we_n <= '1';
+
+        --calc relative addr.
+        rel_calc_n <= '0';
+        pg_next_n <= '0';
+        dl_dh_oe_n <= '0';
+        back_oe(pcl_cmd, '0');
+        back_oe(pch_cmd, '0');
+        back_we(pcl_cmd, '0');
+
+        next_cycle <= T3;
+    elsif exec_cycle = T3 then
+
+        dl_dh_oe_n <= '1';
+        back_we(pcl_cmd, '1');
+        if ea_carry = '1' then
+            --page crossed. adh calc.
+            back_oe(pcl_cmd, '0');
+            back_oe(pch_cmd, '0');
+            back_we(pch_cmd, '0');
+
+            rel_calc_n <= '0';
+            pg_next_n <= '1';
+            next_cycle <= T0;
+        else
+            back_we(pcl_cmd, '0');
+
+            --no page boundary. 
+            --fetch cycle is done.
+            fetch_inst;
+            next_cycle <= T1;
+        end if;
     end if;
 end  procedure;
 
@@ -1173,7 +1185,6 @@ end  procedure;
 
                         --load/output  pch
                         ad_oe_n <= '1';
-                        dl_ah_oe_n <= '0';
                         dl_dh_oe_n <= '0';
                         front_we(pch_cmd, '0');
 
@@ -1361,10 +1372,11 @@ end  procedure;
                 y_cmd <= "1111";
 
                 abs_xy_n <= '1';
-                abs_pg_next_n <= '1';
+                pg_next_n <= '1';
                 zp_n <= '1';
                 zp_xy_n <= '1';
                 arith_en_n <= '1';
+                rel_calc_n <= '1';
 
                 stat_dec_oe_n <= '1';
                 stat_bus_oe_n <= '1';

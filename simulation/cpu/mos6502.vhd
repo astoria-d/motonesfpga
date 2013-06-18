@@ -57,10 +57,11 @@ component decoder
             y_cmd           : out std_logic_vector(3 downto 0);
             abs_xy_n        : out std_logic;
             ea_carry        : in  std_logic;
-            abs_pg_next_n   : out std_logic;
+            pg_next_n       : out std_logic;
             zp_n            : out std_logic;
             zp_xy_n         : out std_logic;
             arith_en_n      : out std_logic;
+            rel_calc_n      : out std_logic;
             stat_dec_oe_n   : out std_logic;
             stat_bus_oe_n   : out std_logic;
             stat_set_flg_n  : out std_logic;
@@ -84,10 +85,11 @@ component alu
             sp_push_n       : in std_logic;
             sp_pop_n        : in std_logic;
             abs_xy_n        : in std_logic;
-            abs_pg_next_n   : in std_logic;
+            pg_next_n       : in std_logic;
             zp_n            : in std_logic;
             zp_xy_n         : in std_logic;
             arith_en_n      : in std_logic;
+            rel_calc_n      : in std_logic;
             instruction     : in std_logic_vector (dsize - 1 downto 0);
             int_d_bus       : inout std_logic_vector (dsize - 1 downto 0);
             acc_out         : in std_logic_vector (dsize - 1 downto 0);
@@ -229,10 +231,11 @@ end component;
     signal pcl_inc_carry : std_logic_vector(0 downto 0);
     signal abs_xy_n        : std_logic;
     signal ea_carry        : std_logic;
-    signal abs_pg_next_n   : std_logic;
+    signal pg_next_n       : std_logic;
     signal zp_n            : std_logic;
     signal zp_xy_n         : std_logic;
     signal arith_en_n      : std_logic;
+    signal rel_calc_n      : std_logic;
                     
     signal alu_n : std_logic;
     signal alu_z : std_logic;
@@ -268,6 +271,7 @@ end component;
     signal bah : std_logic_vector(dsize - 1 downto 0);
     signal bal : std_logic_vector(dsize - 1 downto 0);
     signal index_bus : std_logic_vector(dsize - 1 downto 0);
+    signal idl_out : std_logic_vector(dsize - 1 downto 0);
 
     signal pcl_back : std_logic_vector(dsize - 1 downto 0);
     signal pch_back : std_logic_vector(dsize - 1 downto 0);
@@ -348,10 +352,11 @@ begin
                     y_cmd,
                     abs_xy_n,
                     ea_carry,
-                    abs_pg_next_n,
+                    pg_next_n,
                     zp_n,
                     zp_xy_n,
                     arith_en_n,
+                    rel_calc_n,
                     stat_dec_oe_n, 
                     stat_bus_oe_n, 
                     stat_set_flg_n, 
@@ -371,10 +376,11 @@ begin
                     sp_push_n,
                     sp_pop_n,
                     abs_xy_n,
-                    abs_pg_next_n,
+                    pg_next_n,
                     zp_n,
                     zp_xy_n,
                     arith_en_n,
+                    rel_calc_n,
                     instruction,
                     d_bus,
                     acc_out,
@@ -410,10 +416,12 @@ begin
     idl_l : input_data_latch generic map (dsize) 
             port map(set_clk, dl_al_oe_n, dl_al_we_n, d_bus, bal);
     idl_h : input_data_latch generic map (dsize) 
-            port map(set_clk, dl_ah_oe_n, dl_ah_we_n, d_bus, bah);
+            port map(set_clk, '0', dl_ah_we_n, d_bus, idl_out);
     ---only DLH has b-bus side output.
+    idl_h_a_buf : tri_state_buffer generic map (dsize)
+            port map (dl_ah_oe_n, idl_out, bah);
     idl_h_d_buf : tri_state_buffer generic map (dsize)
-            port map (dl_dh_oe_n, bah, d_bus);
+            port map (dl_dh_oe_n, idl_out, d_bus);
 
     -------- registers --------
     ir : d_flip_flop generic map (dsize) 

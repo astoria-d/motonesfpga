@@ -1,127 +1,3 @@
------------------------------------------
-------------- ALU Core -----------------
------------------------------------------
-
-library ieee;
-use ieee.std_logic_1164.all;
-use ieee.std_logic_unsigned.all;
-
-----d1 = acc
-----d2 = memory
-entity alu_core is 
-    generic (   dsize : integer := 8
-            );
-    port ( 
-            sel         : in std_logic_vector (3 downto 0);
-            d1          : in std_logic_vector (dsize - 1 downto 0);
-            d2          : in std_logic_vector (dsize - 1 downto 0);
-            d_out       : out std_logic_vector (dsize - 1 downto 0);
-            carry_in    : in std_logic;
-            negative    : out std_logic;
-            zero        : out std_logic;
-            carry_out   : out std_logic;
-            overflow    : out std_logic
-    );
-end alu_core;
-
-architecture rtl of alu_core is
-
-procedure d_print(msg : string) is
-use std.textio.all;
-use ieee.std_logic_textio.all;
-variable out_l : line;
-begin
-    write(out_l, msg);
-    writeline(output, out_l);
-end  procedure;
-
-constant ALU_AND    : std_logic_vector (3 downto 0) := "0000";
-constant ALU_EOR    : std_logic_vector (3 downto 0) := "0001";
-constant ALU_OR     : std_logic_vector (3 downto 0) := "0010";
-constant ALU_BIT    : std_logic_vector (3 downto 0) := "0011";
-constant ALU_ADC    : std_logic_vector (3 downto 0) := "0100";
-constant ALU_SBC    : std_logic_vector (3 downto 0) := "0101";
-constant ALU_CMP    : std_logic_vector (3 downto 0) := "0110";
-constant ALU_SL     : std_logic_vector (3 downto 0) := "0111";
-constant ALU_SR     : std_logic_vector (3 downto 0) := "1000";
-constant ALU_RL     : std_logic_vector (3 downto 0) := "1001";
-constant ALU_RR     : std_logic_vector (3 downto 0) := "1010";
-constant ALU_INC    : std_logic_vector (3 downto 0) := "1011";
-constant ALU_DEC    : std_logic_vector (3 downto 0) := "1100";
-
-begin
-
-    alu_p : process (sel, d1, d2, carry_in)
-    variable res : std_logic_vector (dsize downto 0);
-
-procedure set_n (data : in std_logic_vector (dsize - 1 downto 0)) is
-begin
-    if (data(7) = '1') then
-        negative <= '1';
-    else
-        negative <= '0';
-    end if;
-end procedure;
-
-procedure set_z (data : in std_logic_vector (dsize - 1 downto 0)) is
-begin
-    if  (data(7) or data(6) or data(5) or data(4) or 
-        data(3) or data(2) or data(1) or data(0)) = '0' then
-        zero <= '1';
-    else
-        zero <= '0';
-    end if;
-end procedure;
-
-    begin
-    if sel = ALU_AND then
-        res := d1 and d2;
-    elsif sel = ALU_EOR then
-        res := d1 xor d2;
-    elsif sel = ALU_OR then
-        res := d1 or d2;
-    elsif sel = ALU_BIT then
-        ----
-    elsif sel = ALU_ADC then
-        res := ('0' & d1) + ('0' & d2) + carry_in;
-        d_out <= res(dsize - 1 downto 0);
-        carry_out <= res(dsize);
-        if ((d1(dsize - 1) = d1(dsize - 1)) 
-                            and (d1(dsize - 1) /= res(dsize - 1))) then
-            overflow <= '1';
-        else
-            overflow <= '0';
-        end if;
-
-    elsif sel = ALU_SBC then
-        ----
-    elsif sel = ALU_CMP then
-        res := d1 - d2;
-    elsif sel = ALU_SL then
-        ----
-    elsif sel = ALU_SR then
-        ----
-    elsif sel = ALU_RL then
-        ----
-    elsif sel = ALU_RR then
-        ----
-    elsif sel = ALU_INC then
-        res := ('0' & d1) + "000000001";
-        d_out <= res(dsize - 1 downto 0);
-        carry_out <= res(dsize);
-    elsif sel = ALU_DEC then
-        res := ('0' & d1) - "000000001";
-        d_out <= res(dsize - 1 downto 0);
-        carry_out <= res(dsize);
-    end if;
-    set_n(res(dsize - 1 downto 0));
-    set_z(res(dsize - 1 downto 0));
-
-    end process;
-
-end rtl;
-
-
 ----------------------------
 ---- 6502 ALU implementation
 ----------------------------
@@ -140,10 +16,11 @@ entity alu is
             sp_push_n       : in std_logic;
             sp_pop_n        : in std_logic;
             abs_xy_n        : in std_logic;
-            abs_pg_next_n   : in std_logic;
+            pg_next_n       : in std_logic;
             zp_n            : in std_logic;
             zp_xy_n         : in std_logic;
             arith_en_n      : in std_logic;
+            rel_calc_n      : in std_logic;
             instruction     : in std_logic_vector (dsize - 1 downto 0);
             int_d_bus       : inout std_logic_vector (dsize - 1 downto 0);
             acc_out         : in std_logic_vector (dsize - 1 downto 0);
@@ -208,6 +85,7 @@ constant ALU_RL     : std_logic_vector (3 downto 0) := "1001";
 constant ALU_RR     : std_logic_vector (3 downto 0) := "1010";
 constant ALU_INC    : std_logic_vector (3 downto 0) := "1011";
 constant ALU_DEC    : std_logic_vector (3 downto 0) := "1100";
+constant ALU_SIGNED_ADD : std_logic_vector (3 downto 0) := "1101";
 
 procedure d_print(msg : string) is
 use std.textio.all;
@@ -254,8 +132,8 @@ begin
             port map (sel, d1, d2, d_out, c_in, n, z, c, v);
 
     alu_p : process (clk, pcl_inc_n, pch_inc_n, sph_oe_n, sp_push_n, sp_pop_n,
-                    abs_xy_n, abs_pg_next_n, zp_n, zp_xy_n, arith_en_n,
-                    instruction, 
+                    abs_xy_n, pg_next_n, zp_n, zp_xy_n, arith_en_n,
+                    rel_calc_n, instruction, 
                     int_d_bus, acc_out, index_bus, bal, bal, carry_in, d_out, 
                     n, z, c, v)
 
@@ -334,7 +212,7 @@ end  procedure;
             end if;
         end if;
     elsif (abs_xy_n = '0') then
-        if (abs_pg_next_n = '0') then
+        if (pg_next_n = '0') then
             sel <= ALU_INC;
             d1 <= bah;
             ea_carry <= '0';
@@ -356,6 +234,44 @@ end  procedure;
             abh <= bah;
             abl <= d_out;
         end if;
+
+    elsif (rel_calc_n = '0') then
+        if (pg_next_n = '1') then
+            sel <= ALU_INC;
+            c_in <= '0';
+            ---d1 is pch.`
+            d1 <= bah;
+            ---rel val is on the d_bus.
+            alu_res <= d_out;
+            ea_carry <= '0'; 
+
+            --keep the value in the cycle
+            ah_buf_we <= '0';
+            ah_reg_in <= d_out;
+            abh <= d_out;
+            --al no change.
+            abl <= bal;
+        else
+            sel <= ALU_SIGNED_ADD;
+            c_in <= '0';
+            ---d1 is pcl.`
+            d1 <= bal;
+            ---rel val is on the d_bus.
+            d2 <= int_d_bus;
+            alu_res <= d_out;
+            ea_carry <= c;
+
+            --keep the value in the cycle
+            al_buf_we <= '0';
+            al_reg_in <= d_out;
+            if (clk = '0') then
+                abl <= d_out;
+            else
+                abl <= al_reg;
+            end if;
+            abh <= bah;
+        end if;
+        int_d_bus <= (others => 'Z');
 
     elsif (arith_en_n = '0') then
 
@@ -452,6 +368,141 @@ end  procedure;
         alu_res <= bal;
         pcl_inc_carry <= '0';
     end if; --if (pcl_inc_n = '0') then
+    end process;
+
+end rtl;
+
+-----------------------------------------
+------------- ALU Core -----------------
+-----------------------------------------
+
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
+
+----d1 = acc
+----d2 = memory
+entity alu_core is 
+    generic (   dsize : integer := 8
+            );
+    port ( 
+            sel         : in std_logic_vector (3 downto 0);
+            d1          : in std_logic_vector (dsize - 1 downto 0);
+            d2          : in std_logic_vector (dsize - 1 downto 0);
+            d_out       : out std_logic_vector (dsize - 1 downto 0);
+            carry_in    : in std_logic;
+            negative    : out std_logic;
+            zero        : out std_logic;
+            carry_out   : out std_logic;
+            overflow    : out std_logic
+    );
+end alu_core;
+
+architecture rtl of alu_core is
+
+procedure d_print(msg : string) is
+use std.textio.all;
+use ieee.std_logic_textio.all;
+variable out_l : line;
+begin
+    write(out_l, msg);
+    writeline(output, out_l);
+end  procedure;
+
+constant ALU_AND    : std_logic_vector (3 downto 0) := "0000";
+constant ALU_EOR    : std_logic_vector (3 downto 0) := "0001";
+constant ALU_OR     : std_logic_vector (3 downto 0) := "0010";
+constant ALU_BIT    : std_logic_vector (3 downto 0) := "0011";
+constant ALU_ADC    : std_logic_vector (3 downto 0) := "0100";
+constant ALU_SBC    : std_logic_vector (3 downto 0) := "0101";
+constant ALU_CMP    : std_logic_vector (3 downto 0) := "0110";
+constant ALU_SL     : std_logic_vector (3 downto 0) := "0111";
+constant ALU_SR     : std_logic_vector (3 downto 0) := "1000";
+constant ALU_RL     : std_logic_vector (3 downto 0) := "1001";
+constant ALU_RR     : std_logic_vector (3 downto 0) := "1010";
+constant ALU_INC    : std_logic_vector (3 downto 0) := "1011";
+constant ALU_DEC    : std_logic_vector (3 downto 0) := "1100";
+constant ALU_SIGNED_ADD : std_logic_vector (3 downto 0) := "1101";
+
+begin
+
+    alu_p : process (sel, d1, d2, carry_in)
+    variable res : std_logic_vector (dsize downto 0);
+
+procedure set_n (data : in std_logic_vector (dsize - 1 downto 0)) is
+begin
+    if (data(7) = '1') then
+        negative <= '1';
+    else
+        negative <= '0';
+    end if;
+end procedure;
+
+procedure set_z (data : in std_logic_vector (dsize - 1 downto 0)) is
+begin
+    if  (data(7) or data(6) or data(5) or data(4) or 
+        data(3) or data(2) or data(1) or data(0)) = '0' then
+        zero <= '1';
+    else
+        zero <= '0';
+    end if;
+end procedure;
+
+    begin
+    if sel = ALU_AND then
+        res := d1 and d2;
+    elsif sel = ALU_EOR then
+        res := d1 xor d2;
+    elsif sel = ALU_OR then
+        res := d1 or d2;
+    elsif sel = ALU_BIT then
+        ----
+    elsif sel = ALU_ADC then
+        res := ('0' & d1) + ('0' & d2) + carry_in;
+        d_out <= res(dsize - 1 downto 0);
+        carry_out <= res(dsize);
+        if ((d1(dsize - 1) = d1(dsize - 1)) 
+                            and (d1(dsize - 1) /= res(dsize - 1))) then
+            overflow <= '1';
+        else
+            overflow <= '0';
+        end if;
+
+    elsif sel = ALU_SIGNED_ADD then
+        res := ('0' & d1) + ('0' & d2);
+        d_out <= res(dsize - 1 downto 0);
+        if ((d1(dsize - 1) = d1(dsize - 1)) 
+                            and (d1(dsize - 1) /= res(dsize - 1))) then
+            carry_out <= '1';
+        else
+            carry_out <= '0';
+        end if;
+
+
+    elsif sel = ALU_SBC then
+        ----
+    elsif sel = ALU_CMP then
+        res := d1 - d2;
+    elsif sel = ALU_SL then
+        ----
+    elsif sel = ALU_SR then
+        ----
+    elsif sel = ALU_RL then
+        ----
+    elsif sel = ALU_RR then
+        ----
+    elsif sel = ALU_INC then
+        res := ('0' & d1) + "000000001";
+        d_out <= res(dsize - 1 downto 0);
+        carry_out <= res(dsize);
+    elsif sel = ALU_DEC then
+        res := ('0' & d1) - "000000001";
+        d_out <= res(dsize - 1 downto 0);
+        carry_out <= res(dsize);
+    end if;
+    set_n(res(dsize - 1 downto 0));
+    set_z(res(dsize - 1 downto 0));
+
     end process;
 
 end rtl;
