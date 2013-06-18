@@ -39,6 +39,7 @@ entity decoder is
             abs_pg_next_n   : out std_logic;
             zp_n            : out std_logic;
             zp_xy_n         : out std_logic;
+            arith_en_n      : out std_logic;
             stat_dec_oe_n   : out std_logic;
             stat_bus_oe_n   : out std_logic;
             stat_set_flg_n  : out std_logic;
@@ -198,6 +199,7 @@ begin
     abs_pg_next_n <= '1';
     zp_n <= '1';
     zp_xy_n <= '1';
+    arith_en_n <= '1';
 
     stat_dec_oe_n <= '1';
     stat_bus_oe_n <= '1';
@@ -241,10 +243,10 @@ begin
     stat_bus_nz_n <= '0';
 end  procedure;
 
-procedure set_nz_from_alu is
-begin
-end  procedure;
-
+--procedure set_nz_from_alu is
+--begin
+--end  procedure;
+--
 procedure set_nzc_from_alu is
 begin
 end  procedure;
@@ -467,24 +469,34 @@ end  procedure;
 
                 elsif instruction = conv_std_logic_vector(16#ca#, dsize) then
                     d_print("dex");
+                    arith_en_n <= '0';
                     --set nz bit.
-                    set_nz_from_alu ;
+                    set_nz_from_bus;
                     single_inst;
 
                 elsif instruction = conv_std_logic_vector(16#88#, dsize) then
                     d_print("dey");
+                    arith_en_n <= '0';
+                    back_oe(y_cmd, '0');
+                    front_we(y_cmd, '0');
                     --set nz bit.
-                    set_nz_from_alu ;
+                    set_nz_from_bus;
                     single_inst;
 
                 elsif instruction = conv_std_logic_vector(16#e8#, dsize) then
                     d_print("inx");
+                    arith_en_n <= '0';
+                    back_oe(x_cmd, '0');
+                    front_we(x_cmd, '0');
                     --set nz bit.
-                    set_nz_from_alu ;
+                    set_nz_from_bus;
                     single_inst;
 
                 elsif instruction = conv_std_logic_vector(16#c8#, dsize) then
                     d_print("iny");
+                    arith_en_n <= '0';
+                    set_nz_from_bus;
+                    single_inst;
 
                 elsif instruction = conv_std_logic_vector(16#4a#, dsize) then
                     --lsr acc mode
@@ -1326,6 +1338,7 @@ end  procedure;
                 abs_pg_next_n <= '1';
                 zp_n <= '1';
                 zp_xy_n <= '1';
+                arith_en_n <= '1';
 
                 stat_dec_oe_n <= '1';
                 stat_bus_oe_n <= '1';

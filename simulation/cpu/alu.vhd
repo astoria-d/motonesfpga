@@ -128,6 +128,7 @@ end rtl;
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
+use ieee.std_logic_arith.conv_std_logic_vector;
 
 entity alu is 
     generic (   dsize : integer := 8
@@ -227,6 +228,9 @@ signal ah_reg_in : std_logic_vector (dsize - 1 downto 0);
 signal al_reg : std_logic_vector (dsize - 1 downto 0);
 signal ah_reg : std_logic_vector (dsize - 1 downto 0);
 
+signal arith_reg_in : std_logic_vector (dsize - 1 downto 0);
+signal arith_reg : std_logic_vector (dsize - 1 downto 0);
+
 signal n : std_logic;
 signal z : std_logic;
 signal c_in : std_logic;
@@ -235,6 +239,7 @@ signal v : std_logic;
 
 signal al_buf_we : std_logic;
 signal ah_buf_we : std_logic;
+signal arith_buf_we : std_logic;
 
 begin
 
@@ -242,6 +247,8 @@ begin
             port map(clk, '1', '1', al_buf_we, al_reg_in, al_reg);
     ah_buf : d_flip_flop generic map (dsize) 
             port map(clk, '1', '1', ah_buf_we, ah_reg_in, ah_reg);
+    arith_buf : d_flip_flop generic map (dsize) 
+            port map(clk, '1', '1', arith_buf_we, arith_reg_in, arith_reg);
 
     alu_inst : alu_core generic map (dsize)
             port map (sel, d1, d2, d_out, c_in, n, z, c, v);
@@ -251,6 +258,17 @@ begin
                     instruction, 
                     int_d_bus, acc_out, index_bus, bal, bal, carry_in, d_out, 
                     n, z, c, v)
+
+procedure output_d_bus is
+begin
+    arith_reg_in <= d_out;
+    if (clk = '0') then
+        int_d_bus <= d_out;
+    else
+        int_d_bus <= arith_reg_in;
+    end if;
+end  procedure;
+
     begin
     if (pcl_inc_n = '0') then
         sel <= ALU_INC;
@@ -268,6 +286,7 @@ begin
         end if;
         abh <= bah;
 
+        int_d_bus <= (others => 'Z');
     elsif (pch_inc_n = '0') then
         sel <= ALU_INC;
         d1 <= bah;
@@ -279,9 +298,11 @@ begin
         abl <= bal;
         abh <= bah;
 
+        int_d_bus <= (others => 'Z');
     elsif (sph_oe_n = '0') then
         --stack operation...
         abh <= "00000001";
+        int_d_bus <= (others => 'Z');
 
         if (sp_push_n /= '0' and sp_pop_n /= '0') then
             abl <= bal;
@@ -334,51 +355,86 @@ begin
         end if;
 
     elsif (arith_en_n = '0') then
-            --instruction is aaabbbcc format.
-            if instruction (1 downto 0) = "01" then
-                if instruction (7 downto 5) = "000" then
-                    d_print("ora");
-                elsif instruction (7 downto 5) = "001" then
-                    d_print("and");
-                elsif instruction (7 downto 5) = "010" then
-                    d_print("eor");
-                elsif instruction (7 downto 5) = "011" then
-                    d_print("adc");
-                elsif instruction (7 downto 5) = "110" then
-                    d_print("cmp");
-                    --cmpare A - M.
-                    sel <= ALU_CMP;
-                    d1 <= acc_out;
-                    d2 <= int_d_bus;
-                    alu_res <= d_out;
 
-                elsif instruction (7 downto 5) = "111" then
-                    d_print("sbc");
-                end if;
-            elsif instruction (1 downto 0) = "10" then
-                if instruction (7 downto 5) = "000" then
-                    d_print("asl");
-                elsif instruction (7 downto 5) = "001" then
-                    d_print("rol");
-                elsif instruction (7 downto 5) = "010" then
-                    d_print("lsr");
-                elsif instruction (7 downto 5) = "011" then
-                    d_print("ror");
-                elsif instruction (7 downto 5) = "110" then
-                    d_print("dec");
-                elsif instruction (7 downto 5) = "111" then
-                    d_print("inc");
-                end if;
-            elsif instruction (1 downto 0) = "00" then
-                if instruction (7 downto 5) = "001" then
-                    d_print("bit");
-                elsif instruction (7 downto 5) = "110" then
-                    d_print("cpy");
-                elsif instruction (7 downto 5) = "111" then
-                    d_print("cpx");
-                end if; --if instruction (7 downto 5) = "001" then
-            end if; --if instruction (1 downto 0) = "01"
+        arith_buf_we <= '0';
+        abl <= (others => 'Z');
+        abh <= (others => 'Z');
+
+        if instruction = conv_std_logic_vector(16#ca#, dsize) then
+            d_print("dex");
+
+        elsif instruction = conv_std_logic_vector(16#88#, dsize) then
+            --d_print("dey");
+            sel <= ALU_DEC;
+            d1 <= index_bus;
+            c_in <= '0';
+
+            negative <= n;
+            zero <= z;
+            output_d_bus;
+
+        elsif instruction = conv_std_logic_vector(16#e8#, dsize) then
+            --d_print("inx");
+            sel <= ALU_INC;
+            d1 <= index_bus;
+            c_in <= '0';
+
+            negative <= n;
+            zero <= z;
+            output_d_bus;
+
+        elsif instruction = conv_std_logic_vector(16#c8#, dsize) then
+            d_print("iny");
+
+        --instruction is aaabbbcc format.
+        elsif instruction (1 downto 0) = "01" then
+            if instruction (7 downto 5) = "000" then
+                d_print("ora");
+            elsif instruction (7 downto 5) = "001" then
+                d_print("and");
+            elsif instruction (7 downto 5) = "010" then
+                d_print("eor");
+            elsif instruction (7 downto 5) = "011" then
+                d_print("adc");
+            elsif instruction (7 downto 5) = "110" then
+                d_print("cmp");
+                --cmpare A - M.
+                sel <= ALU_CMP;
+                d1 <= acc_out;
+                d2 <= int_d_bus;
+                alu_res <= d_out;
+
+            elsif instruction (7 downto 5) = "111" then
+                d_print("sbc");
+            end if;
+        elsif instruction (1 downto 0) = "10" then
+            if instruction (7 downto 5) = "000" then
+                d_print("asl");
+            elsif instruction (7 downto 5) = "001" then
+                d_print("rol");
+            elsif instruction (7 downto 5) = "010" then
+                d_print("lsr");
+            elsif instruction (7 downto 5) = "011" then
+                d_print("ror");
+            elsif instruction (7 downto 5) = "110" then
+                d_print("dec");
+            elsif instruction (7 downto 5) = "111" then
+                d_print("inc");
+            end if;
+        elsif instruction (1 downto 0) = "00" then
+            if instruction (7 downto 5) = "001" then
+                d_print("bit");
+            elsif instruction (7 downto 5) = "110" then
+                d_print("cpy");
+            elsif instruction (7 downto 5) = "111" then
+                d_print("cpx");
+            end if; --if instruction (7 downto 5) = "001" then
+        end if; --if instruction = conv_std_logic_vector(16#ca#, dsize) 
     else
+        al_buf_we <= '1';
+        ah_buf_we <= '1';
+        arith_buf_we <= '1';
+
         int_d_bus <= (others => 'Z');
         negative <= 'Z';
         zero <= 'Z';
@@ -396,47 +452,4 @@ begin
     end process;
 
 end rtl;
-
-
-----------------------------------------
----- 6502 effective address calucurator
-----------------------------------------
-library ieee;
-use ieee.std_logic_1164.all;
-use ieee.std_logic_unsigned.all;
-
-entity effective_adder is 
-    generic (   dsize : integer := 8
-            );
-    port (  
-            ea_calc_n       : in std_logic;
-            zp_n            : in std_logic;
-            pg_next_n       : in std_logic;
-            base_l          : in std_logic_vector (dsize - 1 downto 0);
-            base_h          : in std_logic_vector (dsize - 1 downto 0);
-            index           : in std_logic_vector (dsize - 1 downto 0);
-            ah_bus          : out std_logic_vector (dsize - 1 downto 0);
-            al_bus          : out std_logic_vector (dsize - 1 downto 0);
-            carry           : out std_logic
-    );
-end effective_adder;
-
-architecture rtl of effective_adder is
-
-signal adc_work : std_logic_vector (dsize downto 0);
-
-begin
-    adc_work <= ('0' & base_l) + ('0' & index);
-    carry <= adc_work(dsize) when ea_calc_n = '0' else
-            'Z';
-    --if not calc effective adder, pass through input.
-    al_bus <= adc_work(dsize - 1 downto 0) when ea_calc_n = '0' else
-            base_l;
-
-    ah_bus <= "00000000" when zp_n = '0' else
-            base_h + '1' when ea_calc_n = '0' and pg_next_n = '0' else
-            base_h;
-
-end rtl;
-
 

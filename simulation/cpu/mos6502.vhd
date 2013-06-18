@@ -60,6 +60,7 @@ component decoder
             abs_pg_next_n   : out std_logic;
             zp_n            : out std_logic;
             zp_xy_n         : out std_logic;
+            arith_en_n      : out std_logic;
             stat_dec_oe_n   : out std_logic;
             stat_bus_oe_n   : out std_logic;
             stat_set_flg_n  : out std_logic;
@@ -231,7 +232,7 @@ end component;
     signal abs_pg_next_n   : std_logic;
     signal zp_n            : std_logic;
     signal zp_xy_n         : std_logic;
-    signal arith_en_n : std_logic;
+    signal arith_en_n      : std_logic;
                     
     signal alu_n : std_logic;
     signal alu_z : std_logic;
@@ -350,6 +351,7 @@ begin
                     abs_pg_next_n,
                     zp_n,
                     zp_xy_n,
+                    arith_en_n,
                     stat_dec_oe_n, 
                     stat_bus_oe_n, 
                     stat_set_flg_n, 
