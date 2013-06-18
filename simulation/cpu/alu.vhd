@@ -307,6 +307,7 @@ end  procedure;
         if (sp_push_n /= '0' and sp_pop_n /= '0') then
             abl <= bal;
         elsif (sp_pop_n = '0') then
+            --case pop
             sel <= ALU_INC;
             d1 <= bal;
             alu_res <= d_out;
@@ -324,6 +325,8 @@ end  procedure;
             d1 <= bal;
             alu_res <= d_out;
 
+            al_buf_we <= '0';
+            al_reg_in <= bal;
             if (clk = '0') then
                 abl <= bal;
             else

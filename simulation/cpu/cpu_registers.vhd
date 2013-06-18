@@ -333,15 +333,26 @@ component d_flip_flop
         );
 end component;
 
+component tri_state_buffer
+    generic (
+            dsize : integer := 8
+            );
+    port (  
+            oe_n    : in std_logic;
+            d       : in std_logic_vector (dsize - 1 downto 0);
+            q       : out std_logic_vector (dsize - 1 downto 0)
+        );
+end component;
+
 signal we_n : std_logic;
 signal d : std_logic_vector (dsize - 1 downto 0);
 signal status_val : std_logic_vector (dsize - 1 downto 0);
 
 begin
-    dec_val <= status_val when dec_oe_n = '0' else
-                (others => 'Z');
-    int_dbus <= status_val when bus_oe_n = '0' else
-                (others => 'Z');
+    dec_tsb : tri_state_buffer generic map (dsize) 
+                    port map(dec_oe_n, status_val, dec_val);
+    dbus_tsb : tri_state_buffer generic map (dsize) 
+                    port map(bus_oe_n, status_val, int_dbus);
 
     we_n <= set_flg_n and load_bus_all_n and 
                 load_bus_nz_n and set_from_alu_n;

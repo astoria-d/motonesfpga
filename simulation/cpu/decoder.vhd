@@ -164,17 +164,29 @@ begin
     cmd(0) <= val;
 end;
 
-procedure fetch_inst is
+procedure fetch_next is
 begin
-    --fetch opcode and phc increment.
-    ad_oe_n <= '0';
+    pcl_inc_n <= '0';
     back_oe(pcl_cmd, '0');
     back_oe(pch_cmd, '0');
     back_we(pcl_cmd, '0');
     back_we(pch_cmd, '1');
-    front_we(pcl_cmd, '1');
-    front_we(pch_cmd, '1');
+end procedure;
 
+procedure fetch_stop is
+begin
+    pcl_inc_n <= '1';
+    back_oe(pcl_cmd, '1');
+    back_oe(pch_cmd, '1');
+    back_we(pcl_cmd, '1');
+end procedure;
+
+procedure fetch_inst is
+begin
+    --fetch opcode and phc increment.
+    ad_oe_n <= '0';
+    pcl_cmd <= "1100";
+    pch_cmd <= "1101";
     inst_we_n <= '0';
     pcl_inc_n <= '0';
     r_nw <= '1';
@@ -215,20 +227,14 @@ end;
 ---common routine for single byte instruction.
 procedure single_inst is
 begin
-    back_oe(pcl_cmd, '1');
-    back_oe(pch_cmd, '1');
-    pcl_inc_n <= '1';
+    fetch_stop;
     next_cycle <= T0;
 end  procedure;
 
 procedure fetch_imm is
 begin
     d_print("immediate");
-    pcl_inc_n <= '0';
-    back_oe(pcl_cmd, '0');
-    back_oe(pch_cmd, '0');
-    back_we(pcl_cmd, '0');
-    back_we(pch_cmd, '1');
+    fetch_next;
     --send data from data bus buffer.
     --receiver is instruction dependent.
     dbuf_int_oe_n <= '0';
@@ -278,10 +284,7 @@ procedure fetch_low is
 begin
     d_print("fetch low 2");
     --fetch next opcode (abs low).
-    back_oe(pcl_cmd, '0');
-    back_we(pcl_cmd, '0');
-    back_oe(pch_cmd, '0');
-    pcl_inc_n <= '0';
+    fetch_next;
     --latch abs low data.
     dbuf_int_oe_n <= '0';
     dl_al_we_n <= '0';
@@ -294,11 +297,7 @@ begin
     dl_al_we_n <= '1';
 
     --latch abs hi data.
-    pcl_inc_n <= '0';
-    back_oe(pcl_cmd, '0');
-    back_we(pcl_cmd, '0');
-    back_oe(pch_cmd, '0');
-
+    fetch_next;
     dbuf_int_oe_n <= '0';
     dl_ah_we_n <= '0';
     next_cycle <= T3;
@@ -307,10 +306,7 @@ end  procedure;
 procedure abs_latch_out is
 begin
     --d_print("abs 4");
-    pcl_inc_n <= '1';
-    back_oe(pcl_cmd, '1');
-    back_we(pcl_cmd, '1');
-    back_oe(pch_cmd, '1');
+    fetch_stop;
     dl_ah_we_n <= '1';
 
     --latch > al/ah.
@@ -388,8 +384,55 @@ end  procedure;
 
 
 -- A.5.8 branch operations
+
+procedure read_status is
+begin
+    status_reg <= (others => 'Z');
+    stat_dec_oe_n <= '0';
+end  procedure;
+
 procedure a58_branch (int_flg : in integer; br_cond : in std_logic) is
 begin
+    if exec_cycle = T1 then
+        read_status;
+        fetch_next;
+        if status_reg(int_flg) = br_cond then
+            d_print("get rel");
+
+            dbuf_int_oe_n <= '0';
+            --latch rel value.
+            --pcl_rel_we_n <= '0';
+            next_cycle <= T2;
+        else
+            d_print("no branch");
+            next_cycle <= T0;
+        end if;
+    elsif exec_cycle = T2 then
+        d_print("rel ea");
+        fetch_stop;
+--        pcl_a_oe_n <= '0';
+--        pch_a_oe_n <= '0';
+--        dbuf_int_oe_n <= '1';
+--        pcl_rel_we_n <= '1';
+--
+--        --calcurate relative addr.
+--        pcl_rel_calc_n <= '0';
+--        next_cycle <= T3;
+--    elsif exec_cycle = T3 then
+--        --pcl_a_oe_n <= '0';
+--        --pch_a_oe_n <= '0';
+--        pcl_rel_calc_n <= '1';
+--
+--        if rel_pg_crs_n = '0' then
+--        --page crossed. start from fetch.
+--            next_cycle <= T0;
+--        else
+--            --no page boundary. 
+--            --fetch cycle is done.
+--            fetch_inst;
+--            next_cycle <= T1;
+--        end if;
+    end if;
 end  procedure;
 
 -------------------------------------------------------------
@@ -1072,20 +1115,14 @@ end  procedure;
                     if exec_cycle = T1 then
                         d_print("jsr abs 2");
                         --fetch opcode.
-                        back_oe(pcl_cmd, '0');
-                        back_oe(pch_cmd, '0');
-                        back_we(pcl_cmd, '0');
-                        pcl_inc_n <= '0';
+                        fetch_next;
                         dbuf_int_oe_n <= '0';
                         --latch adl
                         dl_al_we_n <= '0';
                         next_cycle <= T2;
                     elsif exec_cycle = T2 then
                         d_print("jsr 3");
-                        back_oe(pcl_cmd, '1');
-                        back_oe(pch_cmd, '1');
-                        back_we(pcl_cmd, '1');
-                        pcl_inc_n <= '1';
+                        fetch_stop;
                         dbuf_int_oe_n <= '1';
                         dl_al_we_n <= '1';
 
@@ -1163,10 +1200,7 @@ end  procedure;
                     if exec_cycle = T1 then
                         d_print("jmp 2");
                         --fetch next opcode (abs low).
-                        back_oe(pcl_cmd, '0');
-                        back_oe(pch_cmd, '0');
-                        back_we(pcl_cmd, '0');
-                        pcl_inc_n <= '0';
+                        fetch_next;
 
                         --latch abs low data.
                         dbuf_int_oe_n <= '0';
@@ -1177,10 +1211,7 @@ end  procedure;
                         dl_al_we_n <= '1';
 
                         --fetch abs hi
-                        back_oe(pcl_cmd, '0');
-                        back_oe(pch_cmd, '0');
-                        back_we(pcl_cmd, '0');
-                        pcl_inc_n <= '0';
+                        fetch_next;
 
                         --latch  in dlh
                         dbuf_int_oe_n <= '0';
@@ -1216,9 +1247,7 @@ end  procedure;
                 elsif instruction = conv_std_logic_vector(16#60#, dsize) then
                     if exec_cycle = T1 then
                         d_print("rts 2");
-                        back_oe(pcl_cmd, '1');
-                        back_oe(pch_cmd, '1');
-                        pcl_inc_n <= '1';
+                        fetch_stop;
 
                         --pop stack (decrement only)
                         back_oe(sp_cmd, '0');
@@ -1270,10 +1299,7 @@ end  procedure;
                         d_print("rts 6");
 
                         --increment pc.
-                        pcl_inc_n <= '0';
-                        back_we(pcl_cmd, '0');
-                        back_oe(pcl_cmd, '0');
-                        back_oe(pch_cmd, '0');
+                        fetch_next;
                         next_cycle <= T0;
                     end if; --if exec_cycle = T1 then
 
