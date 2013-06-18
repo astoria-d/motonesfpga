@@ -336,7 +336,10 @@ begin
 
         abl <= bal;
         abh <= bah;
-        alu_res <= (others => 'Z');
+
+        ----alu_res is always bal for jsr instruction....
+        -----TODO must check later if it's ok.
+        alu_res <= bal;
         pcl_inc_carry <= '0';
     end if; --if (pcl_inc_n = '0') then
     end process;

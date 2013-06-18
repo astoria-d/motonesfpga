@@ -165,6 +165,8 @@ begin
     back_oe(pch_cmd, '0');
     back_we(pcl_cmd, '0');
     back_we(pch_cmd, '1');
+    front_we(pcl_cmd, '1');
+    front_we(pch_cmd, '1');
 
     inst_we_n <= '0';
     pcl_inc_n <= '0';
@@ -990,63 +992,53 @@ end  procedure;
                         r_nw <= '0';
                         next_cycle <= T3;
                     elsif exec_cycle = T3 then
---                        sp_push_n <= '1';
---                        sph_oe_n <= '1';
---                        front_oe(pch_cmd, '1');
---                        back_oe(sp_cmd, '1');
---                        back_we(sp_cmd, '1');
---                        r_nw <= '1';
---
---                        back_oe(pcl_cmd, '0');
---                        back_oe(pch_cmd, '0');
---                        back_we(pcl_cmd, '0');
---                        back_we(pch_cmd, '1');
---                        pcl_inc_n <= '0';
---
+                        d_print("jsr 4");
+                        front_oe(pch_cmd, '1');
 
+                       --push return addr low into stack.
+                        sp_push_n <= '0';
+                        sph_oe_n <= '0';
+                        front_oe(pcl_cmd, '0');
+                        back_oe(sp_cmd, '0');
+                        back_we(sp_cmd, '0');
+                        r_nw <= '0';
 
---                        d_print("jsr 4");
---                        pch_d_oe_n <= '1';
---
---                       --push return addr low into stack.
---                        sp_push_n <= '0';
---                        pcl_d_oe_n <= '0';
---                        sp_int_a_oe_n <= '0';
---                        r_nw <= '0';
---
---                        next_cycle <= T4;
---                    elsif exec_cycle = T4 then
---                        d_print("jsr 5");
---                        sp_push_n <= '1';
---                        pcl_d_oe_n <= '1';
---                        sp_int_a_oe_n <= '1';
---                        r_nw <= '1';
---
---                        --fetch last op.
---                        pcl_a_oe_n <= '0';
---                        pch_a_oe_n <= '0';
---                        dbuf_int_oe_n <= '0';
---                        dl_ah_we_n <= '0';
---
---                        next_cycle <= T5;
---                    elsif exec_cycle = T5 then
---                        d_print("jsr 6");
---
---                        pcl_a_oe_n <= '1';
---                        pch_a_oe_n <= '1';
---                        dbuf_int_oe_n <= '1';
---                        dl_ah_we_n <= '1';
---
---                        --load/output  pch
---                        ad_oe_n <= '1';
---                        dl_ah_oe_n <= '0';
---                        pch_a_we_n <= '0';
---
---                        --load pcl.
---                        dl_al_oe_n <= '0';
---                        pcl_a_we_n <= '0';
---
---                        next_cycle <= T0;
+                        next_cycle <= T4;
+                    elsif exec_cycle = T4 then
+                        d_print("jsr 5");
+                        sp_push_n <= '1';
+                        sph_oe_n <= '1';
+                        front_oe(pcl_cmd, '1');
+                        back_oe(sp_cmd, '1');
+                        back_we(sp_cmd, '1');
+                        r_nw <= '1';
+
+                        --fetch last op.
+                        back_oe(pch_cmd, '0');
+                        back_oe(pcl_cmd, '0');
+                        dbuf_int_oe_n <= '0';
+                        dl_ah_we_n <= '0';
+
+                        next_cycle <= T5;
+                    elsif exec_cycle = T5 then
+                        d_print("jsr 6");
+
+                        back_oe(pch_cmd, '1');
+                        back_oe(pcl_cmd, '1');
+                        dbuf_int_oe_n <= '1';
+                        dl_ah_we_n <= '1';
+
+                        --load/output  pch
+                        ad_oe_n <= '1';
+                        dl_ah_oe_n <= '0';
+                        dl_dh_oe_n <= '0';
+                        front_we(pch_cmd, '0');
+
+                        --load pcl.
+                        dl_al_oe_n <= '0';
+                        back_we(pcl_cmd, '0');
+
+                        next_cycle <= T0;
                     end if; --if exec_cycle = T1 then
 
                 -- A.5.4 break
