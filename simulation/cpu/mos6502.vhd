@@ -51,6 +51,7 @@ component decoder
             sp_cmd          : out std_logic_vector(3 downto 0);
             sph_oe_n        : out std_logic;
             sp_push_n       : out std_logic;
+            sp_pop_n        : out std_logic;
             acc_cmd         : out std_logic_vector(3 downto 0);
             x_cmd           : out std_logic_vector(3 downto 0);
             y_cmd           : out std_logic_vector(3 downto 0);
@@ -75,6 +76,7 @@ component alu
             pch_inc_n       : in std_logic;
             sph_oe_n        : in std_logic;
             sp_push_n       : in std_logic;
+            sp_pop_n        : in std_logic;
             abs_ea_n        : in std_logic;
             zp_ea_n         : in std_logic;
             arith_en_n      : in std_logic;
@@ -235,6 +237,7 @@ end component;
     signal y_cmd : std_logic_vector(3 downto 0);
     signal sph_oe_n : std_logic;
     signal sp_push_n : std_logic;
+    signal sp_pop_n  : std_logic;
 
     ---status register
     signal stat_dec_oe_n : std_logic;
@@ -327,6 +330,7 @@ begin
                     sp_cmd,
                     sph_oe_n,
                     sp_push_n,
+                    sp_pop_n,
                     acc_cmd,
                     x_cmd,
                     y_cmd,
@@ -347,6 +351,7 @@ begin
                     pch_inc_n,
                     sph_oe_n,
                     sp_push_n,
+                    sp_pop_n,
                     abs_ea_n,
                     zp_ea_n,
                     arith_en_n,

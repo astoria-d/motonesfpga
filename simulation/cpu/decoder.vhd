@@ -30,6 +30,7 @@ entity decoder is
             sp_cmd          : out std_logic_vector(3 downto 0);
             sph_oe_n        : out std_logic;
             sp_push_n       : out std_logic;
+            sp_pop_n        : out std_logic;
             acc_cmd         : out std_logic_vector(3 downto 0);
             x_cmd           : out std_logic_vector(3 downto 0);
             y_cmd           : out std_logic_vector(3 downto 0);
@@ -183,6 +184,7 @@ begin
     sp_cmd <= "1111";
     sph_oe_n <= '1';
     sp_push_n <= '1';
+    sp_pop_n <= '1';
     acc_cmd <= "1111";
     x_cmd <= "1111";
     y_cmd <= "1111";
@@ -1108,6 +1110,68 @@ end  procedure;
                 -- A.5.7 return from soubroutine
                 ----------------------------------------
                 elsif instruction = conv_std_logic_vector(16#60#, dsize) then
+                    if exec_cycle = T1 then
+                        d_print("rts 2");
+                        back_oe(pcl_cmd, '1');
+                        back_oe(pch_cmd, '1');
+                        pcl_inc_n <= '1';
+
+                        --pop stack (decrement only)
+                        back_oe(sp_cmd, '0');
+                        back_we(sp_cmd, '0');
+                        sp_pop_n <= '0';
+                        sph_oe_n <= '0';
+
+                        next_cycle <= T2;
+                    elsif exec_cycle = T2 then
+                        d_print("rts 3");
+
+                        --pop pcl
+                        back_oe(sp_cmd, '0');
+                        back_we(sp_cmd, '0');
+                        sp_pop_n <= '0';
+                        sph_oe_n <= '0';
+
+                        --load lo addr.
+                        dbuf_int_oe_n <= '0';
+                        front_we(pcl_cmd, '0');
+
+                        next_cycle <= T3;
+                    elsif exec_cycle = T3 then
+                        d_print("rts 4");
+                        --stack decrement stop.
+                        back_we(sp_cmd, '1');
+                        sp_pop_n <= '1';
+                        front_we(pcl_cmd, '1');
+
+                        --pop pch
+                        back_oe(sp_cmd, '0');
+                        sph_oe_n <= '0';
+                        --load hi addr.
+                        dbuf_int_oe_n <= '0';
+                        front_we(pch_cmd, '0');
+
+                        next_cycle <= T4;
+                    elsif exec_cycle = T4 then
+                        d_print("rts 5");
+                        back_oe(sp_cmd, '1');
+                        sph_oe_n <= '1';
+                        --load hi addr.
+                        dbuf_int_oe_n <= '1';
+                        front_we(pch_cmd, '1');
+                        --empty cycle.
+                        --complying h/w manual...
+                        next_cycle <= T5;
+                    elsif exec_cycle = T5 then
+                        d_print("rts 6");
+
+                        --increment pc.
+                        pcl_inc_n <= '0';
+                        back_we(pcl_cmd, '0');
+                        back_oe(pcl_cmd, '0');
+                        back_oe(pch_cmd, '0');
+                        next_cycle <= T0;
+                    end if; --if exec_cycle = T1 then
 
                 ----------------------------------------
                 -- A.5.8 branch operations
@@ -1161,6 +1225,7 @@ end  procedure;
                 sp_cmd <= "1111";
                 sph_oe_n <= '1';
                 sp_push_n <= '1';
+                sp_pop_n <= '1';
                 acc_cmd <= "1111";
                 x_cmd <= "1111";
                 y_cmd <= "1111";

@@ -137,6 +137,7 @@ entity alu is
             pch_inc_n       : in std_logic;
             sph_oe_n        : in std_logic;
             sp_push_n       : in std_logic;
+            sp_pop_n        : in std_logic;
             abs_ea_n        : in std_logic;
             zp_ea_n         : in std_logic;
             arith_en_n      : in std_logic;
@@ -269,9 +270,20 @@ begin
         --stack operation...
         abh <= "00000001";
 
-        if (sp_push_n /= '0') then
+        if (sp_push_n /= '0' and sp_pop_n /= '0') then
             abl <= bal;
+        elsif (sp_pop_n = '0') then
+            sel <= ALU_INC;
+            d1 <= bal;
+            alu_res <= d_out;
+
+            if (clk = '0') then
+                abl <= bal;
+            else
+                abl <= bal_reg;
+            end if;
         else
+            ---case push
             sel <= ALU_DEC;
             d1 <= bal;
             alu_res <= d_out;
