@@ -265,15 +265,45 @@ end  procedure;
 procedure fetch_low is
 begin
     d_print("fetch low 2");
+    --fetch next opcode (abs low).
+    back_oe(pcl_cmd, '0');
+    back_we(pcl_cmd, '0');
+    back_oe(pch_cmd, '0');
+    pcl_inc_n <= '0';
+    --latch abs low data.
+    dbuf_int_oe_n <= '0';
+    dl_al_we_n <= '0';
+    next_cycle <= T2;
 end  procedure;
 
 procedure abs_fetch_high is
 begin
     d_print("abs (xy) 3");
+    dl_al_we_n <= '1';
+
+    --latch abs hi data.
+    pcl_inc_n <= '0';
+    back_oe(pcl_cmd, '0');
+    back_we(pcl_cmd, '0');
+    back_oe(pch_cmd, '0');
+
+    dbuf_int_oe_n <= '0';
+    dl_ah_we_n <= '0';
+    next_cycle <= T3;
 end  procedure;
 
 procedure abs_latch_out is
 begin
+    --d_print("abs 4");
+    pcl_inc_n <= '1';
+    back_oe(pcl_cmd, '1');
+    back_we(pcl_cmd, '1');
+    back_oe(pch_cmd, '1');
+    dl_ah_we_n <= '1';
+
+    --latch > al/ah.
+    dl_al_oe_n <= '0';
+    dl_ah_oe_n <= '0';
 end  procedure;
 
 procedure ea_x_out is
@@ -299,6 +329,16 @@ end  procedure;
 
 procedure a3_abs is
 begin
+    if exec_cycle = T1 then
+        fetch_low;
+    elsif exec_cycle = T2 then
+        abs_fetch_high;
+    elsif exec_cycle = T3 then
+        abs_latch_out;
+        dbuf_int_oe_n <= '1';
+        r_nw <= '0';
+        next_cycle <= T0;
+    end if;
 end  procedure;
 
 
@@ -627,6 +667,7 @@ end  procedure;
                     --imm
                     d_print("lda");
                     fetch_imm;
+                    front_we(acc_cmd, '0');
                     set_nz_from_bus;
 
                 elsif instruction  = conv_std_logic_vector(16#a5#, dsize) then
@@ -695,6 +736,7 @@ end  procedure;
                     d_print("ldy");
                     fetch_imm;
                     set_nz_from_bus;
+                    front_we(y_cmd, '0');
 
                 elsif instruction  = conv_std_logic_vector(16#a4#, dsize) then
                     --zp
@@ -797,6 +839,7 @@ end  procedure;
                     d_print("sta");
                     a3_abs;
                     if exec_cycle = T3 then
+                        front_oe(acc_cmd, '0');
                     end if;
 
                 elsif instruction  = conv_std_logic_vector(16#9d#, dsize) then
