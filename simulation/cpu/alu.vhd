@@ -19,8 +19,8 @@ entity alu is
             pg_next_n       : in std_logic;
             zp_n            : in std_logic;
             zp_xy_n         : in std_logic;
-            arith_en_n      : in std_logic;
             rel_calc_n      : in std_logic;
+            arith_en_n      : in std_logic;
             instruction     : in std_logic_vector (dsize - 1 downto 0);
             int_d_bus       : inout std_logic_vector (dsize - 1 downto 0);
             acc_out         : in std_logic_vector (dsize - 1 downto 0);

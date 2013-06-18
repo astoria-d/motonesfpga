@@ -60,8 +60,8 @@ component decoder
             pg_next_n       : out std_logic;
             zp_n            : out std_logic;
             zp_xy_n         : out std_logic;
-            arith_en_n      : out std_logic;
             rel_calc_n      : out std_logic;
+            arith_en_n      : out std_logic;
             stat_dec_oe_n   : out std_logic;
             stat_bus_oe_n   : out std_logic;
             stat_set_flg_n  : out std_logic;
@@ -88,8 +88,8 @@ component alu
             pg_next_n       : in std_logic;
             zp_n            : in std_logic;
             zp_xy_n         : in std_logic;
-            arith_en_n      : in std_logic;
             rel_calc_n      : in std_logic;
+            arith_en_n      : in std_logic;
             instruction     : in std_logic_vector (dsize - 1 downto 0);
             int_d_bus       : inout std_logic_vector (dsize - 1 downto 0);
             acc_out         : in std_logic_vector (dsize - 1 downto 0);
@@ -234,8 +234,8 @@ end component;
     signal pg_next_n       : std_logic;
     signal zp_n            : std_logic;
     signal zp_xy_n         : std_logic;
-    signal arith_en_n      : std_logic;
     signal rel_calc_n      : std_logic;
+    signal arith_en_n      : std_logic;
                     
     signal alu_n : std_logic;
     signal alu_z : std_logic;
@@ -355,8 +355,8 @@ begin
                     pg_next_n,
                     zp_n,
                     zp_xy_n,
-                    arith_en_n,
                     rel_calc_n,
+                    arith_en_n,
                     stat_dec_oe_n, 
                     stat_bus_oe_n, 
                     stat_set_flg_n, 
@@ -379,8 +379,8 @@ begin
                     pg_next_n,
                     zp_n,
                     zp_xy_n,
-                    arith_en_n,
                     rel_calc_n,
+                    arith_en_n,
                     instruction,
                     d_bus,
                     acc_out,

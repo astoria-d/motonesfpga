@@ -39,8 +39,8 @@ entity decoder is
             pg_next_n       : out std_logic;
             zp_n            : out std_logic;
             zp_xy_n         : out std_logic;
-            arith_en_n      : out std_logic;
             rel_calc_n      : out std_logic;
+            arith_en_n      : out std_logic;
             stat_dec_oe_n   : out std_logic;
             stat_bus_oe_n   : out std_logic;
             stat_set_flg_n  : out std_logic;
@@ -218,8 +218,8 @@ begin
     pg_next_n <= '1';
     zp_n <= '1';
     zp_xy_n <= '1';
-    arith_en_n <= '1';
     rel_calc_n <= '1';
+    arith_en_n <= '1';
 
     read_status;
     stat_bus_oe_n <= '1';
@@ -1227,22 +1227,23 @@ end  procedure;
                         --latch  in dlh
                         dbuf_int_oe_n <= '0';
                         dl_ah_we_n <= '0';
+                        ---load pch.
+                        front_we(pch_cmd, '0');
+
                         next_cycle <= T3;
                     elsif exec_cycle = T3 then
                         d_print("jmp done > next fetch");
                         back_oe(pcl_cmd, '1');
-                        back_oe(pch_cmd, '1');
+                        front_we(pch_cmd, '1');
                         dbuf_int_oe_n <= '1';
                         dl_ah_we_n <= '1';
 
-                        --latch > al/ah.
+                        --latch > al.
                         dl_al_oe_n <= '0';
-                        dl_ah_oe_n <= '0';
-                        dl_dh_oe_n <= '0';
-
-                        --fetch inst and goto decode next.
                         back_we(pcl_cmd, '0');
-                        front_we(pch_cmd, '0');
+                        
+                        --fetch inst and goto decode next.
+                        back_oe(pch_cmd, '0');
                         inst_we_n <= '0';
                         pcl_inc_n <= '0';
                         next_cycle <= T1;
@@ -1375,8 +1376,8 @@ end  procedure;
                 pg_next_n <= '1';
                 zp_n <= '1';
                 zp_xy_n <= '1';
-                arith_en_n <= '1';
                 rel_calc_n <= '1';
+                arith_en_n <= '1';
 
                 stat_dec_oe_n <= '1';
                 stat_bus_oe_n <= '1';
