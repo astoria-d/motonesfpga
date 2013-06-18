@@ -138,8 +138,10 @@ entity alu is
             sph_oe_n        : in std_logic;
             sp_push_n       : in std_logic;
             sp_pop_n        : in std_logic;
-            abs_ea_n        : in std_logic;
-            zp_ea_n         : in std_logic;
+            abs_xy_n        : in std_logic;
+            abs_pg_next_n   : in std_logic;
+            zp_n            : in std_logic;
+            zp_xy_n         : in std_logic;
             arith_en_n      : in std_logic;
             instruction     : in std_logic_vector (dsize - 1 downto 0);
             int_d_bus       : inout std_logic_vector (dsize - 1 downto 0);
@@ -151,6 +153,7 @@ entity alu is
             abl             : out std_logic_vector (dsize - 1 downto 0);
             abh             : out std_logic_vector (dsize - 1 downto 0);
             pcl_inc_carry   : out std_logic;
+            ea_carry        : out std_logic;
             carry_in        : in std_logic;
             negative        : out std_logic;
             zero            : out std_logic;
@@ -219,24 +222,32 @@ signal d1 : std_logic_vector (dsize - 1 downto 0);
 signal d2 : std_logic_vector (dsize - 1 downto 0);
 signal d_out : std_logic_vector (dsize - 1 downto 0);
 
-signal bal_reg : std_logic_vector (dsize - 1 downto 0);
-signal bah_reg : std_logic_vector (dsize - 1 downto 0);
+signal al_reg_in : std_logic_vector (dsize - 1 downto 0);
+signal ah_reg_in : std_logic_vector (dsize - 1 downto 0);
+signal al_reg : std_logic_vector (dsize - 1 downto 0);
+signal ah_reg : std_logic_vector (dsize - 1 downto 0);
 
 signal n : std_logic;
 signal z : std_logic;
+signal c_in : std_logic;
 signal c : std_logic;
 signal v : std_logic;
+
+signal al_buf_we : std_logic;
+signal ah_buf_we : std_logic;
+
 begin
 
-    bal_inst : d_flip_flop generic map (dsize) 
-            port map(clk, '1', '1', '0', bal, bal_reg);
-    bah_inst : d_flip_flop generic map (dsize) 
-            port map(clk, '1', '1', '0', bah, bah_reg);
+    al_buf : d_flip_flop generic map (dsize) 
+            port map(clk, '1', '1', al_buf_we, al_reg_in, al_reg);
+    ah_buf : d_flip_flop generic map (dsize) 
+            port map(clk, '1', '1', ah_buf_we, ah_reg_in, ah_reg);
 
     alu_inst : alu_core generic map (dsize)
-            port map (sel, d1, d2, d_out, carry_in, n, z, c, v);
+            port map (sel, d1, d2, d_out, c_in, n, z, c, v);
 
-    alu_p : process (clk, pcl_inc_n, pch_inc_n, abs_ea_n, zp_ea_n, arith_en_n, 
+    alu_p : process (clk, pcl_inc_n, pch_inc_n, sph_oe_n, sp_push_n, sp_pop_n,
+                    abs_xy_n, abs_pg_next_n, zp_n, zp_xy_n, arith_en_n,
                     instruction, 
                     int_d_bus, acc_out, index_bus, bal, bal, carry_in, d_out, 
                     n, z, c, v)
@@ -248,10 +259,12 @@ begin
         pcl_inc_carry <= c;
 
         --keep the value in the cycle
+        al_buf_we <= '0';
+        al_reg_in <= bal;
         if (clk = '0') then
             abl <= bal;
         else
-            abl <= bal_reg;
+            abl <= al_reg;
         end if;
         abh <= bah;
 
@@ -277,10 +290,12 @@ begin
             d1 <= bal;
             alu_res <= d_out;
 
+            al_buf_we <= '0';
+            al_reg_in <= bal;
             if (clk = '0') then
                 abl <= bal;
             else
-                abl <= bal_reg;
+                abl <= al_reg;
             end if;
         else
             ---case push
@@ -291,9 +306,33 @@ begin
             if (clk = '0') then
                 abl <= bal;
             else
-                abl <= bal_reg;
+                abl <= al_reg;
             end if;
         end if;
+    elsif (abs_xy_n = '0') then
+        if (abs_pg_next_n = '0') then
+            sel <= ALU_INC;
+            d1 <= bah;
+            ea_carry <= '0';
+
+            al_buf_we <= '1';
+            abh <= d_out;
+            ---al is in the al_reg.
+            abl <= al_reg;
+        else
+            sel <= ALU_ADC;
+            d1 <= bal;
+            d2 <= index_bus;
+            c_in <= '0';
+            ea_carry <= c;
+
+            ---keep al for page crossed case
+            al_buf_we <= '0';
+            al_reg_in <= d_out;
+            abh <= bah;
+            abl <= d_out;
+        end if;
+
     elsif (arith_en_n = '0') then
             --instruction is aaabbbcc format.
             if instruction (1 downto 0) = "01" then

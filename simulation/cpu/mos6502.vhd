@@ -55,6 +55,11 @@ component decoder
             acc_cmd         : out std_logic_vector(3 downto 0);
             x_cmd           : out std_logic_vector(3 downto 0);
             y_cmd           : out std_logic_vector(3 downto 0);
+            abs_xy_n        : out std_logic;
+            ea_carry        : in  std_logic;
+            abs_pg_next_n   : out std_logic;
+            zp_n            : out std_logic;
+            zp_xy_n         : out std_logic;
             stat_dec_oe_n   : out std_logic;
             stat_bus_oe_n   : out std_logic;
             stat_set_flg_n  : out std_logic;
@@ -77,8 +82,10 @@ component alu
             sph_oe_n        : in std_logic;
             sp_push_n       : in std_logic;
             sp_pop_n        : in std_logic;
-            abs_ea_n        : in std_logic;
-            zp_ea_n         : in std_logic;
+            abs_xy_n        : in std_logic;
+            abs_pg_next_n   : in std_logic;
+            zp_n            : in std_logic;
+            zp_xy_n         : in std_logic;
             arith_en_n      : in std_logic;
             instruction     : in std_logic_vector (dsize - 1 downto 0);
             int_d_bus       : inout std_logic_vector (dsize - 1 downto 0);
@@ -90,6 +97,7 @@ component alu
             abl             : out std_logic_vector (dsize - 1 downto 0);
             abh             : out std_logic_vector (dsize - 1 downto 0);
             pcl_inc_carry   : out std_logic;
+            ea_carry        : out std_logic;
             carry_in        : in std_logic;
             negative        : out std_logic;
             zero            : out std_logic;
@@ -218,8 +226,11 @@ end component;
     signal pcl_inc_n : std_logic;
     signal pch_inc_n : std_logic;
     signal pcl_inc_carry : std_logic_vector(0 downto 0);
-    signal abs_ea_n : std_logic;
-    signal zp_ea_n : std_logic;
+    signal abs_xy_n        : std_logic;
+    signal ea_carry        : std_logic;
+    signal abs_pg_next_n   : std_logic;
+    signal zp_n            : std_logic;
+    signal zp_xy_n         : std_logic;
     signal arith_en_n : std_logic;
                     
     signal alu_n : std_logic;
@@ -334,6 +345,11 @@ begin
                     acc_cmd,
                     x_cmd,
                     y_cmd,
+                    abs_xy_n,
+                    ea_carry,
+                    abs_pg_next_n,
+                    zp_n,
+                    zp_xy_n,
                     stat_dec_oe_n, 
                     stat_bus_oe_n, 
                     stat_set_flg_n, 
@@ -352,8 +368,10 @@ begin
                     sph_oe_n,
                     sp_push_n,
                     sp_pop_n,
-                    abs_ea_n,
-                    zp_ea_n,
+                    abs_xy_n,
+                    abs_pg_next_n,
+                    zp_n,
+                    zp_xy_n,
                     arith_en_n,
                     instruction,
                     d_bus,
@@ -365,6 +383,7 @@ begin
                     abl,
                     abh,
                     pcl_inc_carry(0),
+                    ea_carry,
                     alu_c_in,
                     alu_n,
                     alu_z,

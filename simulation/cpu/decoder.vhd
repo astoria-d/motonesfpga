@@ -34,6 +34,11 @@ entity decoder is
             acc_cmd         : out std_logic_vector(3 downto 0);
             x_cmd           : out std_logic_vector(3 downto 0);
             y_cmd           : out std_logic_vector(3 downto 0);
+            abs_xy_n        : out std_logic;
+            ea_carry        : in  std_logic;
+            abs_pg_next_n   : out std_logic;
+            zp_n            : out std_logic;
+            zp_xy_n         : out std_logic;
             stat_dec_oe_n   : out std_logic;
             stat_bus_oe_n   : out std_logic;
             stat_set_flg_n  : out std_logic;
@@ -189,6 +194,11 @@ begin
     x_cmd <= "1111";
     y_cmd <= "1111";
 
+    abs_xy_n <= '1';
+    abs_pg_next_n <= '1';
+    zp_n <= '1';
+    zp_xy_n <= '1';
+
     stat_dec_oe_n <= '1';
     stat_bus_oe_n <= '1';
     stat_set_flg_n <= '1';
@@ -309,6 +319,10 @@ end  procedure;
 procedure ea_x_out is
 begin
     -----calucurate and output effective addr
+    back_oe(x_cmd, '0');
+    dl_al_oe_n <= '0';
+    dl_ah_oe_n <= '0';
+    abs_xy_n <= '0';
 end  procedure;
 
 --A.2. internal execution on memory data
@@ -318,6 +332,35 @@ end  procedure;
 
 procedure a2_absx is
 begin
+    if exec_cycle = T1 then
+        fetch_low;
+    elsif exec_cycle = T2 then
+        abs_fetch_high;
+    elsif exec_cycle = T3 then
+        --ea calc & lda
+        abs_latch_out;
+        ea_x_out;
+        dbuf_int_oe_n <= '0';
+        --instruction specific operation wriiten in the caller position.
+        next_cycle <= T4;
+    elsif exec_cycle = T4 then
+        if ea_carry = '1' then
+            --case page boundary crossed.
+            d_print("absx 5 (page boudary crossed.)");
+            abs_latch_out;
+            ea_x_out;
+            dbuf_int_oe_n <= '0';
+            --next page.
+            abs_pg_next_n <= '0';
+            --redo inst.
+            next_cycle <= T0;
+        else
+            --case page boundary not crossed. do the fetch op.
+            d_print("absx 5 (fetch)");
+            fetch_inst;
+            next_cycle <= T1;
+        end if;
+    end if;
 end  procedure;
 
 
@@ -692,8 +735,14 @@ end  procedure;
                     a2_absx;
                     if exec_cycle = T3 then
                         --lda.
+                        front_we(acc_cmd, '0');
                         set_nz_from_bus;
                     elsif exec_cycle = T4 then
+                        if ea_carry = '1' then
+                            --redo lda
+                            front_we(acc_cmd, '0');
+                            set_nz_from_bus;
+                        end if;
                     end if;
 
                 elsif instruction  = conv_std_logic_vector(16#b9#, dsize) then
@@ -1272,6 +1321,11 @@ end  procedure;
                 acc_cmd <= "1111";
                 x_cmd <= "1111";
                 y_cmd <= "1111";
+
+                abs_xy_n <= '1';
+                abs_pg_next_n <= '1';
+                zp_n <= '1';
+                zp_xy_n <= '1';
 
                 stat_dec_oe_n <= '1';
                 stat_bus_oe_n <= '1';
