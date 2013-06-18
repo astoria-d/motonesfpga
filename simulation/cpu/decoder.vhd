@@ -425,13 +425,13 @@ begin
         next_cycle <= T3;
     elsif exec_cycle = T3 then
 
-        dl_dh_oe_n <= '1';
         back_we(pcl_cmd, '1');
         if ea_carry = '1' then
             --page crossed. adh calc.
             back_oe(pcl_cmd, '0');
             back_oe(pch_cmd, '0');
             back_we(pch_cmd, '0');
+            dl_dh_oe_n <= '0';
 
             rel_calc_n <= '0';
             pg_next_n <= '1';

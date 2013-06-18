@@ -237,8 +237,13 @@ end  procedure;
 
     elsif (rel_calc_n = '0') then
         if (pg_next_n = '1') then
-            sel <= ALU_INC;
-            c_in <= '0';
+            if (int_d_bus(7) = '1') then
+                ---backward relative branch
+                sel <= ALU_DEC;
+            else
+                ---forward relative branch
+                sel <= ALU_INC;
+            end if;
             ---d1 is pch.`
             d1 <= bah;
             ---rel val is on the d_bus.
