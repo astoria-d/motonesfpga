@@ -334,6 +334,15 @@ end  procedure;
 --A.2. internal execution on memory data
 procedure a2_abs is
 begin
+    if exec_cycle = T1 then
+        fetch_low;
+    elsif exec_cycle = T2 then
+        abs_fetch_high;
+    elsif exec_cycle = T3 then
+        abs_latch_out;
+        dbuf_int_oe_n <= '0';
+        next_cycle <= T0;
+    end if;
 end  procedure;
 
 procedure a2_absx is
@@ -794,6 +803,7 @@ end  procedure;
                     a2_abs;
                     if exec_cycle = T3 then
                         set_nz_from_bus;
+                        front_we(acc_cmd, '0');
                     end if;
 
                 elsif instruction  = conv_std_logic_vector(16#bd#, dsize) then
