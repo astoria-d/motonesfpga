@@ -377,6 +377,8 @@ begin
       ---only interrupt flag is set on reset.
         if (res_n = '0') then
             d <= "00000100";
+        else
+            d <= (others => 'Z');
         end if;
 
         ---from flag set/clear instructions
@@ -386,7 +388,7 @@ begin
             else
                 tmp := "00000000";
             end if;
-            d <= tmp or (d and not dec_val);
+            d <= tmp or (status_val and not dec_val);
 
         ---status flag set from the data on the internal data bus.
         ---interpret the input data by the dec_val input.
