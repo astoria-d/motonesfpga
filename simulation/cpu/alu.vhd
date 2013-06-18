@@ -84,6 +84,15 @@ end procedure;
         ----
     elsif sel = ALU_ADC then
         res := ('0' & d1) + ('0' & d2) + carry_in;
+        d_out <= res(dsize - 1 downto 0);
+        carry_out <= res(dsize);
+        if ((d1(dsize - 1) = d1(dsize - 1)) 
+                            and (d1(dsize - 1) /= res(dsize - 1))) then
+            overflow <= '1';
+        else
+            overflow <= '0';
+        end if;
+
     elsif sel = ALU_SBC then
         ----
     elsif sel = ALU_CMP then
@@ -102,6 +111,8 @@ end procedure;
         carry_out <= res(dsize);
     elsif sel = ALU_DEC then
         res := ('0' & d1) - "000000001";
+        d_out <= res(dsize - 1 downto 0);
+        carry_out <= res(dsize);
     end if;
     set_n(res(dsize - 1 downto 0));
     set_z(res(dsize - 1 downto 0));
@@ -125,6 +136,7 @@ entity alu is
             pcl_inc_n       : in std_logic;
             pch_inc_n       : in std_logic;
             sph_oe_n        : in std_logic;
+            sp_push_n       : in std_logic;
             abs_ea_n        : in std_logic;
             zp_ea_n         : in std_logic;
             arith_en_n      : in std_logic;
@@ -253,6 +265,12 @@ begin
         --stack operation...
         abl <= bal;
         abh <= "00000001";
+
+        if (sp_push_n = '0') then
+            sel <= ALU_DEC;
+            d1 <= bal;
+            pcl <= d_out;
+        end if;
     elsif (arith_en_n = '0') then
             --instruction is aaabbbcc format.
             if instruction (1 downto 0) = "01" then
@@ -284,10 +302,6 @@ begin
                     d_print("lsr");
                 elsif instruction (7 downto 5) = "011" then
                     d_print("ror");
-                elsif instruction (7 downto 5) = "100" then
-                    d_print("stx");
-                elsif instruction (7 downto 5) = "101" then
-                    d_print("ldx");
                 elsif instruction (7 downto 5) = "110" then
                     d_print("dec");
                 elsif instruction (7 downto 5) = "111" then
@@ -296,14 +310,6 @@ begin
             elsif instruction (1 downto 0) = "00" then
                 if instruction (7 downto 5) = "001" then
                     d_print("bit");
-                elsif instruction (7 downto 5) = "010" then
-                    d_print("jmp");
-                elsif instruction (7 downto 5) = "011" then
-                    d_print("jmp");
-                elsif instruction (7 downto 5) = "100" then
-                    d_print("sty");
-                elsif instruction (7 downto 5) = "101" then
-                    d_print("ldy");
                 elsif instruction (7 downto 5) = "110" then
                     d_print("cpy");
                 elsif instruction (7 downto 5) = "111" then

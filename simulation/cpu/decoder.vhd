@@ -28,6 +28,7 @@ entity decoder is
             pch_cmd         : out std_logic_vector(3 downto 0);
             sp_cmd          : out std_logic_vector(3 downto 0);
             sph_oe_n        : out std_logic;
+            sp_push_n       : out std_logic;
             acc_cmd         : out std_logic_vector(3 downto 0);
             x_cmd           : out std_logic_vector(3 downto 0);
             y_cmd           : out std_logic_vector(3 downto 0);
@@ -177,6 +178,7 @@ begin
     pch_inc_n <= '1';
     sp_cmd <= "1111";
     sph_oe_n <= '1';
+    sp_push_n <= '1';
     acc_cmd <= "1111";
     x_cmd <= "1111";
     y_cmd <= "1111";
@@ -973,13 +975,14 @@ end  procedure;
                         dl_al_we_n <= '1';
 
                        --push return addr high into stack.
---                        sp_push_n <= '0';
+                        sp_push_n <= '0';
                         sph_oe_n <= '0';
                         front_oe(pch_cmd, '0');
                         back_oe(sp_cmd, '0');
+                        back_we(sp_cmd, '0');
                         r_nw <= '0';
---                        next_cycle <= T3;
---                    elsif exec_cycle = T3 then
+                        next_cycle <= T3;
+                    elsif exec_cycle = T3 then
 --                        d_print("jsr 4");
 --                        pch_d_oe_n <= '1';
 --
@@ -1141,6 +1144,7 @@ end  procedure;
                 pch_cmd <= "1111";
                 sp_cmd <= "1111";
                 sph_oe_n <= '1';
+                sp_push_n <= '1';
                 acc_cmd <= "1111";
                 x_cmd <= "1111";
                 y_cmd <= "1111";
