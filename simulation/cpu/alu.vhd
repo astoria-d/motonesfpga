@@ -143,14 +143,12 @@ entity alu is
             instruction     : in std_logic_vector (dsize - 1 downto 0);
             int_d_bus       : inout std_logic_vector (dsize - 1 downto 0);
             acc_out         : in std_logic_vector (dsize - 1 downto 0);
-            acc_in          : out std_logic_vector (dsize - 1 downto 0);
             index_bus       : in std_logic_vector (dsize - 1 downto 0);
             bal             : in std_logic_vector (dsize - 1 downto 0);
             bah             : in std_logic_vector (dsize - 1 downto 0);
+            alu_res         : out std_logic_vector (dsize - 1 downto 0);
             abl             : out std_logic_vector (dsize - 1 downto 0);
             abh             : out std_logic_vector (dsize - 1 downto 0);
-            pcl             : out std_logic_vector (dsize - 1 downto 0);
-            pch             : out std_logic_vector (dsize - 1 downto 0);
             pcl_inc_carry   : out std_logic;
             carry_in        : in std_logic;
             negative        : out std_logic;
@@ -230,9 +228,9 @@ signal v : std_logic;
 begin
 
     bal_inst : d_flip_flop generic map (dsize) 
-            port map(clk, '1', '1', '1', bal, bal_reg);
+            port map(clk, '1', '1', '0', bal, bal_reg);
     bah_inst : d_flip_flop generic map (dsize) 
-            port map(clk, '1', '1', '1', bah, bah_reg);
+            port map(clk, '1', '1', '0', bah, bah_reg);
 
     alu_inst : alu_core generic map (dsize)
             port map (sel, d1, d2, d_out, carry_in, n, z, c, v);
@@ -245,31 +243,44 @@ begin
     if (pcl_inc_n = '0') then
         sel <= ALU_INC;
         d1 <= bal;
-        pcl <= d_out;
+        alu_res <= d_out;
         pcl_inc_carry <= c;
 
-        pch <= bah;
-        abl <= bal;
+        --keep the value in the cycle
+        if (clk = '0') then
+            abl <= bal;
+        else
+            abl <= bal_reg;
+        end if;
         abh <= bah;
 
     elsif (pch_inc_n = '0') then
         sel <= ALU_INC;
         d1 <= bah;
-        pch <= d_out;
+        alu_res <= d_out;
         pcl_inc_carry <= '0';
 
+        --inc pch cycle is not fetch cycle.
+        --it is special cycle.
         abl <= bal;
         abh <= bah;
 
     elsif (sph_oe_n = '0') then
         --stack operation...
-        abl <= bal;
         abh <= "00000001";
 
-        if (sp_push_n = '0') then
+        if (sp_push_n /= '0') then
+            abl <= bal;
+        else
             sel <= ALU_DEC;
             d1 <= bal;
-            pcl <= d_out;
+            alu_res <= d_out;
+
+            if (clk = '0') then
+                abl <= bal;
+            else
+                abl <= bal_reg;
+            end if;
         end if;
     elsif (arith_en_n = '0') then
             --instruction is aaabbbcc format.
@@ -288,7 +299,7 @@ begin
                     sel <= ALU_CMP;
                     d1 <= acc_out;
                     d2 <= int_d_bus;
-                    acc_in <= d_out;
+                    alu_res <= d_out;
 
                 elsif instruction (7 downto 5) = "111" then
                     d_print("sbc");
@@ -318,7 +329,6 @@ begin
             end if; --if instruction (1 downto 0) = "01"
     else
         int_d_bus <= (others => 'Z');
-        acc_in <= (others => 'Z');
         negative <= 'Z';
         zero <= 'Z';
         carry_out <= 'Z';
@@ -326,8 +336,7 @@ begin
 
         abl <= bal;
         abh <= bah;
-        pcl <= (others => 'Z');
-        pch <= (others => 'Z');
+        alu_res <= (others => 'Z');
         pcl_inc_carry <= '0';
     end if; --if (pcl_inc_n = '0') then
     end process;

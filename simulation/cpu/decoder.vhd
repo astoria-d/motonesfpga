@@ -22,6 +22,7 @@ entity decoder is
             dl_ah_we_n      : out std_logic;
             dl_al_oe_n      : out std_logic;
             dl_ah_oe_n      : out std_logic;
+            dl_dh_oe_n      : out std_logic;
             pcl_inc_n       : out std_logic;
             pch_inc_n       : out std_logic;
             pcl_cmd         : out std_logic_vector(3 downto 0);
@@ -175,6 +176,7 @@ begin
     dl_ah_we_n <= '1';
     dl_al_oe_n <= '1';
     dl_ah_oe_n <= '1';
+    dl_dh_oe_n <= '1';
     pch_inc_n <= '1';
     sp_cmd <= "1111";
     sph_oe_n <= '1';
@@ -331,14 +333,19 @@ end  procedure;
                 exec_cycle = T7 then
                 --execute inst.
 
+                ---asyncronous page change might happen.
+                back_we(pch_cmd, '1');
+
                 if exec_cycle = T1 then
                     d_print("decode and execute inst: " 
                             & conv_hex8(conv_integer(instruction)));
-                    --disable pin for jmp
+                    --disable pin since jmp instruction 
+                    --directly enters into t2 cycle.
                     dl_al_oe_n <= '1';
                     dl_ah_oe_n <= '1';
+                    dl_dh_oe_n <= '1';
                     back_we(pcl_cmd, '1');
-                    back_we(pch_cmd, '1');
+                    front_we(pch_cmd, '1');
 
                     --grab instruction register data.
                     inst_we_n <= '1';
@@ -983,6 +990,21 @@ end  procedure;
                         r_nw <= '0';
                         next_cycle <= T3;
                     elsif exec_cycle = T3 then
+--                        sp_push_n <= '1';
+--                        sph_oe_n <= '1';
+--                        front_oe(pch_cmd, '1');
+--                        back_oe(sp_cmd, '1');
+--                        back_we(sp_cmd, '1');
+--                        r_nw <= '1';
+--
+--                        back_oe(pcl_cmd, '0');
+--                        back_oe(pch_cmd, '0');
+--                        back_we(pcl_cmd, '0');
+--                        back_we(pch_cmd, '1');
+--                        pcl_inc_n <= '0';
+--
+
+
 --                        d_print("jsr 4");
 --                        pch_d_oe_n <= '1';
 --
@@ -1076,10 +1098,11 @@ end  procedure;
                         --latch > al/ah.
                         dl_al_oe_n <= '0';
                         dl_ah_oe_n <= '0';
+                        dl_dh_oe_n <= '0';
 
                         --fetch inst and goto decode next.
                         back_we(pcl_cmd, '0');
-                        back_we(pch_cmd, '0');
+                        front_we(pch_cmd, '0');
                         inst_we_n <= '0';
                         pcl_inc_n <= '0';
                         next_cycle <= T1;
@@ -1138,6 +1161,7 @@ end  procedure;
                 dl_ah_we_n <= '1';
                 dl_al_oe_n <= '1';
                 dl_ah_oe_n <= '1';
+                dl_dh_oe_n <= '1';
                 pcl_inc_n <= '1';
                 pch_inc_n <= '1';
                 pcl_cmd <= "1111";
