@@ -96,7 +96,8 @@ component alu
             index_bus       : in std_logic_vector (dsize - 1 downto 0);
             bal             : in std_logic_vector (dsize - 1 downto 0);
             bah             : in std_logic_vector (dsize - 1 downto 0);
-            alu_res         : out std_logic_vector (dsize - 1 downto 0);
+            addr_back       : out std_logic_vector (dsize - 1 downto 0);
+            acc_in          : out std_logic_vector (dsize - 1 downto 0);
             abl             : out std_logic_vector (dsize - 1 downto 0);
             abh             : out std_logic_vector (dsize - 1 downto 0);
             pcl_inc_carry   : out std_logic;
@@ -277,8 +278,8 @@ end component;
     signal pch_back : std_logic_vector(dsize - 1 downto 0);
 
     signal acc_out : std_logic_vector(dsize - 1 downto 0);
-
-    signal alu_res : std_logic_vector(dsize - 1 downto 0);
+    signal acc_in : std_logic_vector(dsize - 1 downto 0);
+    signal addr_back : std_logic_vector(dsize - 1 downto 0);
 
     --not used bus.
     signal null_bus : std_logic_vector(dsize - 1 downto 0);
@@ -387,7 +388,8 @@ begin
                     index_bus,
                     bal,
                     bah,
-                    alu_res,
+                    addr_back,
+                    acc_in,
                     abl,
                     abh,
                     pcl_inc_carry(0),
@@ -442,7 +444,7 @@ begin
 
 
     sp : dual_dff generic map (dsize) 
-            port map(trigger_clk, rst_n, '1', sp_cmd, d_bus, alu_res, bal);
+            port map(trigger_clk, rst_n, '1', sp_cmd, d_bus, addr_back, bal);
 
     x : dual_dff generic map (dsize) 
             port map(trigger_clk, rst_n, '1', x_cmd, d_bus, null_bus, index_bus);
@@ -450,7 +452,7 @@ begin
             port map(trigger_clk, rst_n, '1', y_cmd, d_bus, null_bus, index_bus);
 
     acc : dual_dff generic map (dsize) 
-            port map(trigger_clk, rst_n, '1', acc_cmd, d_bus, alu_res, acc_out);
+            port map(trigger_clk, rst_n, '1', acc_cmd, d_bus, acc_in, acc_out);
 
     --adh output is controlled by decoder.
     adh_buf : tri_state_buffer generic map (dsize)
@@ -462,12 +464,12 @@ begin
 
     ----gating reset vector.
     pcl_buf_alu : tri_state_buffer generic map (dsize)
-            port map (rst, alu_res, pcl_back);
+            port map (rst, addr_back, pcl_back);
     pcl_buf_res_vec : tri_state_buffer generic map (dsize)
             port map (rst_n, reset_l, pcl_back);
 
     pch_buf_alu : tri_state_buffer generic map (dsize)
-            port map (rst, alu_res, pch_back);
+            port map (rst, addr_back, pch_back);
     pch_buf_res_vec : tri_state_buffer generic map (dsize)
             port map (rst_n, reset_h, pch_back);
 

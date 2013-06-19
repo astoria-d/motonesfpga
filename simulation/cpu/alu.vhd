@@ -27,7 +27,8 @@ entity alu is
             index_bus       : in std_logic_vector (dsize - 1 downto 0);
             bal             : in std_logic_vector (dsize - 1 downto 0);
             bah             : in std_logic_vector (dsize - 1 downto 0);
-            alu_res         : out std_logic_vector (dsize - 1 downto 0);
+            addr_back       : out std_logic_vector (dsize - 1 downto 0);
+            acc_in          : out std_logic_vector (dsize - 1 downto 0);
             abl             : out std_logic_vector (dsize - 1 downto 0);
             abh             : out std_logic_vector (dsize - 1 downto 0);
             pcl_inc_carry   : out std_logic;
@@ -56,6 +57,19 @@ component d_flip_flop
         );
 end component;
 
+component address_calculator
+    generic (   dsize : integer := 8
+            );
+    port ( 
+            sel         : in std_logic_vector (1 downto 0);
+            addr1       : in std_logic_vector (dsize - 1 downto 0);
+            addr2       : in std_logic_vector (dsize - 1 downto 0);
+            addr_out    : out std_logic_vector (dsize - 1 downto 0);
+            carry_in    : in std_logic;
+            carry_out   : out std_logic
+    );
+end component;
+
 component alu_core
     generic (   dsize : integer := 8
             );
@@ -72,6 +86,85 @@ component alu_core
     );
 end component;
 
+
+--------- signals for address calucuration ----------
+signal al_buf_we : std_logic;
+signal ah_buf_we : std_logic;
+
+signal al_reg_in : std_logic_vector (dsize - 1 downto 0);
+signal ah_reg_in : std_logic_vector (dsize - 1 downto 0);
+signal al_reg : std_logic_vector (dsize - 1 downto 0);
+signal ah_reg : std_logic_vector (dsize - 1 downto 0);
+
+
+signal a_sel : std_logic_vector (1 downto 0);
+signal addr1 : std_logic_vector (dsize - 1 downto 0);
+signal addr2 : std_logic_vector (dsize - 1 downto 0);
+signal addr_out : std_logic_vector (dsize - 1 downto 0);
+
+signal addr_c_in : std_logic;
+signal addr_c : std_logic;
+
+----------- signals for arithmatic ----------
+signal sel : std_logic_vector (3 downto 0);
+signal d1 : std_logic_vector (dsize - 1 downto 0);
+signal d2 : std_logic_vector (dsize - 1 downto 0);
+signal d_out : std_logic_vector (dsize - 1 downto 0);
+
+signal n : std_logic;
+signal z : std_logic;
+signal c_in : std_logic;
+signal c : std_logic;
+signal v : std_logic;
+
+signal arith_reg_in : std_logic_vector (dsize - 1 downto 0);
+signal arith_reg : std_logic_vector (dsize - 1 downto 0);
+signal arith_buf_we : std_logic;
+
+begin
+
+    ----------------------------------------
+     -- address calucurator instances ----
+    ----------------------------------------
+    al_buf : d_flip_flop generic map (dsize) 
+            port map(clk, '1', '1', al_buf_we, al_reg_in, al_reg);
+    ah_buf : d_flip_flop generic map (dsize) 
+            port map(clk, '1', '1', ah_buf_we, ah_reg_in, ah_reg);
+
+    addr_calc_inst : address_calculator generic map (dsize)
+            port map (a_sel, addr1, addr2, addr_out, addr_c_in, addr_c);
+
+
+    ----------------------------------------
+     -- arithmatic operation instances ----
+    ----------------------------------------
+    arith_buf : d_flip_flop generic map (dsize) 
+            port map(clk, '1', '1', arith_buf_we, arith_reg_in, arith_reg);
+
+    alu_inst : alu_core generic map (dsize)
+            port map (sel, d1, d2, d_out, c_in, n, z, c, v);
+
+
+    -------------------------------
+    ---- address calucuration -----
+    -------------------------------
+    alu_p : process (clk, 
+                    ---for address calucuration
+                    pcl_inc_n, pch_inc_n, sph_oe_n, sp_push_n, sp_pop_n,
+                    abs_xy_n, pg_next_n, zp_n, zp_xy_n, rel_calc_n, 
+                    int_d_bus, index_bus, bal, bal, addr_c_in, addr_out, addr_c,
+
+                    --for arithmatic operation.
+                    arith_en_n,
+                    instruction, int_d_bus, acc_out, index_bus, 
+                    carry_in, d_out, n, z, c, v)
+
+
+constant ADDR_ADC    : std_logic_vector (1 downto 0) := "00";
+constant ADDR_INC    : std_logic_vector (1 downto 0) := "01";
+constant ADDR_DEC    : std_logic_vector (1 downto 0) := "10";
+constant ADDR_SIGNED_ADD : std_logic_vector (1 downto 0) := "11";
+
 constant ALU_AND    : std_logic_vector (3 downto 0) := "0000";
 constant ALU_EOR    : std_logic_vector (3 downto 0) := "0001";
 constant ALU_OR     : std_logic_vector (3 downto 0) := "0010";
@@ -85,57 +178,6 @@ constant ALU_RL     : std_logic_vector (3 downto 0) := "1001";
 constant ALU_RR     : std_logic_vector (3 downto 0) := "1010";
 constant ALU_INC    : std_logic_vector (3 downto 0) := "1011";
 constant ALU_DEC    : std_logic_vector (3 downto 0) := "1100";
-constant ALU_SIGNED_ADD : std_logic_vector (3 downto 0) := "1101";
-
-procedure d_print(msg : string) is
-use std.textio.all;
-use ieee.std_logic_textio.all;
-variable out_l : line;
-begin
-    write(out_l, msg);
-    writeline(output, out_l);
-end  procedure;
-
-signal sel : std_logic_vector (3 downto 0);
-signal d1 : std_logic_vector (dsize - 1 downto 0);
-signal d2 : std_logic_vector (dsize - 1 downto 0);
-signal d_out : std_logic_vector (dsize - 1 downto 0);
-
-signal al_reg_in : std_logic_vector (dsize - 1 downto 0);
-signal ah_reg_in : std_logic_vector (dsize - 1 downto 0);
-signal al_reg : std_logic_vector (dsize - 1 downto 0);
-signal ah_reg : std_logic_vector (dsize - 1 downto 0);
-
-signal arith_reg_in : std_logic_vector (dsize - 1 downto 0);
-signal arith_reg : std_logic_vector (dsize - 1 downto 0);
-
-signal n : std_logic;
-signal z : std_logic;
-signal c_in : std_logic;
-signal c : std_logic;
-signal v : std_logic;
-
-signal al_buf_we : std_logic;
-signal ah_buf_we : std_logic;
-signal arith_buf_we : std_logic;
-
-begin
-
-    al_buf : d_flip_flop generic map (dsize) 
-            port map(clk, '1', '1', al_buf_we, al_reg_in, al_reg);
-    ah_buf : d_flip_flop generic map (dsize) 
-            port map(clk, '1', '1', ah_buf_we, ah_reg_in, ah_reg);
-    arith_buf : d_flip_flop generic map (dsize) 
-            port map(clk, '1', '1', arith_buf_we, arith_reg_in, arith_reg);
-
-    alu_inst : alu_core generic map (dsize)
-            port map (sel, d1, d2, d_out, c_in, n, z, c, v);
-
-    alu_p : process (clk, pcl_inc_n, pch_inc_n, sph_oe_n, sp_push_n, sp_pop_n,
-                    abs_xy_n, pg_next_n, zp_n, zp_xy_n, arith_en_n,
-                    rel_calc_n, instruction, 
-                    int_d_bus, acc_out, index_bus, bal, bal, carry_in, d_out, 
-                    n, z, c, v)
 
 procedure output_d_bus is
 begin
@@ -147,28 +189,43 @@ begin
     end if;
 end  procedure;
 
+procedure d_print(msg : string) is
+use std.textio.all;
+use ieee.std_logic_textio.all;
+variable out_l : line;
+begin
+    write(out_l, msg);
+    writeline(output, out_l);
+end  procedure;
+
     begin
+
     if (pcl_inc_n = '0') then
-        sel <= ALU_INC;
-        d1 <= bal;
-        alu_res <= d_out;
-        pcl_inc_carry <= c;
+        a_sel <= ADDR_INC;
+        addr1 <= bal;
+        addr_back <= addr_out;
+        pcl_inc_carry <= addr_c;
 
         --keep the value in the cycle
         al_buf_we <= '0';
         al_reg_in <= bal;
-        if (clk = '0') then
+        if (instruction = "01001100") then
+            ---exceptional case: only jmp instruction 
             abl <= bal;
         else
-            abl <= al_reg;
+            if (clk = '0') then
+                abl <= bal;
+            else
+                abl <= al_reg;
+            end if;
         end if;
         abh <= bah;
 
         int_d_bus <= (others => 'Z');
     elsif (pch_inc_n = '0') then
-        sel <= ALU_INC;
-        d1 <= bah;
-        alu_res <= d_out;
+        a_sel <= ADDR_INC;
+        addr1 <= bah;
+        addr_back <= addr_out;
         pcl_inc_carry <= '0';
 
         --inc pch cycle is not fetch cycle.
@@ -186,9 +243,9 @@ end  procedure;
             abl <= bal;
         elsif (sp_pop_n = '0') then
             --case pop
-            sel <= ALU_INC;
-            d1 <= bal;
-            alu_res <= d_out;
+            a_sel <= ADDR_INC;
+            addr1 <= bal;
+            addr_back <= addr_out;
 
             al_buf_we <= '0';
             al_reg_in <= bal;
@@ -199,9 +256,9 @@ end  procedure;
             end if;
         else
             ---case push
-            sel <= ALU_DEC;
-            d1 <= bal;
-            alu_res <= d_out;
+            a_sel <= ADDR_DEC;
+            addr1 <= bal;
+            addr_back <= addr_out;
 
             al_buf_we <= '0';
             al_reg_in <= bal;
@@ -213,72 +270,92 @@ end  procedure;
         end if;
     elsif (abs_xy_n = '0') then
         if (pg_next_n = '0') then
-            sel <= ALU_INC;
-            d1 <= bah;
+            a_sel <= ADDR_INC;
+            addr1 <= bah;
             ea_carry <= '0';
 
             al_buf_we <= '1';
-            abh <= d_out;
+            abh <= addr_out;
             ---al is in the al_reg.
             abl <= al_reg;
         else
-            sel <= ALU_ADC;
-            d1 <= bal;
-            d2 <= index_bus;
-            c_in <= '0';
-            ea_carry <= c;
+            a_sel <= ADDR_ADC;
+            addr1 <= bal;
+            addr2 <= index_bus;
+            addr_c_in <= '0';
+            ea_carry <= addr_c;
 
             ---keep al for page crossed case
             al_buf_we <= '0';
-            al_reg_in <= d_out;
+            al_reg_in <= addr_out;
             abh <= bah;
-            abl <= d_out;
+            abl <= addr_out;
         end if;
 
     elsif (rel_calc_n = '0') then
         if (pg_next_n = '1') then
             if (int_d_bus(7) = '1') then
                 ---backward relative branch
-                sel <= ALU_DEC;
+                a_sel <= ADDR_DEC;
             else
                 ---forward relative branch
-                sel <= ALU_INC;
+                a_sel <= ADDR_INC;
             end if;
-            ---d1 is pch.`
-            d1 <= bah;
+            ---addr1 is pch.`
+            addr1 <= bah;
             ---rel val is on the d_bus.
-            alu_res <= d_out;
+            addr_back <= addr_out;
             ea_carry <= '0'; 
 
             --keep the value in the cycle
             ah_buf_we <= '0';
-            ah_reg_in <= d_out;
-            abh <= d_out;
+            ah_reg_in <= addr_out;
+            abh <= addr_out;
             --al no change.
             abl <= bal;
         else
-            sel <= ALU_SIGNED_ADD;
-            c_in <= '0';
-            ---d1 is pcl.`
-            d1 <= bal;
+            a_sel <= ADDR_SIGNED_ADD;
+            ---addr1 is pcl.`
+            addr1 <= bal;
             ---rel val is on the d_bus.
-            d2 <= int_d_bus;
-            alu_res <= d_out;
-            ea_carry <= c;
+            addr2 <= int_d_bus;
+            addr_back <= addr_out;
+            ea_carry <= addr_c;
 
             --keep the value in the cycle
             al_buf_we <= '0';
-            al_reg_in <= d_out;
+            al_reg_in <= addr_out;
             if (clk = '0') then
-                abl <= d_out;
+                abl <= addr_out;
             else
                 abl <= al_reg;
             end if;
             abh <= bah;
         end if;
         int_d_bus <= (others => 'Z');
+    else
+        al_buf_we <= '1';
+        ah_buf_we <= '1';
 
-    elsif (arith_en_n = '0') then
+        int_d_bus <= (others => 'Z');
+        negative <= 'Z';
+        zero <= 'Z';
+        carry_out <= 'Z';
+        overflow <= 'Z';
+
+        abl <= bal;
+        abh <= bah;
+
+        ----addr_back is always bal for jsr instruction....
+        -----TODO must check later if it's ok.
+        addr_back <= bal;
+        pcl_inc_carry <= '0';
+    end if; --if (pcl_inc_n = '0') then
+
+    -------------------------------
+    ---- arithmatic operations-----
+    -------------------------------
+    if (arith_en_n = '0') then
 
         arith_buf_we <= '0';
         abl <= (others => 'Z');
@@ -326,7 +403,6 @@ end  procedure;
                 sel <= ALU_CMP;
                 d1 <= acc_out;
                 d2 <= int_d_bus;
-                alu_res <= d_out;
 
             elsif instruction (7 downto 5) = "111" then
                 d_print("sbc");
@@ -355,27 +431,74 @@ end  procedure;
             end if; --if instruction (7 downto 5) = "001" then
         end if; --if instruction = conv_std_logic_vector(16#ca#, dsize) 
     else
-        al_buf_we <= '1';
-        ah_buf_we <= '1';
         arith_buf_we <= '1';
-
-        int_d_bus <= (others => 'Z');
-        negative <= 'Z';
-        zero <= 'Z';
-        carry_out <= 'Z';
-        overflow <= 'Z';
-
-        abl <= bal;
-        abh <= bah;
-
-        ----alu_res is always bal for jsr instruction....
-        -----TODO must check later if it's ok.
-        alu_res <= bal;
-        pcl_inc_carry <= '0';
-    end if; --if (pcl_inc_n = '0') then
+    end if; -- if (arith_en_n = '0') then
     end process;
 
 end rtl;
+
+-----------------------------------------
+---------- Address calculator------------
+-----------------------------------------
+
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
+
+entity address_calculator is 
+    generic (   dsize : integer := 8
+            );
+    port ( 
+            sel         : in std_logic_vector (1 downto 0);
+            addr1       : in std_logic_vector (dsize - 1 downto 0);
+            addr2       : in std_logic_vector (dsize - 1 downto 0);
+            addr_out    : out std_logic_vector (dsize - 1 downto 0);
+            carry_in    : in std_logic;
+            carry_out   : out std_logic
+    );
+end address_calculator;
+
+architecture rtl of address_calculator is
+
+constant ADDR_ADC    : std_logic_vector (1 downto 0) := "00";
+constant ADDR_INC    : std_logic_vector (1 downto 0) := "01";
+constant ADDR_DEC    : std_logic_vector (1 downto 0) := "10";
+constant ADDR_SIGNED_ADD : std_logic_vector (1 downto 0) := "11";
+
+begin
+
+    alu_p : process (sel, addr1, addr2, carry_in)
+    variable res : std_logic_vector (dsize downto 0);
+
+    begin
+    if sel = ADDR_ADC then
+        res := ('0' & addr1) + ('0' & addr2) + carry_in;
+        addr_out <= res(dsize - 1 downto 0);
+        carry_out <= res(dsize);
+
+    elsif sel = ADDR_SIGNED_ADD then
+        res := ('0' & addr1) + ('0' & addr2);
+        addr_out <= res(dsize - 1 downto 0);
+        if ((addr1(dsize - 1) = addr1(dsize - 1)) 
+                            and (addr1(dsize - 1) /= res(dsize - 1))) then
+            carry_out <= '1';
+        else
+            carry_out <= '0';
+        end if;
+
+    elsif sel = ADDR_INC then
+        res := ('0' & addr1) + "000000001";
+        addr_out <= res(dsize - 1 downto 0);
+        carry_out <= res(dsize);
+    elsif sel = ADDR_DEC then
+        res := ('0' & addr1) - "000000001";
+        addr_out <= res(dsize - 1 downto 0);
+        carry_out <= res(dsize);
+    end if;
+    end process;
+
+end rtl;
+
 
 -----------------------------------------
 ------------- ALU Core -----------------
@@ -427,7 +550,6 @@ constant ALU_RL     : std_logic_vector (3 downto 0) := "1001";
 constant ALU_RR     : std_logic_vector (3 downto 0) := "1010";
 constant ALU_INC    : std_logic_vector (3 downto 0) := "1011";
 constant ALU_DEC    : std_logic_vector (3 downto 0) := "1100";
-constant ALU_SIGNED_ADD : std_logic_vector (3 downto 0) := "1101";
 
 begin
 
@@ -472,17 +594,6 @@ end procedure;
         else
             overflow <= '0';
         end if;
-
-    elsif sel = ALU_SIGNED_ADD then
-        res := ('0' & d1) + ('0' & d2);
-        d_out <= res(dsize - 1 downto 0);
-        if ((d1(dsize - 1) = d1(dsize - 1)) 
-                            and (d1(dsize - 1) /= res(dsize - 1))) then
-            carry_out <= '1';
-        else
-            carry_out <= '0';
-        end if;
-
 
     elsif sel = ALU_SBC then
         ----

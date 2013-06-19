@@ -696,6 +696,8 @@ end  procedure;
                     --imm
                     d_print("cmp");
                     fetch_imm;
+                    arith_en_n <= '0';
+                    back_oe(acc_cmd, '0');
                     set_nzc_from_alu;
 
                 elsif instruction  = conv_std_logic_vector(16#c5#, dsize) then
