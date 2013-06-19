@@ -61,6 +61,8 @@ component decoder
             zp_n            : out std_logic;
             zp_xy_n         : out std_logic;
             rel_calc_n      : out std_logic;
+            indir_x_n       : out std_logic;
+            indir_y_n       : out std_logic;
             arith_en_n      : out std_logic;
             stat_dec_oe_n   : out std_logic;
             stat_bus_oe_n   : out std_logic;
@@ -89,8 +91,11 @@ component alu
             zp_n            : in std_logic;
             zp_xy_n         : in std_logic;
             rel_calc_n      : in std_logic;
+            indir_x_n       : in std_logic;
+            indir_y_n       : in std_logic;
             arith_en_n      : in std_logic;
             instruction     : in std_logic_vector (dsize - 1 downto 0);
+            exec_cycle      : in std_logic_vector (5 downto 0);
             int_d_bus       : inout std_logic_vector (dsize - 1 downto 0);
             acc_out         : in std_logic_vector (dsize - 1 downto 0);
             index_bus       : in std_logic_vector (dsize - 1 downto 0);
@@ -236,6 +241,8 @@ end component;
     signal zp_n            : std_logic;
     signal zp_xy_n         : std_logic;
     signal rel_calc_n      : std_logic;
+    signal indir_x_n       : std_logic;
+    signal indir_y_n       : std_logic;
     signal arith_en_n      : std_logic;
                     
     signal alu_n : std_logic;
@@ -357,6 +364,8 @@ begin
                     zp_n,
                     zp_xy_n,
                     rel_calc_n,
+                    indir_x_n,
+                    indir_y_n,
                     arith_en_n,
                     stat_dec_oe_n, 
                     stat_bus_oe_n, 
@@ -381,8 +390,11 @@ begin
                     zp_n,
                     zp_xy_n,
                     rel_calc_n,
+                    indir_x_n,
+                    indir_y_n,
                     arith_en_n,
                     instruction,
+                    exec_cycle,
                     d_bus,
                     acc_out,
                     index_bus,

@@ -20,8 +20,11 @@ entity alu is
             zp_n            : in std_logic;
             zp_xy_n         : in std_logic;
             rel_calc_n      : in std_logic;
+            indir_x_n       : in std_logic;
+            indir_y_n       : in std_logic;
             arith_en_n      : in std_logic;
             instruction     : in std_logic_vector (dsize - 1 downto 0);
+            exec_cycle      : in std_logic_vector (5 downto 0);
             int_d_bus       : inout std_logic_vector (dsize - 1 downto 0);
             acc_out         : in std_logic_vector (dsize - 1 downto 0);
             index_bus       : in std_logic_vector (dsize - 1 downto 0);
@@ -152,6 +155,7 @@ begin
                     ---for address calucuration
                     pcl_inc_n, pch_inc_n, sph_oe_n, sp_push_n, sp_pop_n,
                     abs_xy_n, pg_next_n, zp_n, zp_xy_n, rel_calc_n, 
+                    indir_x_n, indir_y_n, 
                     int_d_bus, index_bus, bal, bal, addr_c_in, addr_out, addr_c,
 
                     --for arithmatic operation.
@@ -178,6 +182,13 @@ constant ALU_RL     : std_logic_vector (3 downto 0) := "1001";
 constant ALU_RR     : std_logic_vector (3 downto 0) := "1010";
 constant ALU_INC    : std_logic_vector (3 downto 0) := "1011";
 constant ALU_DEC    : std_logic_vector (3 downto 0) := "1100";
+
+---for indirect addressing.
+constant T1 : std_logic_vector (5 downto 0) := "000001";
+constant T2 : std_logic_vector (5 downto 0) := "000010";
+constant T3 : std_logic_vector (5 downto 0) := "000011";
+constant T4 : std_logic_vector (5 downto 0) := "000100";
+constant T5 : std_logic_vector (5 downto 0) := "000101";
 
 procedure output_d_bus is
 begin
@@ -298,7 +309,7 @@ end  procedure;
         end if;
 
     elsif (rel_calc_n = '0') then
-        if (pg_next_n = '1') then
+        if (pg_next_n = '0') then
             if (int_d_bus(7) = '1') then
                 ---backward relative branch
                 a_sel <= ADDR_DEC;
@@ -338,6 +349,68 @@ end  procedure;
             abh <= bah;
         end if;
         int_d_bus <= (others => 'Z');
+    elsif (indir_x_n = '0') then
+        int_d_bus <= (others => 'Z');
+
+    elsif (indir_y_n = '0') then
+
+        if (exec_cycle = T2) then
+            ---input is IAL.
+            abh <= "00000000";
+            abl <= bal;
+
+            ---save BAL.
+            al_buf_we <= '0';
+            al_reg_in <= int_d_bus;
+
+        elsif (exec_cycle = T3) then
+            al_buf_we <= '1';
+
+            abh <= "00000000";
+
+            --input is IAL + 1
+            a_sel <= ADDR_INC;
+            addr1 <= bal;
+            abl <= addr_out;
+
+            ---save BAH.
+            ah_buf_we <= '0';
+            ah_reg_in <= int_d_bus;
+
+        elsif (exec_cycle = T4) then
+
+            ---add y reg.
+            a_sel <= ADDR_ADC;
+
+            --bal from al_reg.
+            addr1 <= al_reg;
+            addr2 <= index_bus;
+            addr_c_in <= '0';
+            ea_carry <= addr_c;
+
+            --bah from ah_reg
+            abh <= ah_reg;
+            abl <= addr_out;
+
+            ---save the address.
+            al_buf_we <= '0';
+            al_reg_in <= addr_out;
+            ah_buf_we <= '0';
+            ah_reg_in <= ah_reg;
+        elsif (exec_cycle = T5) then
+
+            if (pg_next_n = '0') then
+                a_sel <= ADDR_INC;
+                addr1 <= ah_reg;
+                ---next page.
+                abh <= addr_out;
+                abl <= al_reg;
+            else
+                abh <= ah_reg;
+                abl <= al_reg;
+            end if;
+        end if;
+
     else
         al_buf_we <= '1';
         ah_buf_we <= '1';

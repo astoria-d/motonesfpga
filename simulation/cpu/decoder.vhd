@@ -40,6 +40,8 @@ entity decoder is
             zp_n            : out std_logic;
             zp_xy_n         : out std_logic;
             rel_calc_n      : out std_logic;
+            indir_x_n       : out std_logic;
+            indir_y_n       : out std_logic;
             arith_en_n      : out std_logic;
             stat_dec_oe_n   : out std_logic;
             stat_bus_oe_n   : out std_logic;
@@ -219,6 +221,8 @@ begin
     zp_n <= '1';
     zp_xy_n <= '1';
     rel_calc_n <= '1';
+    indir_x_n <= '1';
+    indir_y_n <= '1';
     arith_en_n <= '1';
 
     read_status;
@@ -412,6 +416,50 @@ begin
     end if;
 end  procedure;
 
+procedure a3_indir_y is
+begin
+    if exec_cycle = T1 then
+        fetch_low;
+        --get IAL
+        dl_al_we_n <= '0';
+
+    elsif exec_cycle = T2 then
+        fetch_stop;
+        dl_al_we_n <= '1';
+
+        ---address is 00:IAL
+        --output BAL @IAL
+        indir_y_n <= '0';
+        dl_al_oe_n <= '0';
+        dbuf_int_oe_n <= '0';
+        next_cycle <= T3;
+
+    elsif exec_cycle = T3 then
+        indir_y_n <= '0';
+        dl_al_oe_n <= '0';
+        --output BAH @IAL+1
+        dbuf_int_oe_n <= '0';
+        next_cycle <= T4;
+
+    elsif exec_cycle = T4 then
+        dl_al_oe_n <= '1';
+        dbuf_int_oe_n <= '1';
+
+        --add index y.
+        back_oe(y_cmd, '0');
+        indir_y_n <= '0';
+        next_cycle <= T5;
+
+    elsif exec_cycle = T5 then
+
+        --page handling.
+        back_oe(y_cmd, '1');
+        indir_y_n <= '0';
+        pg_next_n <= not ea_carry;
+        r_nw <= '0';
+        next_cycle <= T0;
+    end if;
+end  procedure;
 
 -- A.5.8 branch operations
 
@@ -438,7 +486,7 @@ begin
 
         --calc relative addr.
         rel_calc_n <= '0';
-        pg_next_n <= '0';
+        pg_next_n <= '1';
         dl_dh_oe_n <= '0';
         back_oe(pcl_cmd, '0');
         back_oe(pch_cmd, '0');
@@ -456,7 +504,7 @@ begin
             dl_dh_oe_n <= '0';
 
             rel_calc_n <= '0';
-            pg_next_n <= '1';
+            pg_next_n <= '0';
             next_cycle <= T0;
         else
             back_we(pcl_cmd, '0');
@@ -1005,6 +1053,10 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#91#, dsize) then
                     --(indir), y
                     d_print("sta");
+                    a3_indir_y;
+                    if exec_cycle = T5 then
+                        front_oe(acc_cmd, '0');
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#86#, dsize) then
                     --zp
@@ -1410,6 +1462,8 @@ end  procedure;
                 zp_n <= '1';
                 zp_xy_n <= '1';
                 rel_calc_n <= '1';
+                indir_x_n <= '1';
+                indir_y_n <= '1';
                 arith_en_n <= '1';
 
                 stat_dec_oe_n <= '1';
