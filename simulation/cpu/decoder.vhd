@@ -534,6 +534,8 @@ end  procedure;
                 elsif instruction = conv_std_logic_vector(16#ca#, dsize) then
                     d_print("dex");
                     arith_en_n <= '0';
+                    back_oe(x_cmd, '0');
+                    front_we(x_cmd, '0');
                     --set nz bit.
                     set_nz_from_bus;
                     single_inst;

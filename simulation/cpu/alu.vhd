@@ -361,6 +361,13 @@ end  procedure;
 
         if instruction = conv_std_logic_vector(16#ca#, dsize) then
             d_print("dex");
+            sel <= ALU_DEC;
+            d1 <= index_bus;
+            c_in <= '0';
+
+            negative <= n;
+            zero <= z;
+            output_d_bus;
 
         elsif instruction = conv_std_logic_vector(16#88#, dsize) then
             --d_print("dey");
