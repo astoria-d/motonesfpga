@@ -810,6 +810,10 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#c0#, dsize) then
                     --imm
                     d_print("cpy");
+                    fetch_imm;
+                    arith_en_n <= '0';
+                    back_oe(y_cmd, '0');
+                    set_nzc_from_alu;
 
                 elsif instruction  = conv_std_logic_vector(16#c4#, dsize) then
                     --zp
@@ -1415,7 +1419,7 @@ end  procedure;
                     d_print("bmi");
                 elsif instruction = conv_std_logic_vector(16#d0#, dsize) then
                     d_print("bne");
-                    a58_branch (st_Z, '1');
+                    a58_branch (st_Z, '0');
 
                 elsif instruction = conv_std_logic_vector(16#10#, dsize) then
                     d_print("bpl");
