@@ -383,6 +383,19 @@ end  procedure;
 
 procedure a3_zp is
 begin
+    if exec_cycle = T1 then
+        fetch_low;
+    elsif exec_cycle = T2 then
+        fetch_stop;
+        dbuf_int_oe_n <= '1';
+        dl_al_we_n <= '1';
+
+        --calc zp.
+        dl_al_oe_n <= '0';
+        zp_n <= '0';
+        r_nw <= '0';
+        next_cycle <= T0;
+    end if;
 end  procedure;
 
 procedure a3_abs is
@@ -733,6 +746,10 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#e0#, dsize) then
                     --imm
                     d_print("cpx");
+                    fetch_imm;
+                    arith_en_n <= '0';
+                    back_oe(x_cmd, '0');
+                    set_nzc_from_alu;
 
                 elsif instruction  = conv_std_logic_vector(16#e4#, dsize) then
                     --zp
@@ -958,6 +975,7 @@ end  procedure;
                     d_print("sta");
                     a3_zp;
                     if exec_cycle = T2 then
+                        front_oe(acc_cmd, '0');
                     end if;
 
                 elsif instruction  = conv_std_logic_vector(16#95#, dsize) then
@@ -993,6 +1011,7 @@ end  procedure;
                     d_print("stx");
                     a3_zp;
                     if exec_cycle = T2 then
+                        front_oe(x_cmd, '0');
                     end if;
 
                 elsif instruction  = conv_std_logic_vector(16#96#, dsize) then

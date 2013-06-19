@@ -268,6 +268,11 @@ end  procedure;
                 abl <= al_reg;
             end if;
         end if;
+    elsif (zp_n = '0') then
+        abh <= "00000000";
+        abl <= bal;
+        int_d_bus <= (others => 'Z');
+
     elsif (abs_xy_n = '0') then
         if (pg_next_n = '0') then
             a_sel <= ADDR_INC;
@@ -360,7 +365,7 @@ end  procedure;
         arith_buf_we <= '0';
 
         if instruction = conv_std_logic_vector(16#ca#, dsize) then
-            d_print("dex");
+            --d_print("dex");
             sel <= ALU_DEC;
             d1 <= index_bus;
             c_in <= '0';
@@ -403,11 +408,14 @@ end  procedure;
             elsif instruction (7 downto 5) = "011" then
                 d_print("adc");
             elsif instruction (7 downto 5) = "110" then
-                d_print("cmp");
+                --d_print("cmp");
                 --cmpare A - M.
                 sel <= ALU_CMP;
                 d1 <= acc_out;
                 d2 <= int_d_bus;
+                negative <= n;
+                zero <= z;
+                carry_out <= c;
 
             elsif instruction (7 downto 5) = "111" then
                 d_print("sbc");
@@ -432,7 +440,14 @@ end  procedure;
             elsif instruction (7 downto 5) = "110" then
                 d_print("cpy");
             elsif instruction (7 downto 5) = "111" then
-                d_print("cpx");
+               -- d_print("cpx");
+                sel <= ALU_CMP;
+                d1 <= index_bus;
+                d2 <= int_d_bus;
+                negative <= n;
+                zero <= z;
+                carry_out <= c;
+
             end if; --if instruction (7 downto 5) = "001" then
         end if; --if instruction = conv_std_logic_vector(16#ca#, dsize) 
     else
