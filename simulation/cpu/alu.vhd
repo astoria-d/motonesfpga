@@ -358,8 +358,6 @@ end  procedure;
     if (arith_en_n = '0') then
 
         arith_buf_we <= '0';
-        abl <= (others => 'Z');
-        abh <= (others => 'Z');
 
         if instruction = conv_std_logic_vector(16#ca#, dsize) then
             d_print("dex");
@@ -567,8 +565,7 @@ end procedure;
 
 procedure set_z (data : in std_logic_vector (dsize - 1 downto 0)) is
 begin
-    if  (data(7) or data(6) or data(5) or data(4) or 
-        data(3) or data(2) or data(1) or data(0)) = '0' then
+    if  (data = "00000000") then
         zero <= '1';
     else
         zero <= '0';
@@ -598,7 +595,12 @@ end procedure;
     elsif sel = ALU_SBC then
         ----
     elsif sel = ALU_CMP then
-        res := d1 - d2;
+        res := ('0' & d1) - ('0' & d2);
+        if (d1 >= d2) then
+            carry_out <= '1';
+        else
+            carry_out <= '0';
+        end if;
     elsif sel = ALU_SL then
         ----
     elsif sel = ALU_SR then
