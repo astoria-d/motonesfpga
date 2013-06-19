@@ -1344,7 +1344,7 @@ end  procedure;
                     d_print("bmi");
                 elsif instruction = conv_std_logic_vector(16#d0#, dsize) then
                     d_print("bne");
-                    a58_branch (st_Z, '0');
+                    a58_branch (st_Z, '1');
 
                 elsif instruction = conv_std_logic_vector(16#10#, dsize) then
                     d_print("bpl");
