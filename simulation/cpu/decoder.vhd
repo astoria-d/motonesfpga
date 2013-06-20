@@ -261,6 +261,14 @@ begin
     stat_bus_nz_n <= '0';
 end  procedure;
 
+procedure set_nz_from_alu is
+begin
+    --status register n/z/c bit update.
+    stat_alu_we_n <= '0';
+    stat_dec_oe_n <= '1';
+    status_reg <= "10000010";
+end  procedure;
+
 procedure set_nzc_from_alu is
 begin
     --status register n/z/c bit update.
@@ -338,8 +346,12 @@ procedure ea_x_out is
 begin
     -----calucurate and output effective addr
     back_oe(x_cmd, '0');
-    dl_al_oe_n <= '0';
-    dl_ah_oe_n <= '0';
+    abs_xy_n <= '0';
+end  procedure;
+
+procedure ea_y_out is
+begin
+    back_oe(y_cmd, '0');
     abs_xy_n <= '0';
 end  procedure;
 
@@ -365,6 +377,7 @@ begin
         abs_fetch_high;
     elsif exec_cycle = T3 then
         --ea calc & lda
+        pg_next_n <= '1';
         abs_latch_out;
         ea_x_out;
         dbuf_int_oe_n <= '0';
@@ -378,7 +391,7 @@ begin
             ea_x_out;
             dbuf_int_oe_n <= '0';
             --next page.
-            pg_next_n <= '0';
+            pg_next_n <= not ea_carry;
             --redo inst.
             next_cycle <= T0;
         else
@@ -424,6 +437,37 @@ begin
     end if;
 end  procedure;
 
+procedure a3_abs_xy (is_x : in boolean) is
+begin
+    if exec_cycle = T1 then
+        fetch_low;
+    elsif exec_cycle = T2 then
+        abs_fetch_high;
+    elsif exec_cycle = T3 then
+        --ea calc & lda
+        pg_next_n <= '1';
+        abs_latch_out;
+        dbuf_int_oe_n <= '1';
+        if (is_x = true) then
+            ea_x_out;
+        else
+            ea_y_out;
+        end if;
+        next_cycle <= T4;
+    elsif exec_cycle = T4 then
+        pg_next_n <= not ea_carry;
+        abs_latch_out;
+        if (is_x = true) then
+            ea_x_out;
+        else
+            ea_y_out;
+        end if;
+        r_nw <= '0';
+        next_cycle <= T0;
+    end if;
+end  procedure;
+
+
 procedure a3_indir_y is
 begin
     if exec_cycle = T1 then
@@ -454,6 +498,7 @@ begin
         dbuf_int_oe_n <= '1';
 
         --add index y.
+        pg_next_n <= '1';
         back_oe(y_cmd, '0');
         indir_y_n <= '0';
         next_cycle <= T5;
@@ -512,7 +557,7 @@ begin
             dl_dh_oe_n <= '0';
 
             rel_calc_n <= '0';
-            pg_next_n <= '0';
+            pg_next_n <= not ea_carry;
             next_cycle <= T0;
         else
             back_we(pcl_cmd, '0');
@@ -630,6 +675,8 @@ end  procedure;
                 elsif instruction = conv_std_logic_vector(16#c8#, dsize) then
                     d_print("iny");
                     arith_en_n <= '0';
+                    back_oe(y_cmd, '0');
+                    front_we(y_cmd, '0');
                     set_nz_from_bus;
                     single_inst;
 
@@ -726,6 +773,11 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#29#, dsize) then
                     --imm
                     d_print("and");
+                    fetch_imm;
+                    arith_en_n <= '0';
+                    back_oe(acc_cmd, '0');
+                    back_we(acc_cmd, '0');
+                    set_nz_from_alu;
 
                 elsif instruction  = conv_std_logic_vector(16#25#, dsize) then
                     --zp
@@ -969,6 +1021,11 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#09#, dsize) then
                     --imm
                     d_print("ora");
+                    fetch_imm;
+                    arith_en_n <= '0';
+                    back_oe(acc_cmd, '0');
+                    back_we(acc_cmd, '0');
+                    set_nz_from_alu;
 
                 elsif instruction  = conv_std_logic_vector(16#05#, dsize) then
                     --zp
@@ -1062,6 +1119,10 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#99#, dsize) then
                     --abs, y
                     d_print("sta");
+                    a3_abs_xy (false);
+                    if exec_cycle = T4 then
+                        front_oe(acc_cmd, '0');
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#81#, dsize) then
                     --(indir, x)

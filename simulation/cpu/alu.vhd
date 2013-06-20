@@ -462,14 +462,30 @@ end procedure;
             output_d_bus;
 
         elsif instruction = conv_std_logic_vector(16#c8#, dsize) then
-            d_print("iny");
+            --d_print("iny");
+            sel <= ALU_INC;
+            d1 <= index_bus;
+            set_nz;
+            output_d_bus;
 
         --instruction is aaabbbcc format.
         elsif instruction (1 downto 0) = "01" then
             if instruction (7 downto 5) = "000" then
-                d_print("ora");
+                --d_print("ora");
+                sel <= ALU_OR;
+                d1 <= acc_out;
+                d2 <= int_d_bus;
+                acc_in <= d_out;
+                set_nz;
+
             elsif instruction (7 downto 5) = "001" then
                 d_print("and");
+                sel <= ALU_AND;
+                d1 <= acc_out;
+                d2 <= int_d_bus;
+                acc_in <= d_out;
+                set_nz;
+
             elsif instruction (7 downto 5) = "010" then
                 d_print("eor");
             elsif instruction (7 downto 5) = "011" then
@@ -672,11 +688,20 @@ end procedure;
 
     begin
     if sel = ALU_AND then
-        res := d1 and d2;
+        res(dsize - 1 downto 0) := d1 and d2;
+        set_n(res(dsize - 1 downto 0));
+        set_z(res(dsize - 1 downto 0));
+        d_out <= res(dsize - 1 downto 0);
+
     elsif sel = ALU_EOR then
         res := d1 xor d2;
+
     elsif sel = ALU_OR then
-        res := d1 or d2;
+        res(dsize - 1 downto 0) := d1 or d2;
+        set_n(res(dsize - 1 downto 0));
+        set_z(res(dsize - 1 downto 0));
+        d_out <= res(dsize - 1 downto 0);
+
     elsif sel = ALU_BIT then
         --transfer bit 7 and 6  of memory data to n, v flag.
         negative <= d2(7);
