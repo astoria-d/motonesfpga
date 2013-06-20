@@ -514,6 +514,37 @@ begin
     end if;
 end  procedure;
 
+
+---A.4. read-modify-write operation
+procedure a4_abs is
+begin
+    if exec_cycle = T1 then
+        fetch_low;
+    elsif exec_cycle = T2 then
+        abs_fetch_high;
+    elsif exec_cycle = T3 then
+        --T3 cycle do nothing.
+        abs_latch_out;
+        next_cycle <= T4;
+    elsif exec_cycle = T4 then
+        abs_latch_out;
+
+        --t4 cycle save data in the alu register only.
+        --hardware maunual says write original data, 
+        --but this implementation doesn't write because bus shortage....
+        arith_en_n <= '0';
+        next_cycle <= T5;
+    elsif exec_cycle = T5 then
+        dbuf_int_oe_n <= '1';
+
+        --t5 cycle writes modified value.
+        r_nw <= '0';
+        arith_en_n <= '0';
+        next_cycle <= T0;
+    end if;
+end  procedure;
+
+
 -- A.5.8 branch operations
 
 procedure a58_branch (int_flg : in integer; br_cond : in std_logic) is
@@ -1214,6 +1245,10 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#ee#, dsize) then
                     --abs
                     d_print("inc");
+                    a4_abs;
+                    if exec_cycle = T5 then
+                        set_nz_from_bus;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#fe#, dsize) then
                     --abs, x
