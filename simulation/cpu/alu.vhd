@@ -122,7 +122,6 @@ signal v : std_logic;
 
 signal arith_reg_in : std_logic_vector (dsize - 1 downto 0);
 signal arith_reg : std_logic_vector (dsize - 1 downto 0);
-signal arith_buf_we : std_logic;
 
 begin
 
@@ -141,8 +140,8 @@ begin
     ----------------------------------------
      -- arithmatic operation instances ----
     ----------------------------------------
-    arith_buf : d_flip_flop generic map (dsize) 
-            port map(clk, '1', '1', arith_buf_we, arith_reg_in, arith_reg);
+--    arith_buf : d_flip_flop generic map (dsize) 
+--            port map(clk, '1', '1', arith_buf_we, arith_reg_in, arith_reg);
 
     alu_inst : alu_core generic map (dsize)
             port map (sel, d1, d2, d_out, c_in, n, z, c, v);
@@ -205,9 +204,15 @@ use std.textio.all;
 use ieee.std_logic_textio.all;
 variable out_l : line;
 begin
-    write(out_l, msg);
-    writeline(output, out_l);
+--    write(out_l, msg);
+--    writeline(output, out_l);
 end  procedure;
+
+procedure set_nz is
+begin
+    negative <= n;
+    zero <= z;
+end procedure;
 
     begin
 
@@ -435,36 +440,25 @@ end  procedure;
     -------------------------------
     if (arith_en_n = '0') then
 
-        arith_buf_we <= '0';
-
         if instruction = conv_std_logic_vector(16#ca#, dsize) then
             --d_print("dex");
             sel <= ALU_DEC;
             d1 <= index_bus;
-            c_in <= '0';
-
-            negative <= n;
-            zero <= z;
+            set_nz;
             output_d_bus;
 
         elsif instruction = conv_std_logic_vector(16#88#, dsize) then
             --d_print("dey");
             sel <= ALU_DEC;
             d1 <= index_bus;
-            c_in <= '0';
-
-            negative <= n;
-            zero <= z;
+            set_nz;
             output_d_bus;
 
         elsif instruction = conv_std_logic_vector(16#e8#, dsize) then
             --d_print("inx");
             sel <= ALU_INC;
             d1 <= index_bus;
-            c_in <= '0';
-
-            negative <= n;
-            zero <= z;
+            set_nz;
             output_d_bus;
 
         elsif instruction = conv_std_logic_vector(16#c8#, dsize) then
@@ -486,8 +480,7 @@ end  procedure;
                 sel <= ALU_CMP;
                 d1 <= acc_out;
                 d2 <= int_d_bus;
-                negative <= n;
-                zero <= z;
+                set_nz;
                 carry_out <= c;
 
             elsif instruction (7 downto 5) = "111" then
@@ -510,21 +503,31 @@ end  procedure;
         elsif instruction (1 downto 0) = "00" then
             if instruction (7 downto 5) = "001" then
                 d_print("bit");
+                sel <= ALU_BIT;
+                d1 <= acc_out;
+                d2 <= int_d_bus;
+                set_nz;
+                overflow <= v;
             elsif instruction (7 downto 5) = "110" then
-                d_print("cpy");
+                --d_print("cpy");
+                sel <= ALU_CMP;
+                d1 <= index_bus;
+                d2 <= int_d_bus;
+                set_nz;
+                carry_out <= c;
+
             elsif instruction (7 downto 5) = "111" then
                -- d_print("cpx");
                 sel <= ALU_CMP;
                 d1 <= index_bus;
                 d2 <= int_d_bus;
-                negative <= n;
-                zero <= z;
+                set_nz;
                 carry_out <= c;
 
             end if; --if instruction (7 downto 5) = "001" then
         end if; --if instruction = conv_std_logic_vector(16#ca#, dsize) 
     else
-        arith_buf_we <= '1';
+
     end if; -- if (arith_en_n = '0') then
     end process;
 
@@ -675,7 +678,12 @@ end procedure;
     elsif sel = ALU_OR then
         res := d1 or d2;
     elsif sel = ALU_BIT then
-        ----
+        --transfer bit 7 and 6  of memory data to n, v flag.
+        negative <= d2(7);
+        overflow <= d2(6);
+        ----zero bit after A and M.
+        res(dsize - 1 downto 0) := d1 and d2;
+        set_z(res(dsize - 1 downto 0));
     elsif sel = ALU_ADC then
         res := ('0' & d1) + ('0' & d2) + carry_in;
         d_out <= res(dsize - 1 downto 0);
@@ -686,6 +694,8 @@ end procedure;
         else
             overflow <= '0';
         end if;
+        set_n(res(dsize - 1 downto 0));
+        set_z(res(dsize - 1 downto 0));
 
     elsif sel = ALU_SBC then
         ----
@@ -707,14 +717,16 @@ end procedure;
     elsif sel = ALU_INC then
         res := ('0' & d1) + "000000001";
         d_out <= res(dsize - 1 downto 0);
-        carry_out <= res(dsize);
+        set_n(res(dsize - 1 downto 0));
+        set_z(res(dsize - 1 downto 0));
+
     elsif sel = ALU_DEC then
         res := ('0' & d1) - "000000001";
         d_out <= res(dsize - 1 downto 0);
-        carry_out <= res(dsize);
+        set_n(res(dsize - 1 downto 0));
+        set_z(res(dsize - 1 downto 0));
+
     end if;
-    set_n(res(dsize - 1 downto 0));
-    set_z(res(dsize - 1 downto 0));
 
     end process;
 

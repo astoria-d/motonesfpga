@@ -261,12 +261,20 @@ begin
     stat_bus_nz_n <= '0';
 end  procedure;
 
---procedure set_nz_from_alu is
---begin
---end  procedure;
---
 procedure set_nzc_from_alu is
 begin
+    --status register n/z/c bit update.
+    stat_alu_we_n <= '0';
+    stat_dec_oe_n <= '1';
+    status_reg <= "10000011";
+end  procedure;
+
+procedure set_nzv_from_alu is
+begin
+    --status register n/z/v bit update.
+    stat_alu_we_n <= '0';
+    stat_dec_oe_n <= '1';
+    status_reg <= "11000010";
 end  procedure;
 
 --flag on/off instruction
@@ -754,6 +762,11 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#2c#, dsize) then
                     --abs
                     d_print("bit");
+                    a2_abs;
+                    if exec_cycle = T3 then
+                        arith_en_n <= '0';
+                        set_nzv_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#c9#, dsize) then
                     --imm

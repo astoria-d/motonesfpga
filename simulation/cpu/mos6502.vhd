@@ -247,7 +247,6 @@ end component;
                     
     signal alu_n : std_logic;
     signal alu_z : std_logic;
-    signal alu_c_in : std_logic;
     signal alu_c : std_logic;
     signal alu_v : std_logic;
 
@@ -406,7 +405,7 @@ begin
                     abh,
                     pcl_inc_carry(0),
                     ea_carry,
-                    alu_c_in,
+                    status_reg(0),
                     alu_n,
                     alu_z,
                     alu_c,
