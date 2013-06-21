@@ -40,6 +40,7 @@ entity decoder is
             zp_n            : out std_logic;
             zp_xy_n         : out std_logic;
             rel_calc_n      : out std_logic;
+            indir_n         : out std_logic;
             indir_x_n       : out std_logic;
             indir_y_n       : out std_logic;
             arith_en_n      : out std_logic;
@@ -50,6 +51,7 @@ entity decoder is
             stat_bus_all_n  : out std_logic;
             stat_bus_nz_n   : out std_logic;
             stat_alu_we_n   : out std_logic;
+            r_vec_oe_n      : out std_logic;
             r_nw            : out std_logic
             ;---for parameter check purpose!!!
             check_bit     : out std_logic_vector(1 to 5)
@@ -95,7 +97,6 @@ constant R2 : std_logic_vector (5 downto 0) := "001010";
 constant R3 : std_logic_vector (5 downto 0) := "001011";
 constant R4 : std_logic_vector (5 downto 0) := "001100";
 constant R5 : std_logic_vector (5 downto 0) := "001101";
-constant R6 : std_logic_vector (5 downto 0) := "001110";
 
 --10xxx : nmi cycle : N0 > N1 > N2 > N3 > N4 > N5 > T0
 constant N0 : std_logic_vector (5 downto 0) := "010000";
@@ -222,6 +223,7 @@ begin
     zp_n <= '1';
     zp_xy_n <= '1';
     rel_calc_n <= '1';
+    indir_n <= '1';
     indir_x_n <= '1';
     indir_y_n <= '1';
     arith_en_n <= '1';
@@ -233,6 +235,8 @@ begin
     stat_bus_all_n <= '1';
     stat_bus_nz_n <= '1';
     stat_alu_we_n <= '1';
+
+    r_vec_oe_n <= '1';
 
     d_print(string'("fetch 1"));
 end;
@@ -1582,6 +1586,7 @@ end  procedure;
                 zp_n <= '1';
                 zp_xy_n <= '1';
                 rel_calc_n <= '1';
+                indir_n <= '1';
                 indir_x_n <= '1';
                 indir_y_n <= '1';
                 arith_en_n <= '1';
@@ -1594,6 +1599,7 @@ end  procedure;
                 stat_bus_nz_n <= '1';
                 stat_alu_we_n <= '1';
 
+                r_vec_oe_n <= '1';
                 r_nw <= '1';
 
                 next_cycle <= R1;
@@ -1646,41 +1652,23 @@ end  procedure;
 
                 --fetch reset vector low
                 r_nw <= '1';
-                fetch_next;
+                r_vec_oe_n <= '0';
                 dbuf_int_oe_n <= '0';
-                dl_al_we_n <= '0';
+                front_we(pcl_cmd, '0');
                 next_cycle <= R5;
                 
             elsif exec_cycle = R5 then
-                dl_al_we_n <= '1';
+                front_we(pcl_cmd, '1');
 
                 --fetch reset vector hi
                 r_nw <= '1';
-                fetch_next;
+                r_vec_oe_n <= '0';
                 dbuf_int_oe_n <= '0';
-                dl_ah_we_n <= '0';
-                ---load pch.
                 front_we(pch_cmd, '0');
+                indir_n <= '0';
 
-                next_cycle <= R6;
-
-            elsif exec_cycle = R6 then
-                back_oe(pcl_cmd, '1');
-                front_we(pch_cmd, '1');
-                dbuf_int_oe_n <= '1';
-                dl_ah_we_n <= '1';
-
-                --latch > al.
-                dl_al_oe_n <= '0';
-                back_we(pcl_cmd, '0');
-                
-                --fetch inst and goto decode next.
-                back_oe(pch_cmd, '0');
-                inst_we_n <= '0';
-                pcl_inc_n <= '0';
-
-                --next is T1.
-                next_cycle <= T1;
+                --start execute cycle.
+                next_cycle <= T0;
 
             elsif exec_cycle(5) = '1' then
                 ---pc increment and next page.

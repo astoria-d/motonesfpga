@@ -20,6 +20,7 @@ entity alu is
             zp_n            : in std_logic;
             zp_xy_n         : in std_logic;
             rel_calc_n      : in std_logic;
+            indir_n         : in std_logic;
             indir_x_n       : in std_logic;
             indir_y_n       : in std_logic;
             arith_en_n      : in std_logic;
@@ -155,7 +156,7 @@ begin
                     ---for address calucuration
                     pcl_inc_n, pch_inc_n, sp_oe_n, sp_push_n, sp_pop_n,
                     abs_xy_n, pg_next_n, zp_n, zp_xy_n, rel_calc_n, 
-                    indir_x_n, indir_y_n, 
+                    indir_n, indir_x_n, indir_y_n, 
                     int_d_bus, index_bus, bal, bal, addr_c_in, addr_out, addr_c,
 
                     --for arithmatic operation.
@@ -351,6 +352,16 @@ end procedure;
             end if;
             abh <= bah;
         end if;
+    elsif (indir_n = '0') then
+        abh <= bah;
+        --get next address.
+        addr1 <= bal;
+        a_sel <= ADDR_INC;
+        abl <= addr_out;
+
+        --TODO: must handle page crossing case...
+        ea_carry <= addr_c;
+
     elsif (indir_x_n = '0') then
 
     elsif (indir_y_n = '0') then
