@@ -12,7 +12,7 @@ entity alu is
     port (  clk             : in std_logic;
             pcl_inc_n       : in std_logic;
             pch_inc_n       : in std_logic;
-            sph_oe_n        : in std_logic;
+            sp_oe_n         : in std_logic;
             sp_push_n       : in std_logic;
             sp_pop_n        : in std_logic;
             abs_xy_n        : in std_logic;
@@ -153,7 +153,7 @@ begin
     -------------------------------
     alu_p : process (clk, 
                     ---for address calucuration
-                    pcl_inc_n, pch_inc_n, sph_oe_n, sp_push_n, sp_pop_n,
+                    pcl_inc_n, pch_inc_n, sp_oe_n, sp_push_n, sp_pop_n,
                     abs_xy_n, pg_next_n, zp_n, zp_xy_n, rel_calc_n, 
                     indir_x_n, indir_y_n, 
                     int_d_bus, index_bus, bal, bal, addr_c_in, addr_out, addr_c,
@@ -250,7 +250,7 @@ end procedure;
         abl <= bal;
         abh <= bah;
 
-    elsif (sph_oe_n = '0') then
+    elsif (sp_oe_n = '0') then
         --stack operation...
         abh <= "00000001";
 

@@ -28,7 +28,7 @@ entity decoder is
             pcl_cmd         : out std_logic_vector(3 downto 0);
             pch_cmd         : out std_logic_vector(3 downto 0);
             sp_cmd          : out std_logic_vector(3 downto 0);
-            sph_oe_n        : out std_logic;
+            sp_oe_n         : out std_logic;
             sp_push_n       : out std_logic;
             sp_pop_n        : out std_logic;
             acc_cmd         : out std_logic_vector(3 downto 0);
@@ -95,6 +95,7 @@ constant R2 : std_logic_vector (5 downto 0) := "001010";
 constant R3 : std_logic_vector (5 downto 0) := "001011";
 constant R4 : std_logic_vector (5 downto 0) := "001100";
 constant R5 : std_logic_vector (5 downto 0) := "001101";
+constant R6 : std_logic_vector (5 downto 0) := "001110";
 
 --10xxx : nmi cycle : N0 > N1 > N2 > N3 > N4 > N5 > T0
 constant N0 : std_logic_vector (5 downto 0) := "010000";
@@ -209,7 +210,7 @@ begin
     dl_dh_oe_n <= '1';
     pch_inc_n <= '1';
     sp_cmd <= "1111";
-    sph_oe_n <= '1';
+    sp_oe_n <= '1';
     sp_push_n <= '1';
     sp_pop_n <= '1';
     acc_cmd <= "1111";
@@ -1341,7 +1342,7 @@ end  procedure;
 
                        --push return addr high into stack.
                         sp_push_n <= '0';
-                        sph_oe_n <= '0';
+                        sp_oe_n <= '0';
                         front_oe(pch_cmd, '0');
                         back_oe(sp_cmd, '0');
                         back_we(sp_cmd, '0');
@@ -1353,7 +1354,7 @@ end  procedure;
 
                        --push return addr low into stack.
                         sp_push_n <= '0';
-                        sph_oe_n <= '0';
+                        sp_oe_n <= '0';
                         front_oe(pcl_cmd, '0');
                         back_oe(sp_cmd, '0');
                         back_we(sp_cmd, '0');
@@ -1363,7 +1364,7 @@ end  procedure;
                     elsif exec_cycle = T4 then
                         d_print("jsr 5");
                         sp_push_n <= '1';
-                        sph_oe_n <= '1';
+                        sp_oe_n <= '1';
                         front_oe(pcl_cmd, '1');
                         back_oe(sp_cmd, '1');
                         back_we(sp_cmd, '1');
@@ -1466,7 +1467,7 @@ end  procedure;
                         back_oe(sp_cmd, '0');
                         back_we(sp_cmd, '0');
                         sp_pop_n <= '0';
-                        sph_oe_n <= '0';
+                        sp_oe_n <= '0';
 
                         next_cycle <= T2;
                     elsif exec_cycle = T2 then
@@ -1476,7 +1477,7 @@ end  procedure;
                         back_oe(sp_cmd, '0');
                         back_we(sp_cmd, '0');
                         sp_pop_n <= '0';
-                        sph_oe_n <= '0';
+                        sp_oe_n <= '0';
 
                         --load lo addr.
                         dbuf_int_oe_n <= '0';
@@ -1492,7 +1493,7 @@ end  procedure;
 
                         --pop pch
                         back_oe(sp_cmd, '0');
-                        sph_oe_n <= '0';
+                        sp_oe_n <= '0';
                         --load hi addr.
                         dbuf_int_oe_n <= '0';
                         front_we(pch_cmd, '0');
@@ -1501,7 +1502,7 @@ end  procedure;
                     elsif exec_cycle = T4 then
                         d_print("rts 5");
                         back_oe(sp_cmd, '1');
-                        sph_oe_n <= '1';
+                        sp_oe_n <= '1';
                         --load hi addr.
                         dbuf_int_oe_n <= '1';
                         front_we(pch_cmd, '1');
@@ -1552,7 +1553,10 @@ end  procedure;
             elsif exec_cycle = R0 then
                 d_print(string'("reset"));
 
-                next_cycle <= R1;
+                front_we(pch_cmd, '1');
+                back_we(pcl_cmd, '1');
+
+                --initialize port...
                 inst_we_n <= '1';
                 ad_oe_n <= '1';
                 dbuf_int_oe_n <= '1';
@@ -1566,7 +1570,7 @@ end  procedure;
                 pcl_cmd <= "1111";
                 pch_cmd <= "1111";
                 sp_cmd <= "1111";
-                sph_oe_n <= '1';
+                sp_oe_n <= '1';
                 sp_push_n <= '1';
                 sp_pop_n <= '1';
                 acc_cmd <= "1111";
@@ -1591,22 +1595,92 @@ end  procedure;
                 stat_alu_we_n <= '1';
 
                 r_nw <= '1';
+
+                next_cycle <= R1;
             elsif exec_cycle = R1 then
+                --push pch.
+                d_print("R1");
+                ad_oe_n <= '0';
+                sp_push_n <= '0';
+                sp_oe_n <= '0';
+                front_oe(pch_cmd, '0');
+                back_oe(sp_cmd, '0');
+                back_we(sp_cmd, '0');
+                r_nw <= '0';
+
                 next_cycle <= R2;
-                front_we(pch_cmd, '1');
-                back_we(pcl_cmd, '1');
 
             elsif exec_cycle = R2 then
+                front_oe(pch_cmd, '1');
+
+               --push pcl.
+                sp_push_n <= '0';
+                sp_oe_n <= '0';
+                front_oe(pcl_cmd, '0');
+                back_oe(sp_cmd, '0');
+                back_we(sp_cmd, '0');
+                r_nw <= '0';
+
                 next_cycle <= R3;
 
             elsif exec_cycle = R3 then
+                front_oe(pcl_cmd, '1');
+
+               --push status.
+                sp_push_n <= '0';
+                sp_oe_n <= '0';
+                stat_bus_oe_n <= '0';
+                back_oe(sp_cmd, '0');
+                back_we(sp_cmd, '0');
+                r_nw <= '0';
+
                 next_cycle <= R4;
 
             elsif exec_cycle = R4 then
+                stat_bus_oe_n <= '1';
+                sp_push_n <= '1';
+                sp_oe_n <= '1';
+                front_oe(pcl_cmd, '1');
+                back_oe(sp_cmd, '1');
+                back_we(sp_cmd, '1');
+
+                --fetch reset vector low
+                r_nw <= '1';
+                fetch_next;
+                dbuf_int_oe_n <= '0';
+                dl_al_we_n <= '0';
                 next_cycle <= R5;
                 
             elsif exec_cycle = R5 then
-                next_cycle <= T0;
+                dl_al_we_n <= '1';
+
+                --fetch reset vector hi
+                r_nw <= '1';
+                fetch_next;
+                dbuf_int_oe_n <= '0';
+                dl_ah_we_n <= '0';
+                ---load pch.
+                front_we(pch_cmd, '0');
+
+                next_cycle <= R6;
+
+            elsif exec_cycle = R6 then
+                back_oe(pcl_cmd, '1');
+                front_we(pch_cmd, '1');
+                dbuf_int_oe_n <= '1';
+                dl_ah_we_n <= '1';
+
+                --latch > al.
+                dl_al_oe_n <= '0';
+                back_we(pcl_cmd, '0');
+                
+                --fetch inst and goto decode next.
+                back_oe(pch_cmd, '0');
+                inst_we_n <= '0';
+                pcl_inc_n <= '0';
+
+                --next is T1.
+                next_cycle <= T1;
 
             elsif exec_cycle(5) = '1' then
                 ---pc increment and next page.

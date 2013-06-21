@@ -49,7 +49,7 @@ component decoder
             pcl_cmd         : out std_logic_vector(3 downto 0);
             pch_cmd         : out std_logic_vector(3 downto 0);
             sp_cmd          : out std_logic_vector(3 downto 0);
-            sph_oe_n        : out std_logic;
+            sp_oe_n         : out std_logic;
             sp_push_n       : out std_logic;
             sp_pop_n        : out std_logic;
             acc_cmd         : out std_logic_vector(3 downto 0);
@@ -83,7 +83,7 @@ component alu
     port (  clk             : in std_logic;
             pcl_inc_n       : in std_logic;
             pch_inc_n       : in std_logic;
-            sph_oe_n        : in std_logic;
+            sp_oe_n         : in std_logic;
             sp_push_n       : in std_logic;
             sp_pop_n        : in std_logic;
             abs_xy_n        : in std_logic;
@@ -257,7 +257,7 @@ end component;
     signal acc_cmd : std_logic_vector(3 downto 0);
     signal x_cmd : std_logic_vector(3 downto 0);
     signal y_cmd : std_logic_vector(3 downto 0);
-    signal sph_oe_n : std_logic;
+    signal sp_oe_n : std_logic;
     signal sp_push_n : std_logic;
     signal sp_pop_n  : std_logic;
 
@@ -318,8 +318,8 @@ begin
     trigger_clk <= not input_clk;
 
     r_nw <= dbuf_r_nw;
-    reset_l <= "00000000";
-    reset_h <= "10000000";
+    reset_l <= "11111100";
+    reset_h <= "11111111";
     rst <= not rst_n;
 
 
@@ -351,7 +351,7 @@ begin
                     pcl_cmd,
                     pch_cmd,
                     sp_cmd,
-                    sph_oe_n,
+                    sp_oe_n,
                     sp_push_n,
                     sp_pop_n,
                     acc_cmd,
@@ -381,7 +381,7 @@ begin
             port map (trigger_clk, 
                     pcl_inc_n,
                     pch_inc_n,
-                    sph_oe_n,
+                    sp_oe_n,
                     sp_push_n,
                     sp_pop_n,
                     abs_xy_n,
