@@ -89,7 +89,7 @@ begin
 
 
     --ram io timing.
-    main_p : process (phi2, addr, R_nW)
+    main_p : process (phi2, addr, d_io, R_nW)
     begin
             -- ram range : 0 - 0x2000.
             -- 0x2000 is 0010_0000_0000_0000
@@ -98,11 +98,7 @@ begin
             if (R_nW = '0') then
                 --write
                 --write timing slided by half clock.
-                if (phi2'event and phi2 = '1') then
-                    ram_ce_n <= '0';
-                elsif (phi2'event and phi2 = '0') then
-                    ram_ce_n <= '1';
-                end if;
+                ram_ce_n <= not phi2;
             elsif (R_nW = '1') then 
                 --read
                 ram_ce_n <= '0';
