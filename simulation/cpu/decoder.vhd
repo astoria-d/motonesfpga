@@ -361,6 +361,23 @@ begin
 end  procedure;
 
 --A.2. internal execution on memory data
+
+procedure a2_zp is
+begin
+    if exec_cycle = T1 then
+        fetch_low;
+    elsif exec_cycle = T2 then
+        fetch_stop;
+        dbuf_int_oe_n <= '0';
+        dl_al_we_n <= '1';
+
+        --calc zp.
+        dl_al_oe_n <= '0';
+        zp_n <= '0';
+        next_cycle <= T0;
+    end if;
+end  procedure;
+
 procedure a2_abs is
 begin
     if exec_cycle = T1 then
@@ -521,6 +538,40 @@ end  procedure;
 
 
 ---A.4. read-modify-write operation
+
+procedure a4_zp is
+begin
+    if exec_cycle = T1 then
+        fetch_low;
+    elsif exec_cycle = T2 then
+        fetch_stop;
+        dbuf_int_oe_n <= '1';
+        dl_al_we_n <= '1';
+
+        --t2 cycle only read
+        dl_al_oe_n <= '0';
+        zp_n <= '0';
+        next_cycle <= T3;
+    elsif exec_cycle = T3 then
+        dl_al_oe_n <= '0';
+        zp_n <= '0';
+        --keep data in the alu reg.
+        arith_en_n <= '0';
+        dbuf_int_oe_n <= '0';
+        next_cycle <= T4;
+    elsif exec_cycle = T4 then
+        dbuf_int_oe_n <= '1';
+
+        --t5 cycle writes modified value.
+        dl_al_oe_n <= '0';
+        zp_n <= '0';
+        r_nw <= '0';
+        arith_en_n <= '0';
+        next_cycle <= T0;
+    end if;
+end  procedure;
+
+
 procedure a4_abs is
 begin
     if exec_cycle = T1 then
@@ -909,6 +960,12 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#e4#, dsize) then
                     --zp
                     d_print("cpx");
+                    a2_zp;
+                    if exec_cycle = T2 then
+                        arith_en_n <= '0';
+                        back_oe(x_cmd, '0');
+                        set_nzc_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#ec#, dsize) then
                     --abs
@@ -1245,6 +1302,7 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#e6#, dsize) then
                     --zp
                     d_print("inc");
+                    a4_zp;
 
                 elsif instruction  = conv_std_logic_vector(16#f6#, dsize) then
                     --zp, x
