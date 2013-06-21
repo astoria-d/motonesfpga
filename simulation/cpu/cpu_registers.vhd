@@ -360,7 +360,8 @@ begin
     dff_inst : d_flip_flop generic map (dsize) 
                     port map(clk, '1', res_n, we_n, d, status_val);
 
-    main_p : process (clk, res_n, we_n, dec_val, int_dbus)
+    main_p : process (clk, res_n, we_n, dec_val, int_dbus, 
+                            alu_n, alu_v, alu_z, alu_c)
     variable tmp : std_logic_vector (dsize - 1 downto 0);
     begin
 --        SR Flags (bit 7 to bit 0):

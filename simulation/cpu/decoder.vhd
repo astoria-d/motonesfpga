@@ -749,6 +749,9 @@ end  procedure;
                 elsif instruction = conv_std_logic_vector(16#a8#, dsize) then
                     d_print("tay");
                     set_nz_from_bus;
+                    single_inst;
+                    front_oe(acc_cmd, '0');
+                    front_we(y_cmd, '0');
 
                 elsif instruction = conv_std_logic_vector(16#ba#, dsize) then
                     d_print("tsx");

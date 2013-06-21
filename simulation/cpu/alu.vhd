@@ -757,6 +757,9 @@ end procedure;
         else
             carry_out <= '0';
         end if;
+        set_n(res(dsize - 1 downto 0));
+        set_z(res(dsize - 1 downto 0));
+
     elsif sel = ALU_SL then
         ----
     elsif sel = ALU_SR then
