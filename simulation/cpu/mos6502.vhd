@@ -296,7 +296,7 @@ end component;
     signal abl : std_logic_vector(dsize - 1 downto 0);
 
     ---internal data bus
-    signal d_bus : std_logic_vector(dsize - 1 downto 0);
+    signal int_d_bus : std_logic_vector(dsize - 1 downto 0);
 
     ---reset vectors---
     signal r_vec_oe_n : std_logic;
@@ -397,7 +397,7 @@ begin
                     arith_en_n,
                     instruction,
                     exec_cycle,
-                    d_bus,
+                    int_d_bus,
                     acc_out,
                     index_bus,
                     bal,
@@ -426,27 +426,27 @@ begin
 
     --io data buffer
     dbus_buf : data_bus_buffer generic map (dsize) 
-            port map(set_clk, dbuf_r_nw, dbuf_int_oe_n, d_bus, d_io);
+            port map(set_clk, dbuf_r_nw, dbuf_int_oe_n, int_d_bus, d_io);
 
     --address operand data buffer.
     idl_l : input_data_latch generic map (dsize) 
-            port map(set_clk, dl_al_oe_n, dl_al_we_n, d_bus, bal);
+            port map(set_clk, dl_al_oe_n, dl_al_we_n, int_d_bus, bal);
     idl_h : input_data_latch generic map (dsize) 
-            port map(set_clk, '0', dl_ah_we_n, d_bus, idl_h_out);
+            port map(set_clk, '0', dl_ah_we_n, int_d_bus, idl_h_out);
     ---only DLH has b-bus side output.
     idl_h_a_buf : tri_state_buffer generic map (dsize)
             port map (dl_ah_oe_n, idl_h_out, bah);
     idl_h_d_buf : tri_state_buffer generic map (dsize)
-            port map (dl_dh_oe_n, idl_h_out, d_bus);
+            port map (dl_dh_oe_n, idl_h_out, int_d_bus);
 
     -------- registers --------
     ir : d_flip_flop generic map (dsize) 
             port map(trigger_clk, rst_n, '1', inst_we_n, d_io, instruction);
 
     pcl_inst : dual_dff generic map (dsize) 
-            port map(trigger_clk, rst_n, '1', pcl_cmd, d_bus, addr_back, bal);
+            port map(trigger_clk, rst_n, '1', pcl_cmd, int_d_bus, addr_back, bal);
     pch_inst : dual_dff generic map (dsize) 
-            port map(trigger_clk, rst_n, '1', pch_cmd, d_bus, addr_back, bah);
+            port map(trigger_clk, rst_n, '1', pch_cmd, int_d_bus, addr_back, bah);
 
     --status register
     status_register : processor_status generic map (dsize) 
@@ -454,19 +454,19 @@ begin
                     stat_dec_oe_n, stat_bus_oe_n, 
                     stat_set_flg_n, stat_flg, stat_bus_all_n, stat_bus_nz_n, 
                     stat_alu_we_n, alu_n, alu_v, alu_z, alu_c,
-                    status_reg, d_bus);
+                    status_reg, int_d_bus);
 
 
     sp : dual_dff generic map (dsize) 
-            port map(trigger_clk, rst_n, '1', sp_cmd, d_bus, addr_back, bal);
+            port map(trigger_clk, rst_n, '1', sp_cmd, int_d_bus, addr_back, bal);
 
     x : dual_dff generic map (dsize) 
-            port map(trigger_clk, rst_n, '1', x_cmd, d_bus, null_bus, index_bus);
+            port map(trigger_clk, rst_n, '1', x_cmd, int_d_bus, null_bus, index_bus);
     y : dual_dff generic map (dsize) 
-            port map(trigger_clk, rst_n, '1', y_cmd, d_bus, null_bus, index_bus);
+            port map(trigger_clk, rst_n, '1', y_cmd, int_d_bus, null_bus, index_bus);
 
     acc : dual_dff generic map (dsize) 
-            port map(trigger_clk, rst_n, '1', acc_cmd, d_bus, acc_in, acc_out);
+            port map(trigger_clk, rst_n, '1', acc_cmd, int_d_bus, acc_in, acc_out);
 
     --adh output is controlled by decoder.
     adh_buf : tri_state_buffer generic map (dsize)
