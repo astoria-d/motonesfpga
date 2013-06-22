@@ -1303,6 +1303,9 @@ end  procedure;
                     --zp
                     d_print("inc");
                     a4_zp;
+                    if exec_cycle = T4 then
+                        set_nz_from_bus;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#f6#, dsize) then
                     --zp, x

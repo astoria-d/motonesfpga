@@ -61,6 +61,17 @@ component d_flip_flop
         );
 end component;
 
+component tri_state_buffer
+    generic (
+            dsize : integer := 8
+            );
+    port (  
+            oe_n    : in std_logic;
+            d       : in std_logic_vector (dsize - 1 downto 0);
+            q       : out std_logic_vector (dsize - 1 downto 0)
+        );
+end component;
+
 component address_calculator
     generic (   dsize : integer := 8
             );
@@ -114,6 +125,7 @@ signal sel : std_logic_vector (3 downto 0);
 signal d1 : std_logic_vector (dsize - 1 downto 0);
 signal d2 : std_logic_vector (dsize - 1 downto 0);
 signal d_out : std_logic_vector (dsize - 1 downto 0);
+signal alu_out : std_logic_vector (dsize - 1 downto 0);
 
 signal n : std_logic;
 signal z : std_logic;
@@ -122,17 +134,23 @@ signal c : std_logic;
 signal v : std_logic;
 
 signal arith_buf_we_n : std_logic;
+signal arith_buf_oe_n : std_logic;
 signal arith_reg_in : std_logic_vector (dsize - 1 downto 0);
 signal arith_reg : std_logic_vector (dsize - 1 downto 0);
+signal arith_reg_out : std_logic_vector (dsize - 1 downto 0);
+signal d_oe_n : std_logic;
+
+signal m2m_stat_1 : std_logic;
+signal m2m_stat_2 : std_logic;
 
 begin
 
     ----------------------------------------
      -- address calucurator instances ----
     ----------------------------------------
-    al_buf : d_flip_flop generic map (dsize) 
+    al_dff : d_flip_flop generic map (dsize) 
             port map(clk, '1', '1', al_buf_we_n, al_reg_in, al_reg);
-    ah_buf : d_flip_flop generic map (dsize) 
+    ah_dff : d_flip_flop generic map (dsize) 
             port map(clk, '1', '1', ah_buf_we_n, ah_reg_in, ah_reg);
 
     addr_calc_inst : address_calculator generic map (dsize)
@@ -142,28 +160,33 @@ begin
     ----------------------------------------
      -- arithmatic operation instances ----
     ----------------------------------------
-    arith_buf : d_flip_flop generic map (dsize) 
+    arith_dff : d_flip_flop generic map (dsize) 
             port map(clk, '1', '1', arith_buf_we_n, arith_reg_in, arith_reg);
+    arith_buf : tri_state_buffer generic map (dsize)
+            port map (arith_buf_oe_n, arith_reg, arith_reg_out);
 
     alu_inst : alu_core generic map (dsize)
-            port map (sel, d1, d2, d_out, c_in, n, z, c, v);
-
+            port map (sel, d1, d2, alu_out, c_in, n, z, c, v);
+    alu_buf : tri_state_buffer generic map (dsize)
+            port map (d_oe_n, alu_out, d_out);
 
     -------------------------------
     ---- address calucuration -----
     -------------------------------
-    alu_p : process (clk, 
+    alu_p : process (
+                    clk, 
                     ---for address calucuration
                     pcl_inc_n, pch_inc_n, sp_oe_n, sp_push_n, sp_pop_n,
                     abs_xy_n, pg_next_n, zp_n, zp_xy_n, rel_calc_n, 
                     indir_n, indir_x_n, indir_y_n, 
-                    int_d_bus, index_bus, bal, bal, addr_c_in, addr_out, addr_c,
+                    index_bus, bal, bal, addr_c_in, addr_out, addr_c,
 
                     --for arithmatic operation.
                     arith_en_n,
-                    instruction, int_d_bus, acc_out, index_bus, 
-                    carry_in, d_out, n, z, c, v)
-
+                    instruction, exec_cycle, int_d_bus, acc_out, 
+                    carry_in, n, z, c, v,
+                    arith_reg, arith_reg_out, alu_out, d_out
+                    )
 
 constant ADDR_ADC    : std_logic_vector (1 downto 0) := "00";
 constant ADDR_INC    : std_logic_vector (1 downto 0) := "01";
@@ -193,12 +216,14 @@ constant T5 : std_logic_vector (5 downto 0) := "000101";
 
 procedure output_d_bus is
 begin
-    arith_reg_in <= d_out;
     arith_buf_we_n <= '0';
+    arith_buf_oe_n <= '0';
+    d_oe_n <= '0';
+    arith_reg_in <= d_out;
     if (clk = '0') then
         int_d_bus <= d_out;
     else
-        int_d_bus <= arith_reg;
+        int_d_bus <= arith_reg_out;
     end if;
 end  procedure;
 
@@ -207,8 +232,8 @@ use std.textio.all;
 use ieee.std_logic_textio.all;
 variable out_l : line;
 begin
---    write(out_l, msg);
---    writeline(output, out_l);
+    write(out_l, msg);
+    writeline(output, out_l);
 end  procedure;
 
 procedure set_nz is
@@ -366,6 +391,7 @@ end procedure;
 
     elsif (indir_y_n = '0') then
 
+        if (clk = '0') then
         if (exec_cycle = T2) then
             ---input is IAL.
             abh <= "00000000";
@@ -421,8 +447,8 @@ end procedure;
                 abh <= ah_reg;
                 abl <= al_reg;
             end if;
-        end if;
-
+        end if; -- if (exec_cycle = T2) then
+        end if; --if (clk'event and clk = '0') then
     else
         al_buf_we_n <= '1';
         ah_buf_we_n <= '1';
@@ -476,6 +502,7 @@ end procedure;
                 sel <= ALU_OR;
                 d1 <= acc_out;
                 d2 <= int_d_bus;
+                d_oe_n <= '0';
                 acc_in <= d_out;
                 set_nz;
 
@@ -484,6 +511,7 @@ end procedure;
                 sel <= ALU_AND;
                 d1 <= acc_out;
                 d2 <= int_d_bus;
+                d_oe_n <= '0';
                 acc_in <= d_out;
                 set_nz;
 
@@ -502,7 +530,8 @@ end procedure;
 
             elsif instruction (7 downto 5) = "111" then
                 d_print("sbc");
-            end if;
+            end if; --if instruction (7 downto 5) = "000" then
+
         elsif instruction (1 downto 0) = "10" then
             if instruction (7 downto 5) = "000" then
                 d_print("asl");
@@ -515,27 +544,43 @@ end procedure;
             elsif instruction (7 downto 5) = "110" then
                 d_print("dec");
             elsif instruction (7 downto 5) = "111" then
-                d_print("inc");
+                --d_print("alu inc");
                 --memory to memory operation takes two cycles.
                 --first is write original data 
                 --second is write modified data
-                if (arith_buf_we_n = '1') then
-                    --first cycle. do nothing.
-                    arith_buf_we_n <= '0';
-                    arith_reg_in <= int_d_bus;
-                else
-                    --second cycle read from register, output modified data.
-                    arith_buf_we_n <= '1';
-                    d1 <= arith_reg;
-                    sel <= ALU_INC;
-                    set_nz;
-                    if (clk'event and clk = '0') then
-                        --output must wait.
-                        int_d_bus <= d_out;
+
+                arith_reg_in <= int_d_bus;
+                sel <= ALU_INC;
+                d1 <= arith_reg_out;
+                set_nz;
+                int_d_bus <= d_out;
+
+                if (clk = '0') then
+                    --d_print("clk hi");
+                    if (m2m_stat_1 = '0') then
+                        --first cycle. keep input variable.
+                        --d_print("inc first.");
+                        m2m_stat_1 <= '1';
+                        arith_buf_we_n <= '0';
+                        arith_buf_oe_n <= '1';
+                        d_oe_n <= '1';
+
                     end if;
                 end if;
 
-            end if;
+                if (clk'event and clk = '0') then
+                    if (m2m_stat_2 = '0') then
+                        --second cycle read from register, output modified data.
+                        --d_print("inc second...");
+                        m2m_stat_2 <= '1';
+                        arith_buf_we_n <= '1';
+                        arith_buf_oe_n <= '0';
+                        d_oe_n <= '0';
+                    end if;
+                end if;
+
+            end if; --if instruction (7 downto 5) = "000" then
+
         elsif instruction (1 downto 0) = "00" then
             if instruction (7 downto 5) = "001" then
                 d_print("bit");
@@ -563,14 +608,15 @@ end procedure;
             end if; --if instruction (7 downto 5) = "001" then
         end if; --if instruction = conv_std_logic_vector(16#ca#, dsize) 
     else
+        --d_print("no arith");
+        m2m_stat_1 <= '0';
+        m2m_stat_2 <= '0';
+        d_oe_n <= '1';
         arith_buf_we_n <= '1';
+        arith_buf_oe_n <= '1';
         int_d_bus <= (others => 'Z');
-
-        negative <= 'Z';
-        zero <= 'Z';
-        carry_out <= 'Z';
-        overflow <= 'Z';
     end if; -- if (arith_en_n = '0') then
+
     end process;
 
 end rtl;
@@ -671,8 +717,8 @@ use std.textio.all;
 use ieee.std_logic_textio.all;
 variable out_l : line;
 begin
-    write(out_l, msg);
-    writeline(output, out_l);
+--    write(out_l, msg);
+--    writeline(output, out_l);
 end  procedure;
 
 constant ALU_AND    : std_logic_vector (3 downto 0) := "0000";
