@@ -205,6 +205,7 @@ component processor_status
             alu_v       : in std_logic;
             alu_z       : in std_logic;
             alu_c       : in std_logic;
+            stat_c      : out std_logic;
             dec_val     : inout std_logic_vector (dsize - 1 downto 0);
             int_dbus    : inout std_logic_vector (dsize - 1 downto 0)
         );
@@ -253,6 +254,7 @@ end component;
     signal alu_z : std_logic;
     signal alu_c : std_logic;
     signal alu_v : std_logic;
+    signal stat_c : std_logic;
 
     ----control line for dual port registers.
     signal pcl_cmd : std_logic_vector(3 downto 0);
@@ -408,7 +410,7 @@ begin
                     abh,
                     pcl_inc_carry(0),
                     ea_carry,
-                    status_reg(0),
+                    stat_c,
                     alu_n,
                     alu_z,
                     alu_c,
@@ -453,7 +455,7 @@ begin
             port map (trigger_clk, rst_n, 
                     stat_dec_oe_n, stat_bus_oe_n, 
                     stat_set_flg_n, stat_flg, stat_bus_all_n, stat_bus_nz_n, 
-                    stat_alu_we_n, alu_n, alu_v, alu_z, alu_c,
+                    stat_alu_we_n, alu_n, alu_v, alu_z, alu_c, stat_c,
                     status_reg, int_d_bus);
 
 

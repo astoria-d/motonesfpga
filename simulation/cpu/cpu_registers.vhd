@@ -312,6 +312,7 @@ entity processor_status is
             alu_v       : in std_logic;
             alu_z       : in std_logic;
             alu_c       : in std_logic;
+            stat_c      : out std_logic;
             dec_val     : inout std_logic_vector (dsize - 1 downto 0);
             int_dbus    : inout std_logic_vector (dsize - 1 downto 0)
         );
@@ -359,6 +360,9 @@ begin
 
     dff_inst : d_flip_flop generic map (dsize) 
                     port map(clk, '1', res_n, we_n, d, status_val);
+
+    --carry status for adc/sbc.
+    stat_c <= status_val(0);
 
     main_p : process (clk, res_n, we_n, dec_val, int_dbus, 
                             alu_n, alu_v, alu_z, alu_c)

@@ -290,6 +290,13 @@ begin
     status_reg <= "11000010";
 end  procedure;
 
+procedure set_nvzc_from_alu is
+begin
+    stat_alu_we_n <= '0';
+    stat_dec_oe_n <= '1';
+    status_reg <= "11000011";
+end  procedure;
+
 --flag on/off instruction
 procedure set_flag (int_flg : in integer; val : in std_logic) is
 begin
@@ -833,6 +840,9 @@ end  procedure;
                 elsif instruction = conv_std_logic_vector(16#98#, dsize) then
                     d_print("tya");
                     set_nz_from_bus;
+                    single_inst;
+                    front_oe(y_cmd, '0');
+                    front_we(acc_cmd, '0');
 
 
 
@@ -842,6 +852,11 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#69#, dsize) then
                     --imm
                     d_print("adc");
+                    fetch_imm;
+                    arith_en_n <= '0';
+                    back_oe(acc_cmd, '0');
+                    back_we(acc_cmd, '0');
+                    set_nvzc_from_alu;
 
                 elsif instruction  = conv_std_logic_vector(16#65#, dsize) then
                     --zp
@@ -932,6 +947,12 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#c5#, dsize) then
                     --zp
                     d_print("cmp");
+                    a2_zp;
+                    if exec_cycle = T2 then
+                        arith_en_n <= '0';
+                        back_oe(acc_cmd, '0');
+                        set_nzc_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#d5#, dsize) then
                     --zp, x

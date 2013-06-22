@@ -129,7 +129,6 @@ signal alu_out : std_logic_vector (dsize - 1 downto 0);
 
 signal n : std_logic;
 signal z : std_logic;
-signal c_in : std_logic;
 signal c : std_logic;
 signal v : std_logic;
 
@@ -166,7 +165,7 @@ begin
             port map (arith_buf_oe_n, arith_reg, arith_reg_out);
 
     alu_inst : alu_core generic map (dsize)
-            port map (sel, d1, d2, alu_out, c_in, n, z, c, v);
+            port map (sel, d1, d2, alu_out, carry_in, n, z, c, v);
     alu_buf : tri_state_buffer generic map (dsize)
             port map (d_oe_n, alu_out, d_out);
 
@@ -517,8 +516,19 @@ end procedure;
 
             elsif instruction (7 downto 5) = "010" then
                 d_print("eor");
+
             elsif instruction (7 downto 5) = "011" then
                 d_print("adc");
+                sel <= ALU_ADC;
+                d1 <= acc_out;
+                d2 <= int_d_bus;
+                d_oe_n <= '0';
+
+                acc_in <= d_out;
+                set_nz;
+                carry_out <= c;
+                overflow <= v;
+
             elsif instruction (7 downto 5) = "110" then
                 --d_print("cmp");
                 --cmpare A - M.
@@ -663,7 +673,7 @@ begin
     elsif sel = ADDR_SIGNED_ADD then
         res := ('0' & addr1) + ('0' & addr2);
         addr_out <= res(dsize - 1 downto 0);
-        if ((addr1(dsize - 1) = addr1(dsize - 1)) 
+        if ((addr1(dsize - 1) = addr2(dsize - 1)) 
                             and (addr1(dsize - 1) /= res(dsize - 1))) then
             carry_out <= '1';
         else
@@ -781,12 +791,13 @@ end procedure;
         ----zero bit after A and M.
         res(dsize - 1 downto 0) := d1 and d2;
         set_z(res(dsize - 1 downto 0));
+
     elsif sel = ALU_ADC then
         res := ('0' & d1) + ('0' & d2) + carry_in;
         d_out <= res(dsize - 1 downto 0);
         carry_out <= res(dsize);
-        if ((d1(dsize - 1) = d1(dsize - 1)) 
-                            and (d1(dsize - 1) /= res(dsize - 1))) then
+        if ((d1(dsize - 1) = d2(dsize - 1)) 
+            and (d1(dsize - 1) /= res(dsize - 1))) then
             overflow <= '1';
         else
             overflow <= '0';
