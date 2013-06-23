@@ -543,6 +543,41 @@ end procedure;
             end if; --if instruction (7 downto 5) = "000" then
 
         elsif instruction (1 downto 0) = "10" then
+
+            --this group is all memory to memory instruction (except for stx/ldx).
+            --memory to memory operation takes two cycles.
+            --first is write original data 
+            --second is write modified data
+
+            arith_reg_in <= int_d_bus;
+            d1 <= arith_reg_out;
+            int_d_bus <= d_out;
+
+            if (clk = '0') then
+                --d_print("clk hi");
+                if (m2m_stat_1 = '0') then
+                    --first cycle. keep input variable.
+                    --d_print("inc first.");
+                    m2m_stat_1 <= '1';
+                    arith_buf_we_n <= '0';
+                    arith_buf_oe_n <= '1';
+                    d_oe_n <= '1';
+
+                end if;
+            end if;
+
+            if (clk'event and clk = '0') then
+                if (m2m_stat_2 = '0') then
+                    --second cycle read from register, output modified data.
+                    --d_print("inc second...");
+                    m2m_stat_2 <= '1';
+                    arith_buf_we_n <= '1';
+                    arith_buf_oe_n <= '0';
+                    d_oe_n <= '0';
+                end if;
+            end if;
+
+
             if instruction (7 downto 5) = "000" then
                 d_print("asl");
             elsif instruction (7 downto 5) = "001" then
@@ -552,42 +587,14 @@ end procedure;
             elsif instruction (7 downto 5) = "011" then
                 d_print("ror");
             elsif instruction (7 downto 5) = "110" then
-                d_print("dec");
+                --d_print("dec");
+                sel <= ALU_DEC;
+                set_nz;
+
             elsif instruction (7 downto 5) = "111" then
                 --d_print("alu inc");
-                --memory to memory operation takes two cycles.
-                --first is write original data 
-                --second is write modified data
-
-                arith_reg_in <= int_d_bus;
                 sel <= ALU_INC;
-                d1 <= arith_reg_out;
                 set_nz;
-                int_d_bus <= d_out;
-
-                if (clk = '0') then
-                    --d_print("clk hi");
-                    if (m2m_stat_1 = '0') then
-                        --first cycle. keep input variable.
-                        --d_print("inc first.");
-                        m2m_stat_1 <= '1';
-                        arith_buf_we_n <= '0';
-                        arith_buf_oe_n <= '1';
-                        d_oe_n <= '1';
-
-                    end if;
-                end if;
-
-                if (clk'event and clk = '0') then
-                    if (m2m_stat_2 = '0') then
-                        --second cycle read from register, output modified data.
-                        --d_print("inc second...");
-                        m2m_stat_2 <= '1';
-                        arith_buf_we_n <= '1';
-                        arith_buf_oe_n <= '0';
-                        d_oe_n <= '0';
-                    end if;
-                end if;
 
             end if; --if instruction (7 downto 5) = "000" then
 

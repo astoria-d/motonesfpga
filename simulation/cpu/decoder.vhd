@@ -1348,6 +1348,10 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#c6#, dsize) then
                     --zp
                     d_print("dec");
+                    a4_zp;
+                    if exec_cycle = T4 then
+                        set_nz_from_bus;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#d6#, dsize) then
                     --zp, x
@@ -1658,6 +1662,8 @@ end  procedure;
 
                 elsif instruction = conv_std_logic_vector(16#f0#, dsize) then
                     d_print("beq");
+                    a58_branch (st_Z, '1');
+
                 elsif instruction = conv_std_logic_vector(16#30#, dsize) then
                     d_print("bmi");
                 elsif instruction = conv_std_logic_vector(16#d0#, dsize) then
