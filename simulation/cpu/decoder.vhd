@@ -60,6 +60,17 @@ end decoder;
 
 architecture rtl of decoder is
 
+component d_flip_flop_bit
+    port (  
+            clk     : in std_logic;
+            res_n   : in std_logic;
+            set_n   : in std_logic;
+            we_n    : in std_logic;
+            d       : in std_logic;
+            q       : out std_logic
+        );
+end component;
+
 procedure d_print(msg : string) is
 use std.textio.all;
 use ieee.std_logic_textio.all;
@@ -133,7 +144,16 @@ constant st_I : integer := 2;
 constant st_Z : integer := 1;
 constant st_C : integer := 0;
 
+---for pch_inc_n.
+signal pch_inc_input : std_logic;
+
 begin
+
+    
+    ---pc page next is connected to top bit of exec_cycle
+    pch_inc_input <= not exec_cycle(5);
+    pch_inc_reg : d_flip_flop_bit 
+            port map(set_clk, '1', '1', '0', pch_inc_input, pch_inc_n);
 
     main_p : process (set_clk, res_n)
 
@@ -209,7 +229,6 @@ begin
     dl_al_oe_n <= '1';
     dl_ah_oe_n <= '1';
     dl_dh_oe_n <= '1';
-    pch_inc_n <= '1';
     sp_cmd <= "1111";
     sp_oe_n <= '1';
     sp_push_n <= '1';
@@ -1702,7 +1721,6 @@ end  procedure;
                 dl_ah_oe_n <= '1';
                 dl_dh_oe_n <= '1';
                 pcl_inc_n <= '1';
-                pch_inc_n <= '1';
                 pcl_cmd <= "1111";
                 pch_cmd <= "1111";
                 sp_cmd <= "1111";
@@ -1809,8 +1827,16 @@ end  procedure;
                 pcl_inc_n <= '1';
                 back_we(pcl_cmd, '1');
                 --pch increment
-                pch_inc_n <= '0';
                 back_we(pch_cmd, '0');
+
+                if ('0' & exec_cycle(4 downto 0) = T1) then
+                    --if fetch cycle, preserve instrution register
+                    inst_we_n <= '1';
+                else
+                    --TODO
+                    assert false 
+                        report "is it ok????? must check!!!" ;
+                end if;
 
             end if; --if exec_cycle = T0 then
 

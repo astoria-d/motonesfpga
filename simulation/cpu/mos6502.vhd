@@ -211,6 +211,17 @@ component processor_status
         );
 end component;
 
+component d_flip_flop_bit
+    port (  
+            clk     : in std_logic;
+            res_n   : in std_logic;
+            set_n   : in std_logic;
+            we_n    : in std_logic;
+            d       : in std_logic;
+            q       : out std_logic
+        );
+end component;
+
     ----------------------------------------------
     ------------ signal declareration ------------
     ----------------------------------------------
@@ -238,7 +249,7 @@ end component;
 
     signal pcl_inc_n : std_logic;
     signal pch_inc_n : std_logic;
-    signal pcl_inc_carry : std_logic_vector(0 downto 0);
+    signal pcl_inc_carry : std_logic;
     signal abs_xy_n        : std_logic;
     signal ea_carry        : std_logic;
     signal pg_next_n       : std_logic;
@@ -408,7 +419,7 @@ begin
                     acc_in,
                     abl,
                     abh,
-                    pcl_inc_carry(0),
+                    pcl_inc_carry,
                     ea_carry,
                     stat_c,
                     alu_n,
@@ -422,9 +433,9 @@ begin
             port map(trigger_clk, '1', '1', '0', 
                     next_cycle(4 downto 0), exec_cycle(4 downto 0));
 
-    exec_cycle_carry_inst : d_flip_flop generic map (1) 
+    exec_cycle_carry_inst : d_flip_flop_bit 
             port map(trigger_clk, '1', '1', '0', 
-                    pcl_inc_carry, exec_cycle(5 downto 5));
+                    pcl_inc_carry, exec_cycle(5));
 
     --io data buffer
     dbus_buf : data_bus_buffer generic map (dsize) 

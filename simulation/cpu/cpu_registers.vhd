@@ -37,6 +37,39 @@ begin
     end process;
 end rtl;
 
+
+--------- 1 bit d-flipflop.
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity d_flip_flop_bit is 
+    port (  
+            clk     : in std_logic;
+            res_n   : in std_logic;
+            set_n   : in std_logic;
+            we_n    : in std_logic;
+            d       : in std_logic;
+            q       : out std_logic
+        );
+end d_flip_flop_bit;
+
+architecture rtl of d_flip_flop_bit is
+begin
+
+    process (clk, res_n, set_n, d)
+    begin
+        if (res_n = '0') then
+            q <= '0';
+        elsif (set_n = '0') then
+            q <= d;
+        elsif (clk'event and clk = '1') then
+            if (we_n = '0') then
+                q <= d;
+            end if;
+        end if;
+    end process;
+end rtl;
+
 ----------------------------------------
 --- data latch declaration
 ----------------------------------------
