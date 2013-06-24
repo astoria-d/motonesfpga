@@ -309,7 +309,7 @@ begin
     status_reg <= "10000011";
 end  procedure;
 
-procedure set_nzv_from_alu is
+procedure set_nvz_from_alu is
 begin
     --status register n/z/v bit update.
     stat_alu_we_n <= '0';
@@ -860,6 +860,9 @@ end  procedure;
                 elsif instruction = conv_std_logic_vector(16#aa#, dsize) then
                     d_print("tax");
                     set_nz_from_bus;
+                    single_inst;
+                    front_oe(acc_cmd, '0');
+                    front_we(x_cmd, '0');
 
                 elsif instruction = conv_std_logic_vector(16#a8#, dsize) then
                     d_print("tay");
@@ -996,7 +999,7 @@ end  procedure;
                     a2_abs;
                     if exec_cycle = T3 then
                         arith_en_n <= '0';
-                        set_nzv_from_alu;
+                        set_nvz_from_alu;
                     end if;
 
                 elsif instruction  = conv_std_logic_vector(16#c9#, dsize) then
