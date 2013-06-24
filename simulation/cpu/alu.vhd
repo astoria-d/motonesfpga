@@ -733,8 +733,10 @@ begin
     elsif sel = ADDR_SIGNED_ADD then
         res := ('0' & addr1) + ('0' & addr2);
         addr_out <= res(dsize - 1 downto 0);
-        if ((addr1(dsize - 1) = addr2(dsize - 1)) 
-                            and (addr1(dsize - 1) /= res(dsize - 1))) then
+        if ((addr2(dsize - 1) = '0' and res(dsize) = '1') or 
+        ---positive value add.
+            (addr2(dsize - 1) = '1' and addr1(dsize - 1 ) /= res(dsize - 1))) then
+        ---negative value add.
             carry_out <= '1';
         else
             carry_out <= '0';
