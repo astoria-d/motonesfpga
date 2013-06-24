@@ -548,7 +548,13 @@ end procedure;
                 set_nz;
 
             elsif instruction (7 downto 5) = "010" then
-                d_print("eor");
+                --d_print("eor");
+                sel <= ALU_EOR;
+                d1 <= acc_out;
+                d2 <= int_d_bus;
+                d_oe_n <= '0';
+                acc_in <= d_out;
+                set_nz;
 
             elsif instruction (7 downto 5) = "011" then
                 --d_print("adc");
@@ -816,7 +822,10 @@ end procedure;
         d_out <= res(dsize - 1 downto 0);
 
     elsif sel = ALU_EOR then
-        res := d1 xor d2;
+        res(dsize - 1 downto 0) := d1 xor d2;
+        set_n(res(dsize - 1 downto 0));
+        set_z(res(dsize - 1 downto 0));
+        d_out <= res(dsize - 1 downto 0);
 
     elsif sel = ALU_OR then
         res(dsize - 1 downto 0) := d1 or d2;

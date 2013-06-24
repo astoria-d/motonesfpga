@@ -659,6 +659,33 @@ begin
     end if;
 end procedure;
 
+-- A.5.2 pull stack
+procedure a52_pull is
+begin
+    if exec_cycle = T1 then
+        fetch_stop;
+        next_cycle <= T2;
+
+    elsif exec_cycle = T2 then
+        --stack decrement first.
+        back_oe(sp_cmd, '0');
+        back_we(sp_cmd, '0');
+        sp_pop_n <= '0';
+        sp_oe_n <= '0';
+        next_cycle <= T3;
+
+    elsif exec_cycle = T3 then
+        sp_pop_n <= '1';
+        back_we(sp_cmd, '1');
+
+        ---pop data from stack.
+        back_oe(sp_cmd, '0');
+        sp_oe_n <= '0';
+        dbuf_int_oe_n <= '0';
+        next_cycle <= T0;
+    end if;
+end procedure;
+
 
 -- A.5.8 branch operations
 
@@ -838,6 +865,7 @@ end  procedure;
 
                 elsif instruction = conv_std_logic_vector(16#ea#, dsize) then
                     d_print("nop");
+                    single_inst;
 
                 elsif instruction = conv_std_logic_vector(16#2a#, dsize) then
                     --rol acc
@@ -1098,6 +1126,11 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#49#, dsize) then
                     --imm
                     d_print("eor");
+                    fetch_imm;
+                    arith_en_n <= '0';
+                    back_oe(acc_cmd, '0');
+                    back_we(acc_cmd, '0');
+                    set_nz_from_alu;
 
                 elsif instruction  = conv_std_logic_vector(16#45#, dsize) then
                     --zp
@@ -1530,6 +1563,10 @@ end  procedure;
 
                 elsif instruction = conv_std_logic_vector(16#68#, dsize) then
                     d_print("pla");
+                    a52_pull;
+                    if exec_cycle = T3 then
+                        front_we(acc_cmd, '0');
+                    end if;
 
 
                 ----------------------------------------
