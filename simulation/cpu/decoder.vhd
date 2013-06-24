@@ -1205,6 +1205,11 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#a6#, dsize) then
                     --zp
                     d_print("ldx");
+                    a2_zp;
+                    if exec_cycle = T2 then
+                        front_we(x_cmd, '0');
+                        set_nz_from_bus;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#b6#, dsize) then
                     --zp, y
