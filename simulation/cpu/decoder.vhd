@@ -1135,6 +1135,13 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#45#, dsize) then
                     --zp
                     d_print("eor");
+                    a2_zp;
+                    if exec_cycle = T2 then
+                        arith_en_n <= '0';
+                        back_oe(acc_cmd, '0');
+                        back_we(acc_cmd, '0');
+                        set_nz_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#55#, dsize) then
                     --zp, x
@@ -1529,6 +1536,10 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#66#, dsize) then
                     --zp
                     d_print("ror");
+                    a4_zp;
+                    if exec_cycle = T4 then
+                        set_nzc_from_bus;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#76#, dsize) then
                     --zp, x
@@ -1796,7 +1807,8 @@ end  procedure;
                     ---unknown instruction!!!!
                     assert false 
                         report "======== unknow instruction " 
-                            & conv_hex8(conv_integer(instruction));
+                            & conv_hex8(conv_integer(instruction)) 
+                        severity failure;
                 end if; --if instruction = conv_std_logic_vector(16#0a#, dsize) 
 
             elsif exec_cycle = R0 then
@@ -1926,11 +1938,8 @@ end  procedure;
                 if ('0' & exec_cycle(4 downto 0) = T1) then
                     --if fetch cycle, preserve instrution register
                     inst_we_n <= '1';
-                else
-                    --TODO
-                    assert false 
-                        report "is it ok????? must check!!!" ;
                 end if;
+                back_oe(pch_cmd, '0');
 
             end if; --if exec_cycle = T0 then
 

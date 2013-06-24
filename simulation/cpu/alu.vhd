@@ -135,6 +135,8 @@ signal ea_carry_reg_we_n : std_logic;
 signal ea_carry_reg_in : std_logic;
 signal ea_carry_reg : std_logic;
 
+signal pcl_carry_reg_in : std_logic;
+
 ----------- signals for arithmatic ----------
 signal sel : std_logic_vector (3 downto 0);
 signal d1 : std_logic_vector (dsize - 1 downto 0);
@@ -169,6 +171,10 @@ begin
 
     ea_carry_dff_bit : d_flip_flop_bit 
             port map(clk, '1', '1', ea_carry_reg_we_n, ea_carry_reg_in, ea_carry_reg);
+
+    pch_carry_dff_bit : d_flip_flop_bit 
+            port map(clk, '1', '1', 
+                    '0', pcl_carry_reg_in, pcl_inc_carry);
 
     addr_calc_inst : address_calculator generic map (dsize)
             port map (a_sel, addr1, addr2, addr_out, addr_c_in, addr_c);
@@ -261,11 +267,17 @@ end procedure;
 
     begin
 
+    --pcl carry flag set.
+    if (pcl_inc_n /= '0') then
+        pcl_carry_reg_in <= '0';
+    end if;
+
     if (pcl_inc_n = '0') then
         a_sel <= ADDR_INC;
         addr1 <= bal;
         addr_back <= addr_out;
-        pcl_inc_carry <= addr_c;
+
+        pcl_carry_reg_in <= addr_c;
 
         --keep the value in the cycle
         al_buf_we_n <= '0';
@@ -286,7 +298,6 @@ end procedure;
         a_sel <= ADDR_INC;
         addr1 <= bah;
         addr_back <= addr_out;
-        pcl_inc_carry <= '0';
 
         --inc pch cycle is not fetch cycle.
         --it is special cycle.
@@ -483,7 +494,6 @@ end procedure;
         ----addr_back is always bal for jmp/jsr instruction....
         -----TODO must check later if it's ok.
         addr_back <= bal;
-        pcl_inc_carry <= '0';
     end if; --if (pcl_inc_n = '0') then
 
     -------------------------------
@@ -624,7 +634,11 @@ end procedure;
             elsif instruction (7 downto 5) = "010" then
                 d_print("lsr");
             elsif instruction (7 downto 5) = "011" then
-                d_print("ror");
+                --d_print("ror");
+                sel <= ALU_ROR;
+                set_nz;
+                carry_out <= c;
+
             elsif instruction (7 downto 5) = "110" then
                 --d_print("dec");
                 sel <= ALU_DEC;
@@ -869,8 +883,8 @@ end procedure;
     elsif sel = ALU_ASL then
         ----
     elsif sel = ALU_LSR then
-        res(dsize - 2 downto 0) := d1(dsize - 1 downto 1);
         res(dsize - 1) := '0';
+        res(dsize - 2 downto 0) := d1(dsize - 1 downto 1);
         res(dsize) := d1(0);
 
         d_out <= res(dsize - 1 downto 0);
@@ -881,7 +895,14 @@ end procedure;
     elsif sel = ALU_ROL then
         ----
     elsif sel = ALU_ROR then
-        ----
+        res(dsize - 1) := carry_in;
+        res(dsize - 2 downto 0) := d1(dsize - 1 downto 1);
+
+        d_out <= res(dsize - 1 downto 0);
+        set_n(res(dsize - 1 downto 0));
+        set_z(res(dsize - 1 downto 0));
+        carry_out <= d1(0);
+
     elsif sel = ALU_INC then
         res := ('0' & d1) + "000000001";
         d_out <= res(dsize - 1 downto 0);

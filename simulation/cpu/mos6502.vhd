@@ -211,17 +211,6 @@ component processor_status
         );
 end component;
 
-component d_flip_flop_bit
-    port (  
-            clk     : in std_logic;
-            res_n   : in std_logic;
-            set_n   : in std_logic;
-            we_n    : in std_logic;
-            d       : in std_logic;
-            q       : out std_logic
-        );
-end component;
-
     ----------------------------------------------
     ------------ signal declareration ------------
     ----------------------------------------------
@@ -433,9 +422,8 @@ begin
             port map(trigger_clk, '1', '1', '0', 
                     next_cycle(4 downto 0), exec_cycle(4 downto 0));
 
-    exec_cycle_carry_inst : d_flip_flop_bit 
-            port map(trigger_clk, '1', '1', '0', 
-                    pcl_inc_carry, exec_cycle(5));
+    --exec_cycle top bit is phc carry flag.
+    exec_cycle(5) <= pcl_inc_carry;
 
     --io data buffer
     dbus_buf : data_bus_buffer generic map (dsize) 
