@@ -199,10 +199,10 @@ constant ALU_BIT    : std_logic_vector (3 downto 0) := "0011";
 constant ALU_ADC    : std_logic_vector (3 downto 0) := "0100";
 constant ALU_SBC    : std_logic_vector (3 downto 0) := "0101";
 constant ALU_CMP    : std_logic_vector (3 downto 0) := "0110";
-constant ALU_SL     : std_logic_vector (3 downto 0) := "0111";
-constant ALU_SR     : std_logic_vector (3 downto 0) := "1000";
-constant ALU_RL     : std_logic_vector (3 downto 0) := "1001";
-constant ALU_RR     : std_logic_vector (3 downto 0) := "1010";
+constant ALU_ASL    : std_logic_vector (3 downto 0) := "0111";
+constant ALU_LSR    : std_logic_vector (3 downto 0) := "1000";
+constant ALU_ROL    : std_logic_vector (3 downto 0) := "1001";
+constant ALU_ROR    : std_logic_vector (3 downto 0) := "1010";
 constant ALU_INC    : std_logic_vector (3 downto 0) := "1011";
 constant ALU_DEC    : std_logic_vector (3 downto 0) := "1100";
 
@@ -494,6 +494,14 @@ end procedure;
             set_nz;
             output_d_bus;
 
+        elsif instruction = conv_std_logic_vector(16#4a#, dsize) then
+            --lsr acc.
+            sel <= ALU_LSR;
+            d1 <= acc_out;
+            set_nz;
+            carry_out <= c;
+            output_d_bus;
+
         --instruction is aaabbbcc format.
         elsif instruction (1 downto 0) = "01" then
             if instruction (7 downto 5) = "000" then
@@ -506,7 +514,7 @@ end procedure;
                 set_nz;
 
             elsif instruction (7 downto 5) = "001" then
-                d_print("and");
+                --d_print("and");
                 sel <= ALU_AND;
                 d1 <= acc_out;
                 d2 <= int_d_bus;
@@ -518,7 +526,7 @@ end procedure;
                 d_print("eor");
 
             elsif instruction (7 downto 5) = "011" then
-                d_print("adc");
+                --d_print("adc");
                 sel <= ALU_ADC;
                 d1 <= acc_out;
                 d2 <= int_d_bus;
@@ -745,10 +753,10 @@ constant ALU_BIT    : std_logic_vector (3 downto 0) := "0011";
 constant ALU_ADC    : std_logic_vector (3 downto 0) := "0100";
 constant ALU_SBC    : std_logic_vector (3 downto 0) := "0101";
 constant ALU_CMP    : std_logic_vector (3 downto 0) := "0110";
-constant ALU_SL     : std_logic_vector (3 downto 0) := "0111";
-constant ALU_SR     : std_logic_vector (3 downto 0) := "1000";
-constant ALU_RL     : std_logic_vector (3 downto 0) := "1001";
-constant ALU_RR     : std_logic_vector (3 downto 0) := "1010";
+constant ALU_ASL    : std_logic_vector (3 downto 0) := "0111";
+constant ALU_LSR    : std_logic_vector (3 downto 0) := "1000";
+constant ALU_ROL    : std_logic_vector (3 downto 0) := "1001";
+constant ALU_ROR    : std_logic_vector (3 downto 0) := "1010";
 constant ALU_INC    : std_logic_vector (3 downto 0) := "1011";
 constant ALU_DEC    : std_logic_vector (3 downto 0) := "1100";
 
@@ -824,13 +832,21 @@ end procedure;
         set_n(res(dsize - 1 downto 0));
         set_z(res(dsize - 1 downto 0));
 
-    elsif sel = ALU_SL then
+    elsif sel = ALU_ASL then
         ----
-    elsif sel = ALU_SR then
+    elsif sel = ALU_LSR then
+        res(dsize - 2 downto 0) := d1(dsize - 1 downto 1);
+        res(dsize - 1) := '0';
+        res(dsize) := d1(0);
+
+        d_out <= res(dsize - 1 downto 0);
+        set_n(res(dsize - 1 downto 0));
+        set_z(res(dsize - 1 downto 0));
+        carry_out <= res(dsize);
+
+    elsif sel = ALU_ROL then
         ----
-    elsif sel = ALU_RL then
-        ----
-    elsif sel = ALU_RR then
+    elsif sel = ALU_ROR then
         ----
     elsif sel = ALU_INC then
         res := ('0' & d1) + "000000001";

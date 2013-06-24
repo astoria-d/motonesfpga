@@ -285,6 +285,14 @@ begin
     stat_bus_nz_n <= '0';
 end  procedure;
 
+procedure set_nzc_from_bus is
+begin
+    --status register n,z,c bit update.
+    stat_dec_oe_n <= '1';
+    status_reg <= "10000011";
+    stat_bus_nz_n <= '0';
+end  procedure;
+
 procedure set_nz_from_alu is
 begin
     --status register n/z/c bit update.
@@ -635,6 +643,23 @@ begin
 end  procedure;
 
 
+-- A.5.1 push stack
+procedure a51_push is
+begin
+    if exec_cycle = T1 then
+        fetch_stop;
+        next_cycle <= T2;
+    elsif exec_cycle = T2 then
+        back_oe(sp_cmd, '0');
+        back_we(sp_cmd, '0');
+        sp_push_n <= '0';
+        sp_oe_n <= '0';
+        r_nw <= '0';
+        next_cycle <= T0;
+    end if;
+end procedure;
+
+
 -- A.5.8 branch operations
 
 procedure a58_branch (int_flg : in integer; br_cond : in std_logic) is
@@ -804,6 +829,11 @@ end  procedure;
                 elsif instruction = conv_std_logic_vector(16#4a#, dsize) then
                     --lsr acc mode
                     d_print("lsr");
+                    arith_en_n <= '0';
+                    back_oe(acc_cmd, '0');
+                    front_we(acc_cmd, '0');
+                    set_nzc_from_bus;
+                    single_inst;
 
                 elsif instruction = conv_std_logic_vector(16#ea#, dsize) then
                     d_print("nop");
@@ -880,6 +910,13 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#65#, dsize) then
                     --zp
                     d_print("adc");
+                    a2_zp;
+                    if exec_cycle = T2 then
+                        arith_en_n <= '0';
+                        back_oe(acc_cmd, '0');
+                        back_we(acc_cmd, '0');
+                        set_nvzc_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#75#, dsize) then
                     --zp, x
@@ -917,6 +954,13 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#25#, dsize) then
                     --zp
                     d_print("and");
+                    a2_zp;
+                    if exec_cycle = T2 then
+                        arith_en_n <= '0';
+                        back_oe(acc_cmd, '0');
+                        back_we(acc_cmd, '0');
+                        set_nz_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#35#, dsize) then
                     --zp, x
@@ -1467,6 +1511,10 @@ end  procedure;
 
                 elsif instruction = conv_std_logic_vector(16#48#, dsize) then
                     d_print("pha");
+                    a51_push;
+                    if exec_cycle = T2 then
+                        front_oe(acc_cmd, '0');
+                    end if;
 
                 elsif instruction = conv_std_logic_vector(16#28#, dsize) then
                     d_print("plp");
