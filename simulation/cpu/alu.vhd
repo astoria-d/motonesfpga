@@ -61,6 +61,17 @@ component d_flip_flop
         );
 end component;
 
+component d_flip_flop_bit
+    port (  
+            clk     : in std_logic;
+            res_n   : in std_logic;
+            set_n   : in std_logic;
+            we_n    : in std_logic;
+            d       : in std_logic;
+            q       : out std_logic
+        );
+end component;
+
 component tri_state_buffer
     generic (
             dsize : integer := 8
@@ -120,6 +131,10 @@ signal addr_out : std_logic_vector (dsize - 1 downto 0);
 signal addr_c_in : std_logic;
 signal addr_c : std_logic;
 
+signal ea_carry_reg_we_n : std_logic;
+signal ea_carry_reg_in : std_logic;
+signal ea_carry_reg : std_logic;
+
 ----------- signals for arithmatic ----------
 signal sel : std_logic_vector (3 downto 0);
 signal d1 : std_logic_vector (dsize - 1 downto 0);
@@ -151,6 +166,9 @@ begin
             port map(clk, '1', '1', al_buf_we_n, al_reg_in, al_reg);
     ah_dff : d_flip_flop generic map (dsize) 
             port map(clk, '1', '1', ah_buf_we_n, ah_reg_in, ah_reg);
+
+    ea_carry_dff_bit : d_flip_flop_bit 
+            port map(clk, '1', '1', ea_carry_reg_we_n, ea_carry_reg_in, ea_carry_reg);
 
     addr_calc_inst : address_calculator generic map (dsize)
             port map (a_sel, addr1, addr2, addr_out, addr_c_in, addr_c);
@@ -364,7 +382,13 @@ end procedure;
             ---rel val is on the d_bus.
             addr2 <= int_d_bus;
             addr_back <= addr_out;
-            ea_carry <= addr_c;
+
+            --sustain ea_carry in the register.
+            --because looop back bal is changed and it affect the result of
+            --EA in the next cycle.
+            ea_carry_reg_we_n <= '0';
+            ea_carry_reg_in <= addr_c;
+            ea_carry <= ea_carry_reg;
 
             --keep the value in the cycle
             al_buf_we_n <= '0';
@@ -451,11 +475,12 @@ end procedure;
     else
         al_buf_we_n <= '1';
         ah_buf_we_n <= '1';
+        ea_carry_reg_we_n <= '1';
 
         abl <= bal;
         abh <= bah;
 
-        ----addr_back is always bal for jsr instruction....
+        ----addr_back is always bal for jmp/jsr instruction....
         -----TODO must check later if it's ok.
         addr_back <= bal;
         pcl_inc_carry <= '0';

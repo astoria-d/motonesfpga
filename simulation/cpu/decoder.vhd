@@ -696,6 +696,7 @@ begin
 
         back_we(pcl_cmd, '1');
         if ea_carry = '1' then
+            d_print("page crossed.");
             --page crossed. adh calc.
             back_oe(pcl_cmd, '0');
             back_oe(pch_cmd, '0');
