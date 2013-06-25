@@ -4,7 +4,6 @@ MODULES=cpu_registers.vhd alu.vhd decoder.vhd \
 		#cpu_timing.vhd 
 
 TEST_MODULE= testbench_mos6502.vhd
-#TEST_MODULE= testbench_status_reg.vhd
 
 WORKDIR=../work
 
@@ -12,22 +11,19 @@ GHDL_OPTION=--ieee=synopsys -fexplicit --workdir=$(WORKDIR)
 
 BIN=$(subst .vhd,, $(TEST_MODULE))
 
-OBJS = $(MODULES:.vhd=.o) $(TEST_MODULE:.vhd=.o)
+OBJS = $(addprefix $(WORKDIR)/,$(addsuffix .o,$(basename $(MODULES) $(TEST_MODULE))))
+
 
 all: $(BIN)
 
-.SUFFIXES: .vhd .o
-
-$(addprefix $(WORKDIR)/, $(OBJS)): $(MODULES) $(TEST_MODULE)
+$(WORKDIR)/%.o: %.vhd
 	ghdl -a $(GHDL_OPTION) $(subst .o,.vhd, $(subst $(WORKDIR)/,, $@))
 
-$(BIN): $(addprefix $(WORKDIR)/, $(OBJS))
+$(BIN): $(OBJS)
 	ghdl -e $(GHDL_OPTION) $(BIN)
 
 clean:
-	-rm $(addprefix $(WORKDIR)/, $(OBJS))
-	-rm $(addprefix $(WORKDIR)/testbench_, $(OBJS))
-	-rm $(addprefix $(WORKDIR)/e~testbench_, $(OBJS))
-	-rm $(addprefix testbench_, $(subst .o,, $(OBJS)))
+	-rm $(OBJS)
+	-rm $(patsubst $(WORKDIR)/,$(WORKDIR)/e~, $(OBJS))
 	-rm *.o *.cf *.vcd
 
