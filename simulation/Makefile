@@ -1,5 +1,5 @@
 
-DIRS=clock mem cpu/alu cpu 
+DIRS=clock mem ppu cpu 
 MODULES=address_decoder.vhd motones_sim.vhd 
 WORKDIR=work
 
