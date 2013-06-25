@@ -20,7 +20,15 @@ end ppu;
 architecture rtl of ppu is
 
 
+component ppu_render
+    port (  clk         : in std_logic;
+            rst_n       : in std_logic
+    );
+end component;
+
 begin
+
+    render_inst : ppu_render port map (clk, rst_n);
 
 end rtl;
 
