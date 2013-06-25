@@ -1,26 +1,28 @@
 
-MODULES=ram.vhd prg_rom.vhd
+MODULES=ram.vhd prg_rom.vhd chr_rom.vhd
+
+TEST_MODULE=testbench_prg_rom.vhd
 
 WORKDIR=../work
 
 GHDL_OPTION=--ieee=synopsys -fexplicit --workdir=$(WORKDIR)
 
+BIN=$(subst .vhd,, $(TEST_MODULE))
 
-OBJS = $(MODULES:.vhd=.o)
-TEST_MODULES = $(addprefix testbench_, $(MODULES))
+OBJS = $(addprefix $(WORKDIR)/,$(addsuffix .o,$(basename $(MODULES) $(TEST_MODULE))))
 
-all: $(addprefix $(WORKDIR)/, $(OBJS))
 
-.SUFFIXES: .vhd .o
-$(addprefix $(WORKDIR)/, $(OBJS)): $(MODULES) $(TEST_MODULES)
+all: $(BIN)
+
+$(WORKDIR)/%.o: %.vhd
 	ghdl -a $(GHDL_OPTION) $(subst .o,.vhd, $(subst $(WORKDIR)/,, $@))
-	ghdl -a $(GHDL_OPTION) $(subst .o,.vhd, $(subst $(WORKDIR)/,, testbench_$@))
-	ghdl -e $(GHDL_OPTION) $(subst .o,, $(subst $(WORKDIR)/,, testbench_$@))
+
+$(BIN): $(OBJS)
+	ghdl -e $(GHDL_OPTION) $(BIN)
 
 clean:
-	-rm $(addprefix $(WORKDIR)/, $(OBJS))
-	-rm $(addprefix $(WORKDIR)/testbench_, $(OBJS))
-	-rm $(addprefix $(WORKDIR)/e~testbench_, $(OBJS))
-	-rm $(addprefix testbench_, $(subst .o,, $(OBJS)))
+	-rm $(OBJS)
+	-rm $(BIN)
+	-rm $(patsubst $(WORKDIR)/,$(WORKDIR)/e~, $(OBJS))
 	-rm *.o *.cf *.vcd
 
