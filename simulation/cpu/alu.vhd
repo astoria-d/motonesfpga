@@ -172,6 +172,10 @@ begin
     ea_carry_dff_bit : d_flip_flop_bit 
             port map(clk, '1', '1', ea_carry_reg_we_n, ea_carry_reg_in, ea_carry_reg);
 
+    --pcl carry flag set.
+    pcl_carry_reg_in <= addr_c when pcl_inc_n = '0' else
+                '0';
+
     pch_carry_dff_bit : d_flip_flop_bit 
             port map(clk, '1', '1', 
                     '0', pcl_carry_reg_in, pcl_inc_carry);
@@ -267,17 +271,10 @@ end procedure;
 
     begin
 
-    --pcl carry flag set.
-    if (pcl_inc_n /= '0') then
-        pcl_carry_reg_in <= '0';
-    end if;
-
     if (pcl_inc_n = '0') then
         a_sel <= ADDR_INC;
         addr1 <= bal;
         addr_back <= addr_out;
-
-        pcl_carry_reg_in <= addr_c;
 
         --keep the value in the cycle
         al_buf_we_n <= '0';
