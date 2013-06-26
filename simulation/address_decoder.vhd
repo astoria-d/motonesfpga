@@ -112,3 +112,178 @@ begin
 
 end rtl;
 
+
+
+-----------------------------------------------------
+-----------------------------------------------------
+---------- VRAM / CHR ROM Address Decoder -----------
+-----------------------------------------------------
+-----------------------------------------------------
+
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity v_address_decoder is
+generic (abus_size : integer := 14; dbus_size : integer := 8);
+    port (  clk         : in std_logic; 
+            R_nW        : in std_logic;
+            v_addr      : in std_logic_vector (abus_size - 1 downto 0);
+            v_io        : inout std_logic_vector (dbus_size - 1 downto 0)
+        );
+end v_address_decoder;
+
+-- Address      Size    Description
+-- $0000-$0FFF  $1000   Pattern Table 0 [lower CHR bank]
+-- $1000-$1FFF  $1000   Pattern Table 1 [upper CHR bank]
+-- $2000-$23FF  $0400   Name Table #0
+-- $2400-$27FF  $0400   Name Table #1
+-- $2800-$2BFF  $0400   Name Table #2
+-- $2C00-$2FFF  $0400   Name Table #3
+-- $3000-$3EFF  $0F00   Mirrors of $2000-$2FFF
+-- $3F00-$3F1F  $0020   Palette RAM indexes [not RGB values]
+-- $3F20-$3FFF  $0080   Mirrors of $3F00-$3F1F
+
+architecture rtl of v_address_decoder is
+    component ram
+        generic (abus_size : integer := 16; dbus_size : integer := 8);
+        port (  ce_n, oe_n, we_n  : in std_logic;   --select pin active low.
+                addr              : in std_logic_vector (abus_size - 1 downto 0);
+                d_io              : inout std_logic_vector (dbus_size - 1 downto 0)
+        );
+    end component;
+
+    component chr_rom
+        generic (abus_size : integer := 13; dbus_size : integer := 8);
+        port (  ce_n            : in std_logic;     --active low.
+                addr            : in std_logic_vector (abus_size - 1 downto 0);
+                data            : out std_logic_vector (dbus_size - 1 downto 0);
+                nt_v_mirror     : out std_logic
+        );
+    end component;
+
+    constant dsize : integer := 8;
+    constant vram_1k : integer := 10;      --2k = 11 bit width.
+    constant chr_rom_8k : integer := 13;     --32k = 15 bit width.
+
+    signal oe_n : std_logic;
+    signal nt_v_mirror  : std_logic;
+
+    signal pt_ce_n : std_logic;
+    signal nt0_ce_n : std_logic;
+    signal nt1_ce_n : std_logic;
+    signal plt_ce_n : std_logic;
+begin
+
+    oe_n <= not R_nW;
+
+    --pattern table
+    pt_ce_n <= '0' when (v_addr(13) = '0' and R_nW = '1') else
+             '1' ;
+    pattern_tbl : chr_rom generic map (chr_rom_8k, dsize)
+            port map (pt_ce_n, v_addr(chr_rom_8k - 1 downto 0), v_io, nt_v_mirror);
+
+    --name table/attr table
+    name_tbl0 : ram generic map (vram_1k, dsize)
+            port map (nt0_ce_n, oe_n, R_nW, 
+                    v_addr(vram_1k - 1 downto 0), v_io);
+
+    name_tbl1 : ram generic map (vram_1k, dsize)
+            port map (nt1_ce_n, oe_n, R_nW, 
+                    v_addr(vram_1k - 1 downto 0), v_io);
+
+    --palette table
+    plt_tbl : ram generic map (4, dsize)
+            port map (plt_ce_n, oe_n, R_nW, 
+                    v_addr(3 downto 0), v_io);
+
+    --ram io timing.
+    main_p : process (clk, v_addr, v_io, R_nW)
+    begin
+        if (v_addr(13) = '1') then
+            ---name tbl
+            if ((v_addr(12) and v_addr(11) and v_addr(10) 
+                        and v_addr(9) and v_addr(8)) = '0') then
+                if (nt_v_mirror = '1') then
+                    --bit 10 is the name table selector.
+                    if (v_addr(10) = '0') then
+                        --name table 0 enable.
+                        nt1_ce_n <= '1';
+                        if (R_nW = '0') then
+                            --write
+                            nt0_ce_n <= not clk;
+                        elsif (R_nW = '1') then 
+                            --read
+                            nt0_ce_n <= '0';
+                        else
+                            nt0_ce_n <= '1';
+                        end if;
+                    else
+                        --name table 1 enable.
+                        nt0_ce_n <= '1';
+                        if (R_nW = '0') then
+                            --write
+                            nt1_ce_n <= not clk;
+                        elsif (R_nW = '1') then 
+                            --read
+                            nt1_ce_n <= '0';
+                        else
+                            nt1_ce_n <= '1';
+                        end if;
+                    end if;
+                else
+                    --horizontal mirror.
+                    --bit 11 is the name table selector.
+                    if (v_addr(11) = '0') then
+                        --name table 0 enable.
+                        nt1_ce_n <= '1';
+                        if (R_nW = '0') then
+                            --write
+                            nt0_ce_n <= not clk;
+                        elsif (R_nW = '1') then 
+                            --read
+                            nt0_ce_n <= '0';
+                        else
+                            nt0_ce_n <= '1';
+                        end if;
+                    else
+                        --name table 1 enable.
+                        nt0_ce_n <= '1';
+                        if (R_nW = '0') then
+                            --write
+                            nt1_ce_n <= not clk;
+                        elsif (R_nW = '1') then 
+                            --read
+                            nt1_ce_n <= '0';
+                        else
+                            nt1_ce_n <= '1';
+                        end if;
+                    end if;
+                end if; --if (nt_v_mirror = '1') then
+            else
+                nt0_ce_n <= '1';
+                nt1_ce_n <= '1';
+            end if;
+
+            ---palette table
+            if (v_addr(12 downto 8) = "11111") then
+                if (R_nW = '0') then
+                    --write
+                    plt_ce_n <= not clk;
+                elsif (R_nW = '1') then 
+                    --read
+                    plt_ce_n <= '0';
+                else
+                    plt_ce_n <= '1';
+                end if;
+            else
+                plt_ce_n <= '1';
+            end if; --if (v_addr(12 downto 8) = "11111") then
+        else
+            nt0_ce_n <= '1';
+            nt1_ce_n <= '1';
+            plt_ce_n <= '1';
+        end if; --if (v_addr(13) = '1') then
+    end process;
+
+end rtl;
+

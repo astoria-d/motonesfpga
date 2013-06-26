@@ -9,7 +9,8 @@ entity chr_rom is
     generic (abus_size : integer := 13; dbus_size : integer := 8);
     port (  ce_n            : in std_logic;     --active low.
             addr            : in std_logic_vector (abus_size - 1 downto 0);
-            data            : out std_logic_vector (dbus_size - 1 downto 0)
+            data            : out std_logic_vector (dbus_size - 1 downto 0);
+            nt_v_mirror     : out std_logic
         );
 end chr_rom;
 
@@ -47,10 +48,33 @@ function rom_fill return rom_array is
         return ret;
     end rom_fill;
 
+function vmirror return std_logic is 
+    type binary_file is file of character;
+    FILE nes_file : binary_file OPEN read_mode IS "rom-file.nes" ;
+    variable read_data : character;
+    variable i : integer;
+    variable ret : std_logic_vector(7 downto 0);
+    variable out_line : line;
+    begin
+        --read NES cardridge header part
+        for i in 0 to 15 loop
+            read(nes_file, read_data);
+            if (i = 6) then
+                ret :=
+                    conv_std_logic_vector(character'pos(read_data), 8);
+            end if;
+        end loop;
+        write(out_line, string'("nes header read ok."));
+        writeline(output, out_line);
+        return ret(0);
+    end vmirror;
+
 --itinialize with the rom_fill function.
 constant p_rom : rom_array := rom_fill;
 
 begin
+    
+    nt_v_mirror <= vmirror;
 
     p : process (ce_n, addr)
     begin
