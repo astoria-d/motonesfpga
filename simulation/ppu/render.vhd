@@ -11,7 +11,6 @@ end ppu_render;
 architecture rtl of ppu_render is
 
 component counter_register
-    
     generic (
         dsize : integer := 8
     );
@@ -22,7 +21,22 @@ component counter_register
     );
 end component;
 
+component d_flip_flop
+    generic (
+            dsize : integer := 8
+            );
+    port (  
+            clk     : in std_logic;
+            res_n   : in std_logic;
+            set_n   : in std_logic;
+            we_n    : in std_logic;
+            d       : in std_logic_vector (dsize - 1 downto 0);
+            q       : out std_logic_vector (dsize - 1 downto 0)
+        );
+end component;
+
 constant X_SIZE       : integer := 9;
+constant dsize        : integer := 8;
 constant HSCAN_MAX    : integer := 340;
 constant VSCAN_MAX    : integer := 261;
 
@@ -35,6 +49,9 @@ signal render_y_res_n   : std_logic;
 signal cur_x            : std_logic_vector(X_SIZE - 1 downto 0);
 signal cur_y            : std_logic_vector(X_SIZE - 1 downto 0);
 
+signal nt_val           : std_logic_vector(dsize - 1 downto 0);
+signal v_io             : std_logic_vector(dsize - 1 downto 0);
+
 begin
 
     render_en_n <= '0';
@@ -44,6 +61,9 @@ begin
     render_y_en_n <= render_x_res_n;
     cur_y_inst : counter_register generic map (X_SIZE)
             port map (clk, render_y_res_n, render_y_en_n, cur_y);
+
+    name_t : d_flip_flop generic map(dsize)
+            port map (clk, rst_n, '0', '1', v_io, nt_val);
 
     clk_p : process (rst_n, clk) 
     begin

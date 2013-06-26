@@ -24,6 +24,15 @@ architecture stimulus of testbench_ppu is
     );
     end component;
 
+    component v_address_decoder
+    generic (abus_size : integer := 14; dbus_size : integer := 8);
+        port (  clk         : in std_logic; 
+                R_nW        : in std_logic;
+                v_addr      : in std_logic_vector (abus_size - 1 downto 0);
+                v_io        : inout std_logic_vector (dbus_size - 1 downto 0)
+            );
+    end component;
+
 constant ppu_clk : time := 196 ns;
 
 signal clk      : std_logic;

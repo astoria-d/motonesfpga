@@ -10,7 +10,11 @@ entity shift_register is
         dsize : integer := 8
     );
     port (  clk         : in std_logic;
-            rst_n       : in std_logic
+            rst_n       : in std_logic;
+            set_n       : in std_logic;
+            ce_n        : in std_logic;
+            d           : buffer std_logic_vector(dsize - 1 downto 0);
+            q           : out std_logic_vector(dsize - 1 downto 0)
     );
 end shift_register;
 
@@ -30,8 +34,21 @@ component d_flip_flop
         );
 end component;
 
+signal q_out : std_logic_vector(dsize - 1 downto 0);
 
 begin
+
+    q <= q_out;
+    dff_inst : d_flip_flop generic map (dsize)
+            port map (clk, rst_n, set_n, ce_n, d, q_out);
+
+    clk_p : process (clk) 
+    begin
+        if (ce_n = '0') then
+            d(dsize - 1) <= '0';
+            d(dsize - 2 downto 0) <= q_out(dsize - 1 downto 1);
+        end if;
+    end process;
 
 end rtl;
 
@@ -76,7 +93,7 @@ signal q_out : std_logic_vector(dsize - 1 downto 0);
 
 begin
     q <= q_out;
-    couter_inst : d_flip_flop generic map (dsize)
+    couter_reg_inst : d_flip_flop generic map (dsize)
             port map (clk, rst_n, '1', ce_n, d, q_out);
         
     clk_p : process (clk) 
