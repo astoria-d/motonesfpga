@@ -126,9 +126,11 @@ use ieee.std_logic_1164.all;
 entity v_address_decoder is
 generic (abus_size : integer := 14; dbus_size : integer := 8);
     port (  clk         : in std_logic; 
-            R_nW        : in std_logic;
-            v_addr      : in std_logic_vector (abus_size - 1 downto 0);
-            v_io        : inout std_logic_vector (dbus_size - 1 downto 0)
+            rd_n        : in std_logic;
+            wr_n        : in std_logic;
+            ale         : in std_logic;
+            vram_ad     : inout std_logic_vector (7 downto 0);
+            vram_a      : in std_logic_vector (13 downto 8)
         );
 end v_address_decoder;
 
@@ -161,43 +163,62 @@ architecture rtl of v_address_decoder is
         );
     end component;
 
+    component ls373
+        generic (
+            dsize : integer := 8
+        );
+        port (  c         : in std_logic;
+                oc_n      : in std_logic;
+                d         : in std_logic_vector(dsize - 1 downto 0);
+                q         : out std_logic_vector(dsize - 1 downto 0)
+        );
+    end component;
+
     constant dsize : integer := 8;
     constant vram_1k : integer := 10;      --2k = 11 bit width.
     constant chr_rom_8k : integer := 13;     --32k = 15 bit width.
 
+
+    signal v_addr : std_logic_vector (13 downto 0);
     signal oe_n : std_logic;
+    --signal nt_v_mirror2  : std_logic;
     signal nt_v_mirror  : std_logic;
 
     signal pt_ce_n : std_logic;
     signal nt0_ce_n : std_logic;
     signal nt1_ce_n : std_logic;
     signal plt_ce_n : std_logic;
+
 begin
 
-    oe_n <= not R_nW;
+    --transparent d-latch
+    latch_inst : ls373 generic map (dsize)
+                port map(ale, '0', vram_ad, v_addr(7 downto 0));
+    v_addr (13 downto 8) <= vram_a;
 
     --pattern table
-    pt_ce_n <= '0' when (v_addr(13) = '0' and R_nW = '1') else
+    pt_ce_n <= '0' when (v_addr(13) = '0' and rd_n = '0') else
              '1' ;
+    --nt_v_mirror <= '0';
     pattern_tbl : chr_rom generic map (chr_rom_8k, dsize)
-            port map (pt_ce_n, v_addr(chr_rom_8k - 1 downto 0), v_io, nt_v_mirror);
+            port map (pt_ce_n, v_addr(chr_rom_8k - 1 downto 0), vram_ad, nt_v_mirror);
 
     --name table/attr table
     name_tbl0 : ram generic map (vram_1k, dsize)
-            port map (nt0_ce_n, oe_n, R_nW, 
-                    v_addr(vram_1k - 1 downto 0), v_io);
+            port map (nt0_ce_n, rd_n, wr_n, 
+                    v_addr(vram_1k - 1 downto 0), vram_ad);
 
     name_tbl1 : ram generic map (vram_1k, dsize)
-            port map (nt1_ce_n, oe_n, R_nW, 
-                    v_addr(vram_1k - 1 downto 0), v_io);
+            port map (nt1_ce_n, rd_n, wr_n, 
+                    v_addr(vram_1k - 1 downto 0), vram_ad);
 
     --palette table
     plt_tbl : ram generic map (4, dsize)
-            port map (plt_ce_n, oe_n, R_nW, 
-                    v_addr(3 downto 0), v_io);
+            port map (plt_ce_n, rd_n, wr_n, 
+                    v_addr(3 downto 0), vram_ad);
 
     --ram io timing.
-    main_p : process (clk, v_addr, v_io, R_nW)
+    main_p : process (clk, v_addr, vram_ad, wr_n)
     begin
         if (v_addr(13) = '1') then
             ---name tbl
@@ -208,10 +229,10 @@ begin
                     if (v_addr(10) = '0') then
                         --name table 0 enable.
                         nt1_ce_n <= '1';
-                        if (R_nW = '0') then
+                        if (wr_n = '0') then
                             --write
                             nt0_ce_n <= not clk;
-                        elsif (R_nW = '1') then 
+                        elsif (rd_n = '0') then 
                             --read
                             nt0_ce_n <= '0';
                         else
@@ -220,10 +241,10 @@ begin
                     else
                         --name table 1 enable.
                         nt0_ce_n <= '1';
-                        if (R_nW = '0') then
+                        if (wr_n = '0') then
                             --write
                             nt1_ce_n <= not clk;
-                        elsif (R_nW = '1') then 
+                        elsif (rd_n = '0') then 
                             --read
                             nt1_ce_n <= '0';
                         else
@@ -236,10 +257,10 @@ begin
                     if (v_addr(11) = '0') then
                         --name table 0 enable.
                         nt1_ce_n <= '1';
-                        if (R_nW = '0') then
+                        if (wr_n = '0') then
                             --write
                             nt0_ce_n <= not clk;
-                        elsif (R_nW = '1') then 
+                        elsif (rd_n = '0') then 
                             --read
                             nt0_ce_n <= '0';
                         else
@@ -248,10 +269,10 @@ begin
                     else
                         --name table 1 enable.
                         nt0_ce_n <= '1';
-                        if (R_nW = '0') then
+                        if (wr_n = '0') then
                             --write
                             nt1_ce_n <= not clk;
-                        elsif (R_nW = '1') then 
+                        elsif (rd_n = '0') then 
                             --read
                             nt1_ce_n <= '0';
                         else
@@ -266,10 +287,10 @@ begin
 
             ---palette table
             if (v_addr(12 downto 8) = "11111") then
-                if (R_nW = '0') then
+                if (wr_n = '0') then
                     --write
                     plt_ce_n <= not clk;
-                elsif (R_nW = '1') then 
+                elsif (rd_n = '0') then 
                     --read
                     plt_ce_n <= '0';
                 else

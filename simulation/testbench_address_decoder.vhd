@@ -22,11 +22,27 @@ architecture stimulus of testbench_address_decoder is
     component v_address_decoder
     generic (abus_size : integer := 14; dbus_size : integer := 8);
         port (  clk         : in std_logic; 
-                R_nW        : in std_logic;
-                v_addr      : in std_logic_vector (abus_size - 1 downto 0);
-                v_io        : inout std_logic_vector (dbus_size - 1 downto 0)
+                rd_n        : in std_logic;
+                wr_n        : in std_logic;
+                ale         : in std_logic;
+                vram_ad     : inout std_logic_vector (7 downto 0);
+                vram_a      : in std_logic_vector (13 downto 8)
             );
     end component;
+
+component d_flip_flop
+    generic (
+            dsize : integer := 8
+            );
+    port (  
+            clk     : in std_logic;
+            res_n   : in std_logic;
+            set_n   : in std_logic;
+            we_n    : in std_logic;
+            d       : in std_logic_vector (dsize - 1 downto 0);
+            q       : out std_logic_vector (dsize - 1 downto 0)
+        );
+end component;
 
     constant cpu_clk : time := 589 ns;
     constant size8 : integer := 8;
@@ -39,9 +55,16 @@ architecture stimulus of testbench_address_decoder is
     signal aa16         : std_logic_vector (size16 - 1 downto 0);
     signal dd8_io       : std_logic_vector (size8 - 1 downto 0);
 
-    signal v_r_nw       : std_logic;
+    signal v_ad         : std_logic_vector (size8 - 1 downto 0);
+    signal v_a          : std_logic_vector (size14 - 1 downto size8);
     signal v_addr       : std_logic_vector (size14 - 1 downto 0);
-    signal v_io         : std_logic_vector (size8 - 1 downto 0);
+    signal v_data       : std_logic_vector (size8 - 1 downto 0);
+
+    signal v_rd_n       : std_logic;
+    signal v_wr_n       : std_logic;
+    signal v_ale        : std_logic;
+
+    signal v_dff_we_n        : std_logic;
 
 begin
     dut0 : address_decoder generic map (size16, size8) 
@@ -316,8 +339,14 @@ begin
         wait;
     end process;
 
+    v_ad <= v_addr(size8 - 1 downto 0);
+    v_a <= v_addr(size14 - 1 downto size8);
+
     dut1 : v_address_decoder generic map (size14, size8) 
-        port map (phi2, v_r_nw, v_addr, v_io);
+        port map (phi2, v_rd_n, v_wr_n, v_ale, v_ad, v_a);
+
+    dff : d_flip_flop generic map (size8)
+        port map (cclk, '1', '1', v_dff_we_n, v_ad, v_data);
 
     -----test for vram/chr-rom
     p3 : process
@@ -329,116 +358,139 @@ begin
         --syncronize with clock dropping edge.
         wait for cpu_clk / 2;
 
-        ---read test.
-        v_io <= (others => 'Z');
-        v_r_nw <= '1';
-
-        --pattern tbl
-        v_addr <= conv_std_logic_vector(0, size14);
-        wait for cpu_clk;
-
-        v_addr <= conv_std_logic_vector(16#0001#, size14);
-        wait for cpu_clk;
-
-        v_addr <= conv_std_logic_vector(16#0005#, size14);
-        wait for cpu_clk;
-
-        v_addr <= conv_std_logic_vector(16#1f00#, size14);
-        wait for cpu_clk;
-
-        --name tbl
-        v_addr <= conv_std_logic_vector(16#2000#, size14);
-        wait for cpu_clk;
-
-        v_addr <= conv_std_logic_vector(16#2100#, size14);
-        wait for cpu_clk;
-
-        v_addr <= conv_std_logic_vector(16#2400#, size14);
-        wait for cpu_clk;
-
-        v_addr <= conv_std_logic_vector(16#2800#, size14);
-        wait for cpu_clk;
-
-        v_addr <= conv_std_logic_vector(16#2c00#, size14);
-        wait for cpu_clk;
-
-        --palette tbl
-        v_addr <= conv_std_logic_vector(16#3f00#, size14);
-        wait for cpu_clk;
-
-        v_addr <= conv_std_logic_vector(16#3fff#, size14);
-        wait for cpu_clk;
-
-        v_addr <= conv_std_logic_vector(16#33ff0#, size14);
-        wait for cpu_clk;
-
-        v_addr <= conv_std_logic_vector(16#3ff5#, size14);
-        wait for cpu_clk;
-
-        ----all data, selctor check.
-        for i in 0 to 16#4000# - 1 loop
-            --read rom
-            v_addr <= conv_std_logic_vector(16#0000# + i, size14);
-            wait for cpu_clk;
-        end loop;
 
         --copy from chr rom to name tbl.
         for i in 0 to loopcnt loop
             --read rom
-            v_r_nw <= '1';
-            v_io <= (others => 'Z');
+            v_ale <= '1';
+            v_rd_n <= '1';
+            v_wr_n <= '1';
+            v_dff_we_n <= '1';
             v_addr <= conv_std_logic_vector(16#0000# + i, size14);
+            wait for cpu_clk;
+            v_dff_we_n <= '0';
+            v_addr(7 downto 0) <= (others => 'Z');
+            v_ale <= '0';
+            v_rd_n <= '0';
+            v_wr_n <= '1';
             wait for cpu_clk;
 
             --write name tbl #0
+            v_dff_we_n <= '1';
+            v_ale <= '1';
+            v_rd_n <= '1';
+            v_wr_n <= '1';
             v_addr <= conv_std_logic_vector(16#2000# + i, size14);
-            v_io <= v_io;
-            v_r_nw <= '0';
+            wait for cpu_clk;
+            v_addr(7 downto 0) <= (others => 'Z');
+            v_ale <= '0';
+            v_rd_n <= '1';
+            v_wr_n <= '0';
+            v_addr(7 downto 0) <= v_data;
             wait for cpu_clk;
         end loop;
 
         --data check...
+        v_wr_n <= '1';
         for i in 0 to loopcnt loop
-            --read rom
-            v_r_nw <= '1';
-            v_io <= (others => 'Z');
             v_addr <= conv_std_logic_vector(16#2000# + i, size14);
+            v_ale <= '1';
+            v_rd_n <= '1';
+            wait for cpu_clk;
+            v_addr(7 downto 0) <= (others => 'Z');
+            v_ale <= '0';
+            v_rd_n <= '0';
             wait for cpu_clk;
 
             --mirror check..
             v_addr <= conv_std_logic_vector(16#2400# + i, size14);
+            v_ale <= '1';
+            v_rd_n <= '1';
             wait for cpu_clk;
+            v_addr(7 downto 0) <= (others => 'Z');
+            v_ale <= '0';
+            v_rd_n <= '0';
+            wait for cpu_clk;
+
             v_addr <= conv_std_logic_vector(16#2800# + i, size14);
+            v_ale <= '1';
+            v_rd_n <= '1';
+            wait for cpu_clk;
+            v_addr(7 downto 0) <= (others => 'Z');
+            v_ale <= '0';
+            v_rd_n <= '0';
             wait for cpu_clk;
         end loop;
 
         --copy from chr rom to plt tbl.
         for i in 10 to loopcnt + 10 loop
             --read rom
-            v_r_nw <= '1';
-            v_io <= (others => 'Z');
+            v_ale <= '1';
+            v_rd_n <= '1';
+            v_wr_n <= '1';
+            v_dff_we_n <= '1';
             v_addr <= conv_std_logic_vector(16#0000# + i, size14);
             wait for cpu_clk;
+            v_dff_we_n <= '0';
+            v_addr(7 downto 0) <= (others => 'Z');
+            v_ale <= '0';
+            v_rd_n <= '0';
+            v_wr_n <= '1';
+            wait for cpu_clk;
 
-            --write name tbl #0
+            --write plt tbl #0
+            v_dff_we_n <= '1';
+            v_ale <= '1';
+            v_rd_n <= '1';
+            v_wr_n <= '1';
             v_addr <= conv_std_logic_vector(16#3f00# + i, size14);
-            v_io <= v_io;
-            v_r_nw <= '0';
+            wait for cpu_clk;
+            v_addr(7 downto 0) <= (others => 'Z');
+            v_ale <= '0';
+            v_rd_n <= '1';
+            v_wr_n <= '0';
+            v_addr(7 downto 0) <= v_data;
             wait for cpu_clk;
         end loop;
 
         --data check...
+        v_wr_n <= '1';
         for i in 10 to loopcnt + 10 loop
-            --read rom
-            v_r_nw <= '1';
-            v_io <= (others => 'Z');
             v_addr <= conv_std_logic_vector(16#3f00# + i, size14);
+            v_ale <= '1';
+            v_rd_n <= '1';
+            wait for cpu_clk;
+            v_addr(7 downto 0) <= (others => 'Z');
+            v_ale <= '0';
+            v_rd_n <= '0';
             wait for cpu_clk;
 
             --mirror check..
             v_addr <= conv_std_logic_vector(16#3ff0# + i, size14);
+            v_ale <= '1';
+            v_rd_n <= '1';
+            wait for cpu_clk;
+            v_addr(7 downto 0) <= (others => 'Z');
+            v_ale <= '0';
+            v_rd_n <= '0';
             wait for cpu_clk;
         end loop;
+
+        ---read test.
+        ----all data, selctor check.
+        v_wr_n <= '1';
+        for i in 0 to 16#4000# - 1 loop
+            --read rom
+            v_ale <= '1';
+            v_rd_n <= '1';
+            v_addr <= conv_std_logic_vector(16#0000# + i, size14);
+            wait for cpu_clk;
+            v_ale <= '0';
+            v_rd_n <= '0';
+            v_addr(size8 - 1 downto 0) <= (others => 'Z');
+            wait for cpu_clk;
+        end loop;
+
         wait;
     end process;
 
