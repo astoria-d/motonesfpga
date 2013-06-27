@@ -105,4 +105,53 @@ begin
 
 end rtl;
 
+-------------------------------
+-- LS373 transparent D-latch---
+-------------------------------
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity ls373 is 
+    generic (
+        dsize : integer := 8
+    );
+    port (  c         : in std_logic;
+            oc_n      : in std_logic;
+            d         : in std_logic_vector(dsize - 1 downto 0);
+            q         : out std_logic_vector(dsize - 1 downto 0)
+    );
+end ls373;
+
+architecture rtl of ls373 is
+
+component latch
+    generic (
+            dsize : integer := 8
+            );
+    port (  
+            clk     : in std_logic;
+            d       : in std_logic_vector (dsize - 1 downto 0);
+            q       : out std_logic_vector (dsize - 1 downto 0)
+        );
+end component;
+
+component tri_state_buffer
+    generic (
+            dsize : integer := 8
+            );
+    port (  
+            oe_n    : in std_logic;
+            d       : in std_logic_vector (dsize - 1 downto 0);
+            q       : out std_logic_vector (dsize - 1 downto 0)
+        );
+end component;
+
+signal q_out       : std_logic_vector (dsize - 1 downto 0);
+
+begin
+    ls373_inst : latch generic map (dsize)
+            port map (c, d, q_out);
+    tsb_inst : tri_state_buffer generic map (dsize)
+            port map (oc_n, q_out, q);
+end rtl;
 

@@ -27,13 +27,17 @@ architecture stimulus of testbench_ppu is
     component v_address_decoder
     generic (abus_size : integer := 14; dbus_size : integer := 8);
         port (  clk         : in std_logic; 
-                R_nW        : in std_logic;
-                v_addr      : in std_logic_vector (abus_size - 1 downto 0);
-                v_io        : inout std_logic_vector (dbus_size - 1 downto 0)
+                rd_n        : in std_logic;
+                wr_n        : in std_logic;
+                ale         : in std_logic;
+                vram_ad     : inout std_logic_vector (7 downto 0);
+                vram_a      : in std_logic_vector (13 downto 8)
             );
     end component;
 
 constant ppu_clk : time := 196 ns;
+constant size8  : integer := 8;
+constant size14 : integer := 14;
 
 signal clk      : std_logic;
 signal ce_n     : std_logic;
@@ -53,6 +57,10 @@ begin
     ppu_inst : ppu 
         port map (clk, ce_n, rst_n, r_nw, cpu_addr, cpu_d, 
                 vblank_n, rd_n, wr_n, ale, vram_ad, vram_a);
+
+    ppu_addr_decoder : v_address_decoder generic map (size14, size8) 
+        port map (clk, rd_n, wr_n, ale, vram_ad, vram_a);
+
 
     reset_p : process
     begin
