@@ -22,13 +22,20 @@ architecture rtl of ppu is
 
 component ppu_render
     port (  clk         : in std_logic;
-            rst_n       : in std_logic
+            rst_n       : in std_logic;
+            vblank_n    : out std_logic;
+            rd_n        : out std_logic;
+            wr_n        : out std_logic;
+            ale         : out std_logic;
+            vram_ad     : inout std_logic_vector (7 downto 0);
+            vram_a      : out std_logic_vector (13 downto 8)
     );
 end component;
 
 begin
 
-    render_inst : ppu_render port map (clk, rst_n);
+    render_inst : ppu_render port map (clk, rst_n, vblank_n, 
+            rd_n, wr_n, ale, vram_ad, vram_a);
 
 end rtl;
 
