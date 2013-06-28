@@ -28,6 +28,19 @@ component counter_register
     );
 end component;
 
+component shift_register
+    generic (
+        dsize : integer := 8
+    );
+    port (  clk         : in std_logic;
+            rst_n       : in std_logic;
+            ce_n        : in std_logic;
+            we_n        : in std_logic;
+            d           : buffer std_logic_vector(dsize - 1 downto 0);
+            q           : out std_logic_vector(dsize - 1 downto 0)
+    );
+end component;
+
 component d_flip_flop
     generic (
             dsize : integer := 8
@@ -89,8 +102,11 @@ signal ptn_h_we_n       : std_logic;
 
 signal nt_val           : std_logic_vector (dsize - 1 downto 0);
 signal attr_val         : std_logic_vector (dsize - 1 downto 0);
-signal ptn_l_val        : std_logic_vector (dsize - 1 downto 0);
-signal ptn_h_val        : std_logic_vector (dsize - 1 downto 0);
+signal ptn_l_val        : std_logic_vector (dsize * 2 - 1 downto 0);
+signal ptn_l_in         : std_logic_vector (dsize * 2 - 1 downto 0);
+signal ptn_h_val        : std_logic_vector (dsize * 2 - 1 downto 0);
+signal ptn_h_in         : std_logic_vector (dsize * 2 - 1 downto 0);
+
 
 signal vram_addr        : std_logic_vector (asize - 1 downto 0);
 
@@ -130,10 +146,15 @@ begin
             port map (clk_n, rst_n, '1', nt_we_n, vram_ad, nt_val);
     at_inst : d_flip_flop generic map(dsize)
             port map (clk_n, rst_n, '1', attr_we_n, vram_ad, attr_val);
-    ptn_l_inst : d_flip_flop generic map(dsize)
-            port map (clk_n, rst_n, '1', ptn_l_we_n, vram_ad, ptn_l_val);
-    ptn_h_inst : d_flip_flop generic map(dsize)
-            port map (clk_n, rst_n, '1', ptn_h_we_n, vram_ad, ptn_h_val);
+
+
+    ptn_l_in <= vram_ad & ptn_l_val (dsize downto 1);
+    ptn_l_inst : shift_register generic map(dsize * 2)
+            port map (clk_n, rst_n, '0', ptn_l_we_n, ptn_l_in, ptn_l_val);
+
+    ptn_h_in <= vram_ad & ptn_h_val (dsize downto 1);
+    ptn_h_inst : shift_register generic map(dsize * 2)
+            port map (clk_n, rst_n, '0', ptn_h_we_n, ptn_h_in, ptn_h_val);
 
     vram_io_buf : tri_state_buffer generic map (dsize)
             port map (io_oe_n, vram_addr(dsize - 1 downto 0), vram_ad);
@@ -312,7 +333,8 @@ begin
             v_ale <= '0';
             v_rd_n <= '1';
             v_wr_n <= '0';
-            v_addr(7 downto 0) <= conv_std_logic_vector(96 + 16 * i, size8);
+            ---bg sprite start from 0.
+            v_addr(7 downto 0) <= conv_std_logic_vector(16 * i, size8);
             wait for ppu_clk;
 
             --write attr tbl #0
