@@ -11,7 +11,12 @@ entity ppu_render is
             wr_n        : out std_logic;
             ale         : out std_logic;
             vram_ad     : inout std_logic_vector (7 downto 0);
-            vram_a      : out std_logic_vector (13 downto 8)
+            vram_a      : out std_logic_vector (13 downto 8);
+            pos_x       : out std_logic_vector (8 downto 0);
+            pos_y       : out std_logic_vector (8 downto 0);
+            r           : out std_logic_vector (3 downto 0);
+            g           : out std_logic_vector (3 downto 0);
+            b           : out std_logic_vector (3 downto 0)
     );
 end ppu_render;
 
@@ -162,6 +167,9 @@ begin
     vram_a_buf : tri_state_buffer generic map (6)
             port map (rst, vram_addr(asize - 1 downto dsize), vram_a);
 
+    pos_x <= cur_x;
+    pos_y <= cur_y;
+
     clk_p : process (rst_n, clk) 
     begin
         if (rst_n = '0') then
@@ -205,7 +213,6 @@ begin
                         <= "000" & cur_x(dsize - 1 downto 3);
                     vram_addr(asize - 1 downto dsize) <= "100000";
                 end if;
-
                 if (cur_x (2 downto 0) = "001" ) then
                     nt_we_n <= '0';
                 else
@@ -220,7 +227,6 @@ begin
                         <= "110" & cur_x(dsize - 1 downto 3);
                     vram_addr(asize - 1 downto dsize) <= "100011";
                 end if;--if (cur_x (2 downto 0) = "010" ) then
-
                 if (cur_x (2 downto 0) = "011" ) then
                     attr_we_n <= '0';
                 else
@@ -233,7 +239,6 @@ begin
                     vram_addr(dsize - 1 downto 0) <= nt_val;
                     vram_addr(asize - 1 downto dsize) <= "000000";
                 end if;--if (cur_x (2 downto 0) = "100" ) then
-
                 if (cur_x (2 downto 0) = "101" ) then
                     ptn_l_we_n <= '0';
                 else
@@ -246,12 +251,14 @@ begin
                     vram_addr(dsize - 1 downto 0) <= nt_val + 1;
                     vram_addr(asize - 1 downto dsize) <= "000000";
                 end if;
-
                 if (cur_x (2 downto 0) = "111" ) then
                     ptn_h_we_n <= '0';
                 else
                     ptn_h_we_n <= '1';
                 end if;--if (cur_x (2 downto 0) = "001" ) then
+
+
+                --output image.
             end if; --if (clk'event and clk = '1') then
 
         end if;--if (rst_n = '0') then
@@ -299,7 +306,7 @@ component d_flip_flop
         );
 end component;
 
-    constant ppu_clk : time := 196 ns;
+    constant ppu_clk : time := 186 ns;
     constant size8 : integer := 8;
     constant size16 : integer := 16;
     constant size14 : integer := 14;

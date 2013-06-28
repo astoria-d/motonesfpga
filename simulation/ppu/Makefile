@@ -1,5 +1,5 @@
 
-MODULES=ppu.vhd render.vhd ppu_registers.vhd
+MODULES=ppu.vhd render.vhd ppu_registers.vhd vga.vhd
 
 
 TEST_MODULE= testbench_ppu.vhd
