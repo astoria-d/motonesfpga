@@ -73,7 +73,7 @@ signal clk_n            : std_logic;
 
 signal render_en_n      : std_logic;
 signal render_x_res_n   : std_logic;
-signal render_y_en_n      : std_logic;
+signal render_y_en_n    : std_logic;
 signal render_y_res_n   : std_logic;
 
 signal cur_x            : std_logic_vector(X_SIZE - 1 downto 0);
@@ -82,6 +82,7 @@ signal cur_y            : std_logic_vector(X_SIZE - 1 downto 0);
 signal nt_oe_n          : std_logic;
 signal nt_we_n          : std_logic;
 signal nt_val           : std_logic_vector (dsize - 1 downto 0);
+
 signal vram_addr        : std_logic_vector (asize - 1 downto 0);
 
 signal init_ale          : std_logic;
@@ -99,12 +100,12 @@ begin
 --    wr_n <= '1';
 --    ale <= not cur_x(0) when rst_n = '1' else '1';
 --    rd_n <= not cur_x(0) when rst_n = '1' else '1';
-    ale <= not cur_x(0) when rst_n = '1' else init_ale;
-    rd_n <= not cur_x(0) when rst_n = '1' else init_rd_n;
+    ale <= cur_x(0) when rst_n = '1' else init_ale;
+    rd_n <= cur_x(0) when rst_n = '1' else init_rd_n;
     wr_n <= '1' when rst_n = '1' else init_wr_n;
 
-    nt_we_n <= not cur_x(0) when rst_n = '1' else '1';
-    nt_oe_n <= cur_x(0) when rst_n = '1' else '1';
+    nt_we_n <= cur_x(0) when rst_n = '1' else '1';
+    nt_oe_n <= not cur_x(0) when rst_n = '1' else '1';
 
 
     -----fill test data during the reset.....
@@ -115,7 +116,6 @@ begin
     cur_x_inst : counter_register generic map (X_SIZE)
             port map (clk, render_x_res_n, render_en_n, cur_x);
     --y pos increment when x pos reset.
-    render_y_en_n <= render_x_res_n;
     cur_y_inst : counter_register generic map (X_SIZE)
             port map (clk, render_y_res_n, render_y_en_n, cur_y);
 
@@ -133,35 +133,53 @@ begin
         if (rst_n = '0') then
             render_x_res_n <= '0';
             render_y_res_n <= '0';
-        end if;
+        else
 
-        if (clk'event and clk = '0' and rst_n = '1') then
-            --x pos reset.
-            if (cur_x = conv_std_logic_vector(VSCAN_MAX, X_SIZE)) then
-                render_x_res_n <= '0';
-            else
-                render_x_res_n <= '1';
-            end if;
+            if (clk'event) then
+                --x pos reset.
+                if (clk = '1' and 
+                        cur_x = conv_std_logic_vector(HSCAN_MAX, X_SIZE)) then
+                    render_x_res_n <= '0';
 
-            --y pos reset.
-            if (cur_y = conv_std_logic_vector(HSCAN_MAX, X_SIZE)) then
-                render_y_res_n <= '0';
-            else
-                render_y_res_n <= '1';
-            end if;
+                    --y pos reset.
+                    if (cur_y = conv_std_logic_vector(VSCAN_MAX, X_SIZE)) then
+                        render_y_res_n <= '0';
+                    else
+                        render_y_res_n <= '1';
+                    end if;
+                else
+                    render_x_res_n <= '1';
+                    render_y_res_n <= '1';
+                end if;
+            end if; --if (clk'event) then
 
-        end if;
+            if (clk'event and clk = '0') then
+                --y pos increment.
+                if (cur_x = conv_std_logic_vector(HSCAN_MAX, X_SIZE)) then
+                    render_y_en_n <= '0';
+                else
+                    render_y_en_n <= '1';
+                end if;
+            end if; --if (clk'event) then
 
+            if (clk'event and clk = '1') then
+                ----fetch name table byte.
+                if (cur_x (2 downto 0) = "000" ) then
+                    --vram addr is incremented every 8 cycle.
+                    vram_addr(dsize - 1 downto 0) <= "000" & cur_x(7 downto 3);
+                    vram_addr(asize - 1 downto dsize) <= "100000";
+
+                ----fetch attr table byte.
+                elsif (cur_x (2 downto 0) = "010" ) then
+                    --vram addr is incremented every 8 cycle.
+                    vram_addr(dsize - 1 downto 0) <= "110" & cur_x(7 downto 3);
+                    vram_addr(asize - 1 downto dsize) <= "100011";
+                end if;--if (cur_x (2 downto 0) = "000" ) then
+            end if; --if (clk'event and clk = '1') then
+
+        end if;--if (rst_n = '0') then
     end process;
 
-    nt_p : process (clk, cur_x) 
-    begin
-        ----fetch name table byte.
-        if (cur_x(1)'event and cur_x(1) = '0') then
-            vram_addr(dsize - 1 downto 0) <= cur_x(7 downto 0);
-            vram_addr(asize - 1 downto dsize) <= "100000";
-        end if;
-    end process;
 end rtl;
 
 
@@ -238,7 +256,7 @@ begin
             v_ale <= '0';
             v_rd_n <= '1';
             v_wr_n <= '0';
-            v_addr(7 downto 0) <= conv_std_logic_vector(16#a5# + i, size8);
+            v_addr(7 downto 0) <= conv_std_logic_vector(16#a0# + i, size8);
             wait for ppu_clk;
         end loop;
 

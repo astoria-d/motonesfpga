@@ -96,7 +96,7 @@ begin
     couter_reg_inst : d_flip_flop generic map (dsize)
             port map (clk, rst_n, '1', ce_n, d, q_out);
         
-    clk_p : process (clk) 
+    clk_p : process (clk, ce_n) 
     begin
         if (ce_n = '0') then
             d <= q_out + 1;
