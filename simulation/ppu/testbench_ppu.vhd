@@ -43,7 +43,6 @@ architecture stimulus of testbench_ppu is
 
     component vga_device
         port (  
-            vga_clk     : in std_logic;
             h_sync      : in std_logic;
             v_sync      : in std_logic;
             r           : in std_logic_vector(3 downto 0);
@@ -88,7 +87,7 @@ begin
         port map (clk, rd_n, wr_n, ale, vram_ad, vram_a);
 
     dummy_vga_disp : vga_device 
-        port map (vga_clk, h_sync, v_sync, r, g, b);
+        port map (h_sync, v_sync, r, g, b);
 
     reset_p : process
     begin

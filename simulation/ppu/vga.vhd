@@ -108,7 +108,22 @@ begin
             end if; --if (vga_clk'event) then
 
             if (vga_clk'event and vga_clk = '1') then
-                -- fp = 16, sp = 96, bp = 48.
+                if (vga_x < conv_std_logic_vector(VGA_W + H_FP, VGA_SIZE) and 
+                    vga_y < conv_std_logic_vector(VGA_H + V_FP, VGA_SIZE)) then
+
+                    r <= nes_screen(conv_integer(
+                                pos_x(7 downto 0) & pos_y(7 downto 0)))(11 downto 8);
+                    g <= nes_screen(conv_integer(
+                                pos_x(7 downto 0) & pos_y(7 downto 0)))(7 downto 4);
+                    b <= nes_screen(conv_integer(
+                                pos_x(7 downto 0) & pos_y(7 downto 0)))(3 downto 0);
+                else
+                    r <= (others => '0');
+                    g <= (others => '0');
+                    b <= (others => '0');
+                end if;
+
+                --sync signal assert.
                 if (vga_x >= conv_std_logic_vector(VGA_W + H_FP, VGA_SIZE) and 
                     vga_x < conv_std_logic_vector(VGA_W + H_FP + H_SP, VGA_SIZE)) then
                     h_sync <= '0';
@@ -143,7 +158,6 @@ use ieee.std_logic_unsigned.conv_integer;
 
 entity vga_device is 
         port (  
-            vga_clk     : in std_logic;
             h_sync      : in std_logic;
             v_sync      : in std_logic;
             r           : in std_logic_vector(3 downto 0);
