@@ -157,7 +157,8 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.conv_integer;
 
 entity vga_device is 
-        port (  
+    port (  vga_clk     : in std_logic;
+            rst_n       : in std_logic;
             h_sync      : in std_logic;
             v_sync      : in std_logic;
             r           : in std_logic_vector(3 downto 0);
@@ -168,8 +169,72 @@ end vga_device;
 
 architecture rtl of vga_device is
 
-
+procedure d_print(msg : string) is
+use std.textio.all;
+use ieee.std_logic_textio.all;
+variable out_l : line;
 begin
+    write(out_l, msg);
+    writeline(output, out_l);
+end  procedure;
+
+function conv_color_hex (
+            r           : in std_logic_vector(3 downto 0);
+            g           : in std_logic_vector(3 downto 0);
+            b           : in std_logic_vector(3 downto 0)
+        ) return string is
+variable tmp1, tmp2, tmp3 : integer;
+variable hex_chr: string (1 to 16) := "0123456789abcdef";
+begin
+    tmp1 := conv_integer(r) mod 16;
+    tmp2 := conv_integer(g) mod 16;
+    tmp3 := conv_integer(b) mod 16;
+    return  hex_chr(tmp3 + 1) & hex_chr(tmp2 + 1) & hex_chr(tmp1 + 1);
+end;
+
+procedure write_vga_pipe(msg : string) is
+use std.textio.all;
+use ieee.std_logic_textio.all;
+variable out_l : line;
+file vga_file: TEXT open write_mode is "vga-port";
+begin
+    write(out_l, msg);
+    writeline(vga_file, out_l);
+end  procedure;
+
+
+---ival : 0x0000 - 0xffff
+begin
+
+    clk_p : process (rst_n, vga_clk) 
+    variable x, y : integer;
+
+
+    begin
+        if (rst_n = '0') then
+            x := 0;
+            y := 0;
+        else
+            if (vga_clk'event and vga_clk = '1') then
+                if ( x < 640 and y < 480) then
+                    --d_print(conv_color_hex(r, g, b));
+                    write_vga_pipe(conv_color_hex(r, g, b));
+                end if;
+                if (h_sync = '0') then
+                    write_vga_pipe("-");
+                    x := 0;
+                    y := y + 1;
+                else
+                    x := x + 1;
+                end if;
+                if (v_sync = '0') then
+                    y := 0;
+                    write_vga_pipe("_");
+                end if;
+
+            end if;
+        end if;
+    end process;
 
 end rtl;
 
