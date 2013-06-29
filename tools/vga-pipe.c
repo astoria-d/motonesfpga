@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <string.h>
+#include <time.h>
 #include "vga.h"
 
 void *vga_shm_get(void);
@@ -49,8 +50,11 @@ int main(int argc, char **argv) {
 
         memset(buf, 0, sizeof(buf));
         len = read(fd, buf, 2);
-        if (len == 0)
+        if (len == 0) {
+            struct timespec sleep_inteval = {0, 100000000};
+            nanosleep(&sleep_inteval, NULL);
             continue;
+        }
 
         if (buf[0] == '-') {
             if (dump) {
