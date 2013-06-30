@@ -6,7 +6,8 @@ use ieee.std_logic_1164.all;
 
 entity shift_register is 
     generic (
-        dsize : integer := 8
+        dsize : integer := 8;
+        shift : integer := 1
     );
     port (  clk         : in std_logic;
             rst_n       : in std_logic;
@@ -49,8 +50,9 @@ begin
         if (we_n = '0') then
             df_in <= d;
         elsif (ce_n = '0') then
-            df_in (dsize - 1) <= '0';
-            df_in (dsize - 2 downto 0) <= q_out(dsize - 1 downto 1);
+            df_in (dsize - 1 downto dsize - shift) <= (others => '0');
+            df_in (dsize - shift - 1  downto 0) <= 
+                q_out(dsize - 1 downto shift);
         end if;
     end process;
 

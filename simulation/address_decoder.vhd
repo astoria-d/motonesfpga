@@ -178,7 +178,6 @@ architecture rtl of v_address_decoder is
     constant vram_1k : integer := 10;      --2k = 11 bit width.
     constant chr_rom_8k : integer := 13;     --32k = 15 bit width.
 
-
     signal v_addr : std_logic_vector (13 downto 0);
     signal oe_n : std_logic;
     --signal nt_v_mirror2  : std_logic;
@@ -187,7 +186,6 @@ architecture rtl of v_address_decoder is
     signal pt_ce_n : std_logic;
     signal nt0_ce_n : std_logic;
     signal nt1_ce_n : std_logic;
-    signal plt_ce_n : std_logic;
 
 begin
 
@@ -212,10 +210,7 @@ begin
             port map (nt1_ce_n, rd_n, wr_n, 
                     v_addr(vram_1k - 1 downto 0), vram_ad);
 
-    --palette table
-    plt_tbl : ram generic map (4, dsize)
-            port map (plt_ce_n, rd_n, wr_n, 
-                    v_addr(3 downto 0), vram_ad);
+    --palette table data is stored in the inside ppu
 
     --ram io timing.
     main_p : process (clk, v_addr, vram_ad, wr_n)
@@ -284,25 +279,9 @@ begin
                 nt0_ce_n <= '1';
                 nt1_ce_n <= '1';
             end if;
-
-            ---palette table
-            if (v_addr(12 downto 8) = "11111") then
-                if (wr_n = '0') then
-                    --write
-                    plt_ce_n <= not clk;
-                elsif (rd_n = '0') then 
-                    --read
-                    plt_ce_n <= '0';
-                else
-                    plt_ce_n <= '1';
-                end if;
-            else
-                plt_ce_n <= '1';
-            end if; --if (v_addr(12 downto 8) = "11111") then
         else
             nt0_ce_n <= '1';
             nt1_ce_n <= '1';
-            plt_ce_n <= '1';
         end if; --if (v_addr(13) = '1') then
     end process;
 

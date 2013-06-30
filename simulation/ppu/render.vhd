@@ -12,6 +12,10 @@ entity ppu_render is
             ale         : out std_logic;
             vram_ad     : inout std_logic_vector (7 downto 0);
             vram_a      : out std_logic_vector (13 downto 8);
+            plt_bus_ce_n : in std_logic;
+            plt_r_nw    : in std_logic;
+            plt_addr    : in std_logic_vector (4 downto 0);
+            plt_data    : inout std_logic_vector (7 downto 0);
             pos_x       : out std_logic_vector (8 downto 0);
             pos_y       : out std_logic_vector (8 downto 0);
             r           : out std_logic_vector (3 downto 0);
@@ -35,7 +39,8 @@ end component;
 
 component shift_register
     generic (
-        dsize : integer := 8
+        dsize : integer := 8;
+        shift : integer := 1
     );
     port (  clk         : in std_logic;
             rst_n       : in std_logic;
@@ -72,12 +77,16 @@ component tri_state_buffer
 end component;
 
 component test_module_init_data
-    port (  clk         : in std_logic;
-            v_rd_n        : out std_logic;
-            v_wr_n        : out std_logic;
-            v_ale         : out std_logic;
-            v_ad     : inout std_logic_vector (7 downto 0);
-            v_a      : out std_logic_vector (13 downto 8)
+    port (  clk             : in std_logic;
+            v_rd_n          : out std_logic;
+            v_wr_n          : out std_logic;
+            v_ale           : out std_logic;
+            v_ad            : out std_logic_vector (7 downto 0);
+            v_a             : out std_logic_vector (13 downto 8);
+            plt_bus_ce_n    : out std_logic;
+            plt_r_nw        : out std_logic;
+            plt_addr        : out std_logic_vector (4 downto 0);
+            plt_data        : out std_logic_vector (7 downto 0)
     );
 end component;
 
@@ -86,6 +95,81 @@ constant dsize        : integer := 8;
 constant asize        : integer := 14;
 constant VSCAN_MAX    : integer := 261;
 constant HSCAN_MAX    : integer := 340;
+
+subtype palette_data is std_logic_vector (dsize -1 downto 0);
+type palette_array is array (0 to 15) of palette_data;
+signal bg_palatte : palette_array := (others => (others => '0'));
+signal sprite_palatte : palette_array := (others => (others => '0'));
+
+subtype nes_color_data is std_logic_vector (11 downto 0);
+type nes_color_array is array (0 to 63) of nes_color_data;
+constant nes_color_palette : nes_color_array := (
+        conv_std_logic_vector(16#787878#, 12), 
+        conv_std_logic_vector(16#2000B0#, 12), 
+        conv_std_logic_vector(16#2800B8#, 12), 
+        conv_std_logic_vector(16#6010A0#, 12), 
+        conv_std_logic_vector(16#982078#, 12), 
+        conv_std_logic_vector(16#B01030#, 12), 
+        conv_std_logic_vector(16#A03000#, 12), 
+        conv_std_logic_vector(16#784000#, 12), 
+        conv_std_logic_vector(16#485800#, 12), 
+        conv_std_logic_vector(16#386800#, 12), 
+        conv_std_logic_vector(16#386C00#, 12), 
+        conv_std_logic_vector(16#306040#, 12), 
+        conv_std_logic_vector(16#305080#, 12), 
+        conv_std_logic_vector(16#000000#, 12), 
+        conv_std_logic_vector(16#000000#, 12), 
+        conv_std_logic_vector(16#000000#, 12),
+        conv_std_logic_vector(16#B0B0B0#, 12), 
+        conv_std_logic_vector(16#4060F8#, 12), 
+        conv_std_logic_vector(16#4040FF#, 12), 
+        conv_std_logic_vector(16#9040F0#, 12), 
+        conv_std_logic_vector(16#D840C0#, 12), 
+        conv_std_logic_vector(16#D84060#, 12), 
+        conv_std_logic_vector(16#E05000#, 12), 
+        conv_std_logic_vector(16#C07000#, 12), 
+        conv_std_logic_vector(16#888800#, 12), 
+        conv_std_logic_vector(16#50A000#, 12), 
+        conv_std_logic_vector(16#48A810#, 12), 
+        conv_std_logic_vector(16#48A068#, 12), 
+        conv_std_logic_vector(16#4090C0#, 12), 
+        conv_std_logic_vector(16#000000#, 12), 
+        conv_std_logic_vector(16#000000#, 12), 
+        conv_std_logic_vector(16#000000#, 12),
+
+        conv_std_logic_vector(16#FFFFFF#, 12), 
+        conv_std_logic_vector(16#60A0FF#, 12), 
+        conv_std_logic_vector(16#5080FF#, 12), 
+        conv_std_logic_vector(16#A070FF#, 12), 
+        conv_std_logic_vector(16#F060FF#, 12), 
+        conv_std_logic_vector(16#FF60B0#, 12), 
+        conv_std_logic_vector(16#FF7830#, 12), 
+        conv_std_logic_vector(16#FFA000#, 12), 
+        conv_std_logic_vector(16#E8D020#, 12), 
+        conv_std_logic_vector(16#98E800#, 12), 
+        conv_std_logic_vector(16#70F040#, 12), 
+        conv_std_logic_vector(16#70E090#, 12), 
+        conv_std_logic_vector(16#60D0E0#, 12), 
+        conv_std_logic_vector(16#787878#, 12), 
+        conv_std_logic_vector(16#000000#, 12), 
+        conv_std_logic_vector(16#000000#, 12),
+        conv_std_logic_vector(16#FFFFFF#, 12), 
+        conv_std_logic_vector(16#90D0FF#, 12), 
+        conv_std_logic_vector(16#A0B8FF#, 12), 
+        conv_std_logic_vector(16#C0B0FF#, 12), 
+        conv_std_logic_vector(16#E0B0FF#, 12), 
+        conv_std_logic_vector(16#FFB8E8#, 12), 
+        conv_std_logic_vector(16#FFC8B8#, 12), 
+        conv_std_logic_vector(16#FFD8A0#, 12), 
+        conv_std_logic_vector(16#FFF090#, 12), 
+        conv_std_logic_vector(16#C8F080#, 12), 
+        conv_std_logic_vector(16#A0F0A0#, 12), 
+        conv_std_logic_vector(16#A0FFC8#, 12), 
+        conv_std_logic_vector(16#A0FFF0#, 12), 
+        conv_std_logic_vector(16#A0A0A0#, 12), 
+        conv_std_logic_vector(16#000000#, 12), 
+        conv_std_logic_vector(16#000000#, 12)
+        );
 
 signal rst              : std_logic;
 signal clk_n            : std_logic;
@@ -101,23 +185,30 @@ signal cur_x            : std_logic_vector(X_SIZE - 1 downto 0);
 signal cur_y            : std_logic_vector(X_SIZE - 1 downto 0);
 
 signal nt_we_n          : std_logic;
+signal attr_ce_n        : std_logic;
 signal attr_we_n        : std_logic;
 signal ptn_l_we_n       : std_logic;
 signal ptn_h_we_n       : std_logic;
 
 signal nt_val           : std_logic_vector (dsize - 1 downto 0);
+signal attr_in          : std_logic_vector (dsize - 1 downto 0);
 signal attr_val         : std_logic_vector (dsize - 1 downto 0);
 signal ptn_l_val        : std_logic_vector (dsize * 2 - 1 downto 0);
 signal ptn_l_in         : std_logic_vector (dsize * 2 - 1 downto 0);
 signal ptn_h_val        : std_logic_vector (dsize * 2 - 1 downto 0);
 signal ptn_h_in         : std_logic_vector (dsize * 2 - 1 downto 0);
 
-
 signal vram_addr        : std_logic_vector (asize - 1 downto 0);
 
-signal init_ale          : std_logic;
-signal init_rd_n          : std_logic;
-signal init_wr_n          : std_logic;
+----test init data.
+signal init_ale         : std_logic;
+signal init_rd_n        : std_logic;
+signal init_wr_n        : std_logic;
+
+signal init_plt_bus_ce_n : std_logic;
+signal init_plt_r_nw    : std_logic;
+signal init_plt_addr    : std_logic_vector (4 downto 0);
+signal init_plt_data    : std_logic_vector (7 downto 0);
 
 begin
 
@@ -138,7 +229,9 @@ begin
 
     -----fill test data during the reset.....
     init_data : test_module_init_data 
-        port map (clk, init_rd_n, init_wr_n, init_ale, vram_ad, vram_a);
+        port map (clk, init_rd_n, init_wr_n, init_ale, vram_ad, vram_a,
+                init_plt_bus_ce_n, init_plt_r_nw, init_plt_addr, plt_data
+                );
 
 
     --current x,y pos
@@ -149,16 +242,18 @@ begin
 
     nt_inst : d_flip_flop generic map(dsize)
             port map (clk_n, rst_n, '1', nt_we_n, vram_ad, nt_val);
-    at_inst : d_flip_flop generic map(dsize)
-            port map (clk_n, rst_n, '1', attr_we_n, vram_ad, attr_val);
+
+    attr_in <= vram_ad;
+    at_inst : shift_register generic map(dsize, 2)
+            port map (clk_n, rst_n, attr_ce_n, attr_we_n, attr_in, attr_val);
 
 
     ptn_l_in <= vram_ad & ptn_l_val (dsize downto 1);
-    ptn_l_inst : shift_register generic map(dsize * 2)
+    ptn_l_inst : shift_register generic map(dsize * 2, 1)
             port map (clk_n, rst_n, '0', ptn_l_we_n, ptn_l_in, ptn_l_val);
 
     ptn_h_in <= vram_ad & ptn_h_val (dsize downto 1);
-    ptn_h_inst : shift_register generic map(dsize * 2)
+    ptn_h_inst : shift_register generic map(dsize * 2, 1)
             port map (clk_n, rst_n, '0', ptn_h_we_n, ptn_h_in, ptn_h_val);
 
     vram_io_buf : tri_state_buffer generic map (dsize)
@@ -171,6 +266,18 @@ begin
     pos_y <= cur_y;
 
     clk_p : process (rst_n, clk) 
+
+procedure output_bg_rgb is
+variable index : integer;
+variable palette_index : integer;
+begin
+    index := conv_integer(attr_val(1 downto 0) & ptn_h_val(0) & ptn_l_val(0));
+    palette_index := conv_integer(bg_palatte(index));
+    b <= nes_color_palette(palette_index) (11 downto 8);
+    g <= nes_color_palette(palette_index) (7 downto 4);
+    r <= nes_color_palette(palette_index) (3 downto 0);
+end;
+
     begin
         if (rst_n = '0') then
             render_x_res_n <= '0';
@@ -220,17 +327,23 @@ begin
                 end if;
 
                 ----fetch attr table byte.
-                if (cur_x (2 downto 0) = "010" ) then
-                    --vram addr is incremented every 8 cycle.
+                if (cur_x (4 downto 0) = "00010" ) then
+                    --attribute table is loaded every 32 cycle.
                     --attr table at 0x23c0
                     vram_addr(dsize - 1 downto 0) 
                         <= "110" & cur_x(dsize - 1 downto 3);
                     vram_addr(asize - 1 downto dsize) <= "100011";
                 end if;--if (cur_x (2 downto 0) = "010" ) then
-                if (cur_x (2 downto 0) = "011" ) then
+                if (cur_x (4 downto 0) = "00011" ) then
                     attr_we_n <= '0';
                 else
                     attr_we_n <= '1';
+                end if;
+                ---attribute is shifted every 16 bit.
+                if (cur_x (3 downto 0) = "0011" ) then
+                    attr_ce_n <= '0';
+                else
+                    attr_ce_n <= '1';
                 end if;
 
                 ----fetch pattern table low byte.
@@ -248,7 +361,7 @@ begin
                 ----fetch pattern table high byte.
                 if (cur_x (2 downto 0) = "110" ) then
                     --vram addr is incremented every 8 cycle.
-                    vram_addr(dsize - 1 downto 0) <= nt_val + 1;
+                    vram_addr(dsize - 1 downto 0) <= nt_val + 8;
                     vram_addr(asize - 1 downto dsize) <= "000000";
                 end if;
                 if (cur_x (2 downto 0) = "111" ) then
@@ -257,11 +370,48 @@ begin
                     ptn_h_we_n <= '1';
                 end if;--if (cur_x (2 downto 0) = "001" ) then
 
-
                 --output image.
+                output_bg_rgb;
             end if; --if (clk'event and clk = '1') then
 
         end if;--if (rst_n = '0') then
+    end process;
+
+    ------------------- palette access process -------------------
+    plt_rw : process (plt_bus_ce_n, plt_r_nw, plt_addr, plt_data)
+    begin
+        if (plt_bus_ce_n = '0') then
+            if (plt_r_nw = '0') then
+                if (plt_addr(4) = '0') then
+                    bg_palatte(conv_integer(plt_addr)) <= plt_data;
+                else
+                    sprite_palatte(conv_integer(plt_addr)) <= plt_data;
+                end if;
+            end if;
+
+            if (plt_r_nw = '1') then
+                if (plt_addr(4) = '0') then
+                    plt_data <= bg_palatte(conv_integer(plt_addr));
+                else
+                    plt_data <= sprite_palatte(conv_integer(plt_addr));
+                end if;
+            end if;
+        else
+            plt_data <= (others => 'Z');
+        end if;
+    end process;
+
+    ----- test initial value stting.
+    plt_init_w : process (init_plt_bus_ce_n, init_plt_r_nw, 
+                         init_plt_addr, init_plt_data)
+    begin
+        if (init_plt_bus_ce_n = '0') then
+            if (init_plt_r_nw = '0') then
+                if (init_plt_addr(4) = '0') then
+                    bg_palatte(conv_integer(init_plt_addr)) <= init_plt_data;
+                end if;
+            end if;
+        end if;
     end process;
 
 end rtl;
@@ -282,35 +432,25 @@ use IEEE.std_logic_1164.all;
 use ieee.std_logic_arith.all;
 
 entity test_module_init_data is
-    port (  clk         : in std_logic;
-            v_rd_n        : out std_logic;
-            v_wr_n        : out std_logic;
-            v_ale         : out std_logic;
-            v_ad     : inout std_logic_vector (7 downto 0);
-            v_a      : out std_logic_vector (13 downto 8)
+    port (  clk             : in std_logic;
+            v_rd_n          : out std_logic;
+            v_wr_n          : out std_logic;
+            v_ale           : out std_logic;
+            v_ad            : out std_logic_vector (7 downto 0);
+            v_a             : out std_logic_vector (13 downto 8);
+            plt_bus_ce_n    : out std_logic;
+            plt_r_nw        : out std_logic;
+            plt_addr        : out std_logic_vector (4 downto 0);
+            plt_data        : out std_logic_vector (7 downto 0)
     );
 end test_module_init_data;
 
-architecture stimulus of test_module_init_data is 
-component d_flip_flop
-    generic (
-            dsize : integer := 8
-            );
-    port (  
-            clk     : in std_logic;
-            res_n   : in std_logic;
-            set_n   : in std_logic;
-            we_n    : in std_logic;
-            d       : in std_logic_vector (dsize - 1 downto 0);
-            q       : out std_logic_vector (dsize - 1 downto 0)
-        );
-end component;
+architecture stimulus of test_module_init_data is
 
     constant ppu_clk : time := 186 ns;
     constant size8 : integer := 8;
     constant size16 : integer := 16;
     constant size14 : integer := 14;
-
 
     signal v_addr       : std_logic_vector (size14 - 1 downto 0);
 
@@ -340,8 +480,8 @@ begin
             v_ale <= '0';
             v_rd_n <= '1';
             v_wr_n <= '0';
-            ---bg sprite start from 0.
-            v_addr(7 downto 0) <= conv_std_logic_vector(16 * i, size8);
+            ---bg start from 0.
+            v_addr(7 downto 0) <= conv_std_logic_vector(i, size8);
             wait for ppu_clk;
 
             --write attr tbl #0
@@ -359,6 +499,14 @@ begin
         end loop;
 
         v_addr <= (others => 'Z');
+
+        --fill palette teble.
+        for i in 32 to loopcnt loop
+            plt_bus_ce_n <= '0';
+            plt_r_nw <= '0';
+            plt_addr <= conv_std_logic_vector(i, 8);
+            plt_data <= conv_std_logic_vector(i, 4);
+        end loop;
 
         wait;
     end process;

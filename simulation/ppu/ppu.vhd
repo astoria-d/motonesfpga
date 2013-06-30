@@ -25,7 +25,6 @@ end ppu;
 
 architecture rtl of ppu is
 
-
 component ppu_render
     port (  clk         : in std_logic;
             rst_n       : in std_logic;
@@ -35,6 +34,10 @@ component ppu_render
             ale         : out std_logic;
             vram_ad     : inout std_logic_vector (7 downto 0);
             vram_a      : out std_logic_vector (13 downto 8);
+            plt_bus_ce_n : in std_logic;
+            plt_r_nw    : in std_logic;
+            plt_addr    : in std_logic_vector (4 downto 0);
+            plt_data    : inout std_logic_vector (7 downto 0);
             pos_x       : out std_logic_vector (8 downto 0);
             pos_y       : out std_logic_vector (8 downto 0);
             r           : out std_logic_vector (3 downto 0);
@@ -65,10 +68,16 @@ signal nes_r       : std_logic_vector (3 downto 0);
 signal nes_g       : std_logic_vector (3 downto 0);
 signal nes_b       : std_logic_vector (3 downto 0);
 
+signal plt_bus_ce_n : std_logic;
+signal plt_r_nw    : std_logic;
+signal plt_addr    : std_logic_vector (4 downto 0);
+signal plt_data    : std_logic_vector (7 downto 0);
+
 begin
 
     render_inst : ppu_render port map (clk, rst_n, vblank_n, 
             rd_n, wr_n, ale, vram_ad, vram_a,
+            plt_bus_ce_n, plt_r_nw, plt_addr, plt_data,
             pos_x, pos_y, nes_r, nes_g, nes_b);
 
     vga_inst : vga_ctl port map (vga_clk, rst_n, 
