@@ -19,8 +19,8 @@ do
 #            echo $x
             echo $col > vga-port
         done
-        echo "-" > vga-port
+        echo "---" > vga-port
     done;
-    echo "_" > vga-port
+    echo "___" > vga-port
 done
 

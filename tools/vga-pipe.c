@@ -49,32 +49,36 @@ int main(int argc, char **argv) {
         char buf[4];
 
         memset(buf, 0, sizeof(buf));
-        len = read(fd, buf, 2);
+        len = read(fd, buf, sizeof(buf));
+        //printf("len:%d\n", len);
         if (len == 0) {
             struct timespec sleep_inteval = {0, 100000000};
             nanosleep(&sleep_inteval, NULL);
             continue;
-        }
-
+        } 
+        //printf("buf:[%s]\n", buf);
         if (buf[0] == '-') {
             if (dump) {
                 printf("hsync\n");
             }
             x = 0;
             y++;
+            if (y == 525) {
+                y = 0;
+            }
         }
         else if (buf[0] == '_') {
             if (dump) {
                 printf("vsync\n");
             }
-            y = 0;
+            //vga widht + fp + 1.
+            y = 480 + 10 + 1;
             col = disp_data;
         }
         else {
             unsigned int rgb12;
             unsigned char r, g, b;
 
-            read(fd, buf + 2, 3);
             sscanf(buf, "%x", &rgb12);
 
             r = (rgb12 & 0x0f) * 0x1f / 0x0f;
