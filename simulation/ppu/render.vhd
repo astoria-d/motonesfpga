@@ -92,6 +92,26 @@ component test_module_init_data
     );
 end component;
 
+procedure d_print(msg : string) is
+use std.textio.all;
+use ieee.std_logic_textio.all;
+variable out_l : line;
+begin
+    write(out_l, msg);
+    writeline(output, out_l);
+end  procedure;
+
+function conv_hex8(ival : integer) return string is
+variable tmp1, tmp2 : integer;
+variable hex_chr: string (1 to 16) := "0123456789abcdef";
+begin
+    tmp2 := (ival mod 16 ** 2) / 16 ** 1;
+    tmp1 := ival mod 16 ** 1;
+    return hex_chr(tmp2 + 1) & hex_chr(tmp1 + 1);
+end;
+
+
+
 constant X_SIZE       : integer := 9;
 constant dsize        : integer := 8;
 constant asize        : integer := 14;
@@ -184,15 +204,17 @@ signal render_y_en_n    : std_logic;
 signal render_y_res_n   : std_logic;
 
 signal cur_x            : std_logic_vector(X_SIZE - 1 downto 0);
+signal next_x           : std_logic_vector(X_SIZE - 1 downto 0);
 signal cur_y            : std_logic_vector(X_SIZE - 1 downto 0);
 
-signal nt_we_n          : std_logic;
+signal nt_next_we_n     : std_logic;
 signal attr_ce_n        : std_logic;
 signal attr_we_n        : std_logic;
 signal ptn_l_we_n       : std_logic;
 signal ptn_h_we_n       : std_logic;
 
 signal nt_val           : std_logic_vector (dsize - 1 downto 0);
+signal nt_next_val      : std_logic_vector (dsize - 1 downto 0);
 signal attr_in          : std_logic_vector (dsize - 1 downto 0);
 signal attr_val         : std_logic_vector (dsize - 1 downto 0);
 signal ptn_l_val        : std_logic_vector (dsize * 2 - 1 downto 0);
@@ -229,10 +251,15 @@ begin
     io_oe_n <= not cur_x(0) when rst_n = '1' else '1';
 
 
+    ---x pos is 8 cycle ahead of current pos.
+    next_x <= cur_x + "000001000" when cur_x <  conv_std_logic_vector(HSCAN_MAX - 1, X_SIZE) else
+                (others => '0');
+
+
     -----fill test data during the reset.....
     init_data : test_module_init_data 
         port map (clk, init_rd_n, init_wr_n, init_ale, vram_ad, vram_a,
-                init_plt_bus_ce_n, init_plt_r_nw, init_plt_addr, plt_data
+                init_plt_bus_ce_n, init_plt_r_nw, init_plt_addr, init_plt_data
                 );
 
 
@@ -242,8 +269,10 @@ begin
     cur_y_inst : counter_register generic map (X_SIZE)
             port map (clk, render_y_res_n, '1', render_y_en_n, (others => '0'), cur_y);
 
+    nt_next_inst : d_flip_flop generic map(dsize)
+            port map (clk_n, rst_n, '1', nt_next_we_n, vram_ad, nt_next_val);
     nt_inst : d_flip_flop generic map(dsize)
-            port map (clk_n, rst_n, '1', nt_we_n, vram_ad, nt_val);
+            port map (clk_n, rst_n, '1', nt_next_we_n, nt_next_val, nt_val);
 
     attr_in <= vram_ad;
     at_inst : shift_register generic map(dsize, 2)
@@ -270,21 +299,23 @@ begin
     clk_p : process (rst_n, clk) 
 
 procedure output_bg_rgb is
-variable index : integer;
+variable plt_addr : integer;
 variable palette_index : integer;
 begin
-    index := conv_integer(attr_val(1 downto 0) & ptn_h_val(0) & ptn_l_val(0));
-    palette_index := conv_integer(bg_palatte(index));
+    plt_addr := conv_integer(attr_val(1 downto 0) & ptn_h_val(0) & ptn_l_val(0));
+    palette_index := conv_integer(bg_palatte(plt_addr));
     b <= nes_color_palette(palette_index) (11 downto 8);
     g <= nes_color_palette(palette_index) (7 downto 4);
     r <= nes_color_palette(palette_index) (3 downto 0);
+    d_print("plt_addr: " & conv_hex8(plt_addr));
+    d_print("palette index: " & conv_hex8(palette_index));
 end;
 
     begin
         if (rst_n = '0') then
             render_x_res_n <= '0';
             render_y_res_n <= '0';
-            nt_we_n <= '1';
+            nt_next_we_n <= '1';
         else
             if (clk'event) then
                 --x pos reset.
@@ -314,18 +345,18 @@ end;
             end if; --if (clk'event) then
 
             if (clk'event and clk = '1') then
-                ----fetch name table byte.
+                ----fetch next tile byte.
                 if (cur_x (2 downto 0) = "000" ) then
                     --vram addr is incremented every 8 cycle.
                     --name table at 0x2000
                     vram_addr(dsize - 1 downto 0) 
-                        <= "000" & cur_x(dsize - 1 downto 3);
+                        <= "000" & next_x(dsize - 1 downto 3);
                     vram_addr(asize - 1 downto dsize) <= "100000";
                 end if;
                 if (cur_x (2 downto 0) = "001" ) then
-                    nt_we_n <= '0';
+                    nt_next_we_n <= '0';
                 else
-                    nt_we_n <= '1';
+                    nt_next_we_n <= '1';
                 end if;
 
                 ----fetch attr table byte.
@@ -351,7 +382,7 @@ end;
                 ----fetch pattern table low byte.
                 if (cur_x (2 downto 0) = "100" ) then
                     --vram addr is incremented every 8 cycle.
-                    vram_addr(dsize - 1 downto 0) <= nt_val;
+                    vram_addr(dsize - 1 downto 0) <= nt_next_val;
                     vram_addr(asize - 1 downto dsize) <= "000000";
                 end if;--if (cur_x (2 downto 0) = "100" ) then
                 if (cur_x (2 downto 0) = "101" ) then
@@ -363,7 +394,7 @@ end;
                 ----fetch pattern table high byte.
                 if (cur_x (2 downto 0) = "110" ) then
                     --vram addr is incremented every 8 cycle.
-                    vram_addr(dsize - 1 downto 0) <= nt_val + 8;
+                    vram_addr(dsize - 1 downto 0) <= nt_next_val + 8;
                     vram_addr(asize - 1 downto dsize) <= "000000";
                 end if;
                 if (cur_x (2 downto 0) = "111" ) then
@@ -379,29 +410,29 @@ end;
         end if;--if (rst_n = '0') then
     end process;
 
-    ------------------- palette access process -------------------
-    plt_rw : process (plt_bus_ce_n, plt_r_nw, plt_addr, plt_data)
-    begin
-        if (plt_bus_ce_n = '0') then
-            if (plt_r_nw = '0') then
-                if (plt_addr(4) = '0') then
-                    bg_palatte(conv_integer(plt_addr)) <= plt_data;
-                else
-                    sprite_palatte(conv_integer(plt_addr)) <= plt_data;
-                end if;
-            end if;
-
-            if (plt_r_nw = '1') then
-                if (plt_addr(4) = '0') then
-                    plt_data <= bg_palatte(conv_integer(plt_addr));
-                else
-                    plt_data <= sprite_palatte(conv_integer(plt_addr));
-                end if;
-            end if;
-        else
-            plt_data <= (others => 'Z');
-        end if;
-    end process;
+--    ------------------- palette access process -------------------
+--    plt_rw : process (plt_bus_ce_n, plt_r_nw, plt_addr, plt_data)
+--    begin
+--        if (plt_bus_ce_n = '0') then
+--            if (plt_r_nw = '0') then
+--                if (plt_addr(4) = '0') then
+--                    bg_palatte(conv_integer(plt_addr)) <= plt_data;
+--                else
+--                    sprite_palatte(conv_integer(plt_addr)) <= plt_data;
+--                end if;
+--            end if;
+--
+--            if (plt_r_nw = '1') then
+--                if (plt_addr(4) = '0') then
+--                    plt_data <= bg_palatte(conv_integer(plt_addr));
+--                else
+--                    plt_data <= sprite_palatte(conv_integer(plt_addr));
+--                end if;
+--            end if;
+--        else
+--            plt_data <= (others => 'Z');
+--        end if;
+--    end process;
 
     ----- test initial value stting.
     plt_init_w : process (init_plt_bus_ce_n, init_plt_r_nw, 
@@ -410,6 +441,8 @@ end;
         if (init_plt_bus_ce_n = '0') then
             if (init_plt_r_nw = '0') then
                 if (init_plt_addr(4) = '0') then
+                    d_print("dummy addr:" & conv_hex8(conv_integer(init_plt_addr)));
+                    d_print("plt val:" & conv_hex8(conv_integer(init_plt_data)));
                     bg_palatte(conv_integer(init_plt_addr)) <= init_plt_data;
                 end if;
             end if;
@@ -462,7 +495,7 @@ begin
     v_a <= v_addr(size14 - 1 downto size8);
 
     -----test for vram/chr-rom
-    p3 : process
+    p_vram_init : process
     variable i : integer := 0;
     variable tmp : std_logic_vector (size8 - 1 downto 0);
     constant loopcnt : integer := 10;
@@ -502,15 +535,28 @@ begin
 
         v_addr <= (others => 'Z');
 
+        wait;
+    end process;
+
+    p_palette_init : process
+    variable i : integer := 0;
+    begin
+        wait for 5 us;
+
         --fill palette teble.
-        for i in 32 to loopcnt loop
-            plt_bus_ce_n <= '0';
-            plt_r_nw <= '0';
-            plt_addr <= conv_std_logic_vector(i, 8);
-            plt_data <= conv_std_logic_vector(i, 4);
+        plt_bus_ce_n <= '0';
+        plt_r_nw <= '0';
+        for i in 0 to 32 loop
+            plt_addr <= conv_std_logic_vector(i, 5);
+            plt_data <= conv_std_logic_vector(i, 8);
+            wait for ppu_clk;
         end loop;
+
+        plt_bus_ce_n <= '1';
+        plt_data <= (others => 'Z');
 
         wait;
     end process;
 
 end stimulus ;
+

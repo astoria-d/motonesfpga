@@ -75,6 +75,13 @@ signal plt_data    : std_logic_vector (7 downto 0);
 
 begin
 
+
+    ---TODO: for the time being...
+    plt_bus_ce_n <= 'Z';
+    plt_r_nw <= 'Z';
+    plt_addr <= (others => 'Z');
+    plt_data <= (others => 'Z');
+
     render_inst : ppu_render port map (clk, rst_n, vblank_n, 
             rd_n, wr_n, ale, vram_ad, vram_a,
             plt_bus_ce_n, plt_r_nw, plt_addr, plt_data,
