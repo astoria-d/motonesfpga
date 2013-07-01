@@ -67,11 +67,13 @@ use ieee.std_logic_1164.all;
 entity counter_register is 
     
     generic (
-        dsize : integer := 8
+        dsize       : integer := 8
     );
     port (  clk         : in std_logic;
             rst_n       : in std_logic;
+            set_n       : in std_logic;
             ce_n        : in std_logic;
+            d           : in std_logic_vector(dsize - 1 downto 0);
             q           : out std_logic_vector(dsize - 1 downto 0)
     );
 end counter_register;
@@ -94,18 +96,22 @@ end component;
 
 use ieee.std_logic_unsigned.all;
 
-signal d : std_logic_vector(dsize - 1 downto 0);
+signal d_in : std_logic_vector(dsize - 1 downto 0);
 signal q_out : std_logic_vector(dsize - 1 downto 0);
 
 begin
     q <= q_out;
     couter_reg_inst : d_flip_flop generic map (dsize)
-            port map (clk, rst_n, '1', ce_n, d, q_out);
+            port map (clk, rst_n, set_n, ce_n, d_in, q_out);
         
-    clk_p : process (clk, ce_n) 
+    clk_p : process (rst_n, set_n, ce_n, clk) 
     begin
+        if (set_n = '0') then
+            d_in <= d;
+        end if;
+
         if (ce_n = '0') then
-            d <= q_out + 1;
+            d_in <= q_out + 1;
         end if;
     end process;
 

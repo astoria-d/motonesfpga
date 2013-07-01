@@ -22,8 +22,8 @@ architecture stimulus of testbench_ppu is
             vram_ad     : inout std_logic_vector (7 downto 0);
             vram_a      : out std_logic_vector (13 downto 8);
             vga_clk     : in std_logic;
-            h_sync      : out std_logic;
-            v_sync      : out std_logic;
+            h_sync_n    : out std_logic;
+            v_sync_n    : out std_logic;
             r           : out std_logic_vector(3 downto 0);
             g           : out std_logic_vector(3 downto 0);
             b           : out std_logic_vector(3 downto 0)
@@ -44,8 +44,8 @@ architecture stimulus of testbench_ppu is
     component vga_device
     port (  vga_clk     : in std_logic;
             rst_n       : in std_logic;
-            h_sync      : in std_logic;
-            v_sync      : in std_logic;
+            h_sync_n    : in std_logic;
+            v_sync_n    : in std_logic;
             r           : in std_logic_vector(3 downto 0);
             g           : in std_logic_vector(3 downto 0);
             b           : in std_logic_vector(3 downto 0)
@@ -71,8 +71,8 @@ signal vram_ad  : std_logic_vector (7 downto 0);
 signal vram_a   : std_logic_vector (13 downto 8);
 
 signal vga_clk     : std_logic;
-signal h_sync      : std_logic;
-signal v_sync      : std_logic;
+signal h_sync_n    : std_logic;
+signal v_sync_n    : std_logic;
 signal r           : std_logic_vector(3 downto 0);
 signal g           : std_logic_vector(3 downto 0);
 signal b           : std_logic_vector(3 downto 0);
@@ -82,13 +82,13 @@ begin
     ppu_inst : ppu 
         port map (clk, ce_n, rst_n, r_nw, cpu_addr, cpu_d, 
                 vblank_n, rd_n, wr_n, ale, vram_ad, vram_a,
-                vga_clk, h_sync, v_sync, r, g, b);
+                vga_clk, h_sync_n, v_sync_n, r, g, b);
 
     ppu_addr_decoder : v_address_decoder generic map (size14, size8) 
         port map (clk, rd_n, wr_n, ale, vram_ad, vram_a);
 
     dummy_vga_disp : vga_device 
-        port map (vga_clk, rst_n, h_sync, v_sync, r, g, b);
+        port map (vga_clk, rst_n, h_sync_n, v_sync_n, r, g, b);
 
     reset_p : process
     begin

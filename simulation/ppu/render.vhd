@@ -28,11 +28,13 @@ architecture rtl of ppu_render is
 
 component counter_register
     generic (
-        dsize : integer := 8
+        dsize       : integer := 8
     );
     port (  clk         : in std_logic;
             rst_n       : in std_logic;
+            set_n       : in std_logic;
             ce_n        : in std_logic;
+            d           : in std_logic_vector(dsize - 1 downto 0);
             q           : out std_logic_vector(dsize - 1 downto 0)
     );
 end component;
@@ -93,8 +95,8 @@ end component;
 constant X_SIZE       : integer := 9;
 constant dsize        : integer := 8;
 constant asize        : integer := 14;
-constant VSCAN_MAX    : integer := 261;
-constant HSCAN_MAX    : integer := 340;
+constant VSCAN_MAX    : integer := 262;
+constant HSCAN_MAX    : integer := 341;
 
 subtype palette_data is std_logic_vector (dsize -1 downto 0);
 type palette_array is array (0 to 15) of palette_data;
@@ -176,7 +178,7 @@ signal clk_n            : std_logic;
 
 signal io_oe_n          : std_logic;
 
-signal render_en_n      : std_logic;
+signal render_x_en_n    : std_logic;
 signal render_x_res_n   : std_logic;
 signal render_y_en_n    : std_logic;
 signal render_y_res_n   : std_logic;
@@ -216,7 +218,7 @@ begin
     clk_n <= not clk;
 
 
-    render_en_n <= '0';
+    render_x_en_n <= '0';
 
 --    wr_n <= '1';
 --    ale <= not cur_x(0) when rst_n = '1' else '1';
@@ -236,9 +238,9 @@ begin
 
     --current x,y pos
     cur_x_inst : counter_register generic map (X_SIZE)
-            port map (clk, render_x_res_n, render_en_n, cur_x);
+            port map (clk, render_x_res_n, '1', render_x_en_n, (others => '0'), cur_x);
     cur_y_inst : counter_register generic map (X_SIZE)
-            port map (clk, render_y_res_n, render_y_en_n, cur_y);
+            port map (clk, render_y_res_n, '1', render_y_en_n, (others => '0'), cur_y);
 
     nt_inst : d_flip_flop generic map(dsize)
             port map (clk_n, rst_n, '1', nt_we_n, vram_ad, nt_val);
@@ -287,11 +289,11 @@ end;
             if (clk'event) then
                 --x pos reset.
                 if (clk = '1' and 
-                        cur_x = conv_std_logic_vector(HSCAN_MAX, X_SIZE)) then
+                        cur_x = conv_std_logic_vector(HSCAN_MAX - 1, X_SIZE)) then
                     render_x_res_n <= '0';
 
                     --y pos reset.
-                    if (cur_y = conv_std_logic_vector(VSCAN_MAX, X_SIZE)) then
+                    if (cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) then
                         render_y_res_n <= '0';
                     else
                         render_y_res_n <= '1';
@@ -304,7 +306,7 @@ end;
 
             if (clk'event and clk = '0') then
                 --y pos increment.
-                if (cur_x = conv_std_logic_vector(HSCAN_MAX, X_SIZE)) then
+                if (cur_x = conv_std_logic_vector(HSCAN_MAX - 1, X_SIZE)) then
                     render_y_en_n <= '0';
                 else
                     render_y_en_n <= '1';

@@ -15,8 +15,8 @@ entity ppu is
             vram_ad     : inout std_logic_vector (7 downto 0);
             vram_a      : out std_logic_vector (13 downto 8);
             vga_clk     : in std_logic;
-            h_sync      : out std_logic;
-            v_sync      : out std_logic;
+            h_sync_n    : out std_logic;
+            v_sync_n    : out std_logic;
             r           : out std_logic_vector(3 downto 0);
             g           : out std_logic_vector(3 downto 0);
             b           : out std_logic_vector(3 downto 0)
@@ -54,8 +54,8 @@ component vga_ctl
             nes_r       : in std_logic_vector (3 downto 0);
             nes_g       : in std_logic_vector (3 downto 0);
             nes_b       : in std_logic_vector (3 downto 0);
-            h_sync      : out std_logic;
-            v_sync      : out std_logic;
+            h_sync_n    : out std_logic;
+            v_sync_n    : out std_logic;
             r           : out std_logic_vector(3 downto 0);
             g           : out std_logic_vector(3 downto 0);
             b           : out std_logic_vector(3 downto 0)
@@ -82,6 +82,6 @@ begin
 
     vga_inst : vga_ctl port map (vga_clk, rst_n, 
             pos_x, pos_y, nes_r, nes_g, nes_b,
-            h_sync, v_sync, r, g, b);
+            h_sync_n, v_sync_n, r, g, b);
 end rtl;
 
