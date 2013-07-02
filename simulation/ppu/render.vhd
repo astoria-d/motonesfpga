@@ -115,8 +115,10 @@ end;
 constant X_SIZE       : integer := 9;
 constant dsize        : integer := 8;
 constant asize        : integer := 14;
-constant VSCAN_MAX    : integer := 262;
 constant HSCAN_MAX    : integer := 341;
+constant VSCAN_MAX    : integer := 262;
+constant HSCAN        : integer := 256;
+constant VSCAN        : integer := 240;
 
 subtype palette_data is std_logic_vector (dsize -1 downto 0);
 type palette_array is array (0 to 15) of palette_data;
@@ -208,19 +210,25 @@ signal next_x           : std_logic_vector(X_SIZE - 1 downto 0);
 signal cur_y            : std_logic_vector(X_SIZE - 1 downto 0);
 
 signal nt_next_we_n     : std_logic;
-signal attr_ce_n        : std_logic;
-signal attr_we_n        : std_logic;
-signal ptn_l_we_n       : std_logic;
-signal ptn_h_we_n       : std_logic;
-
 signal nt_val           : std_logic_vector (dsize - 1 downto 0);
 signal nt_next_val      : std_logic_vector (dsize - 1 downto 0);
+
+signal attr_ce_n        : std_logic;
+signal attr_we_n        : std_logic;
 signal attr_in          : std_logic_vector (dsize - 1 downto 0);
 signal attr_val         : std_logic_vector (dsize - 1 downto 0);
-signal ptn_l_val        : std_logic_vector (dsize * 2 - 1 downto 0);
+
+signal ptn_l_next_we_n  : std_logic;
+signal ptn_l_next_in    : std_logic_vector (dsize * 2 - 1 downto 0);
+signal ptn_l_next_val   : std_logic_vector (dsize * 2 - 1 downto 0);
 signal ptn_l_in         : std_logic_vector (dsize * 2 - 1 downto 0);
-signal ptn_h_val        : std_logic_vector (dsize * 2 - 1 downto 0);
+signal ptn_l_val        : std_logic_vector (dsize * 2 - 1 downto 0);
+
+signal ptn_h_next_we_n  : std_logic;
+signal ptn_h_next_in    : std_logic_vector (dsize * 2 - 1 downto 0);
+signal ptn_h_next_val   : std_logic_vector (dsize * 2 - 1 downto 0);
 signal ptn_h_in         : std_logic_vector (dsize * 2 - 1 downto 0);
+signal ptn_h_val        : std_logic_vector (dsize * 2 - 1 downto 0);
 
 signal vram_addr        : std_logic_vector (asize - 1 downto 0);
 
@@ -279,13 +287,23 @@ begin
             port map (clk_n, rst_n, attr_ce_n, attr_we_n, attr_in, attr_val);
 
 
-    ptn_l_in <= vram_ad & ptn_l_val (dsize downto 1);
-    ptn_l_inst : shift_register generic map(dsize * 2, 1)
-            port map (clk_n, rst_n, '0', ptn_l_we_n, ptn_l_in, ptn_l_val);
+    ptn_l_next_in <= vram_ad & ptn_l_next_val (dsize downto 1);
+    ptn_l_next_inst : shift_register generic map(dsize * 2, 1)
+            port map (clk_n, rst_n, '0', ptn_l_next_we_n, ptn_l_next_in, ptn_l_next_val);
 
-    ptn_h_in <= vram_ad & ptn_h_val (dsize downto 1);
+    ptn_l_in <= "00000000" & ptn_l_next_val(dsize downto 1);
+    ptn_l_inst : shift_register generic map(dsize * 2, 1)
+            port map (clk_n, rst_n, '0', ptn_l_next_we_n, 
+                    ptn_l_in, ptn_l_val);
+
+    ptn_h_next_in <= vram_ad & ptn_h_next_val (dsize downto 1);
+    ptn_h_next_inst : shift_register generic map(dsize * 2, 1)
+            port map (clk_n, rst_n, '0', ptn_h_next_we_n, ptn_h_next_in, ptn_h_next_val);
+
+    ptn_h_in <= "00000000" & ptn_h_next_val(dsize downto 1);
     ptn_h_inst : shift_register generic map(dsize * 2, 1)
-            port map (clk_n, rst_n, '0', ptn_h_we_n, ptn_h_in, ptn_h_val);
+            port map (clk_n, rst_n, '0', ptn_h_next_we_n, 
+                    ptn_h_in, ptn_h_val);
 
     vram_io_buf : tri_state_buffer generic map (dsize)
             port map (io_oe_n, vram_addr(dsize - 1 downto 0), vram_ad);
@@ -345,66 +363,73 @@ end;
             end if; --if (clk'event) then
 
             if (clk'event and clk = '1') then
-                ----fetch next tile byte.
-                if (cur_x (2 downto 0) = "000" ) then
-                    --vram addr is incremented every 8 cycle.
-                    --name table at 0x2000
-                    vram_addr(dsize - 1 downto 0) 
-                        <= "000" & next_x(dsize - 1 downto 3);
-                    vram_addr(asize - 1 downto dsize) <= "100000";
-                end if;
-                if (cur_x (2 downto 0) = "001" ) then
-                    nt_next_we_n <= '0';
-                else
-                    nt_next_we_n <= '1';
-                end if;
 
-                ----fetch attr table byte.
-                if (cur_x (4 downto 0) = "00010" ) then
-                    --attribute table is loaded every 32 cycle.
-                    --attr table at 0x23c0
-                    vram_addr(dsize - 1 downto 0) 
-                        <= "110" & cur_x(dsize - 1 downto 3);
-                    vram_addr(asize - 1 downto dsize) <= "100011";
-                end if;--if (cur_x (2 downto 0) = "010" ) then
-                if (cur_x (4 downto 0) = "00011" ) then
-                    attr_we_n <= '0';
-                else
-                    attr_we_n <= '1';
-                end if;
-                ---attribute is shifted every 16 bit.
-                if (cur_x (3 downto 0) = "0011" ) then
-                    attr_ce_n <= '0';
-                else
-                    attr_ce_n <= '1';
-                end if;
+                if (cur_x <= conv_std_logic_vector(HSCAN, X_SIZE)) then
 
-                ----fetch pattern table low byte.
-                if (cur_x (2 downto 0) = "100" ) then
-                    --vram addr is incremented every 8 cycle.
-                    vram_addr(dsize - 1 downto 0) <= nt_next_val;
-                    vram_addr(asize - 1 downto dsize) <= "000000";
-                end if;--if (cur_x (2 downto 0) = "100" ) then
-                if (cur_x (2 downto 0) = "101" ) then
-                    ptn_l_we_n <= '0';
-                else
-                    ptn_l_we_n <= '1';
-                end if;
+                    ----fetch next tile byte.
+                    if (cur_x (2 downto 0) = "000" ) then
+                        --vram addr is incremented every 8 cycle.
+                        --name table at 0x2000
+                        vram_addr(9 downto 0) 
+                            <= cur_y(dsize - 1 downto 3) & next_x(dsize - 1 downto 3);
+                        vram_addr(asize - 1 downto 10) <= "1000";
+                    end if;
+                    if (cur_x (2 downto 0) = "001" ) then
+                        nt_next_we_n <= '0';
+                    else
+                        nt_next_we_n <= '1';
+                    end if;
 
-                ----fetch pattern table high byte.
-                if (cur_x (2 downto 0) = "110" ) then
-                    --vram addr is incremented every 8 cycle.
-                    vram_addr(dsize - 1 downto 0) <= nt_next_val + 8;
-                    vram_addr(asize - 1 downto dsize) <= "000000";
-                end if;
-                if (cur_x (2 downto 0) = "111" ) then
-                    ptn_h_we_n <= '0';
-                else
-                    ptn_h_we_n <= '1';
-                end if;--if (cur_x (2 downto 0) = "001" ) then
+                    ----fetch attr table byte.
+                    if (cur_x (4 downto 0) = "00010" ) then
+                        --attribute table is loaded every 32 cycle.
+                        --attr table at 0x23c0
+                        vram_addr(dsize - 1 downto 0) 
+                            <= "110" & cur_x(dsize - 1 downto 3);
+                        vram_addr(asize - 1 downto dsize) <= "100011";
+                    end if;--if (cur_x (2 downto 0) = "010" ) then
+                    if (cur_x (4 downto 0) = "00011" ) then
+                        attr_we_n <= '0';
+                    else
+                        attr_we_n <= '1';
+                    end if;
+                    ---attribute is shifted every 16 bit.
+                    if (cur_x (3 downto 0) = "0011" ) then
+                        attr_ce_n <= '0';
+                    else
+                        attr_ce_n <= '1';
+                    end if;
 
-                --output image.
-                output_bg_rgb;
+                    ----fetch pattern table low byte.
+                    if (cur_x (2 downto 0) = "100" ) then
+                        --vram addr is incremented every 8 cycle.
+                        vram_addr(dsize - 1 downto 0) <= nt_next_val + cur_y(2 downto 0);
+                        vram_addr(asize - 1 downto dsize) <= "001000";
+                    end if;--if (cur_x (2 downto 0) = "100" ) then
+                    if (cur_x (2 downto 0) = "101" ) then
+                        ptn_l_next_we_n <= '0';
+                    else
+                        ptn_l_next_we_n <= '1';
+                    end if;
+
+                    ----fetch pattern table high byte.
+                    if (cur_x (2 downto 0) = "110" ) then
+                        --vram addr is incremented every 8 cycle.
+                        vram_addr(dsize - 1 downto 0) <= nt_next_val + cur_y(2 downto 0) + 8;
+                        vram_addr(asize - 1 downto dsize) <= "001000";
+                    end if;
+                    if (cur_x (2 downto 0) = "111" ) then
+                        ptn_h_next_we_n <= '0';
+                    else
+                        ptn_h_next_we_n <= '1';
+                    end if;--if (cur_x (2 downto 0) = "001" ) then
+
+                end if; --if (cur_x <= conv_std_logic_vector(HSCAN, X_SIZE) or 
+
+                if (cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) then
+                    --output image.
+                    output_bg_rgb;
+                end if;
             end if; --if (clk'event and clk = '1') then
 
         end if;--if (rst_n = '0') then

@@ -25,5 +25,5 @@ clean:
 	-rm $(OBJS)
 	-rm $(BIN)
 	-rm $(patsubst $(WORKDIR)/,$(WORKDIR)/e~, $(OBJS))
-	-rm *.o *.cf *.vcd
+	-rm *.o *.cf testbench.vcd*
 
