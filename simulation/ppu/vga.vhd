@@ -186,11 +186,11 @@ begin
                     --d_print("vga_ctl: rgb out. x:" & conv_hex16(conv_integer(vga_x)));
 
                     b <= nes_screen(conv_integer(
-                        "0" & vga_y(7 downto 1) & nes_x(7 downto 0)))(11 downto 8);
+                        vga_y(8 downto 1) & nes_x(7 downto 0)))(11 downto 8);
                     g <= nes_screen(conv_integer(
-                        "0" & vga_y(7 downto 1) & nes_x(7 downto 0)))(7 downto 4);
+                        vga_y(8 downto 1) & nes_x(7 downto 0)))(7 downto 4);
                     r <= nes_screen(conv_integer(
-                        "0" & vga_y(7 downto 1) & nes_x(7 downto 0)))(3 downto 0);
+                        vga_y(8 downto 1) & nes_x(7 downto 0)))(3 downto 0);
                 else
                     r <= (others => '0');
                     g <= (others => '0');
