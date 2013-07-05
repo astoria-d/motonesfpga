@@ -47,7 +47,8 @@ component ppu_render
 end component;
 
 component vga_ctl
-    port (  vga_clk     : in std_logic;
+    port (  ppu_clk     : in std_logic;
+            vga_clk     : in std_logic;
             rst_n       : in std_logic;
             pos_x       : in std_logic_vector (8 downto 0);
             pos_y       : in std_logic_vector (8 downto 0);
@@ -87,7 +88,7 @@ begin
             plt_bus_ce_n, plt_r_nw, plt_addr, plt_data,
             pos_x, pos_y, nes_r, nes_g, nes_b);
 
-    vga_inst : vga_ctl port map (vga_clk, rst_n, 
+    vga_inst : vga_ctl port map (clk, vga_clk, rst_n, 
             pos_x, pos_y, nes_r, nes_g, nes_b,
             h_sync_n, v_sync_n, r, g, b);
 end rtl;

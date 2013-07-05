@@ -4,7 +4,8 @@ use ieee.std_logic_unsigned.conv_integer;
 use ieee.std_logic_arith.conv_std_logic_vector;
 
 entity vga_ctl is 
-    port (  vga_clk     : in std_logic;
+    port (  ppu_clk     : in std_logic;
+            vga_clk     : in std_logic;
             rst_n       : in std_logic;
             pos_x       : in std_logic_vector (8 downto 0);
             pos_y       : in std_logic_vector (8 downto 0);
@@ -98,18 +99,20 @@ signal nes_x         : std_logic_vector(7 downto 0);
 
 begin
 
-    p_write : process (pos_x, pos_y, nes_r, nes_g, nes_b)
+    p_write : process (ppu_clk)
     begin
-        --draw pixel on the virtual screen only when x,y is in the screen pos.
-        if (pos_x(8) = '0' and pos_y(8) = '0') then
-            nes_screen(conv_integer(pos_y(7 downto 0) & pos_x(7 downto 0))) <= 
-                nes_b & nes_g & nes_r;
-            d_print("vga set"); 
-            d_print("x,y:" & 
-                conv_hex8(pos_x) & "," & conv_hex8(pos_y));
-            d_print("r,g,b:" & 
-            conv_hex8(nes_r) & "," & conv_hex8(nes_g) & "," & conv_hex8(nes_b)); 
-        end if;
+        --draw pixel on the virtual screen
+        if (ppu_clk'event and ppu_clk = '1') then
+            if (pos_x(8) = '0' and pos_y(8) = '0') then
+                nes_screen(conv_integer(pos_y(7 downto 0) & pos_x(7 downto 0))) <= 
+                    nes_b & nes_g & nes_r;
+                d_print("vga set"); 
+                d_print("x,y:" & 
+                    conv_hex8(pos_x) & "," & conv_hex8(pos_y));
+                d_print("r,g,b:" & 
+                conv_hex8(nes_r) & "," & conv_hex8(nes_g) & "," & conv_hex8(nes_b)); 
+            end if;
+        end if; --if (ppu_clk'event and ppu_clk = '1') then
     end process;
 
     vga_x_en_n <= '0';

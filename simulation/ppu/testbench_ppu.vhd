@@ -93,9 +93,9 @@ begin
     reset_p : process
     begin
         rst_n <= '1';
-        wait for 5 us;
+        wait for 7 us;
         rst_n <= '0';
-        wait for 10 us;
+        wait for 20 us;
         rst_n <= '1';
         wait;
     end process;
