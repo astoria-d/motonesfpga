@@ -279,9 +279,6 @@ begin
     next_x <= cur_x + "000001000" 
                     when cur_x <  conv_std_logic_vector(328, X_SIZE) else
               cur_x + "010111000";
---                    when cur_x <  conv_std_logic_vector(328, X_SIZE) else
---                (others => '0');
-
 
     -----fill test data during the reset.....
     init_data : test_module_init_data 
@@ -292,9 +289,11 @@ begin
 
     --current x,y pos
     cur_x_inst : counter_register generic map (X_SIZE)
-            port map (clk, render_x_res_n, '1', render_x_en_n, (others => '0'), cur_x);
+            port map (clk, render_x_res_n, '1', 
+                    render_x_en_n, (others => '0'), cur_x);
     cur_y_inst : counter_register generic map (X_SIZE)
-            port map (clk, render_y_res_n, '1', render_y_en_n, (others => '0'), cur_y);
+            port map (clk, render_y_res_n, '1', 
+                    render_y_en_n, (others => '0'), cur_y);
 
     nt_next_inst : d_flip_flop generic map(dsize)
             port map (clk_n, rst_n, '1', nt_next_we_n, vram_ad, nt_next_val);
@@ -306,13 +305,16 @@ begin
             port map (clk_n, rst_n, attr_ce_n, attr_we_n, attr_in, attr_val);
 
 
-    --chr rom bit is opposite direction.
+    --chr rom data's bit is stored in opposite direction.
+    --reverse bit when loading...
     ptn_l_next_in_rev <= vram_ad & ptn_l_next_val (dsize downto 1);
     ptn_h_next_in_rev <= vram_ad & ptn_h_next_val (dsize downto 1);
     bit_rev: for cnt in 0 to 7 generate
         ptn_l_next_in(dsize * 2 - 1 - cnt) <= ptn_l_next_in_rev(dsize + cnt);
         ptn_h_next_in(dsize * 2 - 1 - cnt) <= ptn_h_next_in_rev(dsize + cnt);
     end generate;
+    ptn_l_next_in(dsize - 1 downto 0) <= ptn_l_next_in_rev(dsize - 1 downto 0);
+    ptn_h_next_in(dsize - 1 downto 0) <= ptn_h_next_in_rev(dsize - 1 downto 0);
 
     ptn_l_next_inst : shift_register generic map(dsize * 2, 1)
             port map (clk_n, rst_n, '0', ptn_l_next_we_n, 
