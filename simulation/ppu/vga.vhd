@@ -61,6 +61,11 @@ begin
     return conv_hex8(tmp2) & conv_hex8(tmp1);
 end;
 
+function conv_hex8(ival : std_logic_vector) return string is
+begin
+    return conv_hex8(conv_integer(ival));
+end;
+
 constant COLOR_SIZE         : integer := 12;
 constant VGA_SIZE           : integer := 10;
 
@@ -86,20 +91,36 @@ signal vga_y_res_n   : std_logic;
 signal vga_x         : std_logic_vector(VGA_SIZE - 1 downto 0);
 signal vga_y         : std_logic_vector(VGA_SIZE - 1 downto 0);
 
+signal count5_res_n  : std_logic;
+signal count5        : std_logic_vector(2 downto 0);
+signal nes_x_en_n    : std_logic;
+signal nes_x         : std_logic_vector(7 downto 0);
+
 begin
 
-    p_write : process (pos_x, pos_y)
+    p_write : process (pos_x, pos_y, nes_r, nes_g, nes_b)
     begin
         --draw pixel on the virtual screen only when x,y is in the screen pos.
         if (pos_x(8) = '0' and pos_y(8) = '0') then
-            nes_screen(conv_integer(pos_x(7 downto 0) & pos_y(7 downto 0))) <= 
-                nes_r & nes_g & nes_b;
+            nes_screen(conv_integer(pos_y(7 downto 0) & pos_x(7 downto 0))) <= 
+                nes_b & nes_g & nes_r;
+            d_print("vga set"); 
+            d_print("x,y:" & 
+                conv_hex8(pos_x) & "," & conv_hex8(pos_y));
+            d_print("r,g,b:" & 
+            conv_hex8(nes_r) & "," & conv_hex8(nes_g) & "," & conv_hex8(nes_b)); 
         end if;
     end process;
 
     vga_x_en_n <= '0';
     vga_x_inst : counter_register generic map (VGA_SIZE)
             port map (vga_clk, vga_x_res_n, '1', vga_x_en_n, (others => '0'), vga_x);
+
+    count5_inst : counter_register generic map (3)
+            port map (vga_clk, count5_res_n, '1', '0', (others => '0'), count5);
+    nes_x_inst : counter_register generic map (8)
+            port map (vga_clk, vga_x_res_n, '1', nes_x_en_n, (others => '0'), nes_x);
+
     ---test dummy value...
     vga_y_inst : counter_register generic map (VGA_SIZE)
             port map (vga_clk, vga_y_res_n, rst_n, vga_y_en_n, 
@@ -112,6 +133,7 @@ begin
             --for dummy init value set.
             --vga_y_res_n <= '0';
             vga_y_res_n <= '1';
+            count5_res_n <= '0';
         else
             if (vga_clk'event) then
                 --x pos reset.
@@ -129,10 +151,16 @@ begin
                     vga_x_res_n <= '1';
                     vga_y_res_n <= '1';
                 end if;
+
+                if (vga_clk = '1' and count5 = "100") then
+                    count5_res_n <= '0';
+                else
+                    count5_res_n <= '1';
+                end if;
             end if; --if (vga_clk'event) then
 
             if (vga_clk'event and vga_clk = '0') then
-                d_print("c");
+                --d_print("c");
 
                 --y pos increment.
                 if (vga_x = conv_std_logic_vector(VGA_W_MAX - 1, VGA_SIZE)) then
@@ -140,20 +168,26 @@ begin
                 else
                     vga_y_en_n <= '1';
                 end if;
+
+                if (count5 = "010" or count5 = "100") then
+                    nes_x_en_n <= '0';
+                else
+                    nes_x_en_n <= '1';
+                end if;
             end if; --if (vga_clk'event) then
 
             if (vga_clk'event and vga_clk = '1') then
                 if (vga_x < conv_std_logic_vector(VGA_W, VGA_SIZE) and 
                     vga_y < conv_std_logic_vector(VGA_H, VGA_SIZE)) then
 
-                    d_print("vga_ctl: rgb out. x:" & conv_hex16(conv_integer(vga_x)));
+                    --d_print("vga_ctl: rgb out. x:" & conv_hex16(conv_integer(vga_x)));
 
-                    r <= nes_screen(conv_integer(
-                                vga_x(7 downto 0) & vga_y(7 downto 0)))(11 downto 8);
-                    g <= nes_screen(conv_integer(
-                                vga_x(7 downto 0) & vga_y(7 downto 0)))(7 downto 4);
                     b <= nes_screen(conv_integer(
-                                vga_x(7 downto 0) & vga_y(7 downto 0)))(3 downto 0);
+                        "0" & vga_y(7 downto 1) & nes_x(7 downto 0)))(11 downto 8);
+                    g <= nes_screen(conv_integer(
+                        "0" & vga_y(7 downto 1) & nes_x(7 downto 0)))(7 downto 4);
+                    r <= nes_screen(conv_integer(
+                        "0" & vga_y(7 downto 1) & nes_x(7 downto 0)))(3 downto 0);
                 else
                     r <= (others => '0');
                     g <= (others => '0');
@@ -226,8 +260,8 @@ use std.textio.all;
 use ieee.std_logic_textio.all;
 variable out_l : line;
 begin
-    write(out_l, msg);
-    writeline(output, out_l);
+--    write(out_l, msg);
+--    writeline(output, out_l);
 end  procedure;
 
 function conv_hex8(ival : integer) return string is

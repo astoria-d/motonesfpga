@@ -110,6 +110,19 @@ begin
     return hex_chr(tmp2 + 1) & hex_chr(tmp1 + 1);
 end;
 
+function conv_hex8(ival : std_logic_vector) return string is
+begin
+    return conv_hex8(conv_integer(ival));
+end;
+
+function conv_hex16(ival : integer) return string is
+variable tmp1, tmp2 : integer;
+variable hex_chr: string (1 to 16) := "0123456789abcdef";
+begin
+    tmp2 := ival / 256;
+    tmp1 := ival mod 256;
+    return conv_hex8(tmp2) & conv_hex8(tmp1);
+end;
 
 
 constant X_SIZE       : integer := 9;
@@ -220,17 +233,20 @@ signal attr_val         : std_logic_vector (dsize - 1 downto 0);
 
 signal ptn_l_next_we_n  : std_logic;
 signal ptn_l_next_in    : std_logic_vector (dsize * 2 - 1 downto 0);
+signal ptn_l_next_in_rev: std_logic_vector (dsize * 2 - 1 downto 0);
 signal ptn_l_next_val   : std_logic_vector (dsize * 2 - 1 downto 0);
 signal ptn_l_in         : std_logic_vector (dsize * 2 - 1 downto 0);
 signal ptn_l_val        : std_logic_vector (dsize * 2 - 1 downto 0);
 
 signal ptn_h_next_we_n  : std_logic;
 signal ptn_h_next_in    : std_logic_vector (dsize * 2 - 1 downto 0);
+signal ptn_h_next_in_rev: std_logic_vector (dsize * 2 - 1 downto 0);
 signal ptn_h_next_val   : std_logic_vector (dsize * 2 - 1 downto 0);
 signal ptn_h_in         : std_logic_vector (dsize * 2 - 1 downto 0);
 signal ptn_h_val        : std_logic_vector (dsize * 2 - 1 downto 0);
 
 signal vram_addr        : std_logic_vector (asize - 1 downto 0);
+signal ptn_addr        : std_logic_vector (asize - 1 downto 0);
 
 ----test init data.
 signal init_ale         : std_logic;
@@ -260,8 +276,11 @@ begin
 
 
     ---x pos is 8 cycle ahead of current pos.
-    next_x <= cur_x + "000001000" when cur_x <  conv_std_logic_vector(HSCAN_MAX - 1, X_SIZE) else
-                (others => '0');
+    next_x <= cur_x + "000001000" 
+                    when cur_x <  conv_std_logic_vector(328, X_SIZE) else
+              cur_x + "010111000";
+--                    when cur_x <  conv_std_logic_vector(328, X_SIZE) else
+--                (others => '0');
 
 
     -----fill test data during the reset.....
@@ -287,18 +306,26 @@ begin
             port map (clk_n, rst_n, attr_ce_n, attr_we_n, attr_in, attr_val);
 
 
-    ptn_l_next_in <= vram_ad & ptn_l_next_val (dsize downto 1);
+    --chr rom bit is opposite direction.
+    ptn_l_next_in_rev <= vram_ad & ptn_l_next_val (dsize downto 1);
+    ptn_h_next_in_rev <= vram_ad & ptn_h_next_val (dsize downto 1);
+    bit_rev: for cnt in 0 to 7 generate
+        ptn_l_next_in(dsize * 2 - 1 - cnt) <= ptn_l_next_in_rev(dsize + cnt);
+        ptn_h_next_in(dsize * 2 - 1 - cnt) <= ptn_h_next_in_rev(dsize + cnt);
+    end generate;
+
     ptn_l_next_inst : shift_register generic map(dsize * 2, 1)
-            port map (clk_n, rst_n, '0', ptn_l_next_we_n, ptn_l_next_in, ptn_l_next_val);
+            port map (clk_n, rst_n, '0', ptn_l_next_we_n, 
+                    ptn_l_next_in, ptn_l_next_val);
 
     ptn_l_in <= "00000000" & ptn_l_next_val(dsize downto 1);
     ptn_l_inst : shift_register generic map(dsize * 2, 1)
             port map (clk_n, rst_n, '0', ptn_l_next_we_n, 
                     ptn_l_in, ptn_l_val);
 
-    ptn_h_next_in <= vram_ad & ptn_h_next_val (dsize downto 1);
     ptn_h_next_inst : shift_register generic map(dsize * 2, 1)
-            port map (clk_n, rst_n, '0', ptn_h_next_we_n, ptn_h_next_in, ptn_h_next_val);
+            port map (clk_n, rst_n, '0', ptn_h_next_we_n, 
+                    ptn_h_next_in, ptn_h_next_val);
 
     ptn_h_in <= "00000000" & ptn_h_next_val(dsize downto 1);
     ptn_h_inst : shift_register generic map(dsize * 2, 1)
@@ -320,13 +347,21 @@ procedure output_bg_rgb is
 variable plt_addr : integer;
 variable palette_index : integer;
 begin
-    plt_addr := conv_integer(attr_val(1 downto 0) & ptn_h_val(0) & ptn_l_val(0));
+    --plt_addr := conv_integer(attr_val(1 downto 0) & ptn_h_val(0) & ptn_l_val(0));
+    plt_addr := conv_integer(ptn_h_val(0) & ptn_l_val(0));
     palette_index := conv_integer(bg_palatte(plt_addr));
     b <= nes_color_palette(palette_index) (11 downto 8);
     g <= nes_color_palette(palette_index) (7 downto 4);
     r <= nes_color_palette(palette_index) (3 downto 0);
-    d_print("plt_addr: " & conv_hex8(plt_addr));
-    d_print("palette index: " & conv_hex8(palette_index));
+--    d_print("plt_addr: " & conv_hex8(plt_addr));
+--    d_print("palette index: " & conv_hex8(palette_index));
+    d_print("output_bg_rgb");
+    d_print("pht h:" & conv_hex8(ptn_h_val));
+    d_print("pht l:" & conv_hex8(ptn_l_val));
+    d_print("rgb:" &
+    conv_hex8(nes_color_palette(palette_index) (3 downto 0)) & "," & 
+    conv_hex8(nes_color_palette(palette_index) (7 downto 4)) & "," & 
+    conv_hex8(nes_color_palette(palette_index) (11 downto 8)));
 end;
 
     begin
@@ -364,7 +399,10 @@ end;
 
             if (clk'event and clk = '1') then
 
-                if (cur_x <= conv_std_logic_vector(HSCAN, X_SIZE)) then
+                --visible area and last pixel for the next sirst pixel.
+                if (cur_x <= conv_std_logic_vector(HSCAN, X_SIZE) or 
+                        (cur_x > conv_std_logic_vector(328, X_SIZE) and 
+                         cur_x < conv_std_logic_vector(336, X_SIZE) )) then
 
                     ----fetch next tile byte.
                     if (cur_x (2 downto 0) = "000" ) then
@@ -403,8 +441,8 @@ end;
                     ----fetch pattern table low byte.
                     if (cur_x (2 downto 0) = "100" ) then
                         --vram addr is incremented every 8 cycle.
-                        vram_addr(dsize - 1 downto 0) <= nt_next_val + cur_y(2 downto 0);
-                        vram_addr(asize - 1 downto dsize) <= "001000";
+                        vram_addr <= "01" & nt_next_val(dsize - 1 downto 0) 
+                                            & "0"  & cur_y(2  downto 0);
                     end if;--if (cur_x (2 downto 0) = "100" ) then
                     if (cur_x (2 downto 0) = "101" ) then
                         ptn_l_next_we_n <= '0';
@@ -415,9 +453,9 @@ end;
                     ----fetch pattern table high byte.
                     if (cur_x (2 downto 0) = "110" ) then
                         --vram addr is incremented every 8 cycle.
-                        vram_addr(dsize - 1 downto 0) <= nt_next_val + cur_y(2 downto 0) + 8;
-                        vram_addr(asize - 1 downto dsize) <= "001000";
-                    end if;
+                        vram_addr <= "01" & nt_next_val(dsize - 1 downto 0) 
+                                            & "0"  & cur_y(2  downto 0) + 8;
+                    end if; --if (cur_x (2 downto 0) = "110" ) then
                     if (cur_x (2 downto 0) = "111" ) then
                         ptn_h_next_we_n <= '0';
                     else
@@ -426,6 +464,14 @@ end;
 
                 end if; --if (cur_x <= conv_std_logic_vector(HSCAN, X_SIZE) or 
 
+    d_print("------------------------------");
+    d_print("cur_x: " & conv_hex16(conv_integer(cur_x)));
+    d_print("cur_y: " & conv_hex16(conv_integer(cur_y)));
+    d_print("next_x: " & conv_hex16(conv_integer(next_x)));
+    d_print("nt_next_val: " & conv_hex8(conv_integer(nt_next_val)));
+    d_print("vram_addr: " & conv_hex16(conv_integer(vram_addr)));
+
+                --output visible area only.
                 if (cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) then
                     --output image.
                     output_bg_rgb;
@@ -466,8 +512,8 @@ end;
         if (init_plt_bus_ce_n = '0') then
             if (init_plt_r_nw = '0') then
                 if (init_plt_addr(4) = '0') then
-                    d_print("dummy addr:" & conv_hex8(conv_integer(init_plt_addr)));
-                    d_print("plt val:" & conv_hex8(conv_integer(init_plt_data)));
+--                    d_print("dummy addr:" & conv_hex8(conv_integer(init_plt_addr)));
+--                    d_print("plt val:" & conv_hex8(conv_integer(init_plt_data)));
                     bg_palatte(conv_integer(init_plt_addr)) <= init_plt_data;
                 end if;
             end if;
