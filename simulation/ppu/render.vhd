@@ -248,15 +248,14 @@ signal ptn_h_next_we_n  : std_logic;
 signal ptn_h_next_in    : std_logic_vector (dsize * 2 - 1 downto 0);
 signal ptn_h_next_in_rev: std_logic_vector (dsize * 2 - 1 downto 0);
 signal ptn_h_next_val   : std_logic_vector (dsize * 2 - 1 downto 0);
-signal ptn_h_in         : std_logic_vector (dsize * 2 - 1 downto 0);
 signal ptn_h_val        : std_logic_vector (dsize * 2 - 1 downto 0);
 
 signal vram_addr        : std_logic_vector (asize - 1 downto 0);
 signal ptn_addr        : std_logic_vector (asize - 1 downto 0);
 
-signal reg_r_in         : std_logic_vector (3 downto 0);
-signal reg_g_in         : std_logic_vector (3 downto 0);
-signal reg_b_in         : std_logic_vector (3 downto 0);
+--signal reg_r_in         : std_logic_vector (3 downto 0);
+--signal reg_g_in         : std_logic_vector (3 downto 0);
+--signal reg_b_in         : std_logic_vector (3 downto 0);
 
 ----test init data.
 signal init_ale         : std_logic;
@@ -293,6 +292,8 @@ begin
               cur_x + "011000000";
     next_y <= cur_y 
                     when cur_x <  conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE) else
+              "000000000" 
+                    when cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE) else
               cur_y + "000000001";
 
     -----fill test data during the reset.....
@@ -339,19 +340,16 @@ begin
             port map (clk_n, rst_n, ptn_en_n, ptn_l_next_we_n, 
                     ptn_l_next_in, ptn_l_next_val);
 
-    ptn_l_in <= "00000000" & ptn_l_next_val(dsize downto 1);
+    --2 bit shift restored to align with the ptn_h.
+    ptn_l_in <= ptn_l_next_val(13 downto 6) & ptn_l_val(8 downto 1);
     ptn_l_inst : shift_register generic map(dsize * 2, 1)
-            port map (clk_n, rst_n, ptn_en_n, ptn_l_next_we_n, 
+            port map (clk_n, rst_n, ptn_en_n, ptn_h_next_we_n, 
                     ptn_l_in, ptn_l_val);
 
     ptn_h_next_inst : shift_register generic map(dsize * 2, 1)
             port map (clk_n, rst_n, ptn_en_n, ptn_h_next_we_n, 
                     ptn_h_next_in, ptn_h_next_val);
-
-    ptn_h_in <= "00000000" & ptn_h_next_val(dsize downto 1);
-    ptn_h_inst : shift_register generic map(dsize * 2, 1)
-            port map (clk_n, rst_n, ptn_en_n, ptn_h_next_we_n, 
-                    ptn_h_in, ptn_h_val);
+    ptn_h_val <= ptn_h_next_val;
 
     vram_io_buf : tri_state_buffer generic map (dsize)
             port map (io_oe_n, vram_addr(dsize - 1 downto 0), vram_ad);
