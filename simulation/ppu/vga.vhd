@@ -99,10 +99,10 @@ signal nes_x         : std_logic_vector(7 downto 0);
 
 begin
 
-    p_write : process (ppu_clk)
+    p_write : process (pos_x, pos_y, nes_r, nes_g, nes_b)
     begin
         --draw pixel on the virtual screen
-        if (ppu_clk'event and ppu_clk = '1') then
+        --if (rst_n = '1' and ppu_clk'event and ppu_clk = '1') then
             if (pos_x(8) = '0' and pos_y(8) = '0') then
                 nes_screen(conv_integer(pos_y(7 downto 0) & pos_x(7 downto 0))) <= 
                     nes_b & nes_g & nes_r;
@@ -112,7 +112,7 @@ begin
                 d_print("r,g,b:" & 
                 conv_hex8(nes_r) & "," & conv_hex8(nes_g) & "," & conv_hex8(nes_b)); 
             end if;
-        end if; --if (ppu_clk'event and ppu_clk = '1') then
+        --end if; --if (ppu_clk'event and ppu_clk = '1') then
     end process;
 
     vga_x_en_n <= '0';
@@ -163,8 +163,6 @@ begin
             end if; --if (vga_clk'event) then
 
             if (vga_clk'event and vga_clk = '0') then
-                --d_print("c");
-
                 --y pos increment.
                 if (vga_x = conv_std_logic_vector(VGA_W_MAX - 1, VGA_SIZE)) then
                     vga_y_en_n <= '0';

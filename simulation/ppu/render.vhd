@@ -132,6 +132,8 @@ constant HSCAN_MAX    : integer := 341;
 constant VSCAN_MAX    : integer := 262;
 constant HSCAN        : integer := 256;
 constant VSCAN        : integer := 240;
+constant HSCAN_NEXT_START    : integer := 320;
+constant HSCAN_NEXT_EXTRA    : integer := 336;
 
 subtype palette_data is std_logic_vector (dsize -1 downto 0);
 type palette_array is array (0 to 15) of palette_data;
@@ -233,6 +235,8 @@ signal attr_we_n        : std_logic;
 signal attr_in          : std_logic_vector (dsize - 1 downto 0);
 signal attr_val         : std_logic_vector (dsize - 1 downto 0);
 
+signal ptn_en_n       : std_logic;
+
 signal ptn_l_next_we_n  : std_logic;
 signal ptn_l_next_in    : std_logic_vector (dsize * 2 - 1 downto 0);
 signal ptn_l_next_in_rev: std_logic_vector (dsize * 2 - 1 downto 0);
@@ -284,11 +288,11 @@ begin
     io_oe_n <= not io_cnt(0) when rst_n = '1' else '1';
 
     ---x pos is 8 cycle ahead of current pos.
-    next_x <= cur_x + "000001000" 
-                    when cur_x <  conv_std_logic_vector(328, X_SIZE) else
-              cur_x + "010111000";
+    next_x <= cur_x + "000010000" 
+                    when cur_x <  conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE) else
+              cur_x + "011000000";
     next_y <= cur_y 
-                    when cur_x <  conv_std_logic_vector(328, X_SIZE) else
+                    when cur_x <  conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE) else
               cur_y + "000000001";
 
     -----fill test data during the reset.....
@@ -327,22 +331,26 @@ begin
     ptn_l_next_in(dsize - 1 downto 0) <= ptn_l_next_in_rev(dsize - 1 downto 0);
     ptn_h_next_in(dsize - 1 downto 0) <= ptn_h_next_in_rev(dsize - 1 downto 0);
 
+
+    ptn_en_n <= '0' when cur_x < conv_std_logic_vector(HSCAN_NEXT_EXTRA, X_SIZE) else
+                '1';
+
     ptn_l_next_inst : shift_register generic map(dsize * 2, 1)
-            port map (clk_n, rst_n, '0', ptn_l_next_we_n, 
+            port map (clk_n, rst_n, ptn_en_n, ptn_l_next_we_n, 
                     ptn_l_next_in, ptn_l_next_val);
 
     ptn_l_in <= "00000000" & ptn_l_next_val(dsize downto 1);
     ptn_l_inst : shift_register generic map(dsize * 2, 1)
-            port map (clk_n, rst_n, '0', ptn_l_next_we_n, 
+            port map (clk_n, rst_n, ptn_en_n, ptn_l_next_we_n, 
                     ptn_l_in, ptn_l_val);
 
     ptn_h_next_inst : shift_register generic map(dsize * 2, 1)
-            port map (clk_n, rst_n, '0', ptn_h_next_we_n, 
+            port map (clk_n, rst_n, ptn_en_n, ptn_h_next_we_n, 
                     ptn_h_next_in, ptn_h_next_val);
 
     ptn_h_in <= "00000000" & ptn_h_next_val(dsize downto 1);
     ptn_h_inst : shift_register generic map(dsize * 2, 1)
-            port map (clk_n, rst_n, '0', ptn_h_next_we_n, 
+            port map (clk_n, rst_n, ptn_en_n, ptn_h_next_we_n, 
                     ptn_h_in, ptn_h_val);
 
     vram_io_buf : tri_state_buffer generic map (dsize)
@@ -351,40 +359,17 @@ begin
     vram_a_buf : tri_state_buffer generic map (6)
             port map (rst, vram_addr(asize - 1 downto dsize), vram_a);
 
-    color_r_inst : d_flip_flop generic map(4)
-            port map (clk_n, rst_n, '1', '0', reg_r_in, r);
-    color_g_inst : d_flip_flop generic map(4)
-            port map (clk_n, rst_n, '1', '0', reg_g_in, g);
-    color_b_inst : d_flip_flop generic map(4)
-            port map (clk_n, rst_n, '1', '0', reg_b_in, b);
+--    color_r_inst : d_flip_flop generic map(4)
+--            port map (clk_n, rst_n, '1', '0', reg_r_in, r);
+--    color_g_inst : d_flip_flop generic map(4)
+--            port map (clk_n, rst_n, '1', '0', reg_g_in, g);
+--    color_b_inst : d_flip_flop generic map(4)
+--            port map (clk_n, rst_n, '1', '0', reg_b_in, b);
 
     pos_x <= cur_x;
     pos_y <= cur_y;
 
     clk_p : process (rst_n, clk) 
-
-procedure output_bg_rgb is
-variable plt_addr : integer;
-variable palette_index : integer;
-begin
-    --plt_addr := conv_integer(attr_val(1 downto 0) & ptn_h_val(0) & ptn_l_val(0));
-    plt_addr := conv_integer(ptn_h_val(0) & ptn_l_val(0));
-    palette_index := conv_integer(bg_palatte(plt_addr));
-    reg_b_in <= nes_color_palette(palette_index) (11 downto 8);
-    reg_g_in <= nes_color_palette(palette_index) (7 downto 4);
-    reg_r_in <= nes_color_palette(palette_index) (3 downto 0);
-
---    d_print("plt_addr: " & conv_hex8(plt_addr));
---    d_print("palette index: " & conv_hex8(palette_index));
-    d_print("output_bg_rgb");
-    d_print("pht h:" & conv_hex8(ptn_h_val));
-    d_print("pht l:" & conv_hex8(ptn_l_val));
-    d_print("rgb:" &
-    conv_hex8(nes_color_palette(palette_index) (3 downto 0)) & "," & 
-    conv_hex8(nes_color_palette(palette_index) (7 downto 4)) & "," & 
-    conv_hex8(nes_color_palette(palette_index) (11 downto 8)));
-end;
-
     begin
         if (rst_n = '0') then
             render_x_res_n <= '0';
@@ -418,13 +403,17 @@ end;
                 end if;
             end if; --if (clk'event) then
 
+            if (clk'event and clk = '0') then
+                d_print("-");
+            end if;
+
             if (clk'event and clk = '1') then
                 d_print("*");
 
                 --visible area and last pixel for the next sirst pixel.
                 if (cur_x <= conv_std_logic_vector(HSCAN, X_SIZE) or 
-                        (cur_x > conv_std_logic_vector(328, X_SIZE) and 
-                         cur_x < conv_std_logic_vector(336, X_SIZE) )) then
+                        (cur_x > conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE) and 
+                         cur_x < conv_std_logic_vector(HSCAN_NEXT_EXTRA, X_SIZE) )) then
 
                     ----fetch next tile byte.
                     if (cur_x (2 downto 0) = "001" ) then
@@ -479,7 +468,7 @@ end;
                         vram_addr <= "01" & nt_next_val(dsize - 1 downto 0) 
                                             & "0"  & next_y(2  downto 0) + 8;
                     end if; --if (cur_x (2 downto 0) = "110" ) then
-                    if (cur_x (2 downto 0) = "000" and cur_x /= "000000000") then
+                    if (cur_x (2 downto 0) = "000") then
                         ptn_h_next_we_n <= '0';
                     else
                         ptn_h_next_we_n <= '1';
@@ -493,16 +482,44 @@ end;
     d_print("nt_next_val: " & conv_hex8(conv_integer(nt_next_val)));
     d_print("vram_addr: " & conv_hex16(conv_integer(vram_addr)));
 
-                --output visible area only.
-                if (cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) then
-                    --output image.
-                    output_bg_rgb;
-                end if;
             end if; --if (clk'event and clk = '1') then
-
         end if;--if (rst_n = '0') then
     end process;
 
+    draw_p : process (cur_x, cur_y, ptn_l_val, attr_val)
+
+procedure output_bg_rgb is
+variable plt_addr : integer;
+variable palette_index : integer;
+begin
+    --plt_addr := conv_integer(attr_val(1 downto 0) & ptn_h_val(0) & ptn_l_val(0));
+    plt_addr := conv_integer(ptn_h_val(0) & ptn_l_val(0));
+    palette_index := conv_integer(bg_palatte(plt_addr));
+--    reg_b_in <= nes_color_palette(palette_index) (11 downto 8);
+--    reg_g_in <= nes_color_palette(palette_index) (7 downto 4);
+--    reg_r_in <= nes_color_palette(palette_index) (3 downto 0);
+    b <= nes_color_palette(palette_index) (11 downto 8);
+    g <= nes_color_palette(palette_index) (7 downto 4);
+    r <= nes_color_palette(palette_index) (3 downto 0);
+
+--    d_print("plt_addr: " & conv_hex8(plt_addr));
+--    d_print("palette index: " & conv_hex8(palette_index));
+    d_print("output_bg_rgb");
+    d_print("pht h:" & conv_hex8(ptn_h_val));
+    d_print("pht l:" & conv_hex8(ptn_l_val));
+    d_print("rgb:" &
+    conv_hex8(nes_color_palette(palette_index) (3 downto 0)) & "," & 
+    conv_hex8(nes_color_palette(palette_index) (7 downto 4)) & "," & 
+    conv_hex8(nes_color_palette(palette_index) (11 downto 8)));
+end;
+
+    begin
+        --output visible area only.
+        if (cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) then
+            --output image.
+            output_bg_rgb;
+        end if;
+    end process;
 --    ------------------- palette access process -------------------
 --    plt_rw : process (plt_bus_ce_n, plt_r_nw, plt_addr, plt_data)
 --    begin
