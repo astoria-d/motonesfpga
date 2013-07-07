@@ -37,7 +37,7 @@ component ppu_render
             plt_bus_ce_n : in std_logic;
             plt_r_nw    : in std_logic;
             plt_addr    : in std_logic_vector (4 downto 0);
-            plt_data    : inout std_logic_vector (7 downto 0);
+            plt_data    : inout std_logic_vector (5 downto 0);
             pos_x       : out std_logic_vector (8 downto 0);
             pos_y       : out std_logic_vector (8 downto 0);
             r           : out std_logic_vector (3 downto 0);
@@ -72,7 +72,7 @@ signal nes_b       : std_logic_vector (3 downto 0);
 signal plt_bus_ce_n : std_logic;
 signal plt_r_nw    : std_logic;
 signal plt_addr    : std_logic_vector (4 downto 0);
-signal plt_data    : std_logic_vector (7 downto 0);
+signal plt_data    : std_logic_vector (5 downto 0);
 
 begin
 

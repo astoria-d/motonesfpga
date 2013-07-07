@@ -15,7 +15,7 @@ entity ppu_render is
             plt_bus_ce_n : in std_logic;
             plt_r_nw    : in std_logic;
             plt_addr    : in std_logic_vector (4 downto 0);
-            plt_data    : inout std_logic_vector (7 downto 0);
+            plt_data    : inout std_logic_vector (5 downto 0);
             pos_x       : out std_logic_vector (8 downto 0);
             pos_y       : out std_logic_vector (8 downto 0);
             r           : out std_logic_vector (3 downto 0);
@@ -88,7 +88,7 @@ component test_module_init_data
             plt_bus_ce_n    : out std_logic;
             plt_r_nw        : out std_logic;
             plt_addr        : out std_logic_vector (4 downto 0);
-            plt_data        : out std_logic_vector (7 downto 0)
+            plt_data        : out std_logic_vector (5 downto 0)
     );
 end component;
 
@@ -239,21 +239,25 @@ signal attr_ce_n        : std_logic;
 signal attr_we_n        : std_logic;
 signal attr_in          : std_logic_vector (dsize - 1 downto 0);
 signal attr_val         : std_logic_vector (dsize - 1 downto 0);
+signal disp_attr_we_n   : std_logic;
+signal disp_attr        : std_logic_vector (dsize - 1 downto 0);
 
 signal ptn_en_n         : std_logic;
 
-signal ptn_l_we_n  : std_logic;
-signal ptn_l_in    : std_logic_vector (dsize * 2 - 1 downto 0);
-signal ptn_l_in_rev: std_logic_vector (dsize * 2 - 1 downto 0);
-signal ptn_l_val   : std_logic_vector (dsize * 2 - 1 downto 0);
+signal ptn_l_we_n       : std_logic;
+signal ptn_l_in         : std_logic_vector (dsize - 1 downto 0);
+signal ptn_l_in_rev     : std_logic_vector (dsize - 1 downto 0);
+signal ptn_l_val        : std_logic_vector (dsize - 1 downto 0);
+signal disp_ptn_l_in    : std_logic_vector (dsize * 2 - 1 downto 0);
+signal disp_ptn_l       : std_logic_vector (dsize * 2 - 1 downto 0);
 
-signal ptn_h_we_n  : std_logic;
-signal ptn_h_in    : std_logic_vector (dsize * 2 - 1 downto 0);
-signal ptn_h_in_rev: std_logic_vector (dsize * 2 - 1 downto 0);
-signal ptn_h_val   : std_logic_vector (dsize * 2 - 1 downto 0);
+signal ptn_h_we_n       : std_logic;
+signal ptn_h_in         : std_logic_vector (dsize * 2 - 1 downto 0);
+signal ptn_h_in_rev     : std_logic_vector (dsize * 2 - 1 downto 0);
+signal disp_ptn_h       : std_logic_vector (dsize * 2 - 1 downto 0);
 
 signal vram_addr        : std_logic_vector (asize - 1 downto 0);
-signal ptn_addr        : std_logic_vector (asize - 1 downto 0);
+signal ptn_addr         : std_logic_vector (asize - 1 downto 0);
 
 ----test init data.
 signal init_ale         : std_logic;
@@ -263,7 +267,7 @@ signal init_wr_n        : std_logic;
 signal init_plt_bus_ce_n : std_logic;
 signal init_plt_r_nw    : std_logic;
 signal init_plt_addr    : std_logic_vector (4 downto 0);
-signal init_plt_data    : std_logic_vector (7 downto 0);
+signal init_plt_data    : std_logic_vector (5 downto 0);
 
 begin
 
@@ -308,29 +312,34 @@ begin
             port map (clk_n, rst_n, '1', nt_next_we_n, nt_next_val, nt_val);
 
     attr_in <= vram_ad;
-    at_inst : shift_register generic map(dsize, 2)
-            port map (clk_n, rst_n, attr_ce_n, attr_we_n, attr_in, attr_val);
+    at_inst : d_flip_flop generic map(dsize)
+            port map (clk_n, rst_n, '1', attr_we_n, attr_in, attr_val);
+
+    disp_at_inst : shift_register generic map(dsize, 2)
+            port map (clk_n, rst_n, attr_ce_n, disp_attr_we_n, attr_val, disp_attr);
 
     --chr rom data's bit is stored in opposite direction.
     --reverse bit when loading...
-    ptn_l_in_rev <= vram_ad & ptn_l_val (dsize downto 1);
-    ptn_h_in_rev <= vram_ad & ptn_h_val (dsize downto 1);
+    ptn_l_in_rev <= vram_ad;
+    ptn_h_in_rev <= vram_ad & disp_ptn_h (dsize downto 1);
     bit_rev: for cnt in 0 to 7 generate
-        ptn_l_in(dsize * 2 - 1 - cnt) <= ptn_l_in_rev(dsize + cnt);
+        ptn_l_in(dsize - 1 - cnt) <= ptn_l_in_rev(cnt);
         ptn_h_in(dsize * 2 - 1 - cnt) <= ptn_h_in_rev(dsize + cnt);
     end generate;
-    ptn_l_in(dsize - 1 downto 0) <= ptn_l_in_rev(dsize - 1 downto 0);
     ptn_h_in(dsize - 1 downto 0) <= ptn_h_in_rev(dsize - 1 downto 0);
-
 
     ptn_en_n <= '0' when cur_x < conv_std_logic_vector(HSCAN_NEXT_EXTRA, X_SIZE) else
                 '1';
 
-    ptn_l_inst : shift_register generic map(dsize * 2, 1)
-            port map (clk_n, rst_n, ptn_en_n, ptn_l_we_n, ptn_l_in, ptn_l_val);
+    ptn_l_inst : d_flip_flop generic map(dsize)
+            port map (clk_n, rst_n, '1', ptn_l_we_n, ptn_l_in, ptn_l_val);
+
+    disp_ptn_l_in <= ptn_l_val & disp_ptn_l (dsize downto 1);
+    disp_ptn_l_inst : shift_register generic map(dsize * 2, 1)
+            port map (clk_n, rst_n, ptn_en_n, ptn_h_we_n, disp_ptn_l_in, disp_ptn_l);
 
     ptn_h_inst : shift_register generic map(dsize * 2, 1)
-            port map (clk_n, rst_n, ptn_en_n, ptn_h_we_n, ptn_h_in, ptn_h_val);
+            port map (clk_n, rst_n, ptn_en_n, ptn_h_we_n, ptn_h_in, disp_ptn_h);
 
     vram_io_buf : tri_state_buffer generic map (dsize)
             port map (io_oe_n, vram_addr(dsize - 1 downto 0), vram_ad);
@@ -346,30 +355,36 @@ begin
 procedure output_bg_rgb is
 variable plt_addr : integer;
 variable palette_index : integer;
-constant disp_bit_l : integer := 0;
-constant disp_bit_h : integer := 2;
 begin
     --firs t color in the palette is transparent color.
-    if ((ptn_h_val(disp_bit_h) or ptn_l_val(disp_bit_l)) = '1') then
-        --plt_addr := conv_integer(attr_val(2 downto 1) & ptn_h_val(2) & ptn_l_val(0));
-        plt_addr := conv_integer("00" & 
-                          ptn_h_val(disp_bit_h) & ptn_l_val(disp_bit_l));
+    if ((disp_ptn_h(0) or disp_ptn_l(0)) = '1') then
+        if (cur_y(4) = '0') then
+            plt_addr := conv_integer(
+                        disp_attr(1 downto 0) & disp_ptn_h(0) & disp_ptn_l(0));
+        else
+            plt_addr := conv_integer(
+                        disp_attr(5 downto 4) & disp_ptn_h(0) & disp_ptn_l(0));
+        end if;
+        --plt_addr := conv_integer("00" & disp_ptn_h(0) & disp_ptn_l(0));
         palette_index := conv_integer(bg_palatte(plt_addr));
+
+        d_print("output_bg_rgb");
+        d_print("plt_addr:" & conv_hex8(plt_addr));
+        d_print("palette_index:" & conv_hex8(palette_index));
+
         b <= nes_color_palette(palette_index) (11 downto 8);
         g <= nes_color_palette(palette_index) (7 downto 4);
         r <= nes_color_palette(palette_index) (3 downto 0);
 
-        d_print("output_bg_rgb");
---        d_print("pht h:" & conv_hex8(ptn_h_val));
---        d_print("pht l:" & conv_hex8(ptn_l_val));
-        d_print("palette_index:" & conv_hex8(palette_index));
+--        d_print("pht h:" & conv_hex8(disp_ptn_h));
+--        d_print("pht l:" & conv_hex8(disp_ptn_h));
         d_print("rgb:" &
             conv_hex16(nes_color_palette(palette_index)));
     else
         b <= (others => '1');
         g <= (others => '1');
         r <= (others => '1');
-    end if; --if ((ptn_l_val(0) or ptn_h_val(0)) = '1') then
+    end if; --if ((disp_ptn_h(0) or disp_ptn_h(0)) = '1') then
 end;
 
     begin
@@ -437,8 +452,8 @@ end;
                     if (cur_x (4 downto 0) = "00011" ) then
                         --attribute table is loaded every 32 cycle.
                         --attr table at 0x23c0
-                        vram_addr(dsize - 1 downto 0) 
-                            <= "110" & cur_x(dsize - 1 downto 3);
+                        vram_addr(dsize - 1 downto 0) <= "11000000" + 
+                                ("00" & next_y(7 downto 5) & next_x(7 downto 5));
                         vram_addr(asize - 1 downto dsize) <= "100011";
                     end if;--if (cur_x (2 downto 0) = "010" ) then
                     if (cur_x (4 downto 0) = "00100" ) then
@@ -446,12 +461,18 @@ end;
                     else
                         attr_we_n <= '1';
                     end if;
+                    if (cur_x (4 downto 0) = "00000" ) then
+                        disp_attr_we_n <= '0';
+                    else
+                        disp_attr_we_n <= '1';
+                    end if;
                     ---attribute is shifted every 16 bit.
-                    if (cur_x (3 downto 0) = "0100" ) then
+                    if (cur_x (3 downto 0) = "0000" ) then
                         attr_ce_n <= '0';
                     else
                         attr_ce_n <= '1';
                     end if;
+                    
 
                     ----fetch pattern table low byte.
                     if (cur_x (2 downto 0) = "101" ) then
@@ -535,7 +556,7 @@ end;
                 if (init_plt_addr(4) = '0') then
 --                    d_print("dummy addr:" & conv_hex8(conv_integer(init_plt_addr)));
 --                    d_print("plt val:" & conv_hex8(conv_integer(init_plt_data)));
-                    bg_palatte(conv_integer(init_plt_addr)) <= init_plt_data;
+                    bg_palatte(conv_integer(init_plt_addr)) <= "00" & init_plt_data;
                 end if;
             end if;
         end if;
@@ -568,7 +589,7 @@ entity test_module_init_data is
             plt_bus_ce_n    : out std_logic;
             plt_r_nw        : out std_logic;
             plt_addr        : out std_logic_vector (4 downto 0);
-            plt_data        : out std_logic_vector (7 downto 0)
+            plt_data        : out std_logic_vector (5 downto 0)
     );
 end test_module_init_data;
 
@@ -641,7 +662,7 @@ begin
         plt_r_nw <= '0';
         for i in 0 to 32 loop
             plt_addr <= conv_std_logic_vector(i, 5);
-            plt_data <= conv_std_logic_vector((i - 1) * 4 + 1, 8);
+            plt_data <= conv_std_logic_vector((i - 1) * 4 + 17, 6);
             wait for ppu_clk;
         end loop;
 
