@@ -324,7 +324,7 @@ begin
             if (vga_clk'event and vga_clk = '1') then
                 if ( x < VGA_W and y < VGA_H) then
                     --d_print(conv_color_hex(r, g, b));
-                    write_vga_pipe(conv_color_hex(r, g, b));
+                    write_vga_pipe(conv_color_hex(b, g, r));
                     --write_vga_pipe("0" & conv_hex8(x));
                     d_print("vga_device: rgb out x:" & conv_hex16(x));
                 end if;
