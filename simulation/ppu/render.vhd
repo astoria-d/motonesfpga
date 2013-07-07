@@ -124,6 +124,11 @@ begin
     return conv_hex8(tmp2) & conv_hex8(tmp1);
 end;
 
+function conv_hex16(ival : std_logic_vector) return string is
+begin
+    return conv_hex16(conv_integer(ival));
+end;
+
 
 constant X_SIZE       : integer := 9;
 constant dsize        : integer := 8;
@@ -144,71 +149,70 @@ subtype nes_color_data is std_logic_vector (11 downto 0);
 type nes_color_array is array (0 to 63) of nes_color_data;
 --ref: http://hlc6502.web.fc2.com/NesPal2.htm
 constant nes_color_palette : nes_color_array := (
-        conv_std_logic_vector(16#787878#, 12), 
-        conv_std_logic_vector(16#2000B0#, 12), 
-        conv_std_logic_vector(16#2800B8#, 12), 
-        conv_std_logic_vector(16#6010A0#, 12), 
-        conv_std_logic_vector(16#982078#, 12), 
-        conv_std_logic_vector(16#B01030#, 12), 
-        conv_std_logic_vector(16#A03000#, 12), 
-        conv_std_logic_vector(16#784000#, 12), 
-        conv_std_logic_vector(16#485800#, 12), 
-        conv_std_logic_vector(16#386800#, 12), 
-        conv_std_logic_vector(16#386C00#, 12), 
-        conv_std_logic_vector(16#306040#, 12), 
-        conv_std_logic_vector(16#305080#, 12), 
-        conv_std_logic_vector(16#000000#, 12), 
-        conv_std_logic_vector(16#000000#, 12), 
-        conv_std_logic_vector(16#000000#, 12),
-        conv_std_logic_vector(16#B0B0B0#, 12), 
-        conv_std_logic_vector(16#4060F8#, 12), 
-        conv_std_logic_vector(16#4040FF#, 12), 
-        conv_std_logic_vector(16#9040F0#, 12), 
-        conv_std_logic_vector(16#D840C0#, 12), 
-        conv_std_logic_vector(16#D84060#, 12), 
-        conv_std_logic_vector(16#E05000#, 12), 
-        conv_std_logic_vector(16#C07000#, 12), 
-        conv_std_logic_vector(16#888800#, 12), 
-        conv_std_logic_vector(16#50A000#, 12), 
-        conv_std_logic_vector(16#48A810#, 12), 
-        conv_std_logic_vector(16#48A068#, 12), 
-        conv_std_logic_vector(16#4090C0#, 12), 
-        conv_std_logic_vector(16#000000#, 12), 
-        conv_std_logic_vector(16#000000#, 12), 
-        conv_std_logic_vector(16#000000#, 12),
-
-        conv_std_logic_vector(16#FFFFFF#, 12), 
-        conv_std_logic_vector(16#60A0FF#, 12), 
-        conv_std_logic_vector(16#5080FF#, 12), 
-        conv_std_logic_vector(16#A070FF#, 12), 
-        conv_std_logic_vector(16#F060FF#, 12), 
-        conv_std_logic_vector(16#FF60B0#, 12), 
-        conv_std_logic_vector(16#FF7830#, 12), 
-        conv_std_logic_vector(16#FFA000#, 12), 
-        conv_std_logic_vector(16#E8D020#, 12), 
-        conv_std_logic_vector(16#98E800#, 12), 
-        conv_std_logic_vector(16#70F040#, 12), 
-        conv_std_logic_vector(16#70E090#, 12), 
-        conv_std_logic_vector(16#60D0E0#, 12), 
-        conv_std_logic_vector(16#787878#, 12), 
-        conv_std_logic_vector(16#000000#, 12), 
-        conv_std_logic_vector(16#000000#, 12),
-        conv_std_logic_vector(16#FFFFFF#, 12), 
-        conv_std_logic_vector(16#90D0FF#, 12), 
-        conv_std_logic_vector(16#A0B8FF#, 12), 
-        conv_std_logic_vector(16#C0B0FF#, 12), 
-        conv_std_logic_vector(16#E0B0FF#, 12), 
-        conv_std_logic_vector(16#FFB8E8#, 12), 
-        conv_std_logic_vector(16#FFC8B8#, 12), 
-        conv_std_logic_vector(16#FFD8A0#, 12), 
-        conv_std_logic_vector(16#FFF090#, 12), 
-        conv_std_logic_vector(16#C8F080#, 12), 
-        conv_std_logic_vector(16#A0F0A0#, 12), 
-        conv_std_logic_vector(16#A0FFC8#, 12), 
-        conv_std_logic_vector(16#A0FFF0#, 12), 
-        conv_std_logic_vector(16#A0A0A0#, 12), 
-        conv_std_logic_vector(16#000000#, 12), 
-        conv_std_logic_vector(16#000000#, 12)
+        conv_std_logic_vector(16#777#, 12), 
+        conv_std_logic_vector(16#20b#, 12), 
+        conv_std_logic_vector(16#20b#, 12), 
+        conv_std_logic_vector(16#61a#, 12), 
+        conv_std_logic_vector(16#927#, 12), 
+        conv_std_logic_vector(16#b13#, 12), 
+        conv_std_logic_vector(16#a30#, 12), 
+        conv_std_logic_vector(16#740#, 12), 
+        conv_std_logic_vector(16#450#, 12), 
+        conv_std_logic_vector(16#360#, 12), 
+        conv_std_logic_vector(16#360#, 12), 
+        conv_std_logic_vector(16#364#, 12), 
+        conv_std_logic_vector(16#358#, 12), 
+        conv_std_logic_vector(16#000#, 12), 
+        conv_std_logic_vector(16#000#, 12), 
+        conv_std_logic_vector(16#000#, 12),
+        conv_std_logic_vector(16#bbb#, 12), 
+        conv_std_logic_vector(16#46f#, 12), 
+        conv_std_logic_vector(16#44f#, 12), 
+        conv_std_logic_vector(16#94f#, 12), 
+        conv_std_logic_vector(16#d4c#, 12), 
+        conv_std_logic_vector(16#d46#, 12), 
+        conv_std_logic_vector(16#e50#, 12), 
+        conv_std_logic_vector(16#c70#, 12), 
+        conv_std_logic_vector(16#880#, 12), 
+        conv_std_logic_vector(16#5a0#, 12), 
+        conv_std_logic_vector(16#4a1#, 12), 
+        conv_std_logic_vector(16#4a6#, 12), 
+        conv_std_logic_vector(16#49c#, 12), 
+        conv_std_logic_vector(16#000#, 12), 
+        conv_std_logic_vector(16#000#, 12), 
+        conv_std_logic_vector(16#000#, 12),
+        conv_std_logic_vector(16#fff#, 12), 
+        conv_std_logic_vector(16#6af#, 12), 
+        conv_std_logic_vector(16#58f#, 12), 
+        conv_std_logic_vector(16#a7f#, 12), 
+        conv_std_logic_vector(16#f6f#, 12), 
+        conv_std_logic_vector(16#f6b#, 12), 
+        conv_std_logic_vector(16#f73#, 12), 
+        conv_std_logic_vector(16#fa0#, 12), 
+        conv_std_logic_vector(16#ed2#, 12), 
+        conv_std_logic_vector(16#9e0#, 12), 
+        conv_std_logic_vector(16#7f4#, 12), 
+        conv_std_logic_vector(16#7e9#, 12), 
+        conv_std_logic_vector(16#6de#, 12), 
+        conv_std_logic_vector(16#777#, 12), 
+        conv_std_logic_vector(16#000#, 12), 
+        conv_std_logic_vector(16#000#, 12),
+        conv_std_logic_vector(16#fff#, 12), 
+        conv_std_logic_vector(16#9df#, 12), 
+        conv_std_logic_vector(16#abf#, 12), 
+        conv_std_logic_vector(16#cbf#, 12), 
+        conv_std_logic_vector(16#ebf#, 12), 
+        conv_std_logic_vector(16#fbe#, 12), 
+        conv_std_logic_vector(16#fcb#, 12), 
+        conv_std_logic_vector(16#fda#, 12), 
+        conv_std_logic_vector(16#ff9#, 12), 
+        conv_std_logic_vector(16#cf8#, 12), 
+        conv_std_logic_vector(16#afa#, 12), 
+        conv_std_logic_vector(16#afc#, 12), 
+        conv_std_logic_vector(16#aff#, 12), 
+        conv_std_logic_vector(16#aaa#, 12), 
+        conv_std_logic_vector(16#000#, 12), 
+        conv_std_logic_vector(16#000#, 12)
         );
 
 signal rst              : std_logic;
@@ -238,18 +242,15 @@ signal attr_val         : std_logic_vector (dsize - 1 downto 0);
 
 signal ptn_en_n         : std_logic;
 
-signal ptn_l_next_we_n  : std_logic;
-signal ptn_l_next_in    : std_logic_vector (dsize * 2 - 1 downto 0);
-signal ptn_l_next_in_rev: std_logic_vector (dsize * 2 - 1 downto 0);
-signal ptn_l_next_val   : std_logic_vector (dsize * 2 - 1 downto 0);
-signal ptn_l_in         : std_logic_vector (dsize * 2 - 1 downto 0);
-signal ptn_l_val        : std_logic_vector (dsize * 2 - 1 downto 0);
+signal ptn_l_we_n  : std_logic;
+signal ptn_l_in    : std_logic_vector (dsize * 2 - 1 downto 0);
+signal ptn_l_in_rev: std_logic_vector (dsize * 2 - 1 downto 0);
+signal ptn_l_val   : std_logic_vector (dsize * 2 - 1 downto 0);
 
-signal ptn_h_next_we_n  : std_logic;
-signal ptn_h_next_in    : std_logic_vector (dsize * 2 - 1 downto 0);
-signal ptn_h_next_in_rev: std_logic_vector (dsize * 2 - 1 downto 0);
-signal ptn_h_next_val   : std_logic_vector (dsize * 2 - 1 downto 0);
-signal ptn_h_val        : std_logic_vector (dsize * 2 - 1 downto 0);
+signal ptn_h_we_n  : std_logic;
+signal ptn_h_in    : std_logic_vector (dsize * 2 - 1 downto 0);
+signal ptn_h_in_rev: std_logic_vector (dsize * 2 - 1 downto 0);
+signal ptn_h_val   : std_logic_vector (dsize * 2 - 1 downto 0);
 
 signal vram_addr        : std_logic_vector (asize - 1 downto 0);
 signal ptn_addr        : std_logic_vector (asize - 1 downto 0);
@@ -310,36 +311,26 @@ begin
     at_inst : shift_register generic map(dsize, 2)
             port map (clk_n, rst_n, attr_ce_n, attr_we_n, attr_in, attr_val);
 
-
     --chr rom data's bit is stored in opposite direction.
     --reverse bit when loading...
-    ptn_l_next_in_rev <= vram_ad & ptn_l_next_val (dsize downto 1);
-    ptn_h_next_in_rev <= vram_ad & ptn_h_next_val (dsize downto 1);
+    ptn_l_in_rev <= vram_ad & ptn_l_val (dsize downto 1);
+    ptn_h_in_rev <= vram_ad & ptn_h_val (dsize downto 1);
     bit_rev: for cnt in 0 to 7 generate
-        ptn_l_next_in(dsize * 2 - 1 - cnt) <= ptn_l_next_in_rev(dsize + cnt);
-        ptn_h_next_in(dsize * 2 - 1 - cnt) <= ptn_h_next_in_rev(dsize + cnt);
+        ptn_l_in(dsize * 2 - 1 - cnt) <= ptn_l_in_rev(dsize + cnt);
+        ptn_h_in(dsize * 2 - 1 - cnt) <= ptn_h_in_rev(dsize + cnt);
     end generate;
-    ptn_l_next_in(dsize - 1 downto 0) <= ptn_l_next_in_rev(dsize - 1 downto 0);
-    ptn_h_next_in(dsize - 1 downto 0) <= ptn_h_next_in_rev(dsize - 1 downto 0);
+    ptn_l_in(dsize - 1 downto 0) <= ptn_l_in_rev(dsize - 1 downto 0);
+    ptn_h_in(dsize - 1 downto 0) <= ptn_h_in_rev(dsize - 1 downto 0);
 
 
     ptn_en_n <= '0' when cur_x < conv_std_logic_vector(HSCAN_NEXT_EXTRA, X_SIZE) else
                 '1';
 
-    ptn_l_next_inst : shift_register generic map(dsize * 2, 1)
-            port map (clk_n, rst_n, ptn_en_n, ptn_l_next_we_n, 
-                    ptn_l_next_in, ptn_l_next_val);
-
-    --2 bit shift restored to align with the ptn_h.
-    ptn_l_in <= ptn_l_next_val(13 downto 6) & ptn_l_val(8 downto 1);
     ptn_l_inst : shift_register generic map(dsize * 2, 1)
-            port map (clk_n, rst_n, ptn_en_n, ptn_h_next_we_n, 
-                    ptn_l_in, ptn_l_val);
+            port map (clk_n, rst_n, ptn_en_n, ptn_l_we_n, ptn_l_in, ptn_l_val);
 
-    ptn_h_next_inst : shift_register generic map(dsize * 2, 1)
-            port map (clk_n, rst_n, ptn_en_n, ptn_h_next_we_n, 
-                    ptn_h_next_in, ptn_h_next_val);
-    ptn_h_val <= ptn_h_next_val;
+    ptn_h_inst : shift_register generic map(dsize * 2, 1)
+            port map (clk_n, rst_n, ptn_en_n, ptn_h_we_n, ptn_h_in, ptn_h_val);
 
     vram_io_buf : tri_state_buffer generic map (dsize)
             port map (io_oe_n, vram_addr(dsize - 1 downto 0), vram_ad);
@@ -355,26 +346,29 @@ begin
 procedure output_bg_rgb is
 variable plt_addr : integer;
 variable palette_index : integer;
+constant disp_bit_l : integer := 0;
+constant disp_bit_h : integer := 2;
 begin
     --firs t color in the palette is transparent color.
-    if ((ptn_l_val(0) or ptn_h_val(0)) = '1') then
-        plt_addr := conv_integer(attr_val(1 downto 0) & ptn_h_val(0) & ptn_l_val(0));
+    if ((ptn_h_val(disp_bit_h) or ptn_l_val(disp_bit_l)) = '1') then
+        --plt_addr := conv_integer(attr_val(2 downto 1) & ptn_h_val(2) & ptn_l_val(0));
+        plt_addr := conv_integer("00" & 
+                          ptn_h_val(disp_bit_h) & ptn_l_val(disp_bit_l));
         palette_index := conv_integer(bg_palatte(plt_addr));
         b <= nes_color_palette(palette_index) (11 downto 8);
         g <= nes_color_palette(palette_index) (7 downto 4);
         r <= nes_color_palette(palette_index) (3 downto 0);
 
---        d_print("output_bg_rgb");
+        d_print("output_bg_rgb");
 --        d_print("pht h:" & conv_hex8(ptn_h_val));
 --        d_print("pht l:" & conv_hex8(ptn_l_val));
---        d_print("rgb:" &
---        conv_hex8(nes_color_palette(palette_index) (3 downto 0)) & "," & 
---        conv_hex8(nes_color_palette(palette_index) (7 downto 4)) & "," & 
---        conv_hex8(nes_color_palette(palette_index) (11 downto 8)));
+        d_print("palette_index:" & conv_hex8(palette_index));
+        d_print("rgb:" &
+            conv_hex16(nes_color_palette(palette_index)));
     else
-        b <= (others => '0');
-        g <= (others => '0');
-        r <= (others => '0');
+        b <= (others => '1');
+        g <= (others => '1');
+        r <= (others => '1');
     end if; --if ((ptn_l_val(0) or ptn_h_val(0)) = '1') then
 end;
 
@@ -466,9 +460,9 @@ end;
                                             & "0"  & next_y(2  downto 0);
                     end if;--if (cur_x (2 downto 0) = "100" ) then
                     if (cur_x (2 downto 0) = "110" ) then
-                        ptn_l_next_we_n <= '0';
+                        ptn_l_we_n <= '0';
                     else
-                        ptn_l_next_we_n <= '1';
+                        ptn_l_we_n <= '1';
                     end if;
 
                     ----fetch pattern table high byte.
@@ -478,18 +472,18 @@ end;
                                             & "0"  & next_y(2  downto 0) + 8;
                     end if; --if (cur_x (2 downto 0) = "110" ) then
                     if (cur_x (2 downto 0) = "000") then
-                        ptn_h_next_we_n <= '0';
+                        ptn_h_we_n <= '0';
                     else
-                        ptn_h_next_we_n <= '1';
+                        ptn_h_we_n <= '1';
                     end if;--if (cur_x (2 downto 0) = "001" ) then
 
                 end if; --if (cur_x <= conv_std_logic_vector(HSCAN, X_SIZE) or 
 
     d_print("cur_x: " & conv_hex16(conv_integer(cur_x)));
     d_print("cur_y: " & conv_hex16(conv_integer(cur_y)));
-    d_print("next_x: " & conv_hex16(conv_integer(next_x)));
-    d_print("nt_next_val: " & conv_hex8(conv_integer(nt_next_val)));
-    d_print("vram_addr: " & conv_hex16(conv_integer(vram_addr)));
+--    d_print("next_x: " & conv_hex16(conv_integer(next_x)));
+--    d_print("nt_next_val: " & conv_hex8(conv_integer(nt_next_val)));
+--    d_print("vram_addr: " & conv_hex16(conv_integer(vram_addr)));
 
                 --output visible area only.
                 if ((cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
@@ -647,7 +641,7 @@ begin
         plt_r_nw <= '0';
         for i in 0 to 32 loop
             plt_addr <= conv_std_logic_vector(i, 5);
-            plt_data <= conv_std_logic_vector(i, 8);
+            plt_data <= conv_std_logic_vector((i - 1) * 4 + 1, 8);
             wait for ppu_clk;
         end loop;
 

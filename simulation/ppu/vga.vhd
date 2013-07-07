@@ -106,11 +106,11 @@ begin
             if (pos_x(8) = '0' and pos_y(8) = '0') then
                 nes_screen(conv_integer(pos_y(7 downto 0) & pos_x(7 downto 0))) <= 
                     nes_b & nes_g & nes_r;
-                d_print("vga set"); 
-                d_print("x,y:" & 
-                    conv_hex8(pos_x) & "," & conv_hex8(pos_y));
-                d_print("r,g,b:" & 
-                conv_hex8(nes_r) & "," & conv_hex8(nes_g) & "," & conv_hex8(nes_b)); 
+--                d_print("vga set"); 
+--                d_print("x,y:" & 
+--                    conv_hex8(pos_x) & "," & conv_hex8(pos_y));
+--                d_print("r,g,b:" & 
+--                conv_hex8(nes_r) & "," & conv_hex8(nes_g) & "," & conv_hex8(nes_b)); 
             end if;
         --end if; --if (ppu_clk'event and ppu_clk = '1') then
     end process;
