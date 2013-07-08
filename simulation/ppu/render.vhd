@@ -78,20 +78,6 @@ component tri_state_buffer
         );
 end component;
 
-component test_module_init_data
-    port (  clk             : in std_logic;
-            v_rd_n          : out std_logic;
-            v_wr_n          : out std_logic;
-            v_ale           : out std_logic;
-            v_ad            : out std_logic_vector (7 downto 0);
-            v_a             : out std_logic_vector (13 downto 8);
-            plt_bus_ce_n    : out std_logic;
-            plt_r_nw        : out std_logic;
-            plt_addr        : out std_logic_vector (4 downto 0);
-            plt_data        : out std_logic_vector (5 downto 0)
-    );
-end component;
-
 procedure d_print(msg : string) is
 use std.textio.all;
 use ieee.std_logic_textio.all;
@@ -128,7 +114,6 @@ function conv_hex16(ival : std_logic_vector) return string is
 begin
     return conv_hex16(conv_integer(ival));
 end;
-
 
 constant X_SIZE       : integer := 9;
 constant dsize        : integer := 8;
@@ -259,16 +244,6 @@ signal disp_ptn_h       : std_logic_vector (dsize * 2 - 1 downto 0);
 signal vram_addr        : std_logic_vector (asize - 1 downto 0);
 signal ptn_addr         : std_logic_vector (asize - 1 downto 0);
 
-----test init data.
-signal init_ale         : std_logic;
-signal init_rd_n        : std_logic;
-signal init_wr_n        : std_logic;
-
-signal init_plt_bus_ce_n : std_logic;
-signal init_plt_r_nw    : std_logic;
-signal init_plt_addr    : std_logic_vector (4 downto 0);
-signal init_plt_data    : std_logic_vector (5 downto 0);
-
 begin
 
     rst <= not rst_n;
@@ -283,9 +258,9 @@ begin
     io_cnt_inst : counter_register generic map (1)
             port map (clk, render_x_res_n, '1', '0', (others => '0'), io_cnt);
 
-    ale <= io_cnt(0) when rst_n = '1' else init_ale;
-    rd_n <= io_cnt(0) when rst_n = '1' else init_rd_n;
-    wr_n <= '1' when rst_n = '1' else init_wr_n;
+    ale <= io_cnt(0) when rst_n = '1' else 'Z';
+    rd_n <= io_cnt(0) when rst_n = '1' else 'Z';
+    wr_n <= '1' when rst_n = '1' else 'Z';
     io_oe_n <= not io_cnt(0) when rst_n = '1' else '1';
 
     ---x pos is 8 cycle ahead of current pos.
@@ -517,159 +492,29 @@ end;
         end if;--if (rst_n = '0') then
     end process;
 
---    ------------------- palette access process -------------------
---    plt_rw : process (plt_bus_ce_n, plt_r_nw, plt_addr, plt_data)
---    begin
---        if (plt_bus_ce_n = '0') then
---            if (plt_r_nw = '0') then
---                if (plt_addr(4) = '0') then
---                    bg_palatte(conv_integer(plt_addr)) <= plt_data;
---                else
---                    sprite_palatte(conv_integer(plt_addr)) <= plt_data;
---                end if;
---            end if;
---
---            if (plt_r_nw = '1') then
---                if (plt_addr(4) = '0') then
---                    plt_data <= bg_palatte(conv_integer(plt_addr));
---                else
---                    plt_data <= sprite_palatte(conv_integer(plt_addr));
---                end if;
---            end if;
---        else
---            plt_data <= (others => 'Z');
---        end if;
---    end process;
-
-    -----fill test data during the reset.....
-    init_data : test_module_init_data 
-        port map (clk, init_rd_n, init_wr_n, init_ale, vram_ad, vram_a,
-                init_plt_bus_ce_n, init_plt_r_nw, init_plt_addr, init_plt_data
-                );
-
-    ----- test initial value stting.
-    plt_init_w : process (init_plt_bus_ce_n, init_plt_r_nw, 
-                         init_plt_addr, init_plt_data)
+    ------------------- palette access process -------------------
+    plt_rw : process (plt_bus_ce_n, plt_r_nw, plt_addr, plt_data)
     begin
-        if (init_plt_bus_ce_n = '0') then
-            if (init_plt_r_nw = '0') then
-                if (init_plt_addr(4) = '0') then
---                    d_print("dummy addr:" & conv_hex8(conv_integer(init_plt_addr)));
---                    d_print("plt val:" & conv_hex8(conv_integer(init_plt_data)));
-                    bg_palatte(conv_integer(init_plt_addr)) <= "00" & init_plt_data;
+        if (plt_bus_ce_n = '0') then
+            if (plt_r_nw = '0') then
+                if (plt_addr(4) = '0') then
+                    bg_palatte(conv_integer(plt_addr)) <= "00" & plt_data;
+                else
+                    sprite_palatte(conv_integer(plt_addr(3 downto 0))) <= "00" & plt_data;
                 end if;
             end if;
+
+            if (plt_r_nw = '1') then
+                if (plt_addr(4) = '0') then
+                    plt_data <= bg_palatte(conv_integer(plt_addr))(5 downto 0);
+                else
+                    plt_data <= sprite_palatte(conv_integer(plt_addr))(5 downto 0);
+                end if;
+            end if;
+        else
+            plt_data <= (others => 'Z');
         end if;
     end process;
 
 end rtl;
-
-
-
-------------------------------------------------------
-------------------------------------------------------
-------------------------------------------------------
-------------------------------------------------------
---       initialize with dummy data
-------------------------------------------------------
-------------------------------------------------------
-------------------------------------------------------
-------------------------------------------------------
-library IEEE;
-use IEEE.std_logic_1164.all;
-use ieee.std_logic_arith.all;
-
-entity test_module_init_data is
-    port (  clk             : in std_logic;
-            v_rd_n          : out std_logic;
-            v_wr_n          : out std_logic;
-            v_ale           : out std_logic;
-            v_ad            : out std_logic_vector (7 downto 0);
-            v_a             : out std_logic_vector (13 downto 8);
-            plt_bus_ce_n    : out std_logic;
-            plt_r_nw        : out std_logic;
-            plt_addr        : out std_logic_vector (4 downto 0);
-            plt_data        : out std_logic_vector (5 downto 0)
-    );
-end test_module_init_data;
-
-architecture stimulus of test_module_init_data is
-
-    constant ppu_clk : time := 186 ns;
-    constant size8 : integer := 8;
-    constant size16 : integer := 16;
-    constant size14 : integer := 14;
-
-    signal v_addr       : std_logic_vector (size14 - 1 downto 0);
-
-begin
-
-    v_ad <= v_addr(size8 - 1 downto 0);
-    v_a <= v_addr(size14 - 1 downto size8);
-
-    -----test for vram/chr-rom
-    p_vram_init : process
-    variable i : integer := 0;
-    variable tmp : std_logic_vector (size8 - 1 downto 0);
-    constant loopcnt : integer := 15;
-    begin
-
-        ---dummy power up wait (same amount of time as testbench)
-        wait for 7 us;
-
-        --copy from chr rom to name tbl.
-        for i in 0 to loopcnt loop
-            --write name tbl #0
-            v_ale <= '1';
-            v_rd_n <= '1';
-            v_wr_n <= '1';
-            v_addr <= conv_std_logic_vector(16#2000# + i, size14);
-            wait for ppu_clk;
-            v_addr(7 downto 0) <= (others => 'Z');
-            v_ale <= '0';
-            v_rd_n <= '1';
-            v_wr_n <= '0';
-            ---bg start from 0.
-            v_addr(7 downto 0) <= conv_std_logic_vector(i + 32, size8);
-            wait for ppu_clk;
-
-            --write attr tbl #0
-            v_ale <= '1';
-            v_rd_n <= '1';
-            v_wr_n <= '1';
-            v_addr <= conv_std_logic_vector(16#23c0# + i, size14);
-            wait for ppu_clk;
-            v_addr(7 downto 0) <= (others => 'Z');
-            v_ale <= '0';
-            v_rd_n <= '1';
-            v_wr_n <= '0';
-            v_addr(7 downto 0) <= conv_std_logic_vector(16#a0# + i, size8);
-            wait for ppu_clk;
-        end loop;
-
-        v_addr <= (others => 'Z');
-
-        wait;
-    end process;
-
-    p_palette_init : process
-    variable i : integer := 0;
-    begin
-        wait for 7 us;
-
-        --fill palette teble.
-        plt_bus_ce_n <= '0';
-        plt_r_nw <= '0';
-        for i in 0 to 32 loop
-            plt_addr <= conv_std_logic_vector(i, 5);
-            plt_data <= conv_std_logic_vector((i - 1) * 4 + 17, 6);
-            wait for ppu_clk;
-        end loop;
-        plt_bus_ce_n <= '1';
-        plt_data <= (others => 'Z');
-
-        wait;
-    end process;
-
-end stimulus ;
 

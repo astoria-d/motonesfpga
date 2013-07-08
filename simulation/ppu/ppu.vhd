@@ -77,12 +77,6 @@ signal plt_data    : std_logic_vector (5 downto 0);
 begin
 
 
-    ---TODO: for the time being...
-    plt_bus_ce_n <= 'Z';
-    plt_r_nw <= 'Z';
-    plt_addr <= (others => 'Z');
-    plt_data <= (others => 'Z');
-
     render_inst : ppu_render port map (clk, rst_n, vblank_n, 
             rd_n, wr_n, ale, vram_ad, vram_a,
             plt_bus_ce_n, plt_r_nw, plt_addr, plt_data,
@@ -91,5 +85,33 @@ begin
     vga_inst : vga_ctl port map (clk, vga_clk, rst_n, 
             pos_x, pos_y, nes_r, nes_g, nes_b,
             h_sync_n, v_sync_n, r, g, b);
+
+--test init value set.
+    p_palette_init : process
+    variable i : integer := 0;
+use ieee.std_logic_arith.all;
+constant ppu_clk_time : time := 186 ns;
+    begin
+        wait for 7 us;
+
+        --fill palette teble.
+        plt_bus_ce_n <= '0';
+        plt_r_nw <= '0';
+        for i in 0 to 32 loop
+            plt_addr <= conv_std_logic_vector(i, 5);
+            plt_data <= conv_std_logic_vector((i - 1) * 4 + 17, 6);
+            wait for ppu_clk_time;
+        end loop;
+        plt_bus_ce_n <= '1';
+
+        ---TODO: for the time being...
+        plt_bus_ce_n <= 'Z';
+        plt_r_nw <= 'Z';
+        plt_addr <= (others => 'Z');
+        plt_data <= (others => 'Z');
+
+        wait;
+    end process;
+
 end rtl;
 
