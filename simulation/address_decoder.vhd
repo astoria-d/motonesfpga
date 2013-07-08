@@ -179,7 +179,6 @@ architecture rtl of v_address_decoder is
     constant chr_rom_8k : integer := 13;     --32k = 15 bit width.
 
     signal v_addr : std_logic_vector (13 downto 0);
-    signal oe_n : std_logic;
     --signal nt_v_mirror2  : std_logic;
     signal nt_v_mirror  : std_logic;
 

@@ -331,7 +331,7 @@ procedure output_bg_rgb is
 variable plt_addr : integer;
 variable palette_index : integer;
 begin
-    --firs t color in the palette is transparent color.
+    --firs color in the palette is transparent color.
     if ((disp_ptn_h(0) or disp_ptn_l(0)) = '1') then
         if (cur_y(4) = '0') then
             plt_addr := conv_integer(
@@ -402,7 +402,7 @@ end;
             if (clk'event and clk = '1') then
                 d_print("*");
 
-                --visible area and last pixel for the next sirst pixel.
+                --visible area and last pixel for the next first pixel.
                 if (cur_x <= conv_std_logic_vector(HSCAN, X_SIZE) or 
                         (cur_x > conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE) and 
                          cur_x < conv_std_logic_vector(HSCAN_NEXT_EXTRA, X_SIZE) )) 
@@ -508,7 +508,8 @@ end;
                 if (plt_addr(4) = '0') then
                     plt_data <= bg_palatte(conv_integer(plt_addr))(5 downto 0);
                 else
-                    plt_data <= sprite_palatte(conv_integer(plt_addr))(5 downto 0);
+                    plt_data <= 
+                        sprite_palatte(conv_integer(plt_addr(3 downto 0)))(5 downto 0);
                 end if;
             end if;
         else
