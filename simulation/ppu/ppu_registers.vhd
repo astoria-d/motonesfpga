@@ -101,7 +101,7 @@ signal q_out : std_logic_vector(dsize - 1 downto 0);
 
 begin
     q <= q_out;
-    couter_reg_inst : d_flip_flop generic map (dsize)
+    counter_reg_inst : d_flip_flop generic map (dsize)
             port map (clk, rst_n, set_n, ce_n, d_in, q_out);
         
     clk_p : process (rst_n, set_n, ce_n, clk) 

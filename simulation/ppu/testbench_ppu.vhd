@@ -68,6 +68,9 @@ constant vga_clk_time : time := 40 ns;
 constant size8  : integer := 8;
 constant size14 : integer := 14;
 
+constant test_init_time : time := 7 us;
+constant test_reset_time : time := 20 us;
+
 signal clk      : std_logic;
 signal ce_n     : std_logic;
 signal rst_n    : std_logic;
@@ -109,9 +112,9 @@ begin
     reset_p : process
     begin
         rst_n <= '1';
-        wait for 7 us;
+        wait for test_init_time;
         rst_n <= '0';
-        wait for 20 us;
+        wait for test_reset_time;
         rst_n <= '1';
         wait;
     end process;
@@ -130,6 +133,20 @@ begin
         wait for vga_clk_time / 2;
         vga_clk <= '0';
         wait for vga_clk_time / 2;
+    end process;
+
+    test_init_p : process
+    begin
+        wait for 7 us;
+        ce_n <= '0';
+        r_nw <= '0';
+        cpu_addr <= "000";
+        cpu_d <= "00001111";
+        wait for ppu_clk_time;
+
+        ce_n <= '1';
+        cpu_d <= (others => 'Z');
+        wait;
     end process;
 
 end stimulus ;
@@ -168,6 +185,9 @@ architecture stimulus of test_module_init_data is
     constant size16 : integer := 16;
     constant size14 : integer := 14;
 
+constant test_init_time : time := 7 us;
+constant test_reset_time : time := 20 us;
+
     signal v_addr       : std_logic_vector (size14 - 1 downto 0);
 
 begin
@@ -183,7 +203,7 @@ begin
     begin
 
         ---dummy power up wait (same amount of time as testbench)
-        wait for 7 us;
+        wait for test_init_time;
 
         --copy from chr rom to name tbl.
         for i in 0 to loopcnt loop
