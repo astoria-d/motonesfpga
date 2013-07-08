@@ -665,7 +665,6 @@ begin
             plt_data <= conv_std_logic_vector((i - 1) * 4 + 17, 6);
             wait for ppu_clk;
         end loop;
-
         plt_bus_ce_n <= '1';
         plt_data <= (others => 'Z');
 
