@@ -149,13 +149,17 @@ signal plt_data         : std_logic_vector (5 downto 0);
 
 begin
 
-
     render_inst : ppu_render port map (clk, rst_n, vblank_n, 
             rd_n, wr_n, ale, vram_ad, vram_a,
             pos_x, pos_y, nes_r, nes_g, nes_b,
             ppu_ctrl, ppu_mask, ppu_status, ppu_scroll_x, ppu_scroll_y,
             r_nw, oam_bus_ce_n, oam_addr, oam_data,
             plt_bus_ce_n, plt_addr, plt_data);
+
+--    render_ad_buf : tri_state_buffer generic map (dsize)
+--            port map ('0', render_vram_ad, vram_ad);
+--    render_d_buf : tri_state_buffer generic map (6)
+--            port map ('0', render_vram_a, vram_a);
 
     vga_inst : vga_ctl port map (clk, vga_clk, rst_n, 
             pos_x, pos_y, nes_r, nes_g, nes_b,
@@ -247,19 +251,28 @@ begin
                     ppu_addr_cnt_ce_n <= '0';
                     ppu_addr_we_n <= '0';
                     if (ppu_addr_cnt(0) = '0') then
-                        ppu_addr_in <= ppu_addr(13 downto 8) & cpu_d;
-                    else
                         ppu_addr_in <= cpu_d(5 downto 0) & ppu_addr(7 downto 0);
+                        ale <= '1';
+                    else
+                        ppu_addr_in <= ppu_addr(13 downto 8) & cpu_d;
+                        vram_ad <= ppu_addr(7 downto 0);
+                        vram_a <= ppu_addr(13 downto 8);
+                        ale <= '0';
                     end if;
                 else
                     ppu_addr_cnt_ce_n <= '1';
                     ppu_addr_we_n <= '1';
+                    ale <= '1';
                 end if;
 
                 if(cpu_addr = PPUDATA) then
                     ppu_data_we_n <= '0';
+                    rd_n <= not r_nw;
+                    wr_n <= r_nw;
                 else
                     ppu_data_we_n <= '1';
+                    rd_n <= '1';
+                    wr_n <= '1';
                 end if;
 
             else
@@ -275,6 +288,12 @@ begin
                 ppu_addr_we_n        <= '1';
                 ppu_addr_cnt_ce_n    <= '1';
                 ppu_data_we_n    <= '1';
+
+                ale <= 'Z';
+                rd_n <= 'Z';
+                wr_n <= 'Z';
+                vram_ad <= (others => 'Z');
+                vram_a <= (others => 'Z');
             end if; --if (ce_n = '0') then
         else
 
