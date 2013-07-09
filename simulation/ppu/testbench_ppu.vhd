@@ -137,14 +137,15 @@ begin
 
     test_init_p : process
     begin
-        wait for 7 us;
+        wait for test_init_time + test_reset_time + ppu_clk_time / 2;
         ce_n <= '0';
         r_nw <= '0';
-        cpu_addr <= "000";
-        cpu_d <= "00001111";
+        cpu_addr <= "001";
+        cpu_d <= "00011000";
         wait for ppu_clk_time;
 
         ce_n <= '1';
+        cpu_addr <= (others => 'Z');
         cpu_d <= (others => 'Z');
         wait;
     end process;

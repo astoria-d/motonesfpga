@@ -34,15 +34,23 @@ component ppu_render
             ale         : out std_logic;
             vram_ad     : inout std_logic_vector (7 downto 0);
             vram_a      : out std_logic_vector (13 downto 8);
-            plt_bus_ce_n : in std_logic;
-            plt_r_nw    : in std_logic;
-            plt_addr    : in std_logic_vector (4 downto 0);
-            plt_data    : inout std_logic_vector (5 downto 0);
             pos_x       : out std_logic_vector (8 downto 0);
             pos_y       : out std_logic_vector (8 downto 0);
             r           : out std_logic_vector (3 downto 0);
             g           : out std_logic_vector (3 downto 0);
-            b           : out std_logic_vector (3 downto 0)
+            b           : out std_logic_vector (3 downto 0);
+            ppu_ctrl        : in std_logic_vector (7 downto 0);
+            ppu_mask        : in std_logic_vector (7 downto 0);
+            ppu_status      : out std_logic_vector (7 downto 0);
+            ppu_scroll_x    : in std_logic_vector (7 downto 0);
+            ppu_scroll_y    : in std_logic_vector (7 downto 0);
+            r_nw            : in std_logic;
+            oam_bus_ce_n    : in std_logic;
+            oam_addr        : in std_logic_vector (7 downto 0);
+            oam_data        : inout std_logic_vector (7 downto 0);
+            plt_bus_ce_n    : in std_logic;
+            plt_addr        : in std_logic_vector (4 downto 0);
+            plt_data        : inout std_logic_vector (5 downto 0)
     );
 end component;
 
@@ -96,11 +104,6 @@ signal nes_r       : std_logic_vector (3 downto 0);
 signal nes_g       : std_logic_vector (3 downto 0);
 signal nes_b       : std_logic_vector (3 downto 0);
 
-signal plt_bus_ce_n : std_logic;
-signal plt_r_nw    : std_logic;
-signal plt_addr    : std_logic_vector (4 downto 0);
-signal plt_data    : std_logic_vector (5 downto 0);
-
 constant dsize     : integer := 8;
 
 constant PPUCTRL   : std_logic_vector(2 downto 0) := "000";
@@ -112,9 +115,12 @@ constant PPUSCROLL : std_logic_vector(2 downto 0) := "101";
 constant PPUADDR   : std_logic_vector(2 downto 0) := "110";
 constant PPUDATA   : std_logic_vector(2 downto 0) := "111";
 
+signal clk_n            : std_logic;
+
 signal ppu_ctrl_we_n    : std_logic;
 signal ppu_mask_we_n    : std_logic;
 signal ppu_status_we_n  : std_logic;
+signal oam_bus_ce_n     : std_logic;
 signal oam_addr_we_n    : std_logic;
 signal oam_data_we_n    : std_logic;
 signal ppu_scroll_x_we_n    : std_logic;
@@ -137,149 +143,171 @@ signal ppu_addr_in      : std_logic_vector (13 downto 0);
 signal ppu_addr_cnt     : std_logic_vector (0 downto 0);
 signal ppu_data         : std_logic_vector (dsize - 1 downto 0);
 
+signal plt_bus_ce_n     : std_logic;
+signal plt_addr         : std_logic_vector (4 downto 0);
+signal plt_data         : std_logic_vector (5 downto 0);
+
 begin
 
 
     render_inst : ppu_render port map (clk, rst_n, vblank_n, 
             rd_n, wr_n, ale, vram_ad, vram_a,
-            plt_bus_ce_n, plt_r_nw, plt_addr, plt_data,
-            pos_x, pos_y, nes_r, nes_g, nes_b);
+            pos_x, pos_y, nes_r, nes_g, nes_b,
+            ppu_ctrl, ppu_mask, ppu_status, ppu_scroll_x, ppu_scroll_y,
+            r_nw, oam_bus_ce_n, oam_addr, oam_data,
+            plt_bus_ce_n, plt_addr, plt_data);
 
     vga_inst : vga_ctl port map (clk, vga_clk, rst_n, 
             pos_x, pos_y, nes_r, nes_g, nes_b,
             h_sync_n, v_sync_n, r, g, b);
 
     --PPU registers.
+    clk_n <= not clk;
     ppu_ctrl_inst : d_flip_flop generic map(dsize)
-            port map (clk, rst_n, '1', ppu_ctrl_we_n, cpu_d, ppu_ctrl);
+            port map (clk_n, rst_n, '1', ppu_ctrl_we_n, cpu_d, ppu_ctrl);
 
     ppu_mask_inst : d_flip_flop generic map(dsize)
-            port map (clk, rst_n, '1', ppu_mask_we_n, cpu_d, ppu_mask);
+            port map (clk_n, rst_n, '1', ppu_mask_we_n, cpu_d, ppu_mask);
 
     ppu_status_inst : d_flip_flop generic map(dsize)
-            port map (clk, rst_n, '1', ppu_status_we_n, cpu_d, ppu_status);
+            port map (clk_n, rst_n, '1', ppu_status_we_n, cpu_d, ppu_status);
 
     oma_addr_inst : d_flip_flop generic map(dsize)
-            port map (clk, rst_n, '1', oam_addr_we_n, cpu_d, oam_addr);
+            port map (clk_n, rst_n, '1', oam_addr_we_n, cpu_d, oam_addr);
     oma_data_inst : d_flip_flop generic map(dsize)
-            port map (clk, rst_n, '1', oam_data_we_n, cpu_d, oam_data);
+            port map (clk_n, rst_n, '1', oam_data_we_n, cpu_d, oam_data);
 
     ppu_scroll_x_inst : d_flip_flop generic map(dsize)
-            port map (clk, rst_n, '1', ppu_scroll_x_we_n, cpu_d, ppu_scroll_x);
+            port map (clk_n, rst_n, '1', ppu_scroll_x_we_n, cpu_d, ppu_scroll_x);
     ppu_scroll_y_inst : d_flip_flop generic map(dsize)
-            port map (clk, rst_n, '1', ppu_scroll_y_we_n, cpu_d, ppu_scroll_y);
+            port map (clk_n, rst_n, '1', ppu_scroll_y_we_n, cpu_d, ppu_scroll_y);
     ppu_scroll_cnt_inst : counter_register generic map (1)
-            port map (clk, rst_n, '1', ppu_scroll_cnt_ce_n, (others => '0'), ppu_scroll_cnt);
+            port map (clk_n, rst_n, '1', ppu_scroll_cnt_ce_n, (others => '0'), ppu_scroll_cnt);
 
     ppu_addr_inst : d_flip_flop generic map(14)
-            port map (clk, rst_n, '1', ppu_addr_we_n, ppu_addr_in, ppu_addr);
+            port map (clk_n, rst_n, '1', ppu_addr_we_n, ppu_addr_in, ppu_addr);
     ppu_addr_cnt_inst : counter_register generic map (1)
-            port map (clk, rst_n, '1', ppu_addr_cnt_ce_n, (others => '0'), ppu_addr_cnt);
+            port map (clk_n, rst_n, '1', ppu_addr_cnt_ce_n, (others => '0'), ppu_addr_cnt);
     ppu_data_inst : d_flip_flop generic map(dsize)
-            port map (clk, rst_n, '1', ppu_data_we_n, cpu_d, ppu_data);
+            port map (clk_n, rst_n, '1', ppu_data_we_n, cpu_d, ppu_data);
 
 
     clock_p : process (clk)
     begin
 
-        if (clk'event and clk = '1' and ce_n = '0') then
-            --register set.
-            if(cpu_addr = PPUCTRL) then
-                ppu_ctrl_we_n <= '0';
-            else
-                ppu_ctrl_we_n <= '1';
-            end if;
-
-            if(cpu_addr = PPUMASK) then
-                ppu_mask_we_n <= '0';
-            else
-                ppu_mask_we_n <= '1';
-            end if;
-
-            if(cpu_addr = PPUSTATUS) then
-                ppu_status_we_n <= '0';
-            else
-                ppu_status_we_n <= '1';
-            end if;
-
-            if(cpu_addr = OAMADDR) then
-                oam_addr_we_n <= '0';
-            else
-                oam_addr_we_n <= '1';
-            end if;
-
-            if(cpu_addr = OAMDATA) then
-                oam_data_we_n <= '0';
-            else
-                oam_data_we_n <= '1';
-            end if;
-
-            if(cpu_addr = PPUSCROLL) then
-                ppu_scroll_cnt_ce_n <= '0';
-                if (ppu_scroll_cnt(0) = '0') then
-                    ppu_scroll_x_we_n <= '0';
-                    ppu_scroll_y_we_n <= '1';
+        if (clk'event and clk = '1') then
+            if (ce_n = '0') then
+                --register set.
+                if(cpu_addr = PPUCTRL) then
+                    ppu_ctrl_we_n <= '0';
                 else
-                    ppu_scroll_y_we_n <= '0';
+                    ppu_ctrl_we_n <= '1';
+                end if;
+
+                if(cpu_addr = PPUMASK) then
+                    ppu_mask_we_n <= '0';
+                else
+                    ppu_mask_we_n <= '1';
+                end if;
+
+                if(cpu_addr = PPUSTATUS) then
+                    ppu_status_we_n <= '0';
+                else
+                    ppu_status_we_n <= '1';
+                end if;
+
+                if(cpu_addr = OAMADDR) then
+                    oam_addr_we_n <= '0';
+                else
+                    oam_addr_we_n <= '1';
+                end if;
+
+                if(cpu_addr = OAMDATA) then
+                    oam_data_we_n <= '0';
+                else
+                    oam_data_we_n <= '1';
+                end if;
+
+                if(cpu_addr = PPUSCROLL) then
+                    ppu_scroll_cnt_ce_n <= '0';
+                    if (ppu_scroll_cnt(0) = '0') then
+                        ppu_scroll_x_we_n <= '0';
+                        ppu_scroll_y_we_n <= '1';
+                    else
+                        ppu_scroll_y_we_n <= '0';
+                        ppu_scroll_x_we_n <= '1';
+                    end if;
+                else
                     ppu_scroll_x_we_n <= '1';
+                    ppu_scroll_y_we_n <= '1';
+                    ppu_scroll_cnt_ce_n <= '1';
                 end if;
-            else
-                ppu_scroll_x_we_n <= '1';
-                ppu_scroll_y_we_n <= '1';
-                ppu_scroll_cnt_ce_n <= '1';
-            end if;
 
-            if(cpu_addr = PPUADDR) then
-                ppu_addr_cnt_ce_n <= '0';
-                ppu_addr_we_n <= '0';
-                if (ppu_addr_cnt(0) = '0') then
-                    ppu_addr_in <= ppu_addr(13 downto 8) & cpu_d;
+                if(cpu_addr = PPUADDR) then
+                    ppu_addr_cnt_ce_n <= '0';
+                    ppu_addr_we_n <= '0';
+                    if (ppu_addr_cnt(0) = '0') then
+                        ppu_addr_in <= ppu_addr(13 downto 8) & cpu_d;
+                    else
+                        ppu_addr_in <= cpu_d(5 downto 0) & ppu_addr(7 downto 0);
+                    end if;
                 else
-                    ppu_addr_in <= cpu_d(5 downto 0) & ppu_addr(7 downto 0);
+                    ppu_addr_cnt_ce_n <= '1';
+                    ppu_addr_we_n <= '1';
                 end if;
-            else
-                ppu_addr_cnt_ce_n <= '1';
-                ppu_addr_we_n <= '1';
-            end if;
 
-            if(cpu_addr = PPUDATA) then
-                ppu_data_we_n <= '0';
-            else
-                ppu_data_we_n <= '1';
-            end if;
+                if(cpu_addr = PPUDATA) then
+                    ppu_data_we_n <= '0';
+                else
+                    ppu_data_we_n <= '1';
+                end if;
 
+            else
+                ppu_ctrl_we_n    <= '1';
+                ppu_mask_we_n    <= '1';
+                ppu_status_we_n  <= '1';
+                oam_bus_ce_n     <= '1';
+                oam_addr_we_n    <= '1';
+                oam_data_we_n    <= '1';
+                ppu_scroll_x_we_n    <= '1';
+                ppu_scroll_y_we_n    <= '1';
+                ppu_scroll_cnt_ce_n  <= '1';
+                ppu_addr_we_n        <= '1';
+                ppu_addr_cnt_ce_n    <= '1';
+                ppu_data_we_n    <= '1';
+            end if; --if (ce_n = '0') then
         else
 
-        end if;
+        end if;--if (clk'event and clk = '1') then
 
     end process;
 
---test init value set.
-    p_palette_init : process
-    variable i : integer := 0;
-use ieee.std_logic_arith.all;
-constant ppu_clk_time : time := 186 ns;
-    begin
-        wait for 7 us;
-
-        --fill palette teble.
-        plt_bus_ce_n <= '0';
-        plt_r_nw <= '0';
-        for i in 0 to 32 loop
-            plt_addr <= conv_std_logic_vector(i, 5);
-            plt_data <= conv_std_logic_vector((i - 1) * 4 + 17, 6);
-            wait for ppu_clk_time;
-        end loop;
-        plt_bus_ce_n <= '1';
-
-        ---TODO: for the time being...
-        plt_bus_ce_n <= 'Z';
-        plt_r_nw <= 'Z';
-        plt_addr <= (others => 'Z');
-        plt_data <= (others => 'Z');
-
-        wait;
-    end process;
+----test init value set.
+--    p_palette_init : process
+--    variable i : integer := 0;
+--use ieee.std_logic_arith.all;
+--constant ppu_clk_time : time := 186 ns;
+--    begin
+--        wait for 7 us;
+--
+--        --fill palette teble.
+--        plt_bus_ce_n <= '0';
+--        plt_r_nw <= '0';
+--        for i in 0 to 32 loop
+--            plt_addr <= conv_std_logic_vector(i, 5);
+--            plt_data <= conv_std_logic_vector((i - 1) * 4 + 17, 6);
+--            wait for ppu_clk_time;
+--        end loop;
+--        plt_bus_ce_n <= '1';
+--
+--        ---TODO: for the time being...
+--        plt_bus_ce_n <= 'Z';
+--        plt_r_nw <= 'Z';
+--        plt_addr <= (others => 'Z');
+--        plt_data <= (others => 'Z');
+--
+--        wait;
+--    end process;
 
 end rtl;
 
