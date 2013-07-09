@@ -123,7 +123,6 @@ begin
     --test data set.
     test_init_p : process
     variable i : integer := 0;
-    constant loopcnt : integer := 40;
     begin
         wait for test_init_time + test_reset_time + ppu_clk_time / 2;
         ce_n <= '0';
@@ -134,19 +133,26 @@ begin
         cpu_d <= "00000000";
         wait for ppu_clk_time;
 
+        --ppuctl set
+        cpu_addr <= "000";
+        cpu_d <= "00010010";
+        wait for ppu_clk_time;
+
         --vram addr set
         r_nw <= '0';
-        for i in 0 to loopcnt loop
+        for i in 0 to 50 loop
             --name table set.
             cpu_addr <= "110";
-            cpu_d <= conv_std_logic_vector(16#2000# + i, 16)(15 downto 8);
+            cpu_d <= conv_std_logic_vector(16#2800# + i, 16)(15 downto 8);
             wait for ppu_clk_time;
-            cpu_d <= conv_std_logic_vector(16#2000# + i, 16)(7 downto 0);
+            cpu_d <= conv_std_logic_vector(16#2800# + i, 16)(7 downto 0);
             wait for ppu_clk_time;
             cpu_addr <= "111";
             cpu_d <= conv_std_logic_vector(i + 32, 8);
             wait for ppu_clk_time;
+        end loop;
 
+        for i in 0 to 13 loop
             --attr tbl set.
             cpu_addr <= "110";
             cpu_d <= conv_std_logic_vector(16#23c0# + i, 16)(15 downto 8);
@@ -156,7 +162,9 @@ begin
             cpu_addr <= "111";
             cpu_d <= conv_std_logic_vector(16#5a# + 3 * i, 8);
             wait for ppu_clk_time;
+        end loop;
 
+        for i in 0 to 31 loop
             --palette tbl set.
             cpu_addr <= "110";
             cpu_d <= conv_std_logic_vector(16#3f00# + i, 16)(15 downto 8);

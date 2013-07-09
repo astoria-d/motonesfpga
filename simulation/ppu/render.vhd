@@ -134,7 +134,7 @@ constant HSCAN_NEXT_START    : integer := 320;
 constant HSCAN_NEXT_EXTRA    : integer := 336;
 
 
-constant PPUBNA    : integer := 0;  --base name address
+constant PPUBNA    : integer := 1;  --base name address
 constant PPUVAI    : integer := 2;  --vram address increment
 constant PPUSPA    : integer := 3;  --sprite pattern table address
 constant PPUBPA    : integer := 4;  --background pattern table address
@@ -444,7 +444,7 @@ end;
                             vram_addr(9 downto 0) 
                                 <= next_y(dsize - 1 downto 3) 
                                     & next_x(dsize - 1 downto 3);
-                            vram_addr(asize - 1 downto 10) <= "1000";
+                            vram_addr(asize - 1 downto 10) <= "10" & ppu_ctrl(PPUBNA downto 0);
                         end if;
                         if (cur_x (2 downto 0) = "010" ) then
                             nt_next_we_n <= '0';
@@ -456,9 +456,10 @@ end;
                         if (cur_x (4 downto 0) = "00011" ) then
                             --attribute table is loaded every 32 cycle.
                             --attr table at 0x23c0
-                            vram_addr(dsize - 1 downto 0) <= "11000000" + 
+                            vram_addr(dsize - 1 downto 0) <= "11000000" +
                                     ("00" & next_y(7 downto 5) & next_x(7 downto 5));
-                            vram_addr(asize - 1 downto dsize) <= "100011";
+                            vram_addr(asize - 1 downto dsize) <= "10" &
+                                    ppu_ctrl(PPUBNA downto 0) & "11";
                         end if;--if (cur_x (2 downto 0) = "010" ) then
                         if (cur_x (4 downto 0) = "00100" ) then
                             attr_we_n <= '0';
@@ -481,7 +482,8 @@ end;
                         ----fetch pattern table low byte.
                         if (cur_x (2 downto 0) = "101" ) then
                             --vram addr is incremented every 8 cycle.
-                            vram_addr <= "01" & nt_next_val(dsize - 1 downto 0) 
+                            vram_addr <= "0" & ppu_ctrl(PPUBPA) & 
+                                            nt_next_val(dsize - 1 downto 0) 
                                                 & "0"  & next_y(2  downto 0);
                         end if;--if (cur_x (2 downto 0) = "100" ) then
                         if (cur_x (2 downto 0) = "110" ) then
@@ -493,7 +495,8 @@ end;
                         ----fetch pattern table high byte.
                         if (cur_x (2 downto 0) = "111" ) then
                             --vram addr is incremented every 8 cycle.
-                            vram_addr <= "01" & nt_next_val(dsize - 1 downto 0) 
+                            vram_addr <= "0" & ppu_ctrl(PPUBPA) & 
+                                            nt_next_val(dsize - 1 downto 0) 
                                                 & "0"  & next_y(2  downto 0) + 8;
                         end if; --if (cur_x (2 downto 0) = "110" ) then
                         if (cur_x (2 downto 0) = "000") then
