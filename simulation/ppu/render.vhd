@@ -91,8 +91,8 @@ use std.textio.all;
 use ieee.std_logic_textio.all;
 variable out_l : line;
 begin
-    write(out_l, msg);
-    writeline(output, out_l);
+--    write(out_l, msg);
+--    writeline(output, out_l);
 end  procedure;
 
 function conv_hex8(ival : integer) return string is
@@ -151,8 +151,12 @@ constant PPUIR     : integer := 5;  --intensify red
 constant PPUIG     : integer := 6;  --intensify green
 constant PPUIB     : integer := 7;  --intensify blue
 
-subtype palette_data    is std_logic_vector (dsize -1 downto 0);
-type palette_array      is array (0 to 15) of palette_data;
+subtype sprite_data_t   is std_logic_vector (dsize -1 downto 0);
+type sprite_array       is array (0 to 255) of sprite_data_t;
+signal sprite_ram       : sprite_array := (others => (others => '0'));
+
+subtype palette_data_t  is std_logic_vector (dsize -1 downto 0);
+type palette_array      is array (0 to 15) of palette_data_t;
 signal bg_palatte       : palette_array := (others => (others => '0'));
 signal sprite_palatte   : palette_array := (others => (others => '0'));
 
@@ -243,9 +247,9 @@ signal cur_y            : std_logic_vector(X_SIZE - 1 downto 0);
 signal next_x           : std_logic_vector(X_SIZE - 1 downto 0);
 signal next_y           : std_logic_vector(X_SIZE - 1 downto 0);
 
-signal nt_next_we_n     : std_logic;
+signal nt_we_n          : std_logic;
 signal nt_val           : std_logic_vector (dsize - 1 downto 0);
-signal nt_next_val      : std_logic_vector (dsize - 1 downto 0);
+signal disp_nt          : std_logic_vector (dsize - 1 downto 0);
 
 signal attr_ce_n        : std_logic;
 signal attr_we_n        : std_logic;
@@ -304,10 +308,10 @@ begin
             port map (clk_n, cnt_y_res_n, '1', 
                     cnt_y_en_n, (others => '0'), cur_y);
 
-    nt_next_inst : d_flip_flop generic map(dsize)
-            port map (clk_n, rst_n, '1', nt_next_we_n, vram_ad, nt_next_val);
     nt_inst : d_flip_flop generic map(dsize)
-            port map (clk_n, rst_n, '1', nt_next_we_n, nt_next_val, nt_val);
+            port map (clk_n, rst_n, '1', nt_we_n, vram_ad, nt_val);
+    disp_nt_inst : d_flip_flop generic map(dsize)
+            port map (clk_n, rst_n, '1', nt_we_n, nt_val, disp_nt);
 
     attr_in <= vram_ad;
     at_inst : d_flip_flop generic map(dsize)
@@ -374,8 +378,6 @@ begin
         g <= nes_color_palette(palette_index) (7 downto 4);
         r <= nes_color_palette(palette_index) (3 downto 0);
 
---        d_print("pht h:" & conv_hex8(disp_ptn_h));
---        d_print("pht l:" & conv_hex8(disp_ptn_h));
         d_print("rgb:" &
             conv_hex16(nes_color_palette(palette_index)));
     else
@@ -389,7 +391,7 @@ end;
         if (rst_n = '0') then
             cnt_x_res_n <= '0';
             cnt_y_res_n <= '0';
-            nt_next_we_n <= '1';
+            nt_we_n <= '1';
 
             b <= (others => '0');
             g <= (others => '0');
@@ -432,87 +434,77 @@ end;
                 if (ppu_mask(PPUSBG) = '1') then
                     d_print("*");
 
-                    --visible area and last pixel for the next first pixel.
-                    if (cur_x <= conv_std_logic_vector(HSCAN, X_SIZE) or 
-                            (cur_x > conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE) and 
-                             cur_x < conv_std_logic_vector(HSCAN_NEXT_EXTRA, X_SIZE) )) 
-                        then
+                    ----fetch next tile byte.
+                    if (cur_x (2 downto 0) = "001" ) then
+                        --vram addr is incremented every 8 cycle.
+                        --name table at 0x2000
+                        vram_addr(9 downto 0) 
+                            <= next_y(dsize - 1 downto 3) 
+                                & next_x(dsize - 1 downto 3);
+                        vram_addr(asize - 1 downto 10) <= "10" & ppu_ctrl(PPUBNA downto 0);
+                    end if;
+                    if (cur_x (2 downto 0) = "010" ) then
+                        nt_we_n <= '0';
+                    else
+                        nt_we_n <= '1';
+                    end if;
 
-                        ----fetch next tile byte.
-                        if (cur_x (2 downto 0) = "001" ) then
-                            --vram addr is incremented every 8 cycle.
-                            --name table at 0x2000
-                            vram_addr(9 downto 0) 
-                                <= next_y(dsize - 1 downto 3) 
-                                    & next_x(dsize - 1 downto 3);
-                            vram_addr(asize - 1 downto 10) <= "10" & ppu_ctrl(PPUBNA downto 0);
-                        end if;
-                        if (cur_x (2 downto 0) = "010" ) then
-                            nt_next_we_n <= '0';
-                        else
-                            nt_next_we_n <= '1';
-                        end if;
+                    ----fetch attr table byte.
+                    if (cur_x (4 downto 0) = "00011" ) then
+                        --attribute table is loaded every 32 cycle.
+                        --attr table at 0x23c0
+                        vram_addr(dsize - 1 downto 0) <= "11000000" +
+                                ("00" & next_y(7 downto 5) & next_x(7 downto 5));
+                        vram_addr(asize - 1 downto dsize) <= "10" &
+                                ppu_ctrl(PPUBNA downto 0) & "11";
+                    end if;--if (cur_x (2 downto 0) = "010" ) then
+                    if (cur_x (4 downto 0) = "00100" ) then
+                        attr_we_n <= '0';
+                    else
+                        attr_we_n <= '1';
+                    end if;
+                    if (cur_x (4 downto 0) = "00000" ) then
+                        disp_attr_we_n <= '0';
+                    else
+                        disp_attr_we_n <= '1';
+                    end if;
+                    ---attribute is shifted every 16 bit.
+                    if (cur_x (3 downto 0) = "0000" ) then
+                        attr_ce_n <= '0';
+                    else
+                        attr_ce_n <= '1';
+                    end if;
+                    
 
-                        ----fetch attr table byte.
-                        if (cur_x (4 downto 0) = "00011" ) then
-                            --attribute table is loaded every 32 cycle.
-                            --attr table at 0x23c0
-                            vram_addr(dsize - 1 downto 0) <= "11000000" +
-                                    ("00" & next_y(7 downto 5) & next_x(7 downto 5));
-                            vram_addr(asize - 1 downto dsize) <= "10" &
-                                    ppu_ctrl(PPUBNA downto 0) & "11";
-                        end if;--if (cur_x (2 downto 0) = "010" ) then
-                        if (cur_x (4 downto 0) = "00100" ) then
-                            attr_we_n <= '0';
-                        else
-                            attr_we_n <= '1';
-                        end if;
-                        if (cur_x (4 downto 0) = "00000" ) then
-                            disp_attr_we_n <= '0';
-                        else
-                            disp_attr_we_n <= '1';
-                        end if;
-                        ---attribute is shifted every 16 bit.
-                        if (cur_x (3 downto 0) = "0000" ) then
-                            attr_ce_n <= '0';
-                        else
-                            attr_ce_n <= '1';
-                        end if;
-                        
+                    ----fetch pattern table low byte.
+                    if (cur_x (2 downto 0) = "101" ) then
+                        --vram addr is incremented every 8 cycle.
+                        vram_addr <= "0" & ppu_ctrl(PPUBPA) & 
+                                        nt_val(dsize - 1 downto 0) 
+                                            & "0"  & next_y(2  downto 0);
+                    end if;--if (cur_x (2 downto 0) = "100" ) then
+                    if (cur_x (2 downto 0) = "110" ) then
+                        ptn_l_we_n <= '0';
+                    else
+                        ptn_l_we_n <= '1';
+                    end if;
 
-                        ----fetch pattern table low byte.
-                        if (cur_x (2 downto 0) = "101" ) then
-                            --vram addr is incremented every 8 cycle.
-                            vram_addr <= "0" & ppu_ctrl(PPUBPA) & 
-                                            nt_next_val(dsize - 1 downto 0) 
-                                                & "0"  & next_y(2  downto 0);
-                        end if;--if (cur_x (2 downto 0) = "100" ) then
-                        if (cur_x (2 downto 0) = "110" ) then
-                            ptn_l_we_n <= '0';
-                        else
-                            ptn_l_we_n <= '1';
-                        end if;
+                    ----fetch pattern table high byte.
+                    if (cur_x (2 downto 0) = "111" ) then
+                        --vram addr is incremented every 8 cycle.
+                        vram_addr <= "0" & ppu_ctrl(PPUBPA) & 
+                                        nt_val(dsize - 1 downto 0) 
+                                            & "0"  & next_y(2  downto 0) + 8;
+                    end if; --if (cur_x (2 downto 0) = "110" ) then
+                    if (cur_x (2 downto 0) = "000") then
+                        ptn_h_we_n <= '0';
+                    else
+                        ptn_h_we_n <= '1';
+                    end if;--if (cur_x (2 downto 0) = "001" ) then
 
-                        ----fetch pattern table high byte.
-                        if (cur_x (2 downto 0) = "111" ) then
-                            --vram addr is incremented every 8 cycle.
-                            vram_addr <= "0" & ppu_ctrl(PPUBPA) & 
-                                            nt_next_val(dsize - 1 downto 0) 
-                                                & "0"  & next_y(2  downto 0) + 8;
-                        end if; --if (cur_x (2 downto 0) = "110" ) then
-                        if (cur_x (2 downto 0) = "000") then
-                            ptn_h_we_n <= '0';
-                        else
-                            ptn_h_we_n <= '1';
-                        end if;--if (cur_x (2 downto 0) = "001" ) then
-
-                    end if; --if (cur_x <= conv_std_logic_vector(HSCAN, X_SIZE) or 
 
         d_print("cur_x: " & conv_hex16(conv_integer(cur_x)));
         d_print("cur_y: " & conv_hex16(conv_integer(cur_y)));
-    --    d_print("next_x: " & conv_hex16(conv_integer(next_x)));
-    --    d_print("nt_next_val: " & conv_hex8(conv_integer(nt_next_val)));
-    --    d_print("vram_addr: " & conv_hex16(conv_integer(vram_addr)));
 
                     --output visible area only.
                     if ((cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
@@ -530,19 +522,35 @@ end;
         end if;--if (rst_n = '0') then
     end process;
 
+    ------------------- sprite access process -------------------
+    sprite_rw : process (oam_bus_ce_n, r_nw, oam_addr, oam_data)
+    begin
+        if (oam_bus_ce_n = '0') then
+            if (r_nw = '0') then
+                --write
+                sprite_ram(conv_integer(oam_addr)) <= oam_data;
+            else
+                --read
+                oam_data <= sprite_ram(conv_integer(oam_addr));
+            end if;
+        else
+            oam_data <= (others => 'Z');
+        end if;
+    end process;
+
     ------------------- palette access process -------------------
     plt_rw : process (plt_bus_ce_n, r_nw, plt_addr, plt_data)
     begin
         if (plt_bus_ce_n = '0') then
             if (r_nw = '0') then
+                --write
                 if (plt_addr(4) = '0') then
                     bg_palatte(conv_integer(plt_addr)) <= "00" & plt_data;
                 else
                     sprite_palatte(conv_integer(plt_addr(3 downto 0))) <= "00" & plt_data;
                 end if;
-            end if;
-
-            if (r_nw = '1') then
+            else
+                --read
                 if (plt_addr(4) = '0') then
                     plt_data <= bg_palatte(conv_integer(plt_addr))(5 downto 0);
                 else

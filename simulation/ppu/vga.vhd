@@ -40,8 +40,8 @@ use std.textio.all;
 use ieee.std_logic_textio.all;
 variable out_l : line;
 begin
-    write(out_l, msg);
-    writeline(output, out_l);
+--    write(out_l, msg);
+--    writeline(output, out_l);
 end  procedure;
 
 function conv_hex8(ival : integer) return string is
