@@ -248,6 +248,7 @@ begin
                     if (ppu_addr_cnt(0) = '0') then
                         --if address is 3fxx, set palette table.
                         ppu_addr_in <= cpu_d(5 downto 0) & ppu_addr(7 downto 0);
+                        ale <= '0';
                     else
                         ppu_addr_in <= ppu_addr(13 downto 8) & cpu_d;
                         if (ppu_addr(13 downto 8) = "111111") then

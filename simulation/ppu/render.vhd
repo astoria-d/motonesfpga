@@ -426,8 +426,9 @@ end;
                 d_print("-");
             end if;
 
-            --fetch bg pattern and display.
             if (clk'event and clk = '1') then
+
+                --fetch bg pattern and display.
                 if (ppu_mask(PPUSBG) = '1') then
                     d_print("*");
 
