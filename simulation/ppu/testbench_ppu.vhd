@@ -66,8 +66,8 @@ constant vga_clk_time : time := 40 ns;
 constant size8  : integer := 8;
 constant size14 : integer := 14;
 
-constant test_init_time : time := 7 us;
-constant test_reset_time : time := 20 us;
+constant test_init_time : time := 5 us;
+constant test_reset_time : time := 10 us;
 
 signal base_clk : std_logic;
 signal cpu_clk  : std_logic;
@@ -116,19 +116,15 @@ begin
         wait;
     end process;
 
---    clock_gen_inst : clock_divider 
---        port map (base_clk, rst_n, cpu_clk, ppu_clk);
+    clock_gen_inst : clock_divider 
+        port map (base_clk, rst_n, cpu_clk, ppu_clk);
 
     clock_p : process
     begin
---        base_clk <= '1';
---        wait for base_clk_time / 2;
---        base_clk <= '0';
---        wait for base_clk_time / 2;
-        ppu_clk <= '1';
-        wait for ppu_clk_time / 2;
-        ppu_clk <= '0';
-        wait for ppu_clk_time / 2;
+        base_clk <= '1';
+        wait for base_clk_time / 2;
+        base_clk <= '0';
+        wait for base_clk_time / 2;
     end process;
 
     vga_clock_p : process
@@ -143,29 +139,32 @@ begin
     test_init_p : process
     variable i : integer := 0;
     begin
-        wait for test_init_time + test_reset_time + ppu_clk_time / 2;
+        wait for test_init_time;
+        wait until (rst_n'event and rst_n = '1');
+        wait until (cpu_clk'event and cpu_clk = '1');
+
         ce_n <= '0';
 
         --disable show bg.
         r_nw <= '0';
         cpu_addr <= "001";
         cpu_d <= "00000000";
-        wait for ppu_clk_time;
+        wait for cpu_clk_time;
 
         --ppuctl set
         cpu_addr <= "000";
         cpu_d <= "00010010";
-        wait for ppu_clk_time;
+        wait for cpu_clk_time;
 
         --vram addr set
         r_nw <= '0';
         --name table set.
         for i in 0 to 50 loop
-        cpu_addr <= "110";
-        cpu_d <= conv_std_logic_vector(16#2800# + i, 16)(15 downto 8);
-        wait for ppu_clk_time;
-        cpu_d <= conv_std_logic_vector(16#2800# + i, 16)(7 downto 0);
-        wait for ppu_clk_time;
+            cpu_addr <= "110";
+            cpu_d <= conv_std_logic_vector(16#2800# + i, 16)(15 downto 8);
+            wait for ppu_clk_time;
+            cpu_d <= conv_std_logic_vector(16#2800# + i, 16)(7 downto 0);
+            wait for ppu_clk_time;
             cpu_addr <= "111";
             cpu_d <= conv_std_logic_vector(i + 32, 8);
             wait for ppu_clk_time;
