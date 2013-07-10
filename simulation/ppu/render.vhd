@@ -36,7 +36,8 @@ architecture rtl of ppu_render is
 
 component counter_register
     generic (
-        dsize       : integer := 8
+        dsize       : integer := 8;
+        inc         : integer := 1
     );
     port (  clk         : in std_logic;
             rst_n       : in std_logic;
@@ -287,7 +288,7 @@ begin
     io_oe_n <= not io_cnt(0) when ppu_mask(PPUSBG) = '1' else '1';
     d_oe_n <= '0' when ppu_mask(PPUSBG) = '1'       else '1';
 
-    io_cnt_inst : counter_register generic map (1)
+    io_cnt_inst : counter_register generic map (1, 1)
             port map (clk, cnt_x_res_n, '1', '0', (others => '0'), io_cnt);
 
     ---x pos is 8 cycle ahead of current pos.
@@ -301,10 +302,10 @@ begin
               cur_y + "000000001";
 
     --current x,y pos
-    cur_x_inst : counter_register generic map (X_SIZE)
+    cur_x_inst : counter_register generic map (X_SIZE, 1)
             port map (clk_n, cnt_x_res_n, '1', 
                     cnt_x_en_n, (others => '0'), cur_x);
-    cur_y_inst : counter_register generic map (X_SIZE)
+    cur_y_inst : counter_register generic map (X_SIZE, 1)
             port map (clk_n, cnt_y_res_n, '1', 
                     cnt_y_en_n, (others => '0'), cur_y);
 

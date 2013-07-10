@@ -67,7 +67,8 @@ use ieee.std_logic_1164.all;
 entity counter_register is 
     
     generic (
-        dsize       : integer := 8
+        dsize       : integer := 8;
+        inc         : integer := 1
     );
     port (  clk         : in std_logic;
             rst_n       : in std_logic;
@@ -111,7 +112,7 @@ begin
         end if;
 
         if (ce_n = '0') then
-            d_in <= q_out + 1;
+            d_in <= q_out + inc;
         end if;
     end process;
 

@@ -51,7 +51,17 @@ architecture stimulus of testbench_ppu is
             );
     end component;
 
+    component clock_divider
+        port (  base_clk    : in std_logic;
+                reset_n     : in std_logic;
+                cpu_clk     : out std_logic;
+                ppu_clk     : out std_logic
+            );
+    end component;
+
+constant base_clk_time : time := 46 ns;
 constant ppu_clk_time : time := 186 ns;
+constant cpu_clk_time : time := 589 ns;
 constant vga_clk_time : time := 40 ns;
 constant size8  : integer := 8;
 constant size14 : integer := 14;
@@ -59,7 +69,9 @@ constant size14 : integer := 14;
 constant test_init_time : time := 7 us;
 constant test_reset_time : time := 20 us;
 
-signal clk      : std_logic;
+signal base_clk : std_logic;
+signal cpu_clk  : std_logic;
+signal ppu_clk  : std_logic;
 signal ce_n     : std_logic;
 signal rst_n    : std_logic;
 signal r_nw     : std_logic;
@@ -84,12 +96,12 @@ signal b           : std_logic_vector(3 downto 0);
 begin
 
     ppu_inst : ppu 
-        port map (clk, ce_n, rst_n, r_nw, cpu_addr, cpu_d, 
+        port map (ppu_clk, ce_n, rst_n, r_nw, cpu_addr, cpu_d, 
                 vblank_n, rd_n, wr_n, ale, vram_ad, vram_a,
                 vga_clk, h_sync_n, v_sync_n, r, g, b);
 
     ppu_addr_decoder : v_address_decoder generic map (size14, size8) 
-        port map (clk, rd_n, wr_n, ale, vram_ad, vram_a);
+        port map (ppu_clk, rd_n, wr_n, ale, vram_ad, vram_a);
 
     dummy_vga_disp : vga_device 
         port map (vga_clk, rst_n, h_sync_n, v_sync_n, r, g, b);
@@ -104,11 +116,18 @@ begin
         wait;
     end process;
 
+--    clock_gen_inst : clock_divider 
+--        port map (base_clk, rst_n, cpu_clk, ppu_clk);
+
     clock_p : process
     begin
-        clk <= '1';
+--        base_clk <= '1';
+--        wait for base_clk_time / 2;
+--        base_clk <= '0';
+--        wait for base_clk_time / 2;
+        ppu_clk <= '1';
         wait for ppu_clk_time / 2;
-        clk <= '0';
+        ppu_clk <= '0';
         wait for ppu_clk_time / 2;
     end process;
 
@@ -140,13 +159,13 @@ begin
 
         --vram addr set
         r_nw <= '0';
+        --name table set.
         for i in 0 to 50 loop
-            --name table set.
-            cpu_addr <= "110";
-            cpu_d <= conv_std_logic_vector(16#2800# + i, 16)(15 downto 8);
-            wait for ppu_clk_time;
-            cpu_d <= conv_std_logic_vector(16#2800# + i, 16)(7 downto 0);
-            wait for ppu_clk_time;
+        cpu_addr <= "110";
+        cpu_d <= conv_std_logic_vector(16#2800# + i, 16)(15 downto 8);
+        wait for ppu_clk_time;
+        cpu_d <= conv_std_logic_vector(16#2800# + i, 16)(7 downto 0);
+        wait for ppu_clk_time;
             cpu_addr <= "111";
             cpu_d <= conv_std_logic_vector(i + 32, 8);
             wait for ppu_clk_time;

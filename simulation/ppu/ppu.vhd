@@ -87,7 +87,8 @@ end component;
 
 component counter_register
     generic (
-        dsize       : integer := 8
+        dsize       : integer := 8;
+        inc         : integer := 1
     );
     port (  clk         : in std_logic;
             rst_n       : in std_logic;
@@ -180,12 +181,12 @@ begin
             port map (clk_n, rst_n, '1', ppu_scroll_x_we_n, cpu_d, ppu_scroll_x);
     ppu_scroll_y_inst : d_flip_flop generic map(dsize)
             port map (clk_n, rst_n, '1', ppu_scroll_y_we_n, cpu_d, ppu_scroll_y);
-    ppu_scroll_cnt_inst : counter_register generic map (1)
+    ppu_scroll_cnt_inst : counter_register generic map (1, 1)
             port map (clk_n, rst_n, '1', ppu_scroll_cnt_ce_n, (others => '0'), ppu_scroll_cnt);
 
-    ppu_addr_inst : d_flip_flop generic map(14)
-            port map (clk_n, rst_n, '1', ppu_addr_we_n, ppu_addr_in, ppu_addr);
-    ppu_addr_cnt_inst : counter_register generic map (1)
+    ppu_addr_inst : counter_register generic map(14, 1)
+            port map (clk_n, rst_n, ppu_addr_we_n, ppu_data_we_n, ppu_addr_in, ppu_addr);
+    ppu_addr_cnt_inst : counter_register generic map (1, 1)
             port map (clk_n, rst_n, '1', ppu_addr_cnt_ce_n, (others => '0'), ppu_addr_cnt);
     ppu_data_inst : d_flip_flop generic map(dsize)
             port map (clk_n, rst_n, '1', ppu_data_we_n, cpu_d, ppu_data);

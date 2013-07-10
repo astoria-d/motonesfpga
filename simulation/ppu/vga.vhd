@@ -24,7 +24,8 @@ architecture rtl of vga_ctl is
 
 component counter_register
     generic (
-        dsize       : integer := 8
+        dsize       : integer := 8;
+        inc         : integer := 1
     );
     port (  clk         : in std_logic;
             rst_n       : in std_logic;
@@ -116,16 +117,16 @@ begin
     end process;
 
     vga_x_en_n <= '0';
-    vga_x_inst : counter_register generic map (VGA_SIZE)
+    vga_x_inst : counter_register generic map (VGA_SIZE, 1)
             port map (vga_clk, vga_x_res_n, '1', vga_x_en_n, (others => '0'), vga_x);
 
-    count5_inst : counter_register generic map (3)
+    count5_inst : counter_register generic map (3, 1)
             port map (vga_clk, count5_res_n, '1', '0', (others => '0'), count5);
-    nes_x_inst : counter_register generic map (8)
+    nes_x_inst : counter_register generic map (8, 1)
             port map (vga_clk, vga_x_res_n, '1', nes_x_en_n, (others => '0'), nes_x);
 
     ---test dummy value...
-    vga_y_inst : counter_register generic map (VGA_SIZE)
+    vga_y_inst : counter_register generic map (VGA_SIZE, 1)
             port map (vga_clk, vga_y_res_n, rst_n, vga_y_en_n, 
                         conv_std_logic_vector(VGA_H - 2, VGA_SIZE), vga_y);
 
