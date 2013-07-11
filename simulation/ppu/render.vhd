@@ -435,6 +435,12 @@ end;
                 if (ppu_mask(PPUSBG) = '1') then
                     d_print("*");
 
+                    --visible area and last pixel for the next first pixel.
+                    if (cur_x <= conv_std_logic_vector(HSCAN, X_SIZE) or 
+                            (cur_x > conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE) and
+                             cur_x < conv_std_logic_vector(HSCAN_NEXT_EXTRA, X_SIZE) ))
+                        then
+
                     ----fetch next tile byte.
                     if (cur_x (2 downto 0) = "001" ) then
                         --vram addr is incremented every 8 cycle.
@@ -503,6 +509,7 @@ end;
                         ptn_h_we_n <= '1';
                     end if;--if (cur_x (2 downto 0) = "001" ) then
 
+                    end if; --if (cur_x <= conv_std_logic_vector(HSCAN, X_SIZE)
 
         d_print("cur_x: " & conv_hex16(conv_integer(cur_x)));
         d_print("cur_y: " & conv_hex16(conv_integer(cur_y)));
