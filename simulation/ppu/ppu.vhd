@@ -99,6 +99,15 @@ component counter_register
     );
 end component;
 
+procedure d_print(msg : string) is
+use std.textio.all;
+use ieee.std_logic_textio.all;
+variable out_l : line;
+begin
+    write(out_l, msg);
+    writeline(output, out_l);
+end  procedure;
+
 signal pos_x       : std_logic_vector (8 downto 0);
 signal pos_y       : std_logic_vector (8 downto 0);
 signal nes_r       : std_logic_vector (3 downto 0);
@@ -117,6 +126,9 @@ constant PPUADDR   : std_logic_vector(2 downto 0) := "110";
 constant PPUDATA   : std_logic_vector(2 downto 0) := "111";
 
 signal clk_n            : std_logic;
+
+signal ppu_clk_cnt_res_n    : std_logic;
+signal ppu_clk_cnt          : std_logic_vector(1 downto 0);
 
 signal ppu_ctrl_we_n    : std_logic;
 signal ppu_mask_we_n    : std_logic;
@@ -163,6 +175,10 @@ begin
 
     --PPU registers.
     clk_n <= not clk;
+
+    ppu_clk_cnt_inst : counter_register generic map (2, 1)
+            port map (clk_n, ppu_clk_cnt_res_n, '1', '0', (others => '0'), ppu_clk_cnt); 
+
     ppu_ctrl_inst : d_flip_flop generic map(dsize)
             port map (clk_n, rst_n, '1', ppu_ctrl_we_n, cpu_d, ppu_ctrl);
 
@@ -192,128 +208,155 @@ begin
             port map (clk_n, rst_n, '1', ppu_data_we_n, cpu_d, ppu_data);
 
 
-    clock_p : process (clk)
+    reg_set_p : process (rst_n, ce_n, r_nw, cpu_addr, cpu_d)
     begin
 
-        if (clk'event and clk = '1') then
-            if (ce_n = '0') then
-                --register set.
-                if(cpu_addr = PPUCTRL) then
-                    ppu_ctrl_we_n <= '0';
-                else
-                    ppu_ctrl_we_n <= '1';
-                end if;
+        if (rst_n = '1' and ce_n = '0') then
 
-                if(cpu_addr = PPUMASK) then
-                    ppu_mask_we_n <= '0';
-                else
-                    ppu_mask_we_n <= '1';
-                end if;
+            --register set.
+            if(cpu_addr = PPUCTRL) then
+                ppu_ctrl_we_n <= '0';
+            else
+                ppu_ctrl_we_n <= '1';
+            end if;
 
-                if(cpu_addr = PPUSTATUS) then
-                    ppu_status_we_n <= '0';
-                else
-                    ppu_status_we_n <= '1';
-                end if;
+            if(cpu_addr = PPUMASK) then
+                ppu_mask_we_n <= '0';
+            else
+                ppu_mask_we_n <= '1';
+            end if;
 
-                if(cpu_addr = OAMADDR) then
-                    oam_addr_we_n <= '0';
-                else
-                    oam_addr_we_n <= '1';
-                end if;
+            if(cpu_addr = PPUSTATUS) then
+                ppu_status_we_n <= '0';
+            else
+                ppu_status_we_n <= '1';
+            end if;
 
-                if(cpu_addr = OAMDATA) then
-                    oam_data_we_n <= '0';
-                else
-                    oam_data_we_n <= '1';
-                end if;
+            if(cpu_addr = OAMADDR) then
+                oam_addr_we_n <= '0';
+            else
+                oam_addr_we_n <= '1';
+            end if;
 
-                if(cpu_addr = PPUSCROLL) then
-                    ppu_scroll_cnt_ce_n <= '0';
-                    if (ppu_scroll_cnt(0) = '0') then
-                        ppu_scroll_x_we_n <= '0';
-                        ppu_scroll_y_we_n <= '1';
-                    else
-                        ppu_scroll_y_we_n <= '0';
-                        ppu_scroll_x_we_n <= '1';
-                    end if;
-                else
-                    ppu_scroll_x_we_n <= '1';
+            if(cpu_addr = OAMDATA) then
+                oam_data_we_n <= '0';
+            else
+                oam_data_we_n <= '1';
+            end if;
+
+            if(cpu_addr = PPUSCROLL) then
+                ppu_scroll_cnt_ce_n <= '0';
+                if (ppu_scroll_cnt(0) = '0') then
+                    ppu_scroll_x_we_n <= '0';
                     ppu_scroll_y_we_n <= '1';
-                    ppu_scroll_cnt_ce_n <= '1';
+                else
+                    ppu_scroll_y_we_n <= '0';
+                    ppu_scroll_x_we_n <= '1';
                 end if;
+            else
+                ppu_scroll_x_we_n <= '1';
+                ppu_scroll_y_we_n <= '1';
+                ppu_scroll_cnt_ce_n <= '1';
+            end if;
 
-                if(cpu_addr = PPUADDR) then
-                    ppu_addr_cnt_ce_n <= '0';
-                    ppu_addr_we_n <= '0';
-                    if (ppu_addr_cnt(0) = '0') then
-                        --if address is 3fxx, set palette table.
-                        ppu_addr_in <= cpu_d(5 downto 0) & ppu_addr(7 downto 0);
+            if(cpu_addr = PPUADDR) then
+                ppu_addr_cnt_ce_n <= '0';
+                ppu_addr_we_n <= '0';
+                if (ppu_addr_cnt(0) = '0') then
+                    --if address is 3fxx, set palette table.
+                    ppu_addr_in <= cpu_d(5 downto 0) & ppu_addr(7 downto 0);
+                    ale <= '0';
+                else
+                    ppu_addr_in <= ppu_addr(13 downto 8) & cpu_d;
+                    if (ppu_addr(13 downto 8) = "111111") then
+                        plt_addr <= cpu_d(4 downto 0);
                         ale <= '0';
                     else
-                        ppu_addr_in <= ppu_addr(13 downto 8) & cpu_d;
-                        if (ppu_addr(13 downto 8) = "111111") then
-                            plt_addr <= cpu_d(4 downto 0);
-                            ale <= '0';
-                        else
-                            vram_ad <= cpu_d;
-                            vram_a <= ppu_addr(13 downto 8);
-                            ale <= '1';
-                        end if;
+                        vram_ad <= cpu_d;
+                        vram_a <= ppu_addr(13 downto 8);
+                        ale <= '1';
                     end if;
-                else
-                    ppu_addr_cnt_ce_n <= '1';
-                    ppu_addr_we_n <= '1';
-                    ale <= '0';
                 end if;
+            else
+                ppu_addr_cnt_ce_n <= '1';
+                ppu_addr_we_n <= '1';
+                ale <= '0';
+            end if;
 
-                if(cpu_addr = PPUDATA) then
-                    ppu_data_we_n <= '0';
-                    rd_n <= not r_nw;
-                    wr_n <= r_nw;
-                    if (ppu_addr(13 downto 8) = "111111") then
-                        --case palette tbl.
-                        plt_bus_ce_n <= '0';
-                        plt_data <= cpu_d(5 downto 0);
-                    else
-                        plt_bus_ce_n <= '1';
-                        if (r_nw = '0') then
-                            vram_ad <= cpu_d;
-                        end if;
-                    end if;
+            if(cpu_addr = PPUDATA) then
+                ppu_data_we_n <= '0';
+                rd_n <= not r_nw;
+                wr_n <= r_nw;
+                if (ppu_addr(13 downto 8) = "111111") then
+                    --case palette tbl.
+                    plt_bus_ce_n <= '0';
+                    plt_data <= cpu_d(5 downto 0);
                 else
                     plt_bus_ce_n <= '1';
-                    ppu_data_we_n <= '1';
-                    rd_n <= '1';
-                    wr_n <= '1';
+                    if (r_nw = '0') then
+                        vram_ad <= cpu_d;
+                    end if;
                 end if;
-
             else
-                ppu_ctrl_we_n    <= '1';
-                ppu_mask_we_n    <= '1';
-                ppu_status_we_n  <= '1';
-                oam_bus_ce_n     <= '1';
-                oam_addr_we_n    <= '1';
-                oam_data_we_n    <= '1';
-                ppu_scroll_x_we_n    <= '1';
-                ppu_scroll_y_we_n    <= '1';
-                ppu_scroll_cnt_ce_n  <= '1';
-                ppu_addr_we_n        <= '1';
-                ppu_addr_cnt_ce_n    <= '1';
-                ppu_data_we_n    <= '1';
-
                 plt_bus_ce_n <= '1';
+                ppu_data_we_n <= '1';
+                rd_n <= '1';
+                wr_n <= '1';
+            end if;
 
-                ale <= 'Z';
-                rd_n <= 'Z';
-                wr_n <= 'Z';
-                vram_ad <= (others => 'Z');
-                vram_a <= (others => 'Z');
-            end if; --if (ce_n = '0') then
+        else
 
-        end if;--if (clk'event and clk = '1') then
+            ppu_ctrl_we_n    <= '1';
+            ppu_mask_we_n    <= '1';
+            ppu_status_we_n  <= '1';
+            oam_bus_ce_n     <= '1';
+            oam_addr_we_n    <= '1';
+            oam_data_we_n    <= '1';
+            ppu_scroll_x_we_n    <= '1';
+            ppu_scroll_y_we_n    <= '1';
+            ppu_scroll_cnt_ce_n  <= '1';
+            ppu_addr_we_n        <= '1';
+            ppu_addr_cnt_ce_n    <= '1';
+            ppu_data_we_n    <= '1';
+
+            plt_bus_ce_n <= '1';
+
+            ale <= 'Z';
+            rd_n <= 'Z';
+            wr_n <= 'Z';
+            vram_ad <= (others => 'Z');
+            vram_a <= (others => 'Z');
+        end if; --if (rst_n = '1' and ce_n = '0') 
 
     end process;
+
+    clk_cnt_set_p : process (rst_n, ce_n, r_nw, cpu_addr, cpu_d, clk)
+    begin
+        if (rst_n = '1' and ce_n = '0') then
+            --set counter=0 on register write.   
+            if (ce_n'event or r_nw'event or cpu_addr'event or cpu_d'event) then
+                ppu_clk_cnt_res_n <= '0';
+                --d_print("write event");
+            end if;
+
+            --start counter.
+            if (clk'event and clk = '0') then
+                if (ppu_clk_cnt = "10") then
+                    ppu_clk_cnt_res_n <= '0';
+                elsif (ppu_clk_cnt = "00") then
+                    ppu_clk_cnt_res_n <= '1';
+                end if;
+                --d_print("clk event");
+            end if;
+        else
+            ppu_clk_cnt_res_n <= '0';
+        end if;
+    end process;
+
+--    vram_p : process (ppu_data)
+--    begin
+--        ppu_data_we_n <= '1';
+--    end process;
 
 end rtl;
 

@@ -60,8 +60,8 @@ architecture stimulus of testbench_ppu is
     end component;
 
 constant base_clk_time : time := 46 ns;
-constant ppu_clk_time : time := 186 ns;
-constant cpu_clk_time : time := 589 ns;
+constant ppu_clk_time : time := (base_clk_time * 4);
+constant cpu_clk_time : time := (base_clk_time * 12);
 constant vga_clk_time : time := 40 ns;
 constant size8  : integer := 8;
 constant size14 : integer := 14;
@@ -139,6 +139,7 @@ begin
     test_init_p : process
     variable i : integer := 0;
     begin
+        --syncronize with the cpu clk.
         wait for test_init_time;
         wait until (rst_n'event and rst_n = '1');
         wait until (cpu_clk'event and cpu_clk = '1');
@@ -151,6 +152,16 @@ begin
         cpu_d <= "00000000";
         wait for cpu_clk_time;
 
+        --multiple write test.
+        cpu_addr <= "001";
+        cpu_d <= "00000000";
+        wait for cpu_clk_time;
+
+        ce_n <= '1';
+        wait for cpu_clk_time;
+
+        ce_n <= '0';
+
         --ppuctl set
         cpu_addr <= "000";
         cpu_d <= "00010010";
@@ -159,46 +170,47 @@ begin
         --vram addr set
         r_nw <= '0';
         --name table set.
+        --burst write.
+        cpu_addr <= "110";
+        cpu_d <= conv_std_logic_vector(16#2800# + 32 + i, 16)(15 downto 8);
+        wait for cpu_clk_time;
+        cpu_d <= conv_std_logic_vector(16#2800# + 32 + i, 16)(7 downto 0);
+        wait for cpu_clk_time;
         for i in 0 to 50 loop
-            cpu_addr <= "110";
-            cpu_d <= conv_std_logic_vector(16#2800# + i, 16)(15 downto 8);
-            wait for ppu_clk_time;
-            cpu_d <= conv_std_logic_vector(16#2800# + i, 16)(7 downto 0);
-            wait for ppu_clk_time;
             cpu_addr <= "111";
             cpu_d <= conv_std_logic_vector(i + 32, 8);
-            wait for ppu_clk_time;
+            wait for cpu_clk_time;
         end loop;
 
         for i in 0 to 13 loop
             --attr tbl set.
             cpu_addr <= "110";
             cpu_d <= conv_std_logic_vector(16#23c0# + i, 16)(15 downto 8);
-            wait for ppu_clk_time;
+            wait for cpu_clk_time;
             cpu_d <= conv_std_logic_vector(16#23c0# + i, 16)(7 downto 0);
-            wait for ppu_clk_time;
+            wait for cpu_clk_time;
             cpu_addr <= "111";
             cpu_d <= conv_std_logic_vector(16#5a# + 3 * i, 8);
-            wait for ppu_clk_time;
+            wait for cpu_clk_time;
         end loop;
 
         for i in 0 to 31 loop
             --palette tbl set.
             cpu_addr <= "110";
             cpu_d <= conv_std_logic_vector(16#3f00# + i, 16)(15 downto 8);
-            wait for ppu_clk_time;
+            wait for cpu_clk_time;
             cpu_d <= conv_std_logic_vector(16#3f00# + i, 16)(7 downto 0);
-            wait for ppu_clk_time;
+            wait for cpu_clk_time;
             cpu_addr <= "111";
             cpu_d <= conv_std_logic_vector((i - 1 ) * 4 + 17, 8);
-            wait for ppu_clk_time;
+            wait for cpu_clk_time;
         end loop;
 
         --enable show bg.
         r_nw <= '0';
         cpu_addr <= "001";
         cpu_d <= "00011000";
-        wait for ppu_clk_time;
+        wait for cpu_clk_time;
 
         ce_n <= '1';
         cpu_addr <= (others => 'Z');
