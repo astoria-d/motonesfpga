@@ -201,13 +201,13 @@ begin
             wait for cpu_clk_time;
         end loop;
 
+        --palette tbl set.
+        cpu_addr <= "110";
+        cpu_d <= conv_std_logic_vector(16#3f00# + i, 16)(15 downto 8);
+        wait for cpu_clk_time;
+        cpu_d <= conv_std_logic_vector(16#3f00# + i, 16)(7 downto 0);
+        wait for cpu_clk_time;
         for i in 0 to 31 loop
-            --palette tbl set.
-            cpu_addr <= "110";
-            cpu_d <= conv_std_logic_vector(16#3f00# + i, 16)(15 downto 8);
-            wait for cpu_clk_time;
-            cpu_d <= conv_std_logic_vector(16#3f00# + i, 16)(7 downto 0);
-            wait for cpu_clk_time;
             cpu_addr <= "111";
             cpu_d <= conv_std_logic_vector((i - 1 ) * 4 + 17, 8);
             wait for cpu_clk_time;

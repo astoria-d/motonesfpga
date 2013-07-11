@@ -287,6 +287,7 @@ begin
 
     end process;
 
+    --cpu and ppu clock timing adjustment...
     clk_cnt_set_p : process (rst_n, ce_n, r_nw, cpu_addr, cpu_d, clk)
     begin
         if (rst_n = '1' and ce_n = '0') then
@@ -326,9 +327,14 @@ begin
                 end if;
             elsif (cpu_addr = PPUDATA and ppu_clk_cnt = "01") then
                 --for burst write.
-                vram_a <= ppu_addr(13 downto 8);
-                vram_ad <= ppu_addr(7 downto 0);
-                ale <= '1';
+                if (ppu_addr(13 downto 8) = "111111") then
+                    plt_addr <= ppu_addr(4 downto 0);
+                    ale <= '0';
+                else
+                    vram_a <= ppu_addr(13 downto 8);
+                    vram_ad <= ppu_addr(7 downto 0);
+                    ale <= '1';
+                end if;
             else
                 ale <= '0';
             end if;
