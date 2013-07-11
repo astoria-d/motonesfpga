@@ -176,9 +176,15 @@ begin
         wait for cpu_clk_time;
         cpu_d <= conv_std_logic_vector(16#2800# + 32 + i, 16)(7 downto 0);
         wait for cpu_clk_time;
+
         for i in 0 to 50 loop
             cpu_addr <= "111";
             cpu_d <= conv_std_logic_vector(i + 32, 8);
+            wait for cpu_clk_time;
+        end loop;
+        for i in 51 to 100 loop
+            cpu_addr <= "111";
+            cpu_d <= conv_std_logic_vector(16#a5#, 8);
             wait for cpu_clk_time;
         end loop;
 

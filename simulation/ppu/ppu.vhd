@@ -263,49 +263,15 @@ begin
                 ppu_addr_cnt_ce_n <= '0';
                 ppu_addr_we_n <= '0';
                 if (ppu_addr_cnt(0) = '0') then
-                    --if address is 3fxx, set palette table.
                     ppu_addr_in <= cpu_d(5 downto 0) & ppu_addr(7 downto 0);
-                    ale <= '0';
                 else
                     ppu_addr_in <= ppu_addr(13 downto 8) & cpu_d;
-                    if (ppu_addr(13 downto 8) = "111111") then
-                        plt_addr <= cpu_d(4 downto 0);
-                        ale <= '0';
-                    else
-                        vram_ad <= cpu_d;
-                        vram_a <= ppu_addr(13 downto 8);
-                        ale <= '1';
-                    end if;
                 end if;
             else
                 ppu_addr_cnt_ce_n <= '1';
                 ppu_addr_we_n <= '1';
-                ale <= '0';
             end if;
-
-            if(cpu_addr = PPUDATA) then
-                ppu_data_we_n <= '0';
-                rd_n <= not r_nw;
-                wr_n <= r_nw;
-                if (ppu_addr(13 downto 8) = "111111") then
-                    --case palette tbl.
-                    plt_bus_ce_n <= '0';
-                    plt_data <= cpu_d(5 downto 0);
-                else
-                    plt_bus_ce_n <= '1';
-                    if (r_nw = '0') then
-                        vram_ad <= cpu_d;
-                    end if;
-                end if;
-            else
-                plt_bus_ce_n <= '1';
-                ppu_data_we_n <= '1';
-                rd_n <= '1';
-                wr_n <= '1';
-            end if;
-
         else
-
             ppu_ctrl_we_n    <= '1';
             ppu_mask_we_n    <= '1';
             ppu_status_we_n  <= '1';
@@ -317,15 +283,6 @@ begin
             ppu_scroll_cnt_ce_n  <= '1';
             ppu_addr_we_n        <= '1';
             ppu_addr_cnt_ce_n    <= '1';
-            ppu_data_we_n    <= '1';
-
-            plt_bus_ce_n <= '1';
-
-            ale <= 'Z';
-            rd_n <= 'Z';
-            wr_n <= 'Z';
-            vram_ad <= (others => 'Z');
-            vram_a <= (others => 'Z');
         end if; --if (rst_n = '1' and ce_n = '0') 
 
     end process;
@@ -348,15 +305,67 @@ begin
                 end if;
                 --d_print("clk event");
             end if;
+
+            --vram address access.
+            if (cpu_addr = PPUADDR and ppu_clk_cnt = "00") then
+                if (ppu_addr_cnt(0) = '0') then
+                    --load addr high
+                    ale <= '0';
+                else
+                    --load addr low and output vram/plt bus.
+
+                    --if address is 3fxx, set palette table.
+                    if (ppu_addr(13 downto 8) = "111111") then
+                        plt_addr <= cpu_d(4 downto 0);
+                        ale <= '0';
+                    else
+                        vram_ad <= cpu_d;
+                        vram_a <= ppu_addr(13 downto 8);
+                        ale <= '1';
+                    end if;
+                end if;
+            elsif (cpu_addr = PPUDATA and ppu_clk_cnt = "01") then
+                --for burst write.
+                vram_a <= ppu_addr(13 downto 8);
+                vram_ad <= ppu_addr(7 downto 0);
+                ale <= '1';
+            else
+                ale <= '0';
+            end if;
+
+            if (cpu_addr = PPUDATA and ppu_clk_cnt = "00") then
+                ppu_data_we_n <= '0';
+                rd_n <= not r_nw;
+                wr_n <= r_nw;
+                if (ppu_addr(13 downto 8) = "111111") then
+                    --case palette tbl.
+                    plt_bus_ce_n <= '0';
+                    plt_data <= cpu_d(5 downto 0);
+                else
+                    plt_bus_ce_n <= '1';
+                    if (r_nw = '0') then
+                        vram_ad <= cpu_d;
+                    end if;
+                end if;
+            else
+                plt_bus_ce_n <= '1';
+                ppu_data_we_n <= '1';
+                rd_n <= '1';
+                wr_n <= '1';
+            end if;
+
         else
+            ppu_data_we_n    <= '1';
+            plt_bus_ce_n <= '1';
             ppu_clk_cnt_res_n <= '0';
+
+            rd_n <= 'Z';
+            wr_n <= 'Z';
+            ale <= 'Z';
+            vram_ad <= (others => 'Z');
+            vram_a <= (others => 'Z');
         end if;
     end process;
-
---    vram_p : process (ppu_data)
---    begin
---        ppu_data_we_n <= '1';
---    end process;
 
 end rtl;
 
