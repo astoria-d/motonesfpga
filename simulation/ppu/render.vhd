@@ -24,11 +24,9 @@ entity ppu_render is
             ppu_scroll_y    : in std_logic_vector (7 downto 0);
             r_nw            : in std_logic;
             oam_bus_ce_n    : in std_logic;
-            oam_addr        : in std_logic_vector (7 downto 0);
-            oam_data        : inout std_logic_vector (7 downto 0);
             plt_bus_ce_n    : in std_logic;
-            plt_addr        : in std_logic_vector (4 downto 0);
-            plt_data        : inout std_logic_vector (5 downto 0)
+            oma_plt_addr    : in std_logic_vector (7 downto 0);
+            oma_plt_data    : inout std_logic_vector (7 downto 0)
     );
 end ppu_render;
 
@@ -356,31 +354,31 @@ begin
     clk_p : process (rst_n, clk) 
 
 procedure output_bg_rgb is
-variable plt_addr : integer;
-variable palette_index : integer;
+variable pl_addr : integer;
+variable pl_index : integer;
 begin
     --firs color in the palette is transparent color.
     if ((disp_ptn_h(0) or disp_ptn_l(0)) = '1') then
         if (cur_y(4) = '0') then
-            plt_addr := conv_integer(
+            pl_addr := conv_integer(
                         disp_attr(1 downto 0) & disp_ptn_h(0) & disp_ptn_l(0));
         else
-            plt_addr := conv_integer(
+            pl_addr := conv_integer(
                         disp_attr(5 downto 4) & disp_ptn_h(0) & disp_ptn_l(0));
         end if;
-        --plt_addr := conv_integer("00" & disp_ptn_h(0) & disp_ptn_l(0));
-        palette_index := conv_integer(bg_palatte(plt_addr));
+        --pl_addr := conv_integer("00" & disp_ptn_h(0) & disp_ptn_l(0));
+        pl_index := conv_integer(bg_palatte(pl_addr));
 
         d_print("output_bg_rgb");
-        d_print("plt_addr:" & conv_hex8(plt_addr));
-        d_print("palette_index:" & conv_hex8(palette_index));
+        d_print("pl_addr:" & conv_hex8(pl_addr));
+        d_print("pl_index:" & conv_hex8(pl_index));
 
-        b <= nes_color_palette(palette_index) (11 downto 8);
-        g <= nes_color_palette(palette_index) (7 downto 4);
-        r <= nes_color_palette(palette_index) (3 downto 0);
+        b <= nes_color_palette(pl_index) (11 downto 8);
+        g <= nes_color_palette(pl_index) (7 downto 4);
+        r <= nes_color_palette(pl_index) (3 downto 0);
 
         d_print("rgb:" &
-            conv_hex16(nes_color_palette(palette_index)));
+            conv_hex16(nes_color_palette(pl_index)));
     else
         b <= (others => '1');
         g <= (others => '1');
@@ -530,44 +528,37 @@ end;
         end if;--if (rst_n = '0') then
     end process;
 
-    ------------------- sprite access process -------------------
-    sprite_rw : process (oam_bus_ce_n, r_nw, oam_addr, oam_data)
+    ------------------- sprite and palette access process -------------------
+    sp_pl_rw : process (oam_bus_ce_n, plt_bus_ce_n, r_nw, oma_plt_addr, oma_plt_data)
     begin
         if (oam_bus_ce_n = '0') then
             if (r_nw = '0') then
                 --write
-                sprite_ram(conv_integer(oam_addr)) <= oam_data;
+                sprite_ram(conv_integer(oma_plt_addr)) <= oma_plt_data;
             else
                 --read
-                oam_data <= sprite_ram(conv_integer(oam_addr));
+                oma_plt_data <= sprite_ram(conv_integer(oma_plt_addr));
             end if;
-        else
-            oam_data <= (others => 'Z');
-        end if;
-    end process;
-
-    ------------------- palette access process -------------------
-    plt_rw : process (plt_bus_ce_n, r_nw, plt_addr, plt_data)
-    begin
-        if (plt_bus_ce_n = '0') then
+        elsif (plt_bus_ce_n = '0') then
             if (r_nw = '0') then
                 --write
-                if (plt_addr(4) = '0') then
-                    bg_palatte(conv_integer(plt_addr)) <= "00" & plt_data;
+                if (oma_plt_addr(4) = '0') then
+                    bg_palatte(conv_integer(oma_plt_addr(3 downto 0)))
+                                            <= "00" & oma_plt_data(5 downto 0);
                 else
-                    sprite_palatte(conv_integer(plt_addr(3 downto 0))) <= "00" & plt_data;
+                    sprite_palatte(conv_integer(oma_plt_addr(3 downto 0)))
+                                            <= "00" & oma_plt_data(5 downto 0);
                 end if;
             else
                 --read
-                if (plt_addr(4) = '0') then
-                    plt_data <= bg_palatte(conv_integer(plt_addr))(5 downto 0);
+                if (oma_plt_addr(4) = '0') then
+                    oma_plt_data <= bg_palatte(conv_integer(oma_plt_addr(3 downto 0)));
                 else
-                    plt_data <= 
-                        sprite_palatte(conv_integer(plt_addr(3 downto 0)))(5 downto 0);
+                    oma_plt_data <= sprite_palatte(conv_integer(oma_plt_addr(3 downto 0)));
                 end if;
             end if;
         else
-            plt_data <= (others => 'Z');
+            oma_plt_data <= (others => 'Z');
         end if;
     end process;
 

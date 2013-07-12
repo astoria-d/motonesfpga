@@ -172,9 +172,9 @@ begin
         --name table set.
         --burst write.
         cpu_addr <= "110";
-        cpu_d <= conv_std_logic_vector(16#2800# + 32 + i, 16)(15 downto 8);
+        cpu_d <= conv_std_logic_vector(16#2800# + 32, 16)(15 downto 8);
         wait for cpu_clk_time;
-        cpu_d <= conv_std_logic_vector(16#2800# + 32 + i, 16)(7 downto 0);
+        cpu_d <= conv_std_logic_vector(16#2800# + 32, 16)(7 downto 0);
         wait for cpu_clk_time;
 
         for i in 0 to 250 loop
@@ -212,6 +212,18 @@ begin
             cpu_d <= conv_std_logic_vector((i - 1 ) * 4 + 17, 8);
             wait for cpu_clk_time;
         end loop;
+
+        --oam tbl set.
+        cpu_addr <= "011";
+        cpu_d <= conv_std_logic_vector(0, 8);
+        wait for cpu_clk_time;
+        cpu_addr <= "100";
+        cpu_d <= conv_std_logic_vector(16#05#, 8);
+        wait for cpu_clk_time;
+        cpu_d <= conv_std_logic_vector(16#11#, 8);
+        wait for cpu_clk_time;
+        cpu_d <= conv_std_logic_vector(16#30#, 8);
+        wait for cpu_clk_time;
 
         --enable show bg.
         r_nw <= '0';

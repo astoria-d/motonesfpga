@@ -46,11 +46,9 @@ component ppu_render
             ppu_scroll_y    : in std_logic_vector (7 downto 0);
             r_nw            : in std_logic;
             oam_bus_ce_n    : in std_logic;
-            oam_addr        : in std_logic_vector (7 downto 0);
-            oam_data        : inout std_logic_vector (7 downto 0);
             plt_bus_ce_n    : in std_logic;
-            plt_addr        : in std_logic_vector (4 downto 0);
-            plt_data        : inout std_logic_vector (5 downto 0)
+            oma_plt_addr    : in std_logic_vector (7 downto 0);
+            oma_plt_data    : inout std_logic_vector (7 downto 0)
     );
 end component;
 
@@ -133,7 +131,7 @@ signal ppu_clk_cnt          : std_logic_vector(1 downto 0);
 signal ppu_ctrl_we_n    : std_logic;
 signal ppu_mask_we_n    : std_logic;
 signal ppu_status_we_n  : std_logic;
-signal oam_bus_ce_n     : std_logic;
+signal oam_addr_ce_n    : std_logic;
 signal oam_addr_we_n    : std_logic;
 signal oam_data_we_n    : std_logic;
 signal ppu_scroll_x_we_n    : std_logic;
@@ -156,9 +154,11 @@ signal ppu_addr_in      : std_logic_vector (13 downto 0);
 signal ppu_addr_cnt     : std_logic_vector (0 downto 0);
 signal ppu_data         : std_logic_vector (dsize - 1 downto 0);
 
+signal oam_bus_ce_n     : std_logic;
 signal plt_bus_ce_n     : std_logic;
-signal plt_addr         : std_logic_vector (4 downto 0);
-signal plt_data         : std_logic_vector (5 downto 0);
+
+signal oma_plt_addr     : std_logic_vector (7 downto 0);
+signal oma_plt_data     : std_logic_vector (7 downto 0);
 
 begin
 
@@ -166,8 +166,8 @@ begin
             rd_n, wr_n, ale, vram_ad, vram_a,
             pos_x, pos_y, nes_r, nes_g, nes_b,
             ppu_ctrl, ppu_mask, ppu_status, ppu_scroll_x, ppu_scroll_y,
-            r_nw, oam_bus_ce_n, oam_addr, oam_data,
-            plt_bus_ce_n, plt_addr, plt_data);
+            r_nw, oam_bus_ce_n, plt_bus_ce_n, 
+            oma_plt_addr, oma_plt_data);
 
     vga_inst : vga_ctl port map (clk, vga_clk, rst_n, 
             pos_x, pos_y, nes_r, nes_g, nes_b,
@@ -188,8 +188,8 @@ begin
     ppu_status_inst : d_flip_flop generic map(dsize)
             port map (clk_n, rst_n, '1', ppu_status_we_n, cpu_d, ppu_status);
 
-    oma_addr_inst : d_flip_flop generic map(dsize)
-            port map (clk_n, rst_n, '1', oam_addr_we_n, cpu_d, oam_addr);
+    oma_addr_inst : counter_register generic map(dsize, 1)
+            port map (clk_n, rst_n, oam_addr_we_n, oam_addr_ce_n, cpu_d, oam_addr);
     oma_data_inst : d_flip_flop generic map(dsize)
             port map (clk_n, rst_n, '1', oam_data_we_n, cpu_d, oam_data);
 
@@ -275,7 +275,6 @@ begin
             ppu_ctrl_we_n    <= '1';
             ppu_mask_we_n    <= '1';
             ppu_status_we_n  <= '1';
-            oam_bus_ce_n     <= '1';
             oam_addr_we_n    <= '1';
             oam_data_we_n    <= '1';
             ppu_scroll_x_we_n    <= '1';
@@ -307,6 +306,18 @@ begin
                 --d_print("clk event");
             end if;
 
+            --oam data set
+            if (cpu_addr = OAMDATA and ppu_clk_cnt = "00") then
+                oam_bus_ce_n <= '0';
+                oma_plt_addr <= oam_addr;
+                oma_plt_data <= cpu_d;
+                --address increment for burst write. 
+                oam_addr_ce_n <= '0';
+            else
+                oam_addr_ce_n <= '1';
+                oam_bus_ce_n <= '1';
+            end if;
+
             --vram address access.
             if (cpu_addr = PPUADDR and ppu_clk_cnt = "00") then
                 if (ppu_addr_cnt(0) = '0') then
@@ -317,7 +328,7 @@ begin
 
                     --if address is 3fxx, set palette table.
                     if (ppu_addr(13 downto 8) = "111111") then
-                        plt_addr <= cpu_d(4 downto 0);
+                        oma_plt_addr <= cpu_d;
                         ale <= '0';
                     else
                         vram_ad <= cpu_d;
@@ -328,7 +339,7 @@ begin
             elsif (cpu_addr = PPUDATA and ppu_clk_cnt = "01") then
                 --for burst write.
                 if (ppu_addr(13 downto 8) = "111111") then
-                    plt_addr <= ppu_addr(4 downto 0);
+                    oma_plt_addr <= ppu_addr(7 downto 0);
                     ale <= '0';
                 else
                     vram_a <= ppu_addr(13 downto 8);
@@ -341,13 +352,15 @@ begin
 
             if (cpu_addr = PPUDATA and ppu_clk_cnt = "00") then
                 ppu_data_we_n <= '0';
-                rd_n <= not r_nw;
-                wr_n <= r_nw;
                 if (ppu_addr(13 downto 8) = "111111") then
                     --case palette tbl.
                     plt_bus_ce_n <= '0';
-                    plt_data <= cpu_d(5 downto 0);
+                    oma_plt_data <= cpu_d;
+                    rd_n <= '1';
+                    wr_n <= '1';
                 else
+                    rd_n <= not r_nw;
+                    wr_n <= r_nw;
                     plt_bus_ce_n <= '1';
                     if (r_nw = '0') then
                         vram_ad <= cpu_d;
@@ -364,6 +377,8 @@ begin
             ppu_data_we_n    <= '1';
             plt_bus_ce_n <= '1';
             ppu_clk_cnt_res_n <= '0';
+            oam_bus_ce_n     <= '1';
+            oam_addr_ce_n <= '1';
 
             rd_n <= 'Z';
             wr_n <= 'Z';
