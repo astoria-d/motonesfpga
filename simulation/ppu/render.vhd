@@ -247,7 +247,6 @@ signal next_x           : std_logic_vector(X_SIZE - 1 downto 0);
 signal next_y           : std_logic_vector(X_SIZE - 1 downto 0);
 
 signal nt_we_n          : std_logic;
-signal nt_val           : std_logic_vector (dsize - 1 downto 0);
 signal disp_nt          : std_logic_vector (dsize - 1 downto 0);
 
 signal attr_ce_n        : std_logic;
@@ -308,9 +307,7 @@ begin
                     cnt_y_en_n, (others => '0'), cur_y);
 
     nt_inst : d_flip_flop generic map(dsize)
-            port map (clk_n, rst_n, '1', nt_we_n, vram_ad, nt_val);
-    disp_nt_inst : d_flip_flop generic map(dsize)
-            port map (clk_n, rst_n, '1', nt_we_n, nt_val, disp_nt);
+            port map (clk_n, rst_n, '1', nt_we_n, vram_ad, disp_nt);
 
     attr_in <= vram_ad;
     at_inst : d_flip_flop generic map(dsize)
@@ -433,12 +430,6 @@ end;
                 if (ppu_mask(PPUSBG) = '1') then
                     d_print("*");
 
-                    --visible area and last pixel for the next first pixel.
-                    if (cur_x <= conv_std_logic_vector(HSCAN, X_SIZE) or 
-                            (cur_x > conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE) and
-                             cur_x < conv_std_logic_vector(HSCAN_NEXT_EXTRA, X_SIZE) ))
-                        then
-
                     ----fetch next tile byte.
                     if (cur_x (2 downto 0) = "001" ) then
                         --vram addr is incremented every 8 cycle.
@@ -480,34 +471,39 @@ end;
                         attr_ce_n <= '1';
                     end if;
                     
+                    --visible area bg image
+                    if ((cur_x <= conv_std_logic_vector(HSCAN, X_SIZE)) or
+                        cur_x > conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE)) then
 
-                    ----fetch pattern table low byte.
-                    if (cur_x (2 downto 0) = "101" ) then
-                        --vram addr is incremented every 8 cycle.
-                        vram_addr <= "0" & ppu_ctrl(PPUBPA) & 
-                                        nt_val(dsize - 1 downto 0) 
-                                            & "0"  & next_y(2  downto 0);
-                    end if;--if (cur_x (2 downto 0) = "100" ) then
-                    if (cur_x (2 downto 0) = "110" ) then
-                        ptn_l_we_n <= '0';
+                        ----fetch pattern table low byte.
+                        if (cur_x (2 downto 0) = "101" ) then
+                            --vram addr is incremented every 8 cycle.
+                            vram_addr <= "0" & ppu_ctrl(PPUBPA) & 
+                                            disp_nt(dsize - 1 downto 0) 
+                                                & "0"  & next_y(2  downto 0);
+                        end if;--if (cur_x (2 downto 0) = "100" ) then
+                        if (cur_x (2 downto 0) = "110" ) then
+                            ptn_l_we_n <= '0';
+                        else
+                            ptn_l_we_n <= '1';
+                        end if;
+
+                        ----fetch pattern table high byte.
+                        if (cur_x (2 downto 0) = "111" ) then
+                            --vram addr is incremented every 8 cycle.
+                            vram_addr <= "0" & ppu_ctrl(PPUBPA) & 
+                                            disp_nt(dsize - 1 downto 0) 
+                                                & "0"  & next_y(2  downto 0) + 8;
+                        end if; --if (cur_x (2 downto 0) = "110" ) then
+                        if (cur_x (2 downto 0) = "000" and cur_x /= "000000000") then
+                            ptn_h_we_n <= '0';
+                        else
+                            ptn_h_we_n <= '1';
+                        end if;--if (cur_x (2 downto 0) = "001" ) then
                     else
-                        ptn_l_we_n <= '1';
-                    end if;
+                        --outside area sprite load.
 
-                    ----fetch pattern table high byte.
-                    if (cur_x (2 downto 0) = "111" ) then
-                        --vram addr is incremented every 8 cycle.
-                        vram_addr <= "0" & ppu_ctrl(PPUBPA) & 
-                                        nt_val(dsize - 1 downto 0) 
-                                            & "0"  & next_y(2  downto 0) + 8;
-                    end if; --if (cur_x (2 downto 0) = "110" ) then
-                    if (cur_x (2 downto 0) = "000") then
-                        ptn_h_we_n <= '0';
-                    else
-                        ptn_h_we_n <= '1';
-                    end if;--if (cur_x (2 downto 0) = "001" ) then
-
-                    end if; --if (cur_x <= conv_std_logic_vector(HSCAN, X_SIZE)
+                    end if; --if (cur_x <= conv_std_logic_vector(HSCAN, X_SIZE)) and
 
         d_print("cur_x: " & conv_hex16(conv_integer(cur_x)));
         d_print("cur_y: " & conv_hex16(conv_integer(cur_y)));
