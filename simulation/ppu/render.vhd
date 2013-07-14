@@ -25,8 +25,8 @@ entity ppu_render is
             r_nw            : in std_logic;
             oam_bus_ce_n    : in std_logic;
             plt_bus_ce_n    : in std_logic;
-            oma_plt_addr    : in std_logic_vector (7 downto 0);
-            oma_plt_data    : inout std_logic_vector (7 downto 0)
+            oam_plt_addr    : in std_logic_vector (7 downto 0);
+            oam_plt_data    : inout std_logic_vector (7 downto 0)
     );
 end ppu_render;
 
@@ -83,6 +83,14 @@ component tri_state_buffer
             d       : in std_logic_vector (dsize - 1 downto 0);
             q       : out std_logic_vector (dsize - 1 downto 0)
         );
+end component;
+
+component ram
+    generic (abus_size : integer := 16; dbus_size : integer := 8);
+    port (  ce_n, oe_n, we_n  : in std_logic;   --select pin active low.
+            addr              : in std_logic_vector (abus_size - 1 downto 0);
+            d_io              : inout std_logic_vector (dbus_size - 1 downto 0)
+    );
 end component;
 
 procedure d_print(msg : string) is
@@ -149,10 +157,6 @@ constant PPUSSP    : integer := 4;  --show sprie
 constant PPUIR     : integer := 5;  --intensify red
 constant PPUIG     : integer := 6;  --intensify green
 constant PPUIB     : integer := 7;  --intensify blue
-
-subtype sprite_data_t   is std_logic_vector (dsize -1 downto 0);
-type sprite_array       is array (0 to 255) of sprite_data_t;
-signal sprite_ram       : sprite_array := (others => (others => '0'));
 
 subtype palette_data_t  is std_logic_vector (dsize -1 downto 0);
 type palette_array      is array (0 to 15) of palette_data_t;
@@ -272,6 +276,50 @@ signal disp_ptn_h       : std_logic_vector (dsize * 2 - 1 downto 0);
 
 signal vram_addr        : std_logic_vector (asize - 1 downto 0);
 
+
+----------sprite registers.
+signal r_n              : std_logic;
+signal oam_cpu_io_n     : std_logic;
+signal oam_ram_ce_n     : std_logic;
+signal oam_addr         : std_logic_vector (dsize - 1 downto 0);
+signal oam_data         : std_logic_vector (dsize - 1 downto 0);
+
+signal x_pos_cnt0       : std_logic_vector (dsize - 1 downto 0);
+signal x_pos_cnt1       : std_logic_vector (dsize - 1 downto 0);
+signal x_pos_cnt2       : std_logic_vector (dsize - 1 downto 0);
+signal x_pos_cnt3       : std_logic_vector (dsize - 1 downto 0);
+signal x_pos_cnt4       : std_logic_vector (dsize - 1 downto 0);
+signal x_pos_cnt5       : std_logic_vector (dsize - 1 downto 0);
+signal x_pos_cnt6       : std_logic_vector (dsize - 1 downto 0);
+signal x_pos_cnt7       : std_logic_vector (dsize - 1 downto 0);
+
+signal spr_attr0        : std_logic_vector (dsize - 1 downto 0);
+signal spr_attr1        : std_logic_vector (dsize - 1 downto 0);
+signal spr_attr2        : std_logic_vector (dsize - 1 downto 0);
+signal spr_attr3        : std_logic_vector (dsize - 1 downto 0);
+signal spr_attr4        : std_logic_vector (dsize - 1 downto 0);
+signal spr_attr5        : std_logic_vector (dsize - 1 downto 0);
+signal spr_attr6        : std_logic_vector (dsize - 1 downto 0);
+signal spr_attr7        : std_logic_vector (dsize - 1 downto 0);
+
+signal spr_pnt_l0        : std_logic_vector (dsize - 1 downto 0);
+signal spr_pnt_l1        : std_logic_vector (dsize - 1 downto 0);
+signal spr_pnt_l2        : std_logic_vector (dsize - 1 downto 0);
+signal spr_pnt_l3        : std_logic_vector (dsize - 1 downto 0);
+signal spr_pnt_l4        : std_logic_vector (dsize - 1 downto 0);
+signal spr_pnt_l5        : std_logic_vector (dsize - 1 downto 0);
+signal spr_pnt_l6        : std_logic_vector (dsize - 1 downto 0);
+signal spr_pnt_l7        : std_logic_vector (dsize - 1 downto 0);
+
+signal spr_pnt_h0        : std_logic_vector (dsize - 1 downto 0);
+signal spr_pnt_h1        : std_logic_vector (dsize - 1 downto 0);
+signal spr_pnt_h2        : std_logic_vector (dsize - 1 downto 0);
+signal spr_pnt_h3        : std_logic_vector (dsize - 1 downto 0);
+signal spr_pnt_h4        : std_logic_vector (dsize - 1 downto 0);
+signal spr_pnt_h5        : std_logic_vector (dsize - 1 downto 0);
+signal spr_pnt_h6        : std_logic_vector (dsize - 1 downto 0);
+signal spr_pnt_h7        : std_logic_vector (dsize - 1 downto 0);
+
 begin
 
     rst <= not rst_n;
@@ -293,7 +341,7 @@ begin
                     when cur_x <  conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE) else
               cur_x + "011000000";
     next_y <= cur_y 
-                    when cur_x <  conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE) else
+                    when cur_x <=  conv_std_logic_vector(HSCAN, X_SIZE) else
               "000000000" 
                     when cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE) else
               cur_y + "000000001";
@@ -347,6 +395,23 @@ begin
 
     pos_x <= cur_x;
     pos_y <= cur_y;
+
+    r_n <= not r_nw;
+    oam_ram_ce_n <= clk when oam_bus_ce_n = '0' and r_nw = '0' else 
+                    '0' when oam_bus_ce_n = '0' and r_nw = '1' else
+                    '1';
+
+    oam_cpu_io_n <= '0' when oam_bus_ce_n = '0' and r_nw = '0' else 
+                    '1';
+
+    oam_cpu_a_buf : tri_state_buffer generic map (dsize)
+            port map (oam_bus_ce_n, oam_plt_addr, oam_addr);
+    oam_cpu_d_buf_w : tri_state_buffer generic map (dsize)
+            port map (r_nw, oam_plt_data, oam_data);
+    oam_cpu_d_buf_r : tri_state_buffer generic map (dsize)
+            port map (r_n, oam_data, oam_plt_data);
+    primary_oam_inst : ram generic map (dsize, dsize)
+            port map (oam_ram_ce_n, r_n, r_nw, oam_addr, oam_data);
 
     clk_p : process (rst_n, clk) 
 
@@ -429,6 +494,8 @@ end;
                 --fetch bg pattern and display.
                 if (ppu_mask(PPUSBG) = '1') then
                     d_print("*");
+                    d_print("cur_x: " & conv_hex16(conv_integer(cur_x)));
+                    d_print("cur_y: " & conv_hex16(conv_integer(cur_y)));
 
                     ----fetch next tile byte.
                     if (cur_x (2 downto 0) = "001" ) then
@@ -500,13 +567,18 @@ end;
                         else
                             ptn_h_we_n <= '1';
                         end if;--if (cur_x (2 downto 0) = "001" ) then
-                    else
-                        --outside area sprite load.
-
                     end if; --if (cur_x <= conv_std_logic_vector(HSCAN, X_SIZE)) and
 
-        d_print("cur_x: " & conv_hex16(conv_integer(cur_x)));
-        d_print("cur_y: " & conv_hex16(conv_integer(cur_y)));
+                    --secondary oam clear
+                    if (cur_x <= conv_std_logic_vector(64, X_SIZE)) then
+
+                    --sprite evaluation and secondary oam copy.
+                    elsif (cur_x > conv_std_logic_vector(64, X_SIZE) and 
+                            cur_x <= conv_std_logic_vector(256, X_SIZE)) then
+                    --sprite pattern fetch
+                    elsif (cur_x > conv_std_logic_vector(256, X_SIZE) and 
+                            cur_x <= conv_std_logic_vector(320, X_SIZE)) then
+                    end if;
 
                     --output visible area only.
                     if ((cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
@@ -524,37 +596,43 @@ end;
         end if;--if (rst_n = '0') then
     end process;
 
-    ------------------- sprite and palette access process -------------------
-    sp_pl_rw : process (oam_bus_ce_n, plt_bus_ce_n, r_nw, oma_plt_addr, oma_plt_data)
+--    ------------------- sprite and palette access process -------------------
+--    sp_pl_r : process (plt_bus_ce_n, r_nw, oam_plt_addr, oam_plt_data)
+--    begin
+--        if (oam_bus_ce_n = '0') then
+--            if (r_nw = '1') then
+--                --read
+--                oam_plt_data <= oam_data;
+--            else
+--                oam_plt_data <= (others => 'Z');
+--            end if;
+--        elsif (plt_bus_ce_n = '0') then
+--            if (r_nw = '1') then
+--                --read
+--                if (oam_plt_addr(4) = '0') then
+--                    oam_plt_data <= bg_palatte(conv_integer(oam_plt_addr(3 downto 0)));
+--                else
+--                    oam_plt_data <= sprite_palatte(conv_integer(oam_plt_addr(3 downto 0)));
+--                end if;
+--            else
+--                oam_plt_data <= (others => 'Z');
+--            end if;
+--        else
+--            oam_plt_data <= (others => 'Z');
+--        end if;
+--    end process;
+
+    pl_w : process (plt_bus_ce_n, r_nw, oam_plt_addr, oam_plt_data)
     begin
-        if (oam_bus_ce_n = '0') then
-            if (r_nw = '0') then
-                --write
-                sprite_ram(conv_integer(oma_plt_addr)) <= oma_plt_data;
+        if (plt_bus_ce_n = '0' and r_nw = '0') then
+            --write
+            if (oam_plt_addr(4) = '0') then
+                bg_palatte(conv_integer(oam_plt_addr(3 downto 0)))
+                                        <= "00" & oam_plt_data(5 downto 0);
             else
-                --read
-                oma_plt_data <= sprite_ram(conv_integer(oma_plt_addr));
+                sprite_palatte(conv_integer(oam_plt_addr(3 downto 0)))
+                                        <= "00" & oam_plt_data(5 downto 0);
             end if;
-        elsif (plt_bus_ce_n = '0') then
-            if (r_nw = '0') then
-                --write
-                if (oma_plt_addr(4) = '0') then
-                    bg_palatte(conv_integer(oma_plt_addr(3 downto 0)))
-                                            <= "00" & oma_plt_data(5 downto 0);
-                else
-                    sprite_palatte(conv_integer(oma_plt_addr(3 downto 0)))
-                                            <= "00" & oma_plt_data(5 downto 0);
-                end if;
-            else
-                --read
-                if (oma_plt_addr(4) = '0') then
-                    oma_plt_data <= bg_palatte(conv_integer(oma_plt_addr(3 downto 0)));
-                else
-                    oma_plt_data <= sprite_palatte(conv_integer(oma_plt_addr(3 downto 0)));
-                end if;
-            end if;
-        else
-            oma_plt_data <= (others => 'Z');
         end if;
     end process;
 

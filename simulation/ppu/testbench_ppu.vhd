@@ -177,17 +177,17 @@ begin
         cpu_d <= conv_std_logic_vector(16#2800# + 32, 16)(7 downto 0);
         wait for cpu_clk_time;
 
-        for i in 0 to 250 loop
+        for i in 0 to 5 loop
             cpu_addr <= "111";
             cpu_d <= conv_std_logic_vector(i + 32, 8);
             wait for cpu_clk_time;
         end loop;
 
-        for i in 251 to 300 loop
-            cpu_addr <= "111";
-            cpu_d <= conv_std_logic_vector(16#a5#, 8);
-            wait for cpu_clk_time;
-        end loop;
+--        for i in 251 to 300 loop
+--            cpu_addr <= "111";
+--            cpu_d <= conv_std_logic_vector(16#a5#, 8);
+--            wait for cpu_clk_time;
+--        end loop;
 
         for i in 0 to 13 loop
             --attr tbl set.
@@ -214,16 +214,35 @@ begin
         end loop;
 
         --oam tbl set.
+        r_nw <= '0';
         cpu_addr <= "011";
         cpu_d <= conv_std_logic_vector(0, 8);
         wait for cpu_clk_time;
         cpu_addr <= "100";
-        cpu_d <= conv_std_logic_vector(16#05#, 8);
+        --x
+        cpu_d <= conv_std_logic_vector(25, 8);
         wait for cpu_clk_time;
+        --attr
         cpu_d <= conv_std_logic_vector(16#11#, 8);
         wait for cpu_clk_time;
-        cpu_d <= conv_std_logic_vector(16#30#, 8);
+        --tile id
+        cpu_d <= conv_std_logic_vector(30, 8);
         wait for cpu_clk_time;
+        --y
+        cpu_d <= conv_std_logic_vector(15, 8);
+        wait for cpu_clk_time;
+
+        --test read
+        r_nw <= '0';
+        cpu_addr <= "011";
+        cpu_d <= conv_std_logic_vector(0, 8);
+        wait for cpu_clk_time;
+        for i in 0 to 5 loop
+            cpu_d <= (others => 'Z');
+            cpu_addr <= "100";
+            r_nw <= '1';
+            wait for cpu_clk_time;
+        end loop;
 
         --enable show bg.
         r_nw <= '0';

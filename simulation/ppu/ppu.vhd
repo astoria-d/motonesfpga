@@ -47,8 +47,8 @@ component ppu_render
             r_nw            : in std_logic;
             oam_bus_ce_n    : in std_logic;
             plt_bus_ce_n    : in std_logic;
-            oma_plt_addr    : in std_logic_vector (7 downto 0);
-            oma_plt_data    : inout std_logic_vector (7 downto 0)
+            oam_plt_addr    : in std_logic_vector (7 downto 0);
+            oam_plt_data    : inout std_logic_vector (7 downto 0)
     );
 end component;
 
@@ -157,8 +157,8 @@ signal ppu_data         : std_logic_vector (dsize - 1 downto 0);
 signal oam_bus_ce_n     : std_logic;
 signal plt_bus_ce_n     : std_logic;
 
-signal oma_plt_addr     : std_logic_vector (7 downto 0);
-signal oma_plt_data     : std_logic_vector (7 downto 0);
+signal oam_plt_addr     : std_logic_vector (7 downto 0);
+signal oam_plt_data     : std_logic_vector (7 downto 0);
 
 begin
 
@@ -167,7 +167,7 @@ begin
             pos_x, pos_y, nes_r, nes_g, nes_b,
             ppu_ctrl, ppu_mask, ppu_status, ppu_scroll_x, ppu_scroll_y,
             r_nw, oam_bus_ce_n, plt_bus_ce_n, 
-            oma_plt_addr, oma_plt_data);
+            oam_plt_addr, oam_plt_data);
 
     vga_inst : vga_ctl port map (clk, vga_clk, rst_n, 
             pos_x, pos_y, nes_r, nes_g, nes_b,
@@ -287,11 +287,11 @@ begin
     end process;
 
     --cpu and ppu clock timing adjustment...
-    clk_cnt_set_p : process (rst_n, ce_n, r_nw, cpu_addr, cpu_d, clk)
+    clk_cnt_set_p : process (rst_n, ce_n, r_nw, cpu_addr, cpu_d, clk, oam_plt_data)
     begin
         if (rst_n = '1' and ce_n = '0') then
             --set counter=0 on register write.   
-            if (ce_n'event or r_nw'event or cpu_addr'event or cpu_d'event) then
+            if (ce_n'event or r_nw'event or cpu_addr'event or (cpu_d'event and r_nw = '0')) then
                 ppu_clk_cnt_res_n <= '0';
                 --d_print("write event");
             end if;
@@ -309,11 +309,17 @@ begin
             --oam data set
             if (cpu_addr = OAMDATA and ppu_clk_cnt = "00") then
                 oam_bus_ce_n <= '0';
-                oma_plt_addr <= oam_addr;
-                oma_plt_data <= cpu_d;
+                oam_plt_addr <= oam_addr;
+                if (r_nw = '1') then
+                    oam_plt_data <= (others => 'Z');
+                    cpu_d <= oam_plt_data;
+                else
+                    oam_plt_data <= cpu_d;
+                end if;
                 --address increment for burst write. 
                 oam_addr_ce_n <= '0';
             else
+                cpu_d <= (others => 'Z');
                 oam_addr_ce_n <= '1';
                 oam_bus_ce_n <= '1';
             end if;
@@ -328,7 +334,7 @@ begin
 
                     --if address is 3fxx, set palette table.
                     if (ppu_addr(13 downto 8) = "111111") then
-                        oma_plt_addr <= cpu_d;
+                        oam_plt_addr <= cpu_d;
                         ale <= '0';
                     else
                         vram_ad <= cpu_d;
@@ -339,7 +345,7 @@ begin
             elsif (cpu_addr = PPUDATA and ppu_clk_cnt = "01") then
                 --for burst write.
                 if (ppu_addr(13 downto 8) = "111111") then
-                    oma_plt_addr <= ppu_addr(7 downto 0);
+                    oam_plt_addr <= ppu_addr(7 downto 0);
                     ale <= '0';
                 else
                     vram_a <= ppu_addr(13 downto 8);
@@ -355,7 +361,7 @@ begin
                 if (ppu_addr(13 downto 8) = "111111") then
                     --case palette tbl.
                     plt_bus_ce_n <= '0';
-                    oma_plt_data <= cpu_d;
+                    oam_plt_data <= cpu_d;
                     rd_n <= '1';
                     wr_n <= '1';
                 else
@@ -383,8 +389,10 @@ begin
             rd_n <= 'Z';
             wr_n <= 'Z';
             ale <= 'Z';
+            oam_plt_data <= (others => 'Z');
             vram_ad <= (others => 'Z');
             vram_a <= (others => 'Z');
+            cpu_d <= (others => 'Z');
         end if;
     end process;
 
