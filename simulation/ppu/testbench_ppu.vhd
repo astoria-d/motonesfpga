@@ -248,9 +248,21 @@ begin
         cpu_addr <= "011";
         cpu_d <= conv_std_logic_vector(0, 8);
         wait for cpu_clk_time;
+        --initialize with 0xff
+        for i in 0 to 256 loop
+            cpu_addr <= "100";
+            cpu_d <= (others => '1');
+            wait for cpu_clk_time;
+        end loop;
+
+        r_nw <= '0';
+        cpu_addr <= "011";
+        cpu_d <= conv_std_logic_vector(0, 8);
+        wait for cpu_clk_time;
+
+        --y
         cpu_addr <= "100";
-        --x
-        cpu_d <= conv_std_logic_vector(25, 8);
+        cpu_d <= conv_std_logic_vector(1, 8);
         wait for cpu_clk_time;
         --attr
         cpu_d <= conv_std_logic_vector(16#11#, 8);
@@ -258,7 +270,7 @@ begin
         --tile id
         cpu_d <= conv_std_logic_vector(30, 8);
         wait for cpu_clk_time;
-        --y
+        --x
         cpu_d <= conv_std_logic_vector(15, 8);
         wait for cpu_clk_time;
 
