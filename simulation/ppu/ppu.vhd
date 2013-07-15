@@ -287,7 +287,7 @@ begin
     end process;
 
     --cpu and ppu clock timing adjustment...
-    clk_cnt_set_p : process (rst_n, ce_n, r_nw, cpu_addr, cpu_d, clk, oam_plt_data)
+    clk_cnt_set_p : process (rst_n, ce_n, r_nw, cpu_addr, cpu_d, clk, oam_plt_data, vram_ad)
     begin
         if (rst_n = '1' and ce_n = '0') then
             --set counter=0 on register write.   
@@ -361,7 +361,12 @@ begin
                 if (ppu_addr(13 downto 8) = "111111") then
                     --case palette tbl.
                     plt_bus_ce_n <= '0';
-                    oam_plt_data <= cpu_d;
+                    if (r_nw = '0') then
+                        oam_plt_data <= cpu_d;
+                    else
+                        oam_plt_data <= (others => 'Z');
+                        cpu_d <= oam_plt_data;
+                    end if;
                     rd_n <= '1';
                     wr_n <= '1';
                 else
@@ -370,6 +375,9 @@ begin
                     plt_bus_ce_n <= '1';
                     if (r_nw = '0') then
                         vram_ad <= cpu_d;
+                    else
+                        vram_ad <= (others => 'Z');
+                        cpu_d <= vram_ad;
                     end if;
                 end if;
             else

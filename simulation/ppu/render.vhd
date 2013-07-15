@@ -158,11 +158,6 @@ constant PPUIR     : integer := 5;  --intensify red
 constant PPUIG     : integer := 6;  --intensify green
 constant PPUIB     : integer := 7;  --intensify blue
 
-subtype palette_data_t  is std_logic_vector (dsize -1 downto 0);
-type palette_array      is array (0 to 15) of palette_data_t;
-signal bg_palatte       : palette_array := (others => (others => '0'));
-signal sprite_palatte   : palette_array := (others => (others => '0'));
-
 subtype nes_color_data  is std_logic_vector (11 downto 0);
 type nes_color_array    is array (0 to 63) of nes_color_data;
 --ref: http://hlc6502.web.fc2.com/NesPal2.htm
@@ -277,13 +272,20 @@ signal disp_ptn_h       : std_logic_vector (dsize * 2 - 1 downto 0);
 signal vram_addr        : std_logic_vector (asize - 1 downto 0);
 
 
-----------sprite registers.
 signal r_n              : std_logic;
-signal oam_cpu_io_n     : std_logic;
+
+signal plt_ram_ce_n     : std_logic;
+signal plt_r_n          : std_logic;
+signal plt_w_n          : std_logic;
+
+signal plt_addr         : std_logic_vector (4 downto 0);
+signal plt_data         : std_logic_vector (dsize - 1 downto 0);
+
 signal oam_ram_ce_n     : std_logic;
 signal oam_addr         : std_logic_vector (dsize - 1 downto 0);
 signal oam_data         : std_logic_vector (dsize - 1 downto 0);
 
+----------sprite registers.
 signal x_pos_cnt0       : std_logic_vector (dsize - 1 downto 0);
 signal x_pos_cnt1       : std_logic_vector (dsize - 1 downto 0);
 signal x_pos_cnt2       : std_logic_vector (dsize - 1 downto 0);
@@ -397,18 +399,43 @@ begin
     pos_y <= cur_y;
 
     r_n <= not r_nw;
+
+    ---palette ram
+    plt_ram_ce_n <= clk when plt_bus_ce_n = '0' and r_nw = '0' else 
+                    '0' when plt_bus_ce_n = '0' and r_nw = '1' else
+                    '0' when ppu_mask(PPUSBG) = '1' and 
+                            (cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) and 
+                            (cur_y < conv_std_logic_vector(VSCAN, X_SIZE)) else
+                    '1';
+
+    plt_addr <= oam_plt_addr(4 downto 0) when plt_bus_ce_n = '0' else
+                "0" & disp_attr(1 downto 0) & disp_ptn_h(0) & disp_ptn_l(0) 
+                                when ppu_mask(PPUSBG) = '1' else
+                (others => 'Z');
+
+    plt_r_n <= not r_nw when plt_bus_ce_n = '0' else
+                '0' when ppu_mask(PPUSBG) = '1' else
+                '1';
+    plt_w_n <= r_nw when plt_bus_ce_n = '0' else
+                '1';
+
+    plt_d_buf_w : tri_state_buffer generic map (dsize)
+            port map (r_nw, oam_plt_data, plt_data);
+    plt_d_buf_r : tri_state_buffer generic map (dsize)
+            port map (r_n, plt_data, oam_plt_data);
+    palette_inst : ram generic map (5, dsize)
+            port map (plt_ram_ce_n, plt_r_n, plt_w_n, plt_addr, plt_data);
+
+    ---oam ram
     oam_ram_ce_n <= clk when oam_bus_ce_n = '0' and r_nw = '0' else 
                     '0' when oam_bus_ce_n = '0' and r_nw = '1' else
                     '1';
 
-    oam_cpu_io_n <= '0' when oam_bus_ce_n = '0' and r_nw = '0' else 
-                    '1';
-
-    oam_cpu_a_buf : tri_state_buffer generic map (dsize)
+    oam_a_buf : tri_state_buffer generic map (dsize)
             port map (oam_bus_ce_n, oam_plt_addr, oam_addr);
-    oam_cpu_d_buf_w : tri_state_buffer generic map (dsize)
+    oam_d_buf_w : tri_state_buffer generic map (dsize)
             port map (r_nw, oam_plt_data, oam_data);
-    oam_cpu_d_buf_r : tri_state_buffer generic map (dsize)
+    oam_d_buf_r : tri_state_buffer generic map (dsize)
             port map (r_n, oam_data, oam_plt_data);
     primary_oam_inst : ram generic map (dsize, dsize)
             port map (oam_ram_ce_n, r_n, r_nw, oam_addr, oam_data);
@@ -421,15 +448,18 @@ variable pl_index : integer;
 begin
     --firs color in the palette is transparent color.
     if ((disp_ptn_h(0) or disp_ptn_l(0)) = '1') then
-        if (cur_y(4) = '0') then
-            pl_addr := conv_integer(
-                        disp_attr(1 downto 0) & disp_ptn_h(0) & disp_ptn_l(0));
-        else
-            pl_addr := conv_integer(
-                        disp_attr(5 downto 4) & disp_ptn_h(0) & disp_ptn_l(0));
-        end if;
-        --pl_addr := conv_integer("00" & disp_ptn_h(0) & disp_ptn_l(0));
-        pl_index := conv_integer(bg_palatte(pl_addr));
+--        if (cur_y(4) = '0') then
+--            pl_addr := conv_integer(
+--                        disp_attr(1 downto 0) & disp_ptn_h(0) & disp_ptn_l(0));
+--            --plt_addr <= "0" & disp_attr(1 downto 0) & disp_ptn_h(0) & disp_ptn_l(0);
+--        else
+--            pl_addr := conv_integer(
+--                        disp_attr(5 downto 4) & disp_ptn_h(0) & disp_ptn_l(0));
+--            --plt_addr <= "1" & disp_attr(1 downto 0) & disp_ptn_h(0) & disp_ptn_l(0);
+--        end if;
+--        --pl_index := conv_integer(bg_palatte(pl_addr));
+        pl_index := conv_integer(plt_data(5 downto 0));
+
 
         d_print("output_bg_rgb");
         d_print("pl_addr:" & conv_hex8(pl_addr));
@@ -594,46 +624,6 @@ end;
                 end if;--if (ppu_mask(PPUSBG) = '1') then
             end if; --if (clk'event and clk = '1') then
         end if;--if (rst_n = '0') then
-    end process;
-
---    ------------------- sprite and palette access process -------------------
---    sp_pl_r : process (plt_bus_ce_n, r_nw, oam_plt_addr, oam_plt_data)
---    begin
---        if (oam_bus_ce_n = '0') then
---            if (r_nw = '1') then
---                --read
---                oam_plt_data <= oam_data;
---            else
---                oam_plt_data <= (others => 'Z');
---            end if;
---        elsif (plt_bus_ce_n = '0') then
---            if (r_nw = '1') then
---                --read
---                if (oam_plt_addr(4) = '0') then
---                    oam_plt_data <= bg_palatte(conv_integer(oam_plt_addr(3 downto 0)));
---                else
---                    oam_plt_data <= sprite_palatte(conv_integer(oam_plt_addr(3 downto 0)));
---                end if;
---            else
---                oam_plt_data <= (others => 'Z');
---            end if;
---        else
---            oam_plt_data <= (others => 'Z');
---        end if;
---    end process;
-
-    pl_w : process (plt_bus_ce_n, r_nw, oam_plt_addr, oam_plt_data)
-    begin
-        if (plt_bus_ce_n = '0' and r_nw = '0') then
-            --write
-            if (oam_plt_addr(4) = '0') then
-                bg_palatte(conv_integer(oam_plt_addr(3 downto 0)))
-                                        <= "00" & oam_plt_data(5 downto 0);
-            else
-                sprite_palatte(conv_integer(oam_plt_addr(3 downto 0)))
-                                        <= "00" & oam_plt_data(5 downto 0);
-            end if;
-        end if;
     end process;
 
 end rtl;

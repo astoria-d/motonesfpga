@@ -189,6 +189,7 @@ begin
 --            wait for cpu_clk_time;
 --        end loop;
 
+
         for i in 0 to 13 loop
             --attr tbl set.
             cpu_addr <= "110";
@@ -201,7 +202,22 @@ begin
             wait for cpu_clk_time;
         end loop;
 
+        --test read
+        r_nw <= '0';
+        cpu_addr <= "110";
+        cpu_d <= conv_std_logic_vector(16#23c0# + i, 16)(15 downto 8);
+        wait for cpu_clk_time;
+        cpu_d <= conv_std_logic_vector(16#23c0# + i, 16)(7 downto 0);
+        wait for cpu_clk_time;
+        for i in 0 to 5 loop
+            cpu_d <= (others => 'Z');
+            cpu_addr <= "111";
+            r_nw <= '1';
+            wait for cpu_clk_time;
+        end loop;
+
         --palette tbl set.
+        r_nw <= '0';
         cpu_addr <= "110";
         cpu_d <= conv_std_logic_vector(16#3f00# + i, 16)(15 downto 8);
         wait for cpu_clk_time;
@@ -210,6 +226,20 @@ begin
         for i in 0 to 31 loop
             cpu_addr <= "111";
             cpu_d <= conv_std_logic_vector((i - 1 ) * 4 + 17, 8);
+            wait for cpu_clk_time;
+        end loop;
+
+        --test read
+        r_nw <= '0';
+        cpu_addr <= "110";
+        cpu_d <= conv_std_logic_vector(16#3f00# + i, 16)(15 downto 8);
+        wait for cpu_clk_time;
+        cpu_d <= conv_std_logic_vector(16#3f00# + i, 16)(7 downto 0);
+        wait for cpu_clk_time;
+        for i in 0 to 5 loop
+            cpu_d <= (others => 'Z');
+            cpu_addr <= "111";
+            r_nw <= '1';
             wait for cpu_clk_time;
         end loop;
 
