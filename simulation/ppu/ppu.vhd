@@ -304,6 +304,7 @@ begin
                     ppu_clk_cnt_res_n <= '1';
                 end if;
                 --d_print("clk event");
+
             end if;
 
             --oam data set
@@ -385,6 +386,14 @@ begin
                 ppu_data_we_n <= '1';
                 rd_n <= '1';
                 wr_n <= '1';
+            end if;
+
+            --sustain cpu output data when reading.
+            if (cpu_addr = PPUDATA and r_nw = '1' and ppu_clk_cnt /= "00") then
+                cpu_d <= ppu_data;
+            end if;
+            if (cpu_addr = OAMDATA and r_nw = '1' and ppu_clk_cnt /= "00") then
+                cpu_d <= oam_data;
             end if;
 
         else
