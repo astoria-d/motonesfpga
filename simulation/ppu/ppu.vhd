@@ -304,7 +304,6 @@ begin
                     ppu_clk_cnt_res_n <= '1';
                 end if;
                 --d_print("clk event");
-
             end if;
 
             --oam data set

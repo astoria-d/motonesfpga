@@ -277,11 +277,12 @@ signal r_n              : std_logic;
 signal plt_ram_ce_n     : std_logic;
 signal plt_r_n          : std_logic;
 signal plt_w_n          : std_logic;
-
 signal plt_addr         : std_logic_vector (4 downto 0);
 signal plt_data         : std_logic_vector (dsize - 1 downto 0);
 
 signal oam_ram_ce_n     : std_logic;
+signal oam_r_n          : std_logic;
+signal oam_w_n          : std_logic;
 signal oam_addr         : std_logic_vector (dsize - 1 downto 0);
 signal oam_data         : std_logic_vector (dsize - 1 downto 0);
 
@@ -398,27 +399,24 @@ begin
     pos_x <= cur_x;
     pos_y <= cur_y;
 
+    ---palette ram
     r_n <= not r_nw;
 
-    ---palette ram
     plt_ram_ce_n <= clk when plt_bus_ce_n = '0' and r_nw = '0' else 
                     '0' when plt_bus_ce_n = '0' and r_nw = '1' else
                     '0' when ppu_mask(PPUSBG) = '1' and 
                             (cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) and 
                             (cur_y < conv_std_logic_vector(VSCAN, X_SIZE)) else
                     '1';
-
     plt_addr <= oam_plt_addr(4 downto 0) when plt_bus_ce_n = '0' else
                 "0" & disp_attr(1 downto 0) & disp_ptn_h(0) & disp_ptn_l(0) 
                                 when ppu_mask(PPUSBG) = '1' else
                 (others => 'Z');
-
     plt_r_n <= not r_nw when plt_bus_ce_n = '0' else
                 '0' when ppu_mask(PPUSBG) = '1' else
                 '1';
     plt_w_n <= r_nw when plt_bus_ce_n = '0' else
                 '1';
-
     plt_d_buf_w : tri_state_buffer generic map (dsize)
             port map (r_nw, oam_plt_data, plt_data);
     plt_d_buf_r : tri_state_buffer generic map (dsize)
@@ -430,15 +428,19 @@ begin
     oam_ram_ce_n <= clk when oam_bus_ce_n = '0' and r_nw = '0' else 
                     '0' when oam_bus_ce_n = '0' and r_nw = '1' else
                     '1';
-
-    oam_a_buf : tri_state_buffer generic map (dsize)
-            port map (oam_bus_ce_n, oam_plt_addr, oam_addr);
+    oam_addr <= oam_plt_addr when oam_bus_ce_n = '0' else
+                (others => 'Z');
+    oam_r_n <= not r_nw when oam_bus_ce_n = '0' else
+                '0' when ppu_mask(PPUSSP) = '1' else
+                '1';
+    oam_w_n <= r_nw when oam_bus_ce_n = '0' else
+                '1';
     oam_d_buf_w : tri_state_buffer generic map (dsize)
             port map (r_nw, oam_plt_data, oam_data);
     oam_d_buf_r : tri_state_buffer generic map (dsize)
             port map (r_n, oam_data, oam_plt_data);
     primary_oam_inst : ram generic map (dsize, dsize)
-            port map (oam_ram_ce_n, r_n, r_nw, oam_addr, oam_data);
+            port map (oam_ram_ce_n, oam_r_n, oam_w_n, oam_addr, oam_data);
 
     clk_p : process (rst_n, clk) 
 
@@ -448,18 +450,7 @@ variable pl_index : integer;
 begin
     --firs color in the palette is transparent color.
     if ((disp_ptn_h(0) or disp_ptn_l(0)) = '1') then
---        if (cur_y(4) = '0') then
---            pl_addr := conv_integer(
---                        disp_attr(1 downto 0) & disp_ptn_h(0) & disp_ptn_l(0));
---            --plt_addr <= "0" & disp_attr(1 downto 0) & disp_ptn_h(0) & disp_ptn_l(0);
---        else
---            pl_addr := conv_integer(
---                        disp_attr(5 downto 4) & disp_ptn_h(0) & disp_ptn_l(0));
---            --plt_addr <= "1" & disp_attr(1 downto 0) & disp_ptn_h(0) & disp_ptn_l(0);
---        end if;
---        --pl_index := conv_integer(bg_palatte(pl_addr));
         pl_index := conv_integer(plt_data(5 downto 0));
-
 
         d_print("output_bg_rgb");
         d_print("pl_addr:" & conv_hex8(pl_addr));
