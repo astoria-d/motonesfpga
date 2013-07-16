@@ -482,10 +482,10 @@ begin
             port map (clk_n, rst_n, '1', oam_ram_ce_n, oam_data, p_oam_ev);
 
     s_oam_ram_ce_n <= clk when ppu_mask(PPUSSP) = '1' and cur_x(0) = '1' and
-                                cur_x > "00000001" and
+                                cur_x > "000000001" and
                                 cur_x <= conv_std_logic_vector(65, X_SIZE) else
                       clk when ppu_mask(PPUSSP) = '1' and cur_x(0) = '1' and
-                                cur_x > "00000001" and
+                                cur_x > "000000001" and
                                 cur_x <= conv_std_logic_vector(257, X_SIZE) and
                                 p_oam_cnt_wrap_n = '1' else
                     '1';
@@ -643,7 +643,7 @@ end;
 
                 if (ppu_mask(PPUSSP) = '1') then
                     --secondary oam clear
-                    if (cur_x /= "00000000" and cur_x <= conv_std_logic_vector(64, X_SIZE)) then
+                    if (cur_x /= "000000000" and cur_x <= conv_std_logic_vector(64, X_SIZE)) then
                         if (cur_x(0) = '0') then
                             --write secondary oam on even cycle
                             s_oam_r_n <= '1';
@@ -698,7 +698,9 @@ end;
                             s_oam_data <= p_oam_ev;
 
                             if (oam_ev_status = EV_STAT_COMP) then
-                                if (cur_y < p_oam_ev + "00000100" and cur_y >= p_oam_ev) then
+                                if (cur_y < "000000110" and p_oam_ev <= cur_y + "000000001") or 
+                                    (cur_y >= "000000110" and p_oam_ev <= cur_y + "000000001" and 
+                                             p_oam_ev >= cur_y - "000000110") then
                                     oam_ev_status <= EV_STAT_CP1;
                                     p_oam_addr_in <= p_oam_cnt;
                                     s_oam_cnt_ce_n <= '0';
