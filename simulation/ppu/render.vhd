@@ -645,6 +645,7 @@ end;
                     --secondary oam clear
                     if (cur_x /= "00000000" and cur_x <= conv_std_logic_vector(64, X_SIZE)) then
                         if (cur_x(0) = '0') then
+                            --write secondary oam on even cycle
                             s_oam_r_n <= '1';
                             s_oam_w_n <= '0';
                             s_oam_addr <= cur_x(5 downto 1);
@@ -661,10 +662,14 @@ end;
                             cur_x <= conv_std_logic_vector(256, X_SIZE)) then
                         p_oam_cnt_res_n <= '1';
 
+                        --TODO: sprite evaluation is simplified!!
+                        --not complying the original NES spec at
+                        --http://wiki.nesdev.com/w/index.php/PPU_sprite_evaluation
+                        --e.g., sprite when overflow happens, it just overwrite the 
+                        --old secondary sprite entry.
                         if (p_oam_cnt = "00000000" and cur_x > conv_std_logic_vector(192, X_SIZE)) then
                             p_oam_cnt_wrap_n <= '0';
                         end if;
-
 
                         --odd cycle copy from primary oam
                         if (cur_x(0) = '1') then
@@ -673,12 +678,10 @@ end;
                                 p_oam_cnt_ce_n <= '1';
                                 s_oam_cnt_ce_n <= '1';
                             elsif (oam_ev_status = EV_STAT_CP1) then
-                                oam_ev_status <= EV_STAT_CP2;
                                 p_oam_addr_in <= p_oam_cnt + "00000001";
                                 s_oam_cnt_ce_n <= '1';
 
                             elsif (oam_ev_status = EV_STAT_CP2) then
-                                oam_ev_status <= EV_STAT_CP3;
                                 p_oam_addr_in <= p_oam_cnt + "00000010";
                                 s_oam_cnt_ce_n <= '1';
 
@@ -707,8 +710,10 @@ end;
                                 end if;
                             elsif (oam_ev_status = EV_STAT_CP1) then
                                 s_oam_cnt_ce_n <= '0';
+                                oam_ev_status <= EV_STAT_CP2;
                             elsif (oam_ev_status = EV_STAT_CP2) then
                                 s_oam_cnt_ce_n <= '0';
+                                oam_ev_status <= EV_STAT_CP3;
                             elsif (oam_ev_status = EV_STAT_CP3) then
                                 s_oam_cnt_ce_n <= '0';
                             elsif (oam_ev_status = EV_STAT_PRE_COMP) then
