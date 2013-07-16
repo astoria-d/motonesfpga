@@ -294,6 +294,7 @@ signal s_oam_data       : std_logic_vector (dsize - 1 downto 0);
 
 signal p_oam_cnt_res_n  : std_logic;
 signal p_oam_cnt_ce_n   : std_logic;
+signal p_oam_cnt_wrap_n : std_logic;
 signal s_oam_cnt_ce_n   : std_logic;
 signal p_oam_cnt        : std_logic_vector (dsize - 1 downto 0);
 signal s_oam_cnt        : std_logic_vector (4 downto 0);
@@ -446,11 +447,12 @@ begin
             port map (plt_ram_ce_n, plt_r_n, plt_w_n, plt_addr, plt_data);
 
     ---primary oam
-    oam_ram_ce_n <= clk when oam_bus_ce_n = '0' and r_nw = '0' else 
+    oam_ram_ce_n <= clk when oam_bus_ce_n = '0' and r_nw = '0' else
                     '0' when oam_bus_ce_n = '0' and r_nw = '1' else
-                    not io_cnt(0) when ppu_mask(PPUSSP) = '1' and 
-                             cur_x > conv_std_logic_vector(64, X_SIZE) and 
-                             cur_x <= conv_std_logic_vector(256, X_SIZE) else
+                    not io_cnt(0) when ppu_mask(PPUSSP) = '1' and
+                             cur_x > conv_std_logic_vector(64, X_SIZE) and
+                             cur_x <= conv_std_logic_vector(256, X_SIZE) and
+                             p_oam_cnt_wrap_n = '1' else
                     '1';
     oam_addr <= oam_plt_addr when oam_bus_ce_n = '0' else
                 p_oam_addr_in when ppu_mask(PPUSSP) = '1' and 
@@ -472,7 +474,7 @@ begin
             port map (oam_ram_ce_n, oam_r_n, oam_w_n, oam_addr, oam_data);
 
     ---secondary oam
-    p_oam_cnt_inst : counter_register generic map (dsize, 2)
+    p_oam_cnt_inst : counter_register generic map (dsize, 4)
             port map (clk_n, p_oam_cnt_res_n, '1', p_oam_cnt_ce_n, (others => '0'), p_oam_cnt);
     s_oam_cnt_inst : counter_register generic map (5, 1)
             port map (clk_n, p_oam_cnt_res_n, '1', s_oam_cnt_ce_n, (others => '0'), s_oam_cnt);
@@ -480,11 +482,12 @@ begin
             port map (clk_n, rst_n, '1', oam_ram_ce_n, oam_data, p_oam_ev);
 
     s_oam_ram_ce_n <= clk when ppu_mask(PPUSSP) = '1' and cur_x(0) = '1' and
-                                cur_x > "00000001" and 
-                                cur_x <= conv_std_logic_vector(65, X_SIZE) else 
+                                cur_x > "00000001" and
+                                cur_x <= conv_std_logic_vector(65, X_SIZE) else
                       clk when ppu_mask(PPUSSP) = '1' and cur_x(0) = '1' and
-                                cur_x > "00000001" and 
-                                cur_x <= conv_std_logic_vector(257, X_SIZE) else
+                                cur_x > "00000001" and
+                                cur_x <= conv_std_logic_vector(257, X_SIZE) and
+                                p_oam_cnt_wrap_n = '1' else
                     '1';
     secondary_oam_inst : ram generic map (5, dsize)
             port map (s_oam_ram_ce_n, s_oam_r_n, s_oam_w_n, s_oam_addr, s_oam_data);
@@ -650,16 +653,24 @@ end;
                         p_oam_cnt_res_n <= '0';
                         p_oam_cnt_ce_n <= '1';
                         s_oam_cnt_ce_n <= '1';
+                        p_oam_cnt_wrap_n <= '1';
                         oam_ev_status <= EV_STAT_COMP;
 
                     --sprite evaluation and secondary oam copy.
                     elsif (cur_x > conv_std_logic_vector(64, X_SIZE) and 
                             cur_x <= conv_std_logic_vector(256, X_SIZE)) then
                         p_oam_cnt_res_n <= '1';
+
+                        if (p_oam_cnt = "00000000" and cur_x > conv_std_logic_vector(192, X_SIZE)) then
+                            p_oam_cnt_wrap_n <= '0';
+                        end if;
+
+
                         --odd cycle copy from primary oam
                         if (cur_x(0) = '1') then
                             if (oam_ev_status = EV_STAT_COMP) then
                                 p_oam_addr_in <= p_oam_cnt;
+                                p_oam_cnt_ce_n <= '1';
                                 s_oam_cnt_ce_n <= '1';
                             elsif (oam_ev_status = EV_STAT_CP1) then
                                 oam_ev_status <= EV_STAT_CP2;
@@ -675,7 +686,6 @@ end;
                                 oam_ev_status <= EV_STAT_PRE_COMP;
                                 p_oam_addr_in <= p_oam_cnt + "00000011";
                                 s_oam_cnt_ce_n <= '1';
-                                p_oam_cnt_ce_n <= '0';
                             end if;
                         else
                         --even cycle copy to secondary oam (if y is in range.)
@@ -693,6 +703,7 @@ end;
                                     p_oam_cnt_ce_n <= '1';
                                 else
                                     --goto next entry
+                                    p_oam_cnt_ce_n <= '0';
                                 end if;
                             elsif (oam_ev_status = EV_STAT_CP1) then
                                 s_oam_cnt_ce_n <= '0';
@@ -703,6 +714,7 @@ end;
                             elsif (oam_ev_status = EV_STAT_PRE_COMP) then
                                 oam_ev_status <= EV_STAT_COMP;
                                 s_oam_cnt_ce_n <= '0';
+                                p_oam_cnt_ce_n <= '0';
                             end if;
                         end if;
 
