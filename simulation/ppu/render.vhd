@@ -702,7 +702,6 @@ end;
                                     (cur_y >= "000000110" and p_oam_ev <= cur_y + "000000001" and 
                                              p_oam_ev >= cur_y - "000000110") then
                                     oam_ev_status <= EV_STAT_CP1;
-                                    p_oam_addr_in <= p_oam_cnt;
                                     s_oam_cnt_ce_n <= '0';
                                     --copy remaining oam entry.
                                     p_oam_cnt_ce_n <= '1';
