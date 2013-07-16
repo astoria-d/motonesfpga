@@ -286,6 +286,27 @@ signal oam_w_n          : std_logic;
 signal oam_addr         : std_logic_vector (dsize - 1 downto 0);
 signal oam_data         : std_logic_vector (dsize - 1 downto 0);
 
+signal s_oam_ram_ce_n   : std_logic;
+signal s_oam_r_n        : std_logic;
+signal s_oam_w_n        : std_logic;
+signal s_oam_addr       : std_logic_vector (4 downto 0);
+signal s_oam_data       : std_logic_vector (dsize - 1 downto 0);
+
+signal p_oam_cnt_res_n  : std_logic;
+signal p_oam_cnt_ce_n   : std_logic;
+signal s_oam_cnt_ce_n   : std_logic;
+signal p_oam_cnt        : std_logic_vector (dsize - 1 downto 0);
+signal s_oam_cnt        : std_logic_vector (4 downto 0);
+signal p_oam_addr_in    : std_logic_vector (dsize - 1 downto 0);
+signal p_oam_ev         : std_logic_vector (dsize - 1 downto 0);
+signal oam_ev_status    : std_logic_vector (2 downto 0);
+
+constant EV_STAT_COMP       : std_logic_vector (2 downto 0) := "000";
+constant EV_STAT_CP1        : std_logic_vector (2 downto 0) := "001";
+constant EV_STAT_CP2        : std_logic_vector (2 downto 0) := "010";
+constant EV_STAT_CP3        : std_logic_vector (2 downto 0) := "011";
+constant EV_STAT_PRE_COMP   : std_logic_vector (2 downto 0) := "100";
+
 ----------sprite registers.
 signal x_pos_cnt0       : std_logic_vector (dsize - 1 downto 0);
 signal x_pos_cnt1       : std_logic_vector (dsize - 1 downto 0);
@@ -424,14 +445,22 @@ begin
     palette_inst : ram generic map (5, dsize)
             port map (plt_ram_ce_n, plt_r_n, plt_w_n, plt_addr, plt_data);
 
-    ---oam ram
+    ---primary oam
     oam_ram_ce_n <= clk when oam_bus_ce_n = '0' and r_nw = '0' else 
                     '0' when oam_bus_ce_n = '0' and r_nw = '1' else
+                    not io_cnt(0) when ppu_mask(PPUSSP) = '1' and 
+                             cur_x > conv_std_logic_vector(64, X_SIZE) and 
+                             cur_x <= conv_std_logic_vector(256, X_SIZE) else
                     '1';
     oam_addr <= oam_plt_addr when oam_bus_ce_n = '0' else
+                p_oam_addr_in when ppu_mask(PPUSSP) = '1' and 
+                         cur_x > conv_std_logic_vector(64, X_SIZE) and 
+                         cur_x <= conv_std_logic_vector(256, X_SIZE) else
                 (others => 'Z');
     oam_r_n <= not r_nw when oam_bus_ce_n = '0' else
-                '0' when ppu_mask(PPUSSP) = '1' else
+                '0' when ppu_mask(PPUSSP) = '1' and 
+                         cur_x > conv_std_logic_vector(64, X_SIZE) and 
+                         cur_x <= conv_std_logic_vector(256, X_SIZE) else
                 '1';
     oam_w_n <= r_nw when oam_bus_ce_n = '0' else
                 '1';
@@ -441,6 +470,24 @@ begin
             port map (r_n, oam_data, oam_plt_data);
     primary_oam_inst : ram generic map (dsize, dsize)
             port map (oam_ram_ce_n, oam_r_n, oam_w_n, oam_addr, oam_data);
+
+    ---secondary oam
+    p_oam_cnt_inst : counter_register generic map (dsize, 2)
+            port map (clk_n, p_oam_cnt_res_n, '1', p_oam_cnt_ce_n, (others => '0'), p_oam_cnt);
+    s_oam_cnt_inst : counter_register generic map (5, 1)
+            port map (clk_n, p_oam_cnt_res_n, '1', s_oam_cnt_ce_n, (others => '0'), s_oam_cnt);
+    p_oam_ev_inst : d_flip_flop generic map (dsize)
+            port map (clk_n, rst_n, '1', oam_ram_ce_n, oam_data, p_oam_ev);
+
+    s_oam_ram_ce_n <= clk when ppu_mask(PPUSSP) = '1' and cur_x(0) = '1' and
+                                cur_x > "00000001" and 
+                                cur_x <= conv_std_logic_vector(65, X_SIZE) else 
+                      clk when ppu_mask(PPUSSP) = '1' and cur_x(0) = '1' and
+                                cur_x > "00000001" and 
+                                cur_x <= conv_std_logic_vector(257, X_SIZE) else
+                    '1';
+    secondary_oam_inst : ram generic map (5, dsize)
+            port map (s_oam_ram_ce_n, s_oam_r_n, s_oam_w_n, s_oam_addr, s_oam_data);
 
     clk_p : process (rst_n, clk) 
 
@@ -589,25 +636,89 @@ end;
                             ptn_h_we_n <= '1';
                         end if;--if (cur_x (2 downto 0) = "001" ) then
                     end if; --if (cur_x <= conv_std_logic_vector(HSCAN, X_SIZE)) and
+                end if;--if (ppu_mask(PPUSBG) = '1') then
 
+                if (ppu_mask(PPUSSP) = '1') then
                     --secondary oam clear
-                    if (cur_x <= conv_std_logic_vector(64, X_SIZE)) then
+                    if (cur_x /= "00000000" and cur_x <= conv_std_logic_vector(64, X_SIZE)) then
+                        if (cur_x(0) = '0') then
+                            s_oam_r_n <= '1';
+                            s_oam_w_n <= '0';
+                            s_oam_addr <= cur_x(5 downto 1);
+                            s_oam_data <= (others => '1');
+                        end if;
+                        p_oam_cnt_res_n <= '0';
+                        p_oam_cnt_ce_n <= '1';
+                        s_oam_cnt_ce_n <= '1';
+                        oam_ev_status <= EV_STAT_COMP;
 
                     --sprite evaluation and secondary oam copy.
                     elsif (cur_x > conv_std_logic_vector(64, X_SIZE) and 
                             cur_x <= conv_std_logic_vector(256, X_SIZE)) then
+                        p_oam_cnt_res_n <= '1';
+                        --odd cycle copy from primary oam
+                        if (cur_x(0) = '1') then
+                            if (oam_ev_status = EV_STAT_COMP) then
+                                p_oam_addr_in <= p_oam_cnt;
+                                s_oam_cnt_ce_n <= '1';
+                            elsif (oam_ev_status = EV_STAT_CP1) then
+                                oam_ev_status <= EV_STAT_CP2;
+                                p_oam_addr_in <= p_oam_cnt + "00000001";
+                                s_oam_cnt_ce_n <= '1';
+
+                            elsif (oam_ev_status = EV_STAT_CP2) then
+                                oam_ev_status <= EV_STAT_CP3;
+                                p_oam_addr_in <= p_oam_cnt + "00000010";
+                                s_oam_cnt_ce_n <= '1';
+
+                            elsif (oam_ev_status = EV_STAT_CP3) then
+                                oam_ev_status <= EV_STAT_PRE_COMP;
+                                p_oam_addr_in <= p_oam_cnt + "00000011";
+                                s_oam_cnt_ce_n <= '1';
+                                p_oam_cnt_ce_n <= '0';
+                            end if;
+                        else
+                        --even cycle copy to secondary oam (if y is in range.)
+                            s_oam_r_n <= '1';
+                            s_oam_w_n <= '0';
+                            s_oam_addr <= s_oam_cnt;
+                            s_oam_data <= p_oam_ev;
+
+                            if (oam_ev_status = EV_STAT_COMP) then
+                                if (cur_y < p_oam_ev + "00000100" and cur_y >= p_oam_ev) then
+                                    oam_ev_status <= EV_STAT_CP1;
+                                    p_oam_addr_in <= p_oam_cnt;
+                                    s_oam_cnt_ce_n <= '0';
+                                    --copy remaining oam entry.
+                                    p_oam_cnt_ce_n <= '1';
+                                else
+                                    --goto next entry
+                                end if;
+                            elsif (oam_ev_status = EV_STAT_CP1) then
+                                s_oam_cnt_ce_n <= '0';
+                            elsif (oam_ev_status = EV_STAT_CP2) then
+                                s_oam_cnt_ce_n <= '0';
+                            elsif (oam_ev_status = EV_STAT_CP3) then
+                                s_oam_cnt_ce_n <= '0';
+                            elsif (oam_ev_status = EV_STAT_PRE_COMP) then
+                                oam_ev_status <= EV_STAT_COMP;
+                                s_oam_cnt_ce_n <= '0';
+                            end if;
+                        end if;
+
                     --sprite pattern fetch
                     elsif (cur_x > conv_std_logic_vector(256, X_SIZE) and 
                             cur_x <= conv_std_logic_vector(320, X_SIZE)) then
                     end if;
+                end if; --if (ppu_mask(PPUSSP) = '1') then
 
+                if (ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') then
                     --output visible area only.
                     if ((cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
                         (cur_y < conv_std_logic_vector(VSCAN, X_SIZE))) then
                         --output image.
                         output_bg_rgb;
                     end if;
-
                 else
                     b <= (others => '1');
                     g <= (others => '0');
