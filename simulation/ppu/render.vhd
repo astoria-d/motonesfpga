@@ -289,7 +289,10 @@ signal oam_data         : std_logic_vector (dsize - 1 downto 0);
 signal s_oam_ram_ce_n   : std_logic;
 signal s_oam_r_n        : std_logic;
 signal s_oam_w_n        : std_logic;
+signal s_oam_addr_cpy_ce_n      : std_logic;
+signal s_oam_addr_cpy_n         : std_logic;
 signal s_oam_addr       : std_logic_vector (4 downto 0);
+signal s_oam_addr_cpy   : std_logic_vector (4 downto 0);
 signal s_oam_data       : std_logic_vector (dsize - 1 downto 0);
 
 signal p_oam_cnt_res_n  : std_logic;
@@ -299,7 +302,6 @@ signal s_oam_cnt_ce_n   : std_logic;
 signal p_oam_cnt        : std_logic_vector (dsize - 1 downto 0);
 signal s_oam_cnt        : std_logic_vector (4 downto 0);
 signal p_oam_addr_in    : std_logic_vector (dsize - 1 downto 0);
-signal p_oam_ev         : std_logic_vector (dsize - 1 downto 0);
 signal oam_ev_status    : std_logic_vector (2 downto 0);
 
 constant EV_STAT_COMP       : std_logic_vector (2 downto 0) := "000";
@@ -309,41 +311,22 @@ constant EV_STAT_CP3        : std_logic_vector (2 downto 0) := "011";
 constant EV_STAT_PRE_COMP   : std_logic_vector (2 downto 0) := "100";
 
 ----------sprite registers.
-signal x_pos_cnt0       : std_logic_vector (dsize - 1 downto 0);
-signal x_pos_cnt1       : std_logic_vector (dsize - 1 downto 0);
-signal x_pos_cnt2       : std_logic_vector (dsize - 1 downto 0);
-signal x_pos_cnt3       : std_logic_vector (dsize - 1 downto 0);
-signal x_pos_cnt4       : std_logic_vector (dsize - 1 downto 0);
-signal x_pos_cnt5       : std_logic_vector (dsize - 1 downto 0);
-signal x_pos_cnt6       : std_logic_vector (dsize - 1 downto 0);
-signal x_pos_cnt7       : std_logic_vector (dsize - 1 downto 0);
+type oam_pin_array    is array (0 to 7) of std_logic;
+type oam_reg_array    is array (0 to 7) of std_logic_vector (dsize - 1 downto 0);
 
-signal spr_attr0        : std_logic_vector (dsize - 1 downto 0);
-signal spr_attr1        : std_logic_vector (dsize - 1 downto 0);
-signal spr_attr2        : std_logic_vector (dsize - 1 downto 0);
-signal spr_attr3        : std_logic_vector (dsize - 1 downto 0);
-signal spr_attr4        : std_logic_vector (dsize - 1 downto 0);
-signal spr_attr5        : std_logic_vector (dsize - 1 downto 0);
-signal spr_attr6        : std_logic_vector (dsize - 1 downto 0);
-signal spr_attr7        : std_logic_vector (dsize - 1 downto 0);
+signal x_pos_we_n       : oam_pin_array;
+signal spr_attr_we_n    : oam_pin_array;
+signal spr_ptn_l_we_n   : oam_pin_array;
+signal spr_ptn_h_we_n   : oam_pin_array;
 
-signal spr_pnt_l0        : std_logic_vector (dsize - 1 downto 0);
-signal spr_pnt_l1        : std_logic_vector (dsize - 1 downto 0);
-signal spr_pnt_l2        : std_logic_vector (dsize - 1 downto 0);
-signal spr_pnt_l3        : std_logic_vector (dsize - 1 downto 0);
-signal spr_pnt_l4        : std_logic_vector (dsize - 1 downto 0);
-signal spr_pnt_l5        : std_logic_vector (dsize - 1 downto 0);
-signal spr_pnt_l6        : std_logic_vector (dsize - 1 downto 0);
-signal spr_pnt_l7        : std_logic_vector (dsize - 1 downto 0);
+signal x_pos_cnt        : oam_reg_array;
+signal spr_attr         : oam_reg_array;
+signal spr_ptn_l        : oam_reg_array;
+signal spr_ptn_h        : oam_reg_array;
 
-signal spr_pnt_h0        : std_logic_vector (dsize - 1 downto 0);
-signal spr_pnt_h1        : std_logic_vector (dsize - 1 downto 0);
-signal spr_pnt_h2        : std_logic_vector (dsize - 1 downto 0);
-signal spr_pnt_h3        : std_logic_vector (dsize - 1 downto 0);
-signal spr_pnt_h4        : std_logic_vector (dsize - 1 downto 0);
-signal spr_pnt_h5        : std_logic_vector (dsize - 1 downto 0);
-signal spr_pnt_h6        : std_logic_vector (dsize - 1 downto 0);
-signal spr_pnt_h7        : std_logic_vector (dsize - 1 downto 0);
+signal y_pos_we_n       : std_logic;
+signal y_pos_tmp        : std_logic_vector (dsize - 1 downto 0);
+
 
 begin
 
@@ -478,19 +461,40 @@ begin
             port map (clk_n, p_oam_cnt_res_n, '1', p_oam_cnt_ce_n, (others => '0'), p_oam_cnt);
     s_oam_cnt_inst : counter_register generic map (5, 1)
             port map (clk_n, p_oam_cnt_res_n, '1', s_oam_cnt_ce_n, (others => '0'), s_oam_cnt);
-    p_oam_ev_inst : d_flip_flop generic map (dsize)
-            port map (clk_n, rst_n, '1', oam_ram_ce_n, oam_data, p_oam_ev);
+    s_oam_addr_cpy_inst : counter_register generic map (5, 1)
+            port map (clk_n, p_oam_cnt_res_n, '1', s_oam_addr_cpy_ce_n, (others => '0'), s_oam_addr_cpy);
 
     s_oam_ram_ce_n <= clk when ppu_mask(PPUSSP) = '1' and cur_x(0) = '1' and
                                 cur_x > "000000001" and
-                                cur_x <= conv_std_logic_vector(65, X_SIZE) else
+                                cur_x <= conv_std_logic_vector(64, X_SIZE) else
                       clk when ppu_mask(PPUSSP) = '1' and cur_x(0) = '1' and
-                                cur_x > "000000001" and
-                                cur_x <= conv_std_logic_vector(257, X_SIZE) and
+                                cur_x > conv_std_logic_vector(64, X_SIZE) and
+                                cur_x <= conv_std_logic_vector(256, X_SIZE) and
                                 p_oam_cnt_wrap_n = '1' else
+                      '0' when ppu_mask(PPUSSP) = '1' and
+                                cur_x > conv_std_logic_vector(256, X_SIZE) and
+                                cur_x <= conv_std_logic_vector(320, X_SIZE) and
+                                s_oam_addr_cpy_n = '0' else
                     '1';
+
     secondary_oam_inst : ram generic map (5, dsize)
             port map (s_oam_ram_ce_n, s_oam_r_n, s_oam_w_n, s_oam_addr, s_oam_data);
+
+    y_pos_inst : d_flip_flop generic map(dsize)
+            port map (clk_n, p_oam_cnt_res_n, '1', y_pos_we_n, s_oam_data, y_pos_tmp);
+    spr_inst : for i in 0 to 7 generate
+        x_pos_inst : d_flip_flop generic map(dsize)
+                port map (clk_n, p_oam_cnt_res_n, '1', x_pos_we_n(i), s_oam_data, x_pos_cnt(i));
+
+        spr_attr_inst : d_flip_flop generic map(dsize)
+                port map (clk_n, p_oam_cnt_res_n, '1', spr_attr_we_n(i), s_oam_data, spr_attr(i));
+
+        spr_ptn_l_inst : d_flip_flop generic map(dsize)
+                port map (clk_n, p_oam_cnt_res_n, '1', spr_ptn_l_we_n(i), s_oam_data, spr_ptn_l(i));
+
+        spr_ptn_h_inst : d_flip_flop generic map(dsize)
+                port map (clk_n, p_oam_cnt_res_n, '1', spr_ptn_h_we_n(i), s_oam_data, spr_ptn_h(i));
+    end generate;
 
     clk_p : process (rst_n, clk) 
 
@@ -641,6 +645,7 @@ end;
                     end if; --if (cur_x <= conv_std_logic_vector(HSCAN, X_SIZE)) and
                 end if;--if (ppu_mask(PPUSBG) = '1') then
 
+                --fetch sprite and display.
                 if (ppu_mask(PPUSSP) = '1') then
                     --secondary oam clear
                     if (cur_x /= "000000000" and cur_x <= conv_std_logic_vector(64, X_SIZE)) then
@@ -695,12 +700,12 @@ end;
                             s_oam_r_n <= '1';
                             s_oam_w_n <= '0';
                             s_oam_addr <= s_oam_cnt;
-                            s_oam_data <= p_oam_ev;
+                            s_oam_data <= oam_data;
 
                             if (oam_ev_status = EV_STAT_COMP) then
-                                if (cur_y < "000000110" and p_oam_ev <= cur_y + "000000001") or 
-                                    (cur_y >= "000000110" and p_oam_ev <= cur_y + "000000001" and 
-                                             p_oam_ev >= cur_y - "000000110") then
+                                if (cur_y < "000000110" and oam_data <= cur_y + "000000001") or 
+                                    (cur_y >= "000000110" and oam_data <= cur_y + "000000001" and 
+                                             oam_data >= cur_y - "000000110") then
                                     oam_ev_status <= EV_STAT_CP1;
                                     s_oam_cnt_ce_n <= '0';
                                     --copy remaining oam entry.
@@ -723,10 +728,66 @@ end;
                                 p_oam_cnt_ce_n <= '0';
                             end if;
                         end if;
+                        s_oam_addr_cpy_n <= '1';
 
                     --sprite pattern fetch
                     elsif (cur_x > conv_std_logic_vector(256, X_SIZE) and 
                             cur_x <= conv_std_logic_vector(320, X_SIZE)) then
+
+                        s_oam_addr_cpy_n <= '0';
+                        s_oam_r_n <= '0';
+                        s_oam_w_n <= '1';
+                        s_oam_addr <= s_oam_addr_cpy;
+
+                        ----fetch y-cordinate from secondary oam
+                        if (cur_x (2 downto 0) = "001" ) then
+                            s_oam_addr_cpy_ce_n <= '0';
+                            y_pos_we_n <= '0';
+                        else
+                            y_pos_we_n <= '1';
+                        end if;
+
+                        ----fetch tile number
+                        if (cur_x (2 downto 0) = "010" ) then
+                            s_oam_addr_cpy_ce_n <= '0';
+                        else
+                        end if;
+
+                        ----fetch attribute
+                        if (cur_x (2 downto 0) = "011" ) then
+                            s_oam_addr_cpy_ce_n <= '0';
+                        else
+                        end if;--if (cur_x (2 downto 0) = "010" ) then
+
+                        ----fetch x-cordinate
+                        if (cur_x (2 downto 0) = "100" ) then
+                            s_oam_addr_cpy_ce_n <= '1';
+                            x_pos_we_n(conv_integer(s_oam_addr_cpy(4 downto 2))) <= '0';
+                        else
+                            x_pos_we_n(conv_integer(s_oam_addr_cpy(4 downto 2))) <= '1';
+                        end if;
+
+                        ----fetch pattern table low byte.
+                        if (cur_x (2 downto 0) = "101" ) then
+                            s_oam_addr_cpy_ce_n <= '1';
+                        else
+                        end if;
+                        if (cur_x (2 downto 0) = "110" ) then
+                            s_oam_addr_cpy_ce_n <= '1';
+                        else
+                        end if;
+
+                        ----fetch pattern table high byte.
+                        if (cur_x (2 downto 0) = "111" ) then
+                            s_oam_addr_cpy_ce_n <= '1';
+                        else
+                        end if;
+
+                        if (cur_x (2 downto 0) = "000") then
+                            s_oam_addr_cpy_ce_n <= '0';
+                        else
+                        end if;
+
                     end if;
                 end if; --if (ppu_mask(PPUSSP) = '1') then
 

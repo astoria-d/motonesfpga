@@ -295,6 +295,26 @@ begin
         cpu_d <= conv_std_logic_vector(25, 8);
         wait for cpu_clk_time;
 
+        --item #10
+        r_nw <= '0';
+        cpu_addr <= "011";
+        cpu_d <= conv_std_logic_vector(4 * 10, 8);
+        wait for cpu_clk_time;
+
+        --y
+        cpu_addr <= "100";
+        cpu_d <= conv_std_logic_vector(12, 8);
+        wait for cpu_clk_time;
+        --attr
+        cpu_d <= conv_std_logic_vector(16#11#, 8);
+        wait for cpu_clk_time;
+        --tile id
+        cpu_d <= conv_std_logic_vector(4, 8);
+        wait for cpu_clk_time;
+        --x
+        cpu_d <= conv_std_logic_vector(30, 8);
+        wait for cpu_clk_time;
+
         --test read
         r_nw <= '0';
         cpu_addr <= "011";
