@@ -508,7 +508,7 @@ begin
             port map (clk_n, p_oam_cnt_res_n, '1', spr_tile_we_n, s_oam_data, spr_tile_tmp);
 
 
-   --reverse bit when NOT SPRHFL is set (.nes file format endian).
+   --reverse bit when NOT SPRHFL is set (.nes file format bit endian).
    spr_ptn_in <= vram_ad when spr_attr(conv_integer(s_oam_addr_cpy(4 downto 2)))(SPRHFL) = '1' else
                 (vram_ad(0) & vram_ad(1) & vram_ad(2) & vram_ad(3) & 
                  vram_ad(4) & vram_ad(5) & vram_ad(6) & vram_ad(7));
