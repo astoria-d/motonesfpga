@@ -164,7 +164,7 @@ begin
 
         --ppuctl set
         cpu_addr <= "000";
-        cpu_d <= "00010010";
+        cpu_d <= "00011010";
         wait for cpu_clk_time;
 
         --vram addr set
@@ -269,7 +269,7 @@ begin
         cpu_d <= conv_std_logic_vector(16#11#, 8);
         wait for cpu_clk_time;
         --tile id
-        cpu_d <= conv_std_logic_vector(30, 8);
+        cpu_d <= conv_std_logic_vector(16#0d#, 8);
         wait for cpu_clk_time;
         --x
         cpu_d <= conv_std_logic_vector(15, 8);
@@ -289,7 +289,7 @@ begin
         cpu_d <= conv_std_logic_vector(16#11#, 8);
         wait for cpu_clk_time;
         --tile id
-        cpu_d <= conv_std_logic_vector(40, 8);
+        cpu_d <= conv_std_logic_vector(16#0e#, 8);
         wait for cpu_clk_time;
         --x
         cpu_d <= conv_std_logic_vector(25, 8);
@@ -309,7 +309,7 @@ begin
         cpu_d <= conv_std_logic_vector(16#11#, 8);
         wait for cpu_clk_time;
         --tile id
-        cpu_d <= conv_std_logic_vector(4, 8);
+        cpu_d <= conv_std_logic_vector(16#0e#, 8);
         wait for cpu_clk_time;
         --x
         cpu_d <= conv_std_logic_vector(30, 8);
