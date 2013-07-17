@@ -13,7 +13,7 @@ void vga_shm_free(void* addr);
 
 int main(int argc, char **argv) {
     int fd;
-    int dump;
+    int dump = 0;
     struct rgb15 *disp_data;
     struct rgb15 *col;
     int x, y;
