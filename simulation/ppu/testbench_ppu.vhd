@@ -177,9 +177,10 @@ begin
         cpu_d <= conv_std_logic_vector(16#2800# + 32, 16)(7 downto 0);
         wait for cpu_clk_time;
 
-        for i in 0 to 5 loop
+        for i in 0 to 32 * 5 loop
             cpu_addr <= "111";
-            cpu_d <= conv_std_logic_vector(i + 32, 8);
+            --cpu_d <= conv_std_logic_vector(i + 32, 8);
+            cpu_d <= conv_std_logic_vector(37, 8);
             wait for cpu_clk_time;
         end loop;
 
@@ -263,16 +264,16 @@ begin
 
         --y
         cpu_addr <= "100";
-        cpu_d <= conv_std_logic_vector(1, 8);
-        wait for cpu_clk_time;
-        --attr
-        cpu_d <= conv_std_logic_vector(16#11#, 8);
+        cpu_d <= conv_std_logic_vector(8, 8);
         wait for cpu_clk_time;
         --tile id
         cpu_d <= conv_std_logic_vector(16#0d#, 8);
         wait for cpu_clk_time;
+        --attr
+        cpu_d <= conv_std_logic_vector(16#11#, 8);
+        wait for cpu_clk_time;
         --x
-        cpu_d <= conv_std_logic_vector(15, 8);
+        cpu_d <= conv_std_logic_vector(50, 8);
         wait for cpu_clk_time;
 
         --item #4
@@ -283,13 +284,13 @@ begin
 
         --y
         cpu_addr <= "100";
-        cpu_d <= conv_std_logic_vector(10, 8);
-        wait for cpu_clk_time;
-        --attr
-        cpu_d <= conv_std_logic_vector(16#11#, 8);
+        cpu_d <= conv_std_logic_vector(14, 8);
         wait for cpu_clk_time;
         --tile id
-        cpu_d <= conv_std_logic_vector(16#0e#, 8);
+        cpu_d <= conv_std_logic_vector(16#0a#, 8);
+        wait for cpu_clk_time;
+        --attr
+        cpu_d <= conv_std_logic_vector(16#13#, 8);
         wait for cpu_clk_time;
         --x
         cpu_d <= conv_std_logic_vector(25, 8);
@@ -305,14 +306,14 @@ begin
         cpu_addr <= "100";
         cpu_d <= conv_std_logic_vector(12, 8);
         wait for cpu_clk_time;
-        --attr
-        cpu_d <= conv_std_logic_vector(16#11#, 8);
-        wait for cpu_clk_time;
         --tile id
         cpu_d <= conv_std_logic_vector(16#0e#, 8);
         wait for cpu_clk_time;
+        --attr
+        cpu_d <= conv_std_logic_vector(16#11#, 8);
+        wait for cpu_clk_time;
         --x
-        cpu_d <= conv_std_logic_vector(30, 8);
+        cpu_d <= conv_std_logic_vector(40, 8);
         wait for cpu_clk_time;
 
         --test read

@@ -158,6 +158,9 @@ constant PPUIR     : integer := 5;  --intensify red
 constant PPUIG     : integer := 6;  --intensify green
 constant PPUIB     : integer := 7;  --intensify blue
 
+constant SPRHFL     : integer := 6;  --flip sprigte horizontally
+constant SPRVFL     : integer := 7;  --flip sprigte vertically
+
 subtype nes_color_data  is std_logic_vector (11 downto 0);
 type nes_color_array    is array (0 to 63) of nes_color_data;
 --ref: http://hlc6502.web.fc2.com/NesPal2.htm
@@ -570,9 +573,9 @@ begin
     end if;
 
     if (dot_output = false) then
-        b <= (others => '1');
-        g <= (others => '1');
-        r <= (others => '1');
+        b <= (others => '0');
+        g <= (others => '0');
+        r <= (others => '0');
     end if; --if (dot_output = false) then
 end;
 
@@ -834,9 +837,16 @@ end;
 
                         ----fetch pattern table low byte.
                         if (cur_x (2 downto 0) = "101" ) then
-                            vram_addr <= "0" & ppu_ctrl(PPUSPA) & 
-                                            spr_tile_tmp(dsize - 1 downto 0) 
-                                                & "0"  & next_y(2  downto 0);
+                            if (spr_attr(conv_integer(s_oam_addr_cpy(4 downto 2)))(SPRVFL) = '0') then
+                                vram_addr <= "0" & ppu_ctrl(PPUSPA) & 
+                                            spr_tile_tmp(dsize - 1 downto 0) & "0" & 
+                                            (next_y(2 downto 0) - spr_y_tmp(2 downto 0) - "001");
+                            else
+                                --flip sprite horizontally.
+                                vram_addr <= "0" & ppu_ctrl(PPUSPA) & 
+                                            spr_tile_tmp(dsize - 1 downto 0) & "0" & 
+                                            (spr_y_tmp(2 downto 0) - next_y(2 downto 0) - "001");
+                            end if;
                         end if;
 
                         if (cur_x (2 downto 0) = "110" ) then
@@ -847,9 +857,18 @@ end;
 
                         ----fetch pattern table high byte.
                         if (cur_x (2 downto 0) = "111" ) then
-                            vram_addr <= "0" & ppu_ctrl(PPUSPA) & 
-                                            spr_tile_tmp(dsize - 1 downto 0) 
-                                                & "0"  & next_y(2  downto 0) + "00000000001000";
+                            if (spr_attr(conv_integer(s_oam_addr_cpy(4 downto 2)))(SPRVFL) = '0') then
+                                vram_addr <= "0" & ppu_ctrl(PPUSPA) & 
+                                            spr_tile_tmp(dsize - 1 downto 0) & "0" & 
+                                            (next_y(2 downto 0) - spr_y_tmp(2 downto 0))
+                                                + "00000000000111";
+                            else
+                                --flip sprite horizontally.
+                                vram_addr <= "0" & ppu_ctrl(PPUSPA) & 
+                                            spr_tile_tmp(dsize - 1 downto 0) & "0"  & 
+                                            (spr_y_tmp(2 downto 0) - next_y(2 downto 0))
+                                                + "00000000000111";
+                            end if;
                         end if;
 
                         if (cur_x (2 downto 0) = "000") then
