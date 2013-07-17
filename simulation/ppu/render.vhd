@@ -337,6 +337,7 @@ signal spr_y_we_n       : std_logic;
 signal spr_tile_we_n    : std_logic;
 signal spr_y_tmp        : std_logic_vector (dsize - 1 downto 0);
 signal spr_tile_tmp     : std_logic_vector (dsize - 1 downto 0);
+signal spr_ptn_in       : std_logic_vector (dsize - 1 downto 0);
 
 
 begin
@@ -506,6 +507,11 @@ begin
     spr_tile_inst : d_flip_flop generic map(dsize)
             port map (clk_n, p_oam_cnt_res_n, '1', spr_tile_we_n, s_oam_data, spr_tile_tmp);
 
+
+   --reverse bit when NOT SPRHFL is set (.nes file format endian).
+   spr_ptn_in <= vram_ad when spr_attr(conv_integer(s_oam_addr_cpy(4 downto 2)))(SPRHFL) = '1' else
+                (vram_ad(0) & vram_ad(1) & vram_ad(2) & vram_ad(3) & 
+                 vram_ad(4) & vram_ad(5) & vram_ad(6) & vram_ad(7));
     --array instances...
     spr_inst : for i in 0 to 7 generate
         spr_x_inst : counter_register generic map(dsize, 16#ff#)
@@ -515,10 +521,10 @@ begin
                 port map (clk_n, rst_n, '1', spr_attr_we_n(i), s_oam_data, spr_attr(i));
 
         spr_ptn_l_inst : shift_register generic map(dsize, 1)
-                port map (clk_n, rst_n, spr_ptn_ce_n(i), spr_ptn_l_we_n(i), vram_ad, spr_ptn_l(i));
+                port map (clk_n, rst_n, spr_ptn_ce_n(i), spr_ptn_l_we_n(i), spr_ptn_in, spr_ptn_l(i));
 
         spr_ptn_h_inst : shift_register generic map(dsize, 1)
-                port map (clk_n, rst_n, spr_ptn_ce_n(i), spr_ptn_h_we_n(i), vram_ad, spr_ptn_h(i));
+                port map (clk_n, rst_n, spr_ptn_ce_n(i), spr_ptn_h_we_n(i), spr_ptn_in, spr_ptn_h(i));
     end generate;
 
     clk_p : process (rst_n, clk) 

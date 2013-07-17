@@ -310,7 +310,27 @@ begin
         cpu_d <= conv_std_logic_vector(16#0e#, 8);
         wait for cpu_clk_time;
         --attr
-        cpu_d <= conv_std_logic_vector(16#11#, 8);
+        cpu_d <= conv_std_logic_vector(16#43#, 8);
+        wait for cpu_clk_time;
+        --x
+        cpu_d <= conv_std_logic_vector(40, 8);
+        wait for cpu_clk_time;
+
+        --item #11
+        r_nw <= '0';
+        cpu_addr <= "011";
+        cpu_d <= conv_std_logic_vector(4 * 11, 8);
+        wait for cpu_clk_time;
+
+        --y
+        cpu_addr <= "100";
+        cpu_d <= conv_std_logic_vector(24, 8);
+        wait for cpu_clk_time;
+        --tile id
+        cpu_d <= conv_std_logic_vector(19, 8);
+        wait for cpu_clk_time;
+        --attr
+        cpu_d <= conv_std_logic_vector(16#c0#, 8);
         wait for cpu_clk_time;
         --x
         cpu_d <= conv_std_logic_vector(40, 8);
