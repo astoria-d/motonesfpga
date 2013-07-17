@@ -404,7 +404,8 @@ begin
     end generate;
     ptn_h_in(dsize - 1 downto 0) <= ptn_h_in_rev(dsize - 1 downto 0);
 
-    ptn_en_n <= '0' when cur_x < conv_std_logic_vector(HSCAN_NEXT_EXTRA, X_SIZE) else
+    ptn_en_n <= '1' when cur_x = conv_std_logic_vector(0, X_SIZE) else
+                '0' when cur_x <= conv_std_logic_vector(HSCAN_NEXT_EXTRA, X_SIZE) else
                 '1';
 
     ptn_l_inst : d_flip_flop generic map(dsize)
