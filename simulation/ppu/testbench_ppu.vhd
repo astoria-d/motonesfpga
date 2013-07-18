@@ -164,7 +164,7 @@ begin
 
         --ppuctl set
         cpu_addr <= "000";
-        cpu_d <= "00011010";
+        cpu_d <= "10011010";
         wait for cpu_clk_time;
 
         --vram addr set

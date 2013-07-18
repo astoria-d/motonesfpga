@@ -144,6 +144,7 @@ signal ppu_data_we_n    : std_logic;
 signal ppu_ctrl         : std_logic_vector (dsize - 1 downto 0);
 signal ppu_mask         : std_logic_vector (dsize - 1 downto 0);
 signal ppu_status       : std_logic_vector (dsize - 1 downto 0);
+signal ppu_status_in    : std_logic_vector (dsize - 1 downto 0);
 signal oam_addr         : std_logic_vector (dsize - 1 downto 0);
 signal oam_data         : std_logic_vector (dsize - 1 downto 0);
 signal ppu_scroll_x     : std_logic_vector (dsize - 1 downto 0);
@@ -165,7 +166,7 @@ begin
     render_inst : ppu_render port map (clk, rst_n, vblank_n, 
             rd_n, wr_n, ale, vram_ad, vram_a,
             pos_x, pos_y, nes_r, nes_g, nes_b,
-            ppu_ctrl, ppu_mask, ppu_status, ppu_scroll_x, ppu_scroll_y,
+            ppu_ctrl, ppu_mask, ppu_status_in, ppu_scroll_x, ppu_scroll_y,
             r_nw, oam_bus_ce_n, plt_bus_ce_n, 
             oam_plt_addr, oam_plt_data);
 
@@ -186,7 +187,7 @@ begin
             port map (clk_n, rst_n, '1', ppu_mask_we_n, cpu_d, ppu_mask);
 
     ppu_status_inst : d_flip_flop generic map(dsize)
-            port map (clk_n, rst_n, '1', ppu_status_we_n, cpu_d, ppu_status);
+            port map (clk_n, rst_n, '1', ppu_status_we_n, ppu_status_in, ppu_status);
 
     oma_addr_inst : counter_register generic map(dsize, 1)
             port map (clk_n, rst_n, oam_addr_ce_n, oam_addr_we_n, cpu_d, oam_addr);

@@ -161,6 +161,10 @@ constant PPUIB     : integer := 7;  --intensify blue
 constant SPRHFL     : integer := 6;  --flip sprigte horizontally
 constant SPRVFL     : integer := 7;  --flip sprigte vertically
 
+constant ST_SOF     : integer := 5;  --sprite overflow
+constant ST_SP0     : integer := 6;  --sprite 0 hits
+constant ST_VBL     : integer := 7;  --vblank
+
 subtype nes_color_data  is std_logic_vector (11 downto 0);
 type nes_color_array    is array (0 to 63) of nes_color_data;
 --ref: http://hlc6502.web.fc2.com/NesPal2.htm
@@ -231,7 +235,6 @@ constant nes_color_palette : nes_color_array := (
         conv_std_logic_vector(16#000#, 12)
         );
 
-signal rst              : std_logic;
 signal clk_n            : std_logic;
 
 --timing adjust
@@ -340,7 +343,6 @@ signal spr_ptn_in       : std_logic_vector (dsize - 1 downto 0);
 
 begin
 
-    rst <= not rst_n;
     clk_n <= not clk;
 
     cnt_x_en_n <= '0';
@@ -568,6 +570,12 @@ begin
         end loop;
     end if;
 
+    if (dot_output = true and ppu_mask(PPUSBG) = '1' and 
+            (disp_ptn_h(0) or disp_ptn_l(0)) = '1') then
+        --raise sprite 0 hit.
+        ppu_status(ST_SP0) <= '1';
+    end if;
+
     --first color in the palette is transparent color.
     if (ppu_mask(PPUSBG) = '1' and dot_output = false and 
             (disp_ptn_h(0) or disp_ptn_l(0)) = '1') then
@@ -596,6 +604,9 @@ end;
             cnt_x_res_n <= '0';
             cnt_y_res_n <= '0';
             nt_we_n <= '1';
+
+            vblank_n <= '0';
+            ppu_status <= (others => '0');
 
             b <= (others => '0');
             g <= (others => '0');
@@ -925,6 +936,25 @@ end;
                     g <= (others => '0');
                     r <= (others => '1');
                 end if;--if (ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') then
+
+                --flag operation
+                if ((cur_x = conv_std_logic_vector(1, X_SIZE)) and
+                    (cur_y = conv_std_logic_vector(VSCAN + 1, X_SIZE))) then
+                    --start vblank.
+                    if (ppu_ctrl(PPUNEN) = '1') then
+                        vblank_n <= '1';
+                    end if;
+                    ppu_status(ST_VBL) <= '1';
+                elsif ((cur_x = conv_std_logic_vector(1, X_SIZE)) and
+                    (cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE))) then
+
+                    --clear flag.
+                    vblank_n <= '0';
+                    ppu_status(ST_SP0) <= '0';
+                    ppu_status(ST_VBL) <= '0';
+                    --TODO: sprite overflow is not inplemented!
+                    ppu_status(ST_SOF) <= '0';
+                end if;
             end if; --if (clk'event and clk = '1') then
         end if;--if (rst_n = '0') then
     end process;
