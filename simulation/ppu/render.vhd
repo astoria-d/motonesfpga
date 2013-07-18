@@ -256,7 +256,6 @@ signal disp_nt          : std_logic_vector (dsize - 1 downto 0);
 
 signal attr_ce_n        : std_logic;
 signal attr_we_n        : std_logic;
-signal attr_in          : std_logic_vector (dsize - 1 downto 0);
 signal attr_val         : std_logic_vector (dsize - 1 downto 0);
 signal disp_attr_we_n   : std_logic;
 signal disp_attr        : std_logic_vector (dsize - 1 downto 0);
@@ -273,11 +272,11 @@ signal ptn_h_we_n       : std_logic;
 signal ptn_h_in         : std_logic_vector (dsize * 2 - 1 downto 0);
 signal disp_ptn_h       : std_logic_vector (dsize * 2 - 1 downto 0);
 
+--signals for palette / oam access from cpu
+signal r_n              : std_logic;
 signal vram_addr        : std_logic_vector (asize - 1 downto 0);
 
-
-signal r_n              : std_logic;
-
+--palette
 signal plt_ram_ce_n     : std_logic;
 signal plt_r_n          : std_logic;
 signal plt_w_n          : std_logic;
@@ -285,6 +284,7 @@ signal plt_addr_in      : std_logic_vector (4 downto 0);
 signal plt_addr         : std_logic_vector (4 downto 0);
 signal plt_data         : std_logic_vector (dsize - 1 downto 0);
 
+--primari / secondary oam
 signal oam_ram_ce_n     : std_logic;
 signal oam_r_n          : std_logic;
 signal oam_w_n          : std_logic;
@@ -386,9 +386,8 @@ begin
     nt_inst : d_flip_flop generic map(dsize)
             port map (clk_n, rst_n, '1', nt_we_n, vram_ad, disp_nt);
 
-    attr_in <= vram_ad;
     at_inst : d_flip_flop generic map(dsize)
-            port map (clk_n, rst_n, '1', attr_we_n, attr_in, attr_val);
+            port map (clk_n, rst_n, '1', attr_we_n, vram_ad, attr_val);
 
     disp_at_inst : shift_register generic map(dsize, 2)
             port map (clk_n, rst_n, attr_ce_n, disp_attr_we_n, attr_val, disp_attr);
@@ -546,9 +545,6 @@ begin
                     g <= nes_color_palette(pl_index) (7 downto 4);
                     r <= nes_color_palette(pl_index) (3 downto 0);
 
---                    b <= (others => '0');
---                    g <= (others => '1');
---                    r <= (others => '0');
                     dot_output := true;
                     exit;
                 end if;
@@ -730,7 +726,7 @@ end;
                         --TODO: sprite evaluation is simplified!!
                         --not complying the original NES spec at
                         --http://wiki.nesdev.com/w/index.php/PPU_sprite_evaluation
-                        --e.g., sprite when overflow happens, it just overwrite the 
+                        --e.g., when overflow happens, it just ignore subsequent entry.
                         --old secondary sprite entry.
                         if (p_oam_cnt = "00000000" and cur_x > conv_std_logic_vector(192, X_SIZE)) then
                             p_oam_cnt_wrap_n <= '0';
