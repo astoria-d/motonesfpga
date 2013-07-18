@@ -265,14 +265,12 @@ signal ptn_en_n         : std_logic;
 
 signal ptn_l_we_n       : std_logic;
 signal ptn_l_in         : std_logic_vector (dsize - 1 downto 0);
-signal ptn_l_in_rev     : std_logic_vector (dsize - 1 downto 0);
 signal ptn_l_val        : std_logic_vector (dsize - 1 downto 0);
 signal disp_ptn_l_in    : std_logic_vector (dsize * 2 - 1 downto 0);
 signal disp_ptn_l       : std_logic_vector (dsize * 2 - 1 downto 0);
 
 signal ptn_h_we_n       : std_logic;
 signal ptn_h_in         : std_logic_vector (dsize * 2 - 1 downto 0);
-signal ptn_h_in_rev     : std_logic_vector (dsize * 2 - 1 downto 0);
 signal disp_ptn_h       : std_logic_vector (dsize * 2 - 1 downto 0);
 
 signal vram_addr        : std_logic_vector (asize - 1 downto 0);
@@ -311,6 +309,7 @@ signal s_oam_cnt        : std_logic_vector (4 downto 0);
 signal p_oam_addr_in    : std_logic_vector (dsize - 1 downto 0);
 signal oam_ev_status    : std_logic_vector (2 downto 0);
 
+--oam evaluation status
 constant EV_STAT_COMP       : std_logic_vector (2 downto 0) := "000";
 constant EV_STAT_CP1        : std_logic_vector (2 downto 0) := "001";
 constant EV_STAT_CP2        : std_logic_vector (2 downto 0) := "010";
@@ -396,13 +395,11 @@ begin
 
     --chr rom data's bit is stored in opposite direction.
     --reverse bit when loading...
-    ptn_l_in_rev <= vram_ad;
-    ptn_h_in_rev <= vram_ad & disp_ptn_h (dsize downto 1);
-    bit_rev: for cnt in 0 to 7 generate
-        ptn_l_in(dsize - 1 - cnt) <= ptn_l_in_rev(cnt);
-        ptn_h_in(dsize * 2 - 1 - cnt) <= ptn_h_in_rev(dsize + cnt);
-    end generate;
-    ptn_h_in(dsize - 1 downto 0) <= ptn_h_in_rev(dsize - 1 downto 0);
+    ptn_l_in <= (vram_ad(0) & vram_ad(1) & vram_ad(2) & vram_ad(3) & 
+                 vram_ad(4) & vram_ad(5) & vram_ad(6) & vram_ad(7));
+    ptn_h_in <= (vram_ad(0) & vram_ad(1) & vram_ad(2) & vram_ad(3) & 
+                 vram_ad(4) & vram_ad(5) & vram_ad(6) & vram_ad(7)) & 
+                disp_ptn_h (dsize downto 1);
 
     ptn_en_n <= '1' when cur_x = conv_std_logic_vector(0, X_SIZE) else
                 '0' when cur_x <= conv_std_logic_vector(HSCAN_NEXT_EXTRA, X_SIZE) else
