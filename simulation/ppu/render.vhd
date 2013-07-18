@@ -280,7 +280,6 @@ signal vram_addr        : std_logic_vector (asize - 1 downto 0);
 signal plt_ram_ce_n     : std_logic;
 signal plt_r_n          : std_logic;
 signal plt_w_n          : std_logic;
-signal plt_addr_in      : std_logic_vector (4 downto 0);
 signal plt_addr         : std_logic_vector (4 downto 0);
 signal plt_data         : std_logic_vector (dsize - 1 downto 0);
 
@@ -434,7 +433,32 @@ begin
                             (cur_y < conv_std_logic_vector(VSCAN, X_SIZE)) else
                     '1';
     plt_addr <= oam_plt_addr(4 downto 0) when plt_bus_ce_n = '0' else
-                plt_addr_in when ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1' else
+                "1" & spr_attr(0)(1 downto 0) & spr_ptn_h(0)(0) & spr_ptn_l(0)(0)
+                    when ppu_mask(PPUSSP) = '1' and spr_x_cnt(0) = "00000000" and 
+                        (spr_ptn_h(0)(0) or spr_ptn_l(0)(0)) = '1' else
+                "1" & spr_attr(1)(1 downto 0) & spr_ptn_h(1)(0) & spr_ptn_l(1)(0)
+                    when ppu_mask(PPUSSP) = '1' and spr_x_cnt(1) = "00000000" and 
+                        (spr_ptn_h(1)(0) or spr_ptn_l(1)(0)) = '1' else
+                "1" & spr_attr(2)(1 downto 0) & spr_ptn_h(2)(0) & spr_ptn_l(2)(0)
+                    when ppu_mask(PPUSSP) = '1' and spr_x_cnt(2) = "00000000" and 
+                        (spr_ptn_h(2)(0) or spr_ptn_l(2)(0)) = '1' else
+                "1" & spr_attr(3)(1 downto 0) & spr_ptn_h(3)(0) & spr_ptn_l(3)(0)
+                    when ppu_mask(PPUSSP) = '1' and spr_x_cnt(3) = "00000000" and 
+                        (spr_ptn_h(3)(0) or spr_ptn_l(3)(0)) = '1' else
+                "1" & spr_attr(4)(1 downto 0) & spr_ptn_h(4)(0) & spr_ptn_l(4)(0)
+                    when ppu_mask(PPUSSP) = '1' and spr_x_cnt(4) = "00000000" and 
+                        (spr_ptn_h(4)(0) or spr_ptn_l(4)(0)) = '1' else
+                "1" & spr_attr(5)(1 downto 0) & spr_ptn_h(5)(0) & spr_ptn_l(5)(0)
+                    when ppu_mask(PPUSSP) = '1' and spr_x_cnt(5) = "00000000" and 
+                        (spr_ptn_h(5)(0) or spr_ptn_l(5)(0)) = '1' else
+                "1" & spr_attr(6)(1 downto 0) & spr_ptn_h(6)(0) & spr_ptn_l(6)(0)
+                    when ppu_mask(PPUSSP) = '1' and spr_x_cnt(6) = "00000000" and 
+                        (spr_ptn_h(6)(0) or spr_ptn_l(6)(0)) = '1' else
+                "1" & spr_attr(7)(1 downto 0) & spr_ptn_h(7)(0) & spr_ptn_l(7)(0)
+                    when ppu_mask(PPUSSP) = '1' and spr_x_cnt(7) = "00000000" and 
+                        (spr_ptn_h(7)(0) or spr_ptn_l(7)(0)) = '1' else
+                "0" & disp_attr(1 downto 0) & disp_ptn_h(0) & disp_ptn_l(0) 
+                                when ppu_mask(PPUSBG) = '1' else
                 (others => 'Z');
     plt_r_n <= not r_nw when plt_bus_ce_n = '0' else
                 '0' when ppu_mask(PPUSBG) = '1' else
@@ -538,7 +562,6 @@ begin
         for i in 0 to 7 loop
             if (spr_x_cnt(i) = "00000000") then
                 if ((spr_ptn_h(i)(0) or spr_ptn_l(i)(0)) = '1') then
-                    plt_addr_in <= "1" & spr_attr(i)(1 downto 0) & spr_ptn_h(i)(0) & spr_ptn_l(i)(0);
                     pl_index := conv_integer(plt_data(5 downto 0));
 
                     b <= nes_color_palette(pl_index) (11 downto 8);
@@ -555,8 +578,6 @@ begin
     --first color in the palette is transparent color.
     if (ppu_mask(PPUSBG) = '1' and dot_output = false and 
             (disp_ptn_h(0) or disp_ptn_l(0)) = '1') then
-        plt_addr_in <= "0" & disp_attr(1 downto 0) & disp_ptn_h(0) & disp_ptn_l(0);
-
         pl_index := conv_integer(plt_data(5 downto 0));
 
         b <= nes_color_palette(pl_index) (11 downto 8);
