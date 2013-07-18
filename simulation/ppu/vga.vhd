@@ -29,8 +29,8 @@ component counter_register
     );
     port (  clk         : in std_logic;
             rst_n       : in std_logic;
-            set_n       : in std_logic;
             ce_n        : in std_logic;
+            we_n        : in std_logic;
             d           : in std_logic_vector(dsize - 1 downto 0);
             q           : out std_logic_vector(dsize - 1 downto 0)
     );
@@ -118,16 +118,16 @@ begin
 
     vga_x_en_n <= '0';
     vga_x_inst : counter_register generic map (VGA_SIZE, 1)
-            port map (vga_clk, vga_x_res_n, '1', vga_x_en_n, (others => '0'), vga_x);
+            port map (vga_clk, vga_x_res_n, vga_x_en_n, '1', (others => '0'), vga_x);
 
     count5_inst : counter_register generic map (3, 1)
-            port map (vga_clk, count5_res_n, '1', '0', (others => '0'), count5);
+            port map (vga_clk, count5_res_n, '0', '1', (others => '0'), count5);
     nes_x_inst : counter_register generic map (8, 1)
-            port map (vga_clk, vga_x_res_n, '1', nes_x_en_n, (others => '0'), nes_x);
+            port map (vga_clk, vga_x_res_n, nes_x_en_n, '1', (others => '0'), nes_x);
 
     ---test dummy value...
     vga_y_inst : counter_register generic map (VGA_SIZE, 1)
-            port map (vga_clk, vga_y_res_n, rst_n, vga_y_en_n, 
+            port map (vga_clk, vga_y_res_n, vga_y_en_n, rst_n, 
                         conv_std_logic_vector(VGA_H - 2, VGA_SIZE), vga_y);
 
     p_vga_out : process (rst_n, vga_clk)

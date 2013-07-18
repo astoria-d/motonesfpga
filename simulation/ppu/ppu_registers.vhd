@@ -45,7 +45,7 @@ begin
     dff_inst : d_flip_flop generic map (dsize)
             port map (clk, rst_n, '1', dff_we_n, df_in, q_out);
 
-    clk_p : process (clk,rst_n, ce_n, d) 
+    clk_p : process (clk, we_n, ce_n, d) 
     begin
         if (we_n = '0') then
             df_in <= d;
@@ -72,8 +72,8 @@ entity counter_register is
     );
     port (  clk         : in std_logic;
             rst_n       : in std_logic;
-            set_n       : in std_logic;
             ce_n        : in std_logic;
+            we_n        : in std_logic;
             d           : in std_logic_vector(dsize - 1 downto 0);
             q           : out std_logic_vector(dsize - 1 downto 0)
     );
@@ -97,21 +97,21 @@ end component;
 
 use ieee.std_logic_unsigned.all;
 
+signal dff_we_n : std_logic;
 signal d_in : std_logic_vector(dsize - 1 downto 0);
 signal q_out : std_logic_vector(dsize - 1 downto 0);
 
 begin
     q <= q_out;
+    dff_we_n <= ce_n and we_n;
     counter_reg_inst : d_flip_flop generic map (dsize)
-            port map (clk, rst_n, set_n, ce_n, d_in, q_out);
+            port map (clk, rst_n, '1', dff_we_n, d_in, q_out);
         
-    clk_p : process (rst_n, set_n, ce_n, clk) 
+    clk_p : process (clk, we_n, ce_n, d)
     begin
-        if (set_n = '0') then
+        if (we_n = '0') then
             d_in <= d;
-        end if;
-
-        if (ce_n = '0') then
+        elsif (ce_n = '0') then
             d_in <= q_out + inc;
         end if;
     end process;

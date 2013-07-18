@@ -39,8 +39,8 @@ component counter_register
     );
     port (  clk         : in std_logic;
             rst_n       : in std_logic;
-            set_n       : in std_logic;
             ce_n        : in std_logic;
+            we_n        : in std_logic;
             d           : in std_logic_vector(dsize - 1 downto 0);
             q           : out std_logic_vector(dsize - 1 downto 0)
     );
@@ -362,7 +362,7 @@ begin
               '1';
 
     io_cnt_inst : counter_register generic map (1, 1)
-            port map (clk, cnt_x_res_n, '1', '0', (others => '0'), io_cnt);
+            port map (clk, cnt_x_res_n, '0', '1', (others => '0'), io_cnt);
 
     ---x pos is 8 cycle ahead of current pos.
     next_x <= cur_x + "000010000" 
@@ -376,11 +376,9 @@ begin
 
     --current x,y pos
     cur_x_inst : counter_register generic map (X_SIZE, 1)
-            port map (clk_n, cnt_x_res_n, '1', 
-                    cnt_x_en_n, (others => '0'), cur_x);
+            port map (clk_n, cnt_x_res_n, cnt_x_en_n, '1', (others => '0'), cur_x);
     cur_y_inst : counter_register generic map (X_SIZE, 1)
-            port map (clk_n, cnt_y_res_n, '1', 
-                    cnt_y_en_n, (others => '0'), cur_y);
+            port map (clk_n, cnt_y_res_n, cnt_y_en_n, '1', (others => '0'), cur_y);
 
     nt_inst : d_flip_flop generic map(dsize)
             port map (clk_n, rst_n, '1', nt_we_n, vram_ad, disp_nt);
@@ -501,11 +499,12 @@ begin
 
     ---secondary oam
     p_oam_cnt_inst : counter_register generic map (dsize, 4)
-            port map (clk_n, p_oam_cnt_res_n, '1', p_oam_cnt_ce_n, (others => '0'), p_oam_cnt);
+            port map (clk_n, p_oam_cnt_res_n, p_oam_cnt_ce_n, '1', (others => '0'), p_oam_cnt);
     s_oam_cnt_inst : counter_register generic map (5, 1)
-            port map (clk_n, p_oam_cnt_res_n, '1', s_oam_cnt_ce_n, (others => '0'), s_oam_cnt);
+            port map (clk_n, p_oam_cnt_res_n, s_oam_cnt_ce_n, '1', (others => '0'), s_oam_cnt);
     s_oam_addr_cpy_inst : counter_register generic map (5, 1)
-            port map (clk_n, p_oam_cnt_res_n, '1', s_oam_addr_cpy_ce_n, (others => '0'), s_oam_addr_cpy);
+            port map (clk_n, p_oam_cnt_res_n, s_oam_addr_cpy_ce_n, 
+                    '1', (others => '0'), s_oam_addr_cpy);
 
     s_oam_ram_ce_n <= clk when ppu_mask(PPUSSP) = '1' and cur_x(0) = '1' and
                                 cur_x > "000000001" and
@@ -536,7 +535,7 @@ begin
     --array instances...
     spr_inst : for i in 0 to 7 generate
         spr_x_inst : counter_register generic map(dsize, 16#ff#)
-                port map (clk_n, rst_n, spr_x_we_n(i), spr_x_ce_n(i), s_oam_data, spr_x_cnt(i));
+                port map (clk_n, rst_n, spr_x_ce_n(i), spr_x_we_n(i), s_oam_data, spr_x_cnt(i));
 
         spr_attr_inst : d_flip_flop generic map(dsize)
                 port map (clk_n, rst_n, '1', spr_attr_we_n(i), s_oam_data, spr_attr(i));
@@ -796,7 +795,7 @@ end;
                                 s_oam_cnt_ce_n <= '0';
                                 p_oam_cnt_ce_n <= '0';
                             end if;
-                        end if;
+                        end if;--if (cur_x(0) = '1') then
 
                         --prepare for next step
                         s_oam_addr_cpy_n <= '1';
@@ -855,7 +854,7 @@ end;
                                             spr_tile_tmp(dsize - 1 downto 0) & "0" & 
                                             (next_y(2 downto 0) - spr_y_tmp(2 downto 0) - "001");
                             else
-                                --flip sprite horizontally.
+                                --flip sprite vertically.
                                 vram_addr <= "0" & ppu_ctrl(PPUSPA) & 
                                             spr_tile_tmp(dsize - 1 downto 0) & "0" & 
                                             (spr_y_tmp(2 downto 0) - next_y(2 downto 0) - "001");
@@ -876,7 +875,7 @@ end;
                                             (next_y(2 downto 0) - spr_y_tmp(2 downto 0))
                                                 + "00000000000111";
                             else
-                                --flip sprite horizontally.
+                                --flip sprite vertically.
                                 vram_addr <= "0" & ppu_ctrl(PPUSPA) & 
                                             spr_tile_tmp(dsize - 1 downto 0) & "0"  & 
                                             (spr_y_tmp(2 downto 0) - next_y(2 downto 0))
@@ -894,8 +893,7 @@ end;
                     elsif (cur_x > conv_std_logic_vector(320, X_SIZE)) then
                         --clear last write enable.
                         spr_ptn_h_we_n <= "11111111";
-
-                    end if;
+                    end if;--if (cur_x /= "000000000" and cur_x <= conv_std_logic_vector(64, X_SIZE))
 
                     --display sprite.
                     if ((cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
@@ -912,9 +910,7 @@ end;
                                 spr_ptn_ce_n(i) <= '0';
                             end if;
                         end loop;
-
                     end if; --if ((cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) 
-
                 end if; --if (ppu_mask(PPUSSP) = '1') then
 
                 if (ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') then
@@ -928,7 +924,7 @@ end;
                     b <= (others => '1');
                     g <= (others => '0');
                     r <= (others => '1');
-                end if;--if (ppu_mask(PPUSBG) = '1') then
+                end if;--if (ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') then
             end if; --if (clk'event and clk = '1') then
         end if;--if (rst_n = '0') then
     end process;
