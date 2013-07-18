@@ -562,12 +562,6 @@ begin
         for i in 0 to 7 loop
             if (spr_x_cnt(i) = "00000000") then
                 if ((spr_ptn_h(i)(0) or spr_ptn_l(i)(0)) = '1') then
-                    pl_index := conv_integer(plt_data(5 downto 0));
-
-                    b <= nes_color_palette(pl_index) (11 downto 8);
-                    g <= nes_color_palette(pl_index) (7 downto 4);
-                    r <= nes_color_palette(pl_index) (3 downto 0);
-
                     dot_output := true;
                     exit;
                 end if;
@@ -578,14 +572,7 @@ begin
     --first color in the palette is transparent color.
     if (ppu_mask(PPUSBG) = '1' and dot_output = false and 
             (disp_ptn_h(0) or disp_ptn_l(0)) = '1') then
-        pl_index := conv_integer(plt_data(5 downto 0));
-
-        b <= nes_color_palette(pl_index) (11 downto 8);
-        g <= nes_color_palette(pl_index) (7 downto 4);
-        r <= nes_color_palette(pl_index) (3 downto 0);
-
         dot_output := true;
-
 --        d_print("output_rgb");
 --        d_print("pl_addr:" & conv_hex8(pl_addr));
 --        d_print("pl_index:" & conv_hex8(pl_index));
@@ -593,7 +580,12 @@ begin
 --            conv_hex16(nes_color_palette(pl_index)));
     end if;
 
-    if (dot_output = false) then
+    if (dot_output = true) then
+        pl_index := conv_integer(plt_data(5 downto 0));
+        b <= nes_color_palette(pl_index) (11 downto 8);
+        g <= nes_color_palette(pl_index) (7 downto 4);
+        r <= nes_color_palette(pl_index) (3 downto 0);
+    else
         b <= (others => '0');
         g <= (others => '0');
         r <= (others => '0');
