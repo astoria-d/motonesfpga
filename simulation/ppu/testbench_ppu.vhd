@@ -180,7 +180,13 @@ begin
         for i in 0 to 32 * 5 loop
             cpu_addr <= "111";
             --cpu_d <= conv_std_logic_vector(i + 32, 8);
+            if (i mod 2 = 0) then
             cpu_d <= conv_std_logic_vector(37, 8);
+            else
+            --cpu_d <= conv_std_logic_vector(16#0d#, 8);
+            --cpu_d <= conv_std_logic_vector(36, 8);
+            cpu_d <= conv_std_logic_vector(38, 8);
+            end if;
             wait for cpu_clk_time;
         end loop;
 
@@ -273,7 +279,7 @@ begin
         cpu_d <= conv_std_logic_vector(16#11#, 8);
         wait for cpu_clk_time;
         --x
-        cpu_d <= conv_std_logic_vector(50, 8);
+        cpu_d <= conv_std_logic_vector(0, 8);
         wait for cpu_clk_time;
 
         --item #4
@@ -356,28 +362,28 @@ begin
 
         ce_n <= '1';
 
-        wait for 3 ms;
-        wait until (cpu_clk'event and cpu_clk = '1');
-
-        --disable show bg.
-        ce_n <= '0';
-        r_nw <= '0';
-        cpu_addr <= "001";
-        cpu_d <= "00000000";
-        wait for cpu_clk_time;
-        ce_n <= '1';
-
-        wait for 3 ms;
-        wait until (cpu_clk'event and cpu_clk = '1');
-
-        --enable show bg.
-        ce_n <= '0';
-        r_nw <= '0';
-        cpu_addr <= "001";
-        cpu_d <= "00011000";
-        wait for cpu_clk_time;
-        ce_n <= '1';
-
+--        wait for 3 ms;
+--        wait until (cpu_clk'event and cpu_clk = '1');
+--
+--        --disable show bg.
+--        ce_n <= '0';
+--        r_nw <= '0';
+--        cpu_addr <= "001";
+--        cpu_d <= "00000000";
+--        wait for cpu_clk_time;
+--        ce_n <= '1';
+--
+--        wait for 3 ms;
+--        wait until (cpu_clk'event and cpu_clk = '1');
+--
+--        --enable show bg.
+--        ce_n <= '0';
+--        r_nw <= '0';
+--        cpu_addr <= "001";
+--        cpu_d <= "00011000";
+--        wait for cpu_clk_time;
+--        ce_n <= '1';
+--
         --wait for vblank
         wait until (vblank_n'event and vblank_n = '0');
         wait until (cpu_clk'event and cpu_clk = '1');

@@ -523,7 +523,7 @@ begin
     ---primary oam
     oam_ram_ce_n <= clk when oam_bus_ce_n = '0' and r_nw = '0' else
                     '0' when oam_bus_ce_n = '0' and r_nw = '1' else
-                    not io_cnt(0) when ppu_mask(PPUSSP) = '1' and
+                    '0' when ppu_mask(PPUSSP) = '1' and
                              cur_x > conv_std_logic_vector(64, X_SIZE) and
                              cur_x <= conv_std_logic_vector(256, X_SIZE) and
                              p_oam_cnt_wrap_n = '1' else
@@ -838,6 +838,7 @@ end;
                             s_oam_data <= oam_data;
 
                             if (oam_ev_status = EV_STAT_COMP) then
+                                --check y range.
                                 if (cur_y < "000000110" and oam_data <= cur_y + "000000001") or 
                                     (cur_y >= "000000110" and oam_data <= cur_y + "000000001" and 
                                              oam_data >= cur_y - "000000110") then
@@ -919,7 +920,7 @@ end;
                             if (spr_attr(conv_integer(s_oam_addr_cpy(4 downto 2)))(SPRVFL) = '0') then
                                 vram_addr <= "0" & ppu_ctrl(PPUSPA) & 
                                             spr_tile_tmp(dsize - 1 downto 0) & "0" & 
-                                            (next_y(2 downto 0) - spr_y_tmp(2 downto 0) - "001");
+                                            (next_y(2 downto 0) - spr_y_tmp(2 downto 0));
                             else
                                 --flip sprite vertically.
                                 vram_addr <= "0" & ppu_ctrl(PPUSPA) & 
@@ -940,7 +941,7 @@ end;
                                 vram_addr <= "0" & ppu_ctrl(PPUSPA) & 
                                             spr_tile_tmp(dsize - 1 downto 0) & "0" & 
                                             (next_y(2 downto 0) - spr_y_tmp(2 downto 0))
-                                                + "00000000000111";
+                                                + "00000000001000";
                             else
                                 --flip sprite vertically.
                                 vram_addr <= "0" & ppu_ctrl(PPUSPA) & 
