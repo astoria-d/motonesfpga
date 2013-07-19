@@ -355,6 +355,49 @@ begin
         wait for cpu_clk_time;
 
         ce_n <= '1';
+
+        wait for 3 ms;
+        wait until (cpu_clk'event and cpu_clk = '1');
+
+        --disable show bg.
+        ce_n <= '0';
+        r_nw <= '0';
+        cpu_addr <= "001";
+        cpu_d <= "00000000";
+        wait for cpu_clk_time;
+        ce_n <= '1';
+
+        wait for 3 ms;
+        wait until (cpu_clk'event and cpu_clk = '1');
+
+        --enable show bg.
+        ce_n <= '0';
+        r_nw <= '0';
+        cpu_addr <= "001";
+        cpu_d <= "00011000";
+        wait for cpu_clk_time;
+        ce_n <= '1';
+
+        --wait for vblank
+        wait until (vblank_n'event and vblank_n = '0');
+        wait until (cpu_clk'event and cpu_clk = '1');
+
+        --change name table test
+        ce_n <= '0';
+        cpu_addr <= "110";
+        cpu_d <= conv_std_logic_vector(16#2800#, 16)(15 downto 8);
+        wait for cpu_clk_time;
+        cpu_d <= conv_std_logic_vector(16#2800#, 16)(7 downto 0);
+        wait for cpu_clk_time;
+
+        for i in 0 to 32 * 5 loop
+            cpu_addr <= "111";
+            cpu_d <= conv_std_logic_vector(i + 32, 8);
+            wait for cpu_clk_time;
+        end loop;
+        wait for cpu_clk_time;
+
+        ce_n <= '1';
         cpu_addr <= (others => 'Z');
         cpu_d <= (others => 'Z');
         wait;

@@ -657,7 +657,7 @@ end;
             cnt_y_res_n <= '0';
             nt_we_n <= '1';
 
-            vblank_n <= '0';
+            vblank_n <= '1';
             ppu_status <= (others => '0');
 
             b <= (others => '0');
@@ -998,14 +998,14 @@ end;
                     (cur_y = conv_std_logic_vector(VSCAN + 1, X_SIZE))) then
                     --start vblank.
                     if (ppu_ctrl(PPUNEN) = '1') then
-                        vblank_n <= '1';
+                        vblank_n <= '0';
                     end if;
                     ppu_status(ST_VBL) <= '1';
                 elsif ((cur_x = conv_std_logic_vector(1, X_SIZE)) and
                     (cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE))) then
 
                     --clear flag.
-                    vblank_n <= '0';
+                    vblank_n <= '1';
                     ppu_status(ST_SP0) <= '0';
                     ppu_status(ST_VBL) <= '0';
                     --TODO: sprite overflow is not inplemented!
