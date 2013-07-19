@@ -130,7 +130,6 @@ signal ppu_clk_cnt          : std_logic_vector(1 downto 0);
 
 signal ppu_ctrl_we_n    : std_logic;
 signal ppu_mask_we_n    : std_logic;
-signal ppu_status_we_n  : std_logic;
 signal oam_addr_ce_n    : std_logic;
 signal oam_addr_we_n    : std_logic;
 signal oam_data_we_n    : std_logic;
@@ -144,7 +143,6 @@ signal ppu_data_we_n    : std_logic;
 signal ppu_ctrl         : std_logic_vector (dsize - 1 downto 0);
 signal ppu_mask         : std_logic_vector (dsize - 1 downto 0);
 signal ppu_status       : std_logic_vector (dsize - 1 downto 0);
-signal ppu_status_in    : std_logic_vector (dsize - 1 downto 0);
 signal oam_addr         : std_logic_vector (dsize - 1 downto 0);
 signal oam_data         : std_logic_vector (dsize - 1 downto 0);
 signal ppu_scroll_x     : std_logic_vector (dsize - 1 downto 0);
@@ -166,7 +164,7 @@ begin
     render_inst : ppu_render port map (clk, rst_n, vblank_n, 
             rd_n, wr_n, ale, vram_ad, vram_a,
             pos_x, pos_y, nes_r, nes_g, nes_b,
-            ppu_ctrl, ppu_mask, ppu_status_in, ppu_scroll_x, ppu_scroll_y,
+            ppu_ctrl, ppu_mask, ppu_status, ppu_scroll_x, ppu_scroll_y,
             r_nw, oam_bus_ce_n, plt_bus_ce_n, 
             oam_plt_addr, oam_plt_data);
 
@@ -185,9 +183,6 @@ begin
 
     ppu_mask_inst : d_flip_flop generic map(dsize)
             port map (clk_n, rst_n, '1', ppu_mask_we_n, cpu_d, ppu_mask);
-
-    ppu_status_inst : d_flip_flop generic map(dsize)
-            port map (clk_n, rst_n, '1', ppu_status_we_n, ppu_status_in, ppu_status);
 
     oma_addr_inst : counter_register generic map(dsize, 1)
             port map (clk_n, rst_n, oam_addr_ce_n, oam_addr_we_n, cpu_d, oam_addr);
@@ -225,12 +220,6 @@ begin
                 ppu_mask_we_n <= '0';
             else
                 ppu_mask_we_n <= '1';
-            end if;
-
-            if(cpu_addr = PPUSTATUS) then
-                ppu_status_we_n <= '0';
-            else
-                ppu_status_we_n <= '1';
             end if;
 
             if(cpu_addr = OAMADDR) then
@@ -275,7 +264,6 @@ begin
         else
             ppu_ctrl_we_n    <= '1';
             ppu_mask_we_n    <= '1';
-            ppu_status_we_n  <= '1';
             oam_addr_we_n    <= '1';
             oam_data_we_n    <= '1';
             ppu_scroll_x_we_n    <= '1';
@@ -394,6 +382,10 @@ begin
             end if;
             if (cpu_addr = OAMDATA and r_nw = '1' and ppu_clk_cnt /= "00") then
                 cpu_d <= oam_data;
+            end if;
+
+            if(cpu_addr = PPUSTATUS and r_nw = '1') then
+                cpu_d <= ppu_status;
             end if;
 
         else

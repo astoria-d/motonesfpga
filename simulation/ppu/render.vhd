@@ -347,20 +347,40 @@ begin
 
     cnt_x_en_n <= '0';
 
-    ale <= io_cnt(0) when ppu_mask(PPUSBG) = '1' else 
-           io_cnt(0) when ppu_mask(PPUSSP) = '1' else 
+    ale <= io_cnt(0) when ppu_mask(PPUSBG) = '1' and
+                (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
+           io_cnt(0) when ppu_mask(PPUSSP) = '1' and
+                (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
            'Z';
-    rd_n <= io_cnt(0) when ppu_mask(PPUSBG) = '1' else 
-            io_cnt(0) when ppu_mask(PPUSSP) = '1' else 
+    rd_n <= io_cnt(0) when ppu_mask(PPUSBG) = '1' and
+                (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
+            io_cnt(0) when ppu_mask(PPUSSP) = '1' and
+                (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
             'Z';
-    wr_n <= '1' when ppu_mask(PPUSBG) = '1' else 
-            '1' when ppu_mask(PPUSSP) = '1' else 
+    wr_n <= '1' when ppu_mask(PPUSBG) = '1' and
+                (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
+            '1' when ppu_mask(PPUSSP) = '1' and
+                (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
             'Z';
-    io_oe_n <= not io_cnt(0) when ppu_mask(PPUSBG) = '1' else 
-               not io_cnt(0) when ppu_mask(PPUSSP) = '1' else 
+    io_oe_n <= not io_cnt(0) when ppu_mask(PPUSBG) = '1' and
+                (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
+               not io_cnt(0) when ppu_mask(PPUSSP) = '1' and
+                (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
                '1';
-    d_oe_n <= '0' when ppu_mask(PPUSBG) = '1' else 
-              '0' when ppu_mask(PPUSSP) = '1' else 
+    d_oe_n <= '0' when ppu_mask(PPUSBG) = '1' and
+                (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
+              '0' when ppu_mask(PPUSSP) = '1' and
+                (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
               '1';
 
     io_cnt_inst : counter_register generic map (1, 1)
@@ -432,34 +452,62 @@ begin
                             (cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) and 
                             (cur_y < conv_std_logic_vector(VSCAN, X_SIZE)) else
                     '1';
+
     plt_addr <= oam_plt_addr(4 downto 0) when plt_bus_ce_n = '0' else
                 "1" & spr_attr(0)(1 downto 0) & spr_ptn_h(0)(0) & spr_ptn_l(0)(0)
-                    when ppu_mask(PPUSSP) = '1' and spr_x_cnt(0) = "00000000" and 
+                    when ppu_mask(PPUSSP) = '1' and
+                        (cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
+                        (cur_y < conv_std_logic_vector(VSCAN, X_SIZE)) and
+                        spr_x_cnt(0) = "00000000" and 
                         (spr_ptn_h(0)(0) or spr_ptn_l(0)(0)) = '1' else
                 "1" & spr_attr(1)(1 downto 0) & spr_ptn_h(1)(0) & spr_ptn_l(1)(0)
-                    when ppu_mask(PPUSSP) = '1' and spr_x_cnt(1) = "00000000" and 
+                    when ppu_mask(PPUSSP) = '1' and
+                        (cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
+                        (cur_y < conv_std_logic_vector(VSCAN, X_SIZE)) and
+                        spr_x_cnt(1) = "00000000" and 
                         (spr_ptn_h(1)(0) or spr_ptn_l(1)(0)) = '1' else
                 "1" & spr_attr(2)(1 downto 0) & spr_ptn_h(2)(0) & spr_ptn_l(2)(0)
-                    when ppu_mask(PPUSSP) = '1' and spr_x_cnt(2) = "00000000" and 
+                    when ppu_mask(PPUSSP) = '1' and 
+                        (cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
+                        (cur_y < conv_std_logic_vector(VSCAN, X_SIZE)) and
+                        spr_x_cnt(2) = "00000000" and
                         (spr_ptn_h(2)(0) or spr_ptn_l(2)(0)) = '1' else
                 "1" & spr_attr(3)(1 downto 0) & spr_ptn_h(3)(0) & spr_ptn_l(3)(0)
-                    when ppu_mask(PPUSSP) = '1' and spr_x_cnt(3) = "00000000" and 
+                    when ppu_mask(PPUSSP) = '1' and
+                        (cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
+                        (cur_y < conv_std_logic_vector(VSCAN, X_SIZE)) and
+                        spr_x_cnt(3) = "00000000" and
                         (spr_ptn_h(3)(0) or spr_ptn_l(3)(0)) = '1' else
                 "1" & spr_attr(4)(1 downto 0) & spr_ptn_h(4)(0) & spr_ptn_l(4)(0)
-                    when ppu_mask(PPUSSP) = '1' and spr_x_cnt(4) = "00000000" and 
+                    when ppu_mask(PPUSSP) = '1' and
+                        (cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
+                        (cur_y < conv_std_logic_vector(VSCAN, X_SIZE)) and
+                        spr_x_cnt(4) = "00000000" and
                         (spr_ptn_h(4)(0) or spr_ptn_l(4)(0)) = '1' else
                 "1" & spr_attr(5)(1 downto 0) & spr_ptn_h(5)(0) & spr_ptn_l(5)(0)
-                    when ppu_mask(PPUSSP) = '1' and spr_x_cnt(5) = "00000000" and 
+                    when ppu_mask(PPUSSP) = '1' and
+                        (cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
+                        (cur_y < conv_std_logic_vector(VSCAN, X_SIZE)) and
+                        spr_x_cnt(5) = "00000000" and
                         (spr_ptn_h(5)(0) or spr_ptn_l(5)(0)) = '1' else
                 "1" & spr_attr(6)(1 downto 0) & spr_ptn_h(6)(0) & spr_ptn_l(6)(0)
-                    when ppu_mask(PPUSSP) = '1' and spr_x_cnt(6) = "00000000" and 
+                    when ppu_mask(PPUSSP) = '1' and
+                        (cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
+                        (cur_y < conv_std_logic_vector(VSCAN, X_SIZE)) and
+                        spr_x_cnt(6) = "00000000" and
                         (spr_ptn_h(6)(0) or spr_ptn_l(6)(0)) = '1' else
                 "1" & spr_attr(7)(1 downto 0) & spr_ptn_h(7)(0) & spr_ptn_l(7)(0)
-                    when ppu_mask(PPUSSP) = '1' and spr_x_cnt(7) = "00000000" and 
+                    when ppu_mask(PPUSSP) = '1' and
+                        (cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
+                        (cur_y < conv_std_logic_vector(VSCAN, X_SIZE)) and
+                        spr_x_cnt(7) = "00000000" and
                         (spr_ptn_h(7)(0) or spr_ptn_l(7)(0)) = '1' else
                 "0" & disp_attr(1 downto 0) & disp_ptn_h(0) & disp_ptn_l(0) 
-                                when ppu_mask(PPUSBG) = '1' else
+                    when ppu_mask(PPUSBG) = '1' and
+                        (cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
+                        (cur_y < conv_std_logic_vector(VSCAN, X_SIZE)) else
                 (others => 'Z');
+
     plt_r_n <= not r_nw when plt_bus_ce_n = '0' else
                 '0' when ppu_mask(PPUSBG) = '1' else
                 '1';
@@ -482,11 +530,15 @@ begin
                     '1';
     oam_addr <= oam_plt_addr when oam_bus_ce_n = '0' else
                 p_oam_addr_in when ppu_mask(PPUSSP) = '1' and 
+                        (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+                        cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) and
                          cur_x > conv_std_logic_vector(64, X_SIZE) and 
                          cur_x <= conv_std_logic_vector(256, X_SIZE) else
                 (others => 'Z');
     oam_r_n <= not r_nw when oam_bus_ce_n = '0' else
                 '0' when ppu_mask(PPUSSP) = '1' and 
+                        (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+                        cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) and
                          cur_x > conv_std_logic_vector(64, X_SIZE) and 
                          cur_x <= conv_std_logic_vector(256, X_SIZE) else
                 '1';
@@ -646,7 +698,9 @@ end;
             if (clk'event and clk = '1') then
 
                 --fetch bg pattern and display.
-                if (ppu_mask(PPUSBG) = '1') then
+                if (ppu_mask(PPUSBG) = '1' and 
+                        (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+                        cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE))) then
                     d_print("*");
                     d_print("cur_x: " & conv_hex16(conv_integer(cur_x)));
                     d_print("cur_y: " & conv_hex16(conv_integer(cur_y)));
@@ -725,7 +779,9 @@ end;
                 end if;--if (ppu_mask(PPUSBG) = '1') then
 
                 --fetch sprite and display.
-                if (ppu_mask(PPUSSP) = '1') then
+                if (ppu_mask(PPUSSP) = '1' and
+                        (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+                        cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE))) then
                     --secondary oam clear
                     if (cur_x /= "000000000" and cur_x <= conv_std_logic_vector(64, X_SIZE)) then
                         if (cur_x(0) = '0') then
