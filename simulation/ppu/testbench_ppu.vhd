@@ -84,8 +84,6 @@ signal ale      : std_logic;
 signal vram_ad  : std_logic_vector (7 downto 0);
 signal vram_a   : std_logic_vector (13 downto 8);
 
-signal set_addr  : std_logic_vector (15 downto 0);
-
 signal vga_clk     : std_logic;
 signal h_sync_n    : std_logic;
 signal v_sync_n    : std_logic;

@@ -31,7 +31,8 @@ architecture stimulus of testbench_mos6502 is
         port (  phi2        : in std_logic;
                 R_nW        : in std_logic; 
                 addr       : in std_logic_vector (abus_size - 1 downto 0);
-                d_io       : inout std_logic_vector (dbus_size - 1 downto 0)
+                d_io       : inout std_logic_vector (dbus_size - 1 downto 0);
+                ppu_ce_n    : out std_logic
     );
     end component;
 
@@ -43,6 +44,7 @@ architecture stimulus of testbench_mos6502 is
     signal rdy, rst_n, irq_n, nmi_n, dbe, r_nw, phi1, phi2 : std_logic;
     signal addr : std_logic_vector( asize - 1 downto 0);
     signal cpu_d : std_logic_vector( dsize - 1 downto 0);
+    signal ppu_ce_n    : std_logic;
 
 begin
 
@@ -53,8 +55,8 @@ begin
         port map (phi0, rdy, rst_n, irq_n, nmi_n, dbe, r_nw, 
                 phi1, phi2, addr, cpu_d);
 
-    addr_dec_inst : address_decoder generic map (asize, dsize) 
-        port map (phi2, r_nw, addr, cpu_d);
+--    addr_dec_inst : address_decoder generic map (asize, dsize) 
+--        port map (phi2, r_nw, addr, cpu_d, ppu_ce_n);
 
     reset_p : process
     begin

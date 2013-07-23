@@ -7,7 +7,8 @@ generic (abus_size : integer := 16; dbus_size : integer := 8);
     port (  phi2        : in std_logic; --dropping edge syncronized clock.
             R_nW        : in std_logic; -- active high on read / active low on write.
             addr        : in std_logic_vector (abus_size - 1 downto 0);
-            d_io        : inout std_logic_vector (dbus_size - 1 downto 0)
+            d_io        : inout std_logic_vector (dbus_size - 1 downto 0);
+            ppu_ce_n    : out std_logic
         );
 end address_decoder;
 
@@ -53,8 +54,6 @@ architecture rtl of address_decoder is
     signal apu_ce_n : std_logic;
     signal apu_io : std_logic_vector (dsize - 1 downto 0);
 
-    signal ppu_ce_n : std_logic;
-    signal ppu_io : std_logic_vector (dsize - 1 downto 0);
 begin
 
     rom_ce_n <= '0' when (addr(15) = '1' and R_nW = '1') else
@@ -72,14 +71,10 @@ begin
 
     ---dummy value.
     apu_io <= "00000000";
-    ppu_io <= "10000001";
 
     --must explicitly drive to for inout port.
     d_io <= ram_io 
             when (((addr(15) or addr(14) or addr(13)) = '0') and r_nw = '1')  else
-        ppu_io 
-            when ((addr(15) = '0') and  (addr(14) = '0') and  addr(13) = '1' 
-                        and  r_nw = '1')  else
         apu_io 
             when ((addr(15) = '0') and  (addr(14) = '1') and  addr(13) = '0' 
                         and  r_nw = '1')  else
@@ -87,6 +82,10 @@ begin
             when ((addr(15) = '1') and r_nw = '1') else
         (others => 'Z');
 
+
+    ppu_ce_n <= '0'
+            when (addr(15) = '0' and addr(14) = '0' and addr(13) = '1')  else
+                '1';
 
     --ram io timing.
     main_p : process (phi2, addr, d_io, R_nW)
