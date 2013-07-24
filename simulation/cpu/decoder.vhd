@@ -91,7 +91,7 @@ begin
 end;
 
 --cycle bit format
---00xxx : exec cycle : T0 > T1 > T2 > T3 > T4 > T5 > T6 > T7 > T0
+--00xxx : exec cycle : T0 > T1 > T2 > T3 > T4 > T5 > T6 > T0
 constant T0 : std_logic_vector (5 downto 0) := "000000";
 constant T1 : std_logic_vector (5 downto 0) := "000001";
 constant T2 : std_logic_vector (5 downto 0) := "000010";
@@ -99,7 +99,6 @@ constant T3 : std_logic_vector (5 downto 0) := "000011";
 constant T4 : std_logic_vector (5 downto 0) := "000100";
 constant T5 : std_logic_vector (5 downto 0) := "000101";
 constant T6 : std_logic_vector (5 downto 0) := "000110";
-constant T7 : std_logic_vector (5 downto 0) := "000111";
 
 --01xxx : reset cycle : R0 > R1 > R2 > R3 > R4 > R5 > T0
 constant R0 : std_logic_vector (5 downto 0) := "001000";
@@ -109,8 +108,7 @@ constant R3 : std_logic_vector (5 downto 0) := "001011";
 constant R4 : std_logic_vector (5 downto 0) := "001100";
 constant R5 : std_logic_vector (5 downto 0) := "001101";
 
---10xxx : nmi cycle : N0 > N1 > N2 > N3 > N4 > N5 > T0
-constant N0 : std_logic_vector (5 downto 0) := "010000";
+--10xxx : nmi cycle : T0 > N1 > N2 > N3 > N4 > N5 > T0
 constant N1 : std_logic_vector (5 downto 0) := "010001";
 constant N2 : std_logic_vector (5 downto 0) := "010010";
 constant N3 : std_logic_vector (5 downto 0) := "010011";
@@ -214,9 +212,20 @@ end  procedure;
 
 procedure fetch_inst is
 begin
-    --fetch opcode and phc increment.
+    if instruction = conv_std_logic_vector(16#4c#, dsize) then
+        --if prior cycle is jump instruction, 
+        --fetch opcode from where the latch is pointing to.
+
+        --latch > al.
+        dl_al_oe_n <= '0';
+        pcl_cmd <= "1110";
+    else
+        --fetch opcode and phc increment.
+        pcl_cmd <= "1100";
+        dl_al_oe_n <= '1';
+    end if;
+
     ad_oe_n <= '0';
-    pcl_cmd <= "1100";
     pch_cmd <= "1101";
     inst_we_n <= '0';
     pcl_inc_n <= '0';
@@ -226,7 +235,6 @@ begin
     dbuf_int_oe_n <= '1';
     dl_al_we_n <= '1';
     dl_ah_we_n <= '1';
-    dl_al_oe_n <= '1';
     dl_ah_oe_n <= '1';
     dl_dh_oe_n <= '1';
     sp_cmd <= "1111";
@@ -258,7 +266,16 @@ begin
     r_vec_oe_n <= '1';
 
     d_print(string'("fetch 1"));
-end;
+end  procedure;
+
+---T0 cycle routine 
+---(along with the page boundary condition, the last 
+---cycle is bypassed and slided to T0.)
+procedure t0_cycle is
+begin
+    fetch_inst;
+    next_cycle <= T1;
+end  procedure;
 
 ---common routine for single byte instruction.
 procedure single_inst is
@@ -461,8 +478,7 @@ begin
         else
             --case page boundary not crossed. do the fetch op.
             d_print("absx 5 (fetch)");
-            fetch_inst;
-            next_cycle <= T1;
+            t0_cycle;
         end if;
     end if;
 end  procedure;
@@ -721,10 +737,10 @@ begin
         next_cycle <= T3;
     elsif exec_cycle = T3 then
 
-        back_we(pcl_cmd, '1');
         if ea_carry = '1' then
             d_print("page crossed.");
             --page crossed. adh calc.
+            back_we(pcl_cmd, '1');
             back_oe(pcl_cmd, '0');
             back_oe(pch_cmd, '0');
             back_we(pch_cmd, '0');
@@ -734,12 +750,9 @@ begin
             pg_next_n <= not ea_carry;
             next_cycle <= T0;
         else
-            back_we(pcl_cmd, '0');
-
             --no page boundary. 
             --fetch cycle is done.
-            fetch_inst;
-            next_cycle <= T1;
+            t0_cycle;
         end if;
     end if;
 end  procedure;
@@ -764,14 +777,16 @@ end  procedure;
         if (set_clk'event and set_clk = '1' and res_n = '1') then
             d_print(string'("-"));
 
+--            if (nmi_n = '0') then
+--                next_cycle <= N1;
+--            end if;
+
             if exec_cycle = T0 then
                 --cycle #1
-                fetch_inst;
-                next_cycle <= T1;
+                t0_cycle;
 
             elsif exec_cycle = T1 or exec_cycle = T2 or exec_cycle = T3 or 
-                exec_cycle = T4 or exec_cycle = T5 or exec_cycle = T6 or 
-                exec_cycle = T7 then
+                exec_cycle = T4 or exec_cycle = T5 or exec_cycle = T6 then
                 --execute inst.
 
                 ---asyncronous page change might happen.
@@ -1690,23 +1705,7 @@ end  procedure;
                         ---load pch.
                         front_we(pch_cmd, '0');
 
-                        next_cycle <= T3;
-                    elsif exec_cycle = T3 then
-                        d_print("jmp done > next fetch");
-                        back_oe(pcl_cmd, '1');
-                        front_we(pch_cmd, '1');
-                        dbuf_int_oe_n <= '1';
-                        dl_ah_we_n <= '1';
-
-                        --latch > al.
-                        dl_al_oe_n <= '0';
-                        back_we(pcl_cmd, '0');
-                        
-                        --fetch inst and goto decode next.
-                        back_oe(pch_cmd, '0');
-                        inst_we_n <= '0';
-                        pcl_inc_n <= '0';
-                        next_cycle <= T1;
+                        next_cycle <= T0;
                     end if;
 
                 elsif instruction = conv_std_logic_vector(16#6c#, dsize) then
