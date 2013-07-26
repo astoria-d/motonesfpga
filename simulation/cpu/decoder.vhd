@@ -52,6 +52,8 @@ entity decoder is
             stat_bus_nz_n   : out std_logic;
             stat_alu_we_n   : out std_logic;
             r_vec_oe_n      : out std_logic;
+            n_vec_oe_n      : out std_logic;
+            i_vec_oe_n      : out std_logic;
             r_nw            : out std_logic
             ;---for parameter check purpose!!!
             check_bit     : out std_logic_vector(1 to 5)
@@ -90,7 +92,11 @@ begin
     return hex_chr(tmp2 + 1) & hex_chr(tmp1 + 1);
 end;
 
---cycle bit format
+--cycle bit format 
+-- bit 5    : pcl increment carry flag
+-- bit 4,3  : cycle type: 00 normal, 01 reset , 10 nmi, 11 irq 
+-- bit 2-0  : cycle
+
 --00xxx : exec cycle : T0 > T1 > T2 > T3 > T4 > T5 > T6 > T0
 constant T0 : std_logic_vector (5 downto 0) := "000000";
 constant T1 : std_logic_vector (5 downto 0) := "000001";
@@ -115,8 +121,7 @@ constant N3 : std_logic_vector (5 downto 0) := "010011";
 constant N4 : std_logic_vector (5 downto 0) := "010100";
 constant N5 : std_logic_vector (5 downto 0) := "010101";
 
---11xxx : irq cycle : I0 > I1 > I2 > I3 > I4 > I5 > T0
-constant I0 : std_logic_vector (5 downto 0) := "011000";
+--11xxx : irq cycle : T0 > I1 > I2 > I3 > I4 > I5 > T0
 constant I1 : std_logic_vector (5 downto 0) := "011001";
 constant I2 : std_logic_vector (5 downto 0) := "011010";
 constant I3 : std_logic_vector (5 downto 0) := "011011";
@@ -145,6 +150,9 @@ constant st_C : integer := 0;
 ---for pch_inc_n.
 signal pch_inc_input : std_logic;
 
+---for nmi handling
+signal nmi_handled_n : std_logic;
+
 begin
 
     
@@ -153,7 +161,7 @@ begin
     pch_inc_reg : d_flip_flop_bit 
             port map(set_clk, '1', '1', '0', pch_inc_input, pch_inc_n);
 
-    main_p : process (set_clk, res_n)
+    main_p : process (set_clk, res_n, nmi_n)
 
 -------------------------------------------------------------
 -------------------------------------------------------------
@@ -210,27 +218,8 @@ begin
     stat_dec_oe_n <= '0';
 end  procedure;
 
-procedure fetch_inst is
+procedure disable_pins is
 begin
-    if instruction = conv_std_logic_vector(16#4c#, dsize) then
-        --if prior cycle is jump instruction, 
-        --fetch opcode from where the latch is pointing to.
-
-        --latch > al.
-        dl_al_oe_n <= '0';
-        pcl_cmd <= "1110";
-    else
-        --fetch opcode and phc increment.
-        pcl_cmd <= "1100";
-        dl_al_oe_n <= '1';
-    end if;
-
-    ad_oe_n <= '0';
-    pch_cmd <= "1101";
-    inst_we_n <= '0';
-    pcl_inc_n <= '0';
-    r_nw <= '1';
-
     --disable the last opration pins.
     dbuf_int_oe_n <= '1';
     dl_al_we_n <= '1';
@@ -264,7 +253,33 @@ begin
     stat_alu_we_n <= '1';
 
     r_vec_oe_n <= '1';
+    n_vec_oe_n <= '1';
+    i_vec_oe_n <= '1';
 
+end  procedure;
+
+procedure fetch_inst is
+begin
+    if instruction = conv_std_logic_vector(16#4c#, dsize) then
+        --if prior cycle is jump instruction, 
+        --fetch opcode from where the latch is pointing to.
+
+        --latch > al.
+        dl_al_oe_n <= '0';
+        pcl_cmd <= "1110";
+    else
+        --fetch opcode and phc increment.
+        pcl_cmd <= "1100";
+        dl_al_oe_n <= '1';
+    end if;
+
+    ad_oe_n <= '0';
+    pch_cmd <= "1101";
+    inst_we_n <= '0';
+    pcl_inc_n <= '0';
+    r_nw <= '1';
+
+    disable_pins;
     d_print(string'("fetch 1"));
 end  procedure;
 
@@ -273,8 +288,18 @@ end  procedure;
 ---cycle is bypassed and slided to T0.)
 procedure t0_cycle is
 begin
-    fetch_inst;
-    next_cycle <= T1;
+    if (nmi_n = '0' and nmi_handled_n = '1') then
+        disable_pins;
+        pcl_cmd <= "1111";
+        pch_cmd <= "1111";
+        pcl_inc_n <= '1';
+        inst_we_n <= '1';
+        r_nw <= '1';
+        next_cycle <= N1;
+    else
+        fetch_inst;
+        next_cycle <= T1;
+    end if;
 end  procedure;
 
 ---common routine for single byte instruction.
@@ -774,12 +799,13 @@ end  procedure;
             pch_cmd <= "1111";
         end if;
 
+        if (nmi_n'event and nmi_n = '1') then
+            --reset nmi handle status
+            nmi_handled_n <= '1';
+        end if;
+
         if (set_clk'event and set_clk = '1' and res_n = '1') then
             d_print(string'("-"));
-
---            if (nmi_n = '0') then
---                next_cycle <= N1;
---            end if;
 
             if exec_cycle = T0 then
                 --cycle #1
@@ -798,8 +824,6 @@ end  procedure;
                     --disable pin since jmp instruction 
                     --directly enters into t2 cycle.
                     dl_al_oe_n <= '1';
-                    dl_ah_oe_n <= '1';
-                    dl_dh_oe_n <= '1';
                     back_we(pcl_cmd, '1');
                     front_we(pch_cmd, '1');
 
@@ -809,7 +833,6 @@ end  procedure;
 
                 --imelementation is wriiten in the order of hardware manual
                 --appendix A.
-
 
                 ----------------------------------------
                 --A.1. Single byte instruction.
@@ -1855,10 +1878,13 @@ end  procedure;
                 stat_alu_we_n <= '1';
 
                 r_vec_oe_n <= '1';
+                n_vec_oe_n <= '1';
+                i_vec_oe_n <= '1';
+                nmi_handled_n <= '1';
                 r_nw <= '1';
 
                 next_cycle <= R1;
-            elsif exec_cycle = R1 then
+            elsif exec_cycle = R1 or exec_cycle = N1 then
                 --push pch.
                 d_print("R1");
                 ad_oe_n <= '0';
@@ -1869,9 +1895,13 @@ end  procedure;
                 back_we(sp_cmd, '0');
                 r_nw <= '0';
 
-                next_cycle <= R2;
+                if exec_cycle = R1 then
+                    next_cycle <= R2;
+                elsif exec_cycle = N1 then
+                    next_cycle <= N2;
+                end if;
 
-            elsif exec_cycle = R2 then
+            elsif exec_cycle = R2 or exec_cycle = N2 then
                 front_oe(pch_cmd, '1');
 
                --push pcl.
@@ -1882,9 +1912,13 @@ end  procedure;
                 back_we(sp_cmd, '0');
                 r_nw <= '0';
 
-                next_cycle <= R3;
+                if exec_cycle = R2 then
+                    next_cycle <= R3;
+                elsif exec_cycle = N2 then
+                    next_cycle <= N3;
+                end if;
 
-            elsif exec_cycle = R3 then
+            elsif exec_cycle = R3 or exec_cycle = N3 then
                 front_oe(pcl_cmd, '1');
 
                --push status.
@@ -1895,9 +1929,13 @@ end  procedure;
                 back_we(sp_cmd, '0');
                 r_nw <= '0';
 
-                next_cycle <= R4;
+                if exec_cycle = R3 then
+                    next_cycle <= R4;
+                elsif exec_cycle = N3 then
+                    next_cycle <= N4;
+                end if;
 
-            elsif exec_cycle = R4 then
+            elsif exec_cycle = R4 or exec_cycle = N4 then
                 stat_bus_oe_n <= '1';
                 sp_push_n <= '1';
                 sp_oe_n <= '1';
@@ -1907,21 +1945,27 @@ end  procedure;
 
                 --fetch reset vector low
                 r_nw <= '1';
-                r_vec_oe_n <= '0';
                 dbuf_int_oe_n <= '0';
                 front_we(pcl_cmd, '0');
-                next_cycle <= R5;
+
+                if exec_cycle = R4 then
+                    r_vec_oe_n <= '0';
+                    next_cycle <= R5;
+                elsif exec_cycle = N4 then
+                    n_vec_oe_n <= '0';
+                    next_cycle <= N5;
+                end if;
                 
-            elsif exec_cycle = R5 then
+            elsif exec_cycle = R5 or exec_cycle = N5 then
                 front_we(pcl_cmd, '1');
 
                 --fetch reset vector hi
-                r_nw <= '1';
-                r_vec_oe_n <= '0';
-                dbuf_int_oe_n <= '0';
                 front_we(pch_cmd, '0');
                 indir_n <= '0';
 
+                if exec_cycle = N5 then
+                    nmi_handled_n <= '0';
+                end if;
                 --start execute cycle.
                 next_cycle <= T0;
 

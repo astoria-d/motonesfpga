@@ -123,6 +123,9 @@ architecture rtl of motones_sim is
     signal g           : std_logic_vector(3 downto 0);
     signal b           : std_logic_vector(3 downto 0);
 
+    --test...
+    signal nmi_n2 : std_logic;
+
 begin
 
     irq_n <= '0';
@@ -169,6 +172,19 @@ begin
 
     dummy_vga_disp : vga_device 
         port map (vga_clk, rst_n, h_sync_n, v_sync_n, r, g, b);
+
+--    nmi_p: process
+--    constant powerup_time : time := 5000 ns;
+--    constant reset_time : time := 10 us;
+--    begin
+--        wait for powerup_time;
+--        nmi_n  <= '1';
+--        wait for reset_time;
+--        wait for 46 us;
+--        nmi_n  <= '0';
+--
+--        wait;
+--    end process;
 
 end rtl;
 

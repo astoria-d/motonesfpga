@@ -73,6 +73,8 @@ component decoder
             stat_bus_nz_n   : out std_logic;
             stat_alu_we_n   : out std_logic;
             r_vec_oe_n      : out std_logic;
+            n_vec_oe_n      : out std_logic;
+            i_vec_oe_n      : out std_logic;
             r_nw            : out std_logic
             ;---for parameter check purpose!!!
             check_bit     : out std_logic_vector(1 to 5)
@@ -225,6 +227,7 @@ end component;
     -------- control lines --------
     -------------------------------
     signal inst_we_n : std_logic;
+    signal inst_rst_n : std_logic;
     signal ad_oe_n : std_logic;
 
     signal dbuf_r_nw : std_logic;
@@ -302,6 +305,8 @@ end component;
 
     ---reset vectors---
     signal r_vec_oe_n : std_logic;
+    signal n_vec_oe_n : std_logic;
+    signal i_vec_oe_n : std_logic;
     signal reset_l : std_logic_vector(dsize - 1 downto 0);
     signal reset_h : std_logic_vector(dsize - 1 downto 0);
     signal nmi_l : std_logic_vector(dsize - 1 downto 0);
@@ -323,7 +328,15 @@ begin
     r_nw <= dbuf_r_nw;
     reset_l <= "11111100";
     reset_h <= "11111111";
+    nmi_l <= "11111010";
+    nmi_h <= "11111111";
+    irq_l <= "11111110";
+    irq_h <= "11111111";
 
+    --instruction register is reset when handling exceptions(nmi/irq cycle).
+    inst_rst_n <= '0' when rst_n = '0' else
+                  '0' when (exec_cycle(3) or exec_cycle(4)) = '1' else
+                  '1';
 
     --------------------------------------------------
     ------------------- instances --------------------
@@ -377,6 +390,8 @@ begin
                     stat_bus_nz_n, 
                     stat_alu_we_n, 
                     r_vec_oe_n,
+                    n_vec_oe_n,
+                    i_vec_oe_n,
                     dbuf_r_nw
                     , check_bit --check bit.
                     );
@@ -442,7 +457,7 @@ begin
 
     -------- registers --------
     ir : d_flip_flop generic map (dsize) 
-            port map(trigger_clk, rst_n, '1', inst_we_n, d_io, instruction);
+            port map(trigger_clk, inst_rst_n, '1', inst_we_n, d_io, instruction);
 
     pcl_inst : dual_dff generic map (dsize) 
             port map(trigger_clk, rst_n, '1', pcl_cmd, int_d_bus, addr_back, bal);
@@ -482,6 +497,14 @@ begin
             port map (r_vec_oe_n, reset_l, bal);
     res_h_buf : tri_state_buffer generic map (dsize)
             port map (r_vec_oe_n, reset_h, bah);
+    nmi_l_buf : tri_state_buffer generic map (dsize)
+            port map (n_vec_oe_n, nmi_l, bal);
+    nmi_h_buf : tri_state_buffer generic map (dsize)
+            port map (n_vec_oe_n, nmi_h, bah);
+    irq_l_buf : tri_state_buffer generic map (dsize)
+            port map (i_vec_oe_n, irq_l, bal);
+    irq_h_buf : tri_state_buffer generic map (dsize)
+            port map (i_vec_oe_n, irq_h, bah);
 
     reset_p : process (rst_n)
     begin
