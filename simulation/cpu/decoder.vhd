@@ -1424,6 +1424,13 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#05#, dsize) then
                     --zp
                     d_print("ora");
+                    a2_zp;
+                    if exec_cycle = T2 then
+                        arith_en_n <= '0';
+                        back_oe(acc_cmd, '0');
+                        back_we(acc_cmd, '0');
+                        set_nz_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#15#, dsize) then
                     --zp, x
