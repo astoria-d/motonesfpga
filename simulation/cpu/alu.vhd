@@ -526,6 +526,14 @@ end procedure;
             set_nz;
             output_d_bus;
 
+        elsif instruction = conv_std_logic_vector(16#2a#, dsize) then
+            --rol acc.
+            sel <= ALU_ROL;
+            d1 <= acc_out;
+            set_nz;
+            carry_out <= c;
+            output_d_bus;
+
         elsif instruction = conv_std_logic_vector(16#4a#, dsize) then
             --lsr acc.
             sel <= ALU_LSR;
@@ -626,10 +634,16 @@ end procedure;
 
             if instruction (7 downto 5) = "000" then
                 d_print("asl");
+
             elsif instruction (7 downto 5) = "001" then
                 d_print("rol");
+                sel <= ALU_ROL;
+                set_nz;
+                carry_out <= c;
+
             elsif instruction (7 downto 5) = "010" then
                 d_print("lsr");
+
             elsif instruction (7 downto 5) = "011" then
                 --d_print("ror");
                 sel <= ALU_ROR;
@@ -892,7 +906,14 @@ end procedure;
         carry_out <= res(dsize);
 
     elsif sel = ALU_ROL then
-        ----
+        res(dsize - 1 downto 1) := d1(dsize - 2 downto 0);
+        res(0) := carry_in;
+
+        d_out <= res(dsize - 1 downto 0);
+        set_n(res(dsize - 1 downto 0));
+        set_z(res(dsize - 1 downto 0));
+        carry_out <= d1(7);
+
     elsif sel = ALU_ROR then
         res(dsize - 1) := carry_in;
         res(dsize - 2 downto 0) := d1(dsize - 1 downto 1);

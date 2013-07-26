@@ -322,17 +322,15 @@ end  procedure;
 procedure set_nz_from_bus is
 begin
     --status register n/z bit update.
-    stat_dec_oe_n <= '1';
-    status_reg <= "10000010";
     stat_bus_nz_n <= '0';
 end  procedure;
 
-procedure set_nzc_from_bus is
+procedure set_zc_from_alu is
 begin
-    --status register n,z,c bit update.
+    --status register n/z bit update.
+    stat_alu_we_n <= '0';
     stat_dec_oe_n <= '1';
-    status_reg <= "10000011";
-    stat_bus_nz_n <= '0';
+    status_reg <= "00000011";
 end  procedure;
 
 procedure set_nz_from_alu is
@@ -951,7 +949,7 @@ end  procedure;
                     arith_en_n <= '0';
                     back_oe(acc_cmd, '0');
                     front_we(acc_cmd, '0');
-                    set_nzc_from_bus;
+                    set_zc_from_alu;
                     single_inst;
 
                 elsif instruction = conv_std_logic_vector(16#ea#, dsize) then
@@ -961,6 +959,11 @@ end  procedure;
                 elsif instruction = conv_std_logic_vector(16#2a#, dsize) then
                     --rol acc
                     d_print("rol");
+                    arith_en_n <= '0';
+                    back_oe(acc_cmd, '0');
+                    front_we(acc_cmd, '0');
+                    set_nzc_from_alu;
+                    single_inst;
 
                 elsif instruction = conv_std_logic_vector(16#38#, dsize) then
                     d_print("sec");
@@ -1672,10 +1675,10 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#66#, dsize) then
                     --zp
                     d_print("ror");
-                    a4_zp;
-                    if exec_cycle = T4 then
-                        set_nzc_from_bus;
-                    end if;
+--                    a4_zp;
+--                    if exec_cycle = T4 then
+--                        set_nzc_from_alu;
+--                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#76#, dsize) then
                     --zp, x
