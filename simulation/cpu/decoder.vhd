@@ -541,6 +541,7 @@ begin
         pg_next_n <= '1';
         back_oe(y_cmd, '0');
         indir_y_n <= '0';
+        dbuf_int_oe_n <= '0';
         next_cycle <= T5;
 
     elsif exec_cycle = T5 then
@@ -549,6 +550,7 @@ begin
             d_print("(indir), y (page boudary crossed.)");
             back_oe(y_cmd, '1');
             indir_y_n <= '0';
+            dbuf_int_oe_n <= '0';
             pg_next_n <= not ea_carry;
             next_cycle <= T0;
         else
