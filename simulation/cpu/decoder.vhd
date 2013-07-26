@@ -1099,6 +1099,20 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#3d#, dsize) then
                     --abs, x
                     d_print("and");
+                    a2_abs_xy(true);
+                    if exec_cycle = T3 then
+                        arith_en_n <= '0';
+                        back_oe(acc_cmd, '0');
+                        back_we(acc_cmd, '0');
+                        set_nz_from_alu;
+                    elsif exec_cycle = T4 then
+                        if ea_carry = '1' then
+                            arith_en_n <= '0';
+                            back_oe(acc_cmd, '0');
+                            back_we(acc_cmd, '0');
+                            set_nz_from_alu;
+                        end if;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#39#, dsize) then
                     --abs, y
