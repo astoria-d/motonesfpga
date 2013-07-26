@@ -508,6 +508,57 @@ begin
     end if;
 end  procedure;
 
+procedure a2_indir_y is
+begin
+    if exec_cycle = T1 then
+        fetch_low;
+        --get IAL
+        dl_al_we_n <= '0';
+
+    elsif exec_cycle = T2 then
+        fetch_stop;
+        dl_al_we_n <= '1';
+
+        ---address is 00:IAL
+        --output BAL @IAL
+        indir_y_n <= '0';
+        dl_al_oe_n <= '0';
+        dbuf_int_oe_n <= '0';
+        next_cycle <= T3;
+
+    elsif exec_cycle = T3 then
+        indir_y_n <= '0';
+        dl_al_oe_n <= '0';
+        --output BAH @IAL+1
+        dbuf_int_oe_n <= '0';
+        next_cycle <= T4;
+
+    elsif exec_cycle = T4 then
+        dl_al_oe_n <= '1';
+        dbuf_int_oe_n <= '1';
+
+        --add index y.
+        pg_next_n <= '1';
+        back_oe(y_cmd, '0');
+        indir_y_n <= '0';
+        next_cycle <= T5;
+
+    elsif exec_cycle = T5 then
+        if ea_carry = '1' then
+            --case page boundary crossed.
+            d_print("(indir), y (page boudary crossed.)");
+            back_oe(y_cmd, '1');
+            indir_y_n <= '0';
+            pg_next_n <= not ea_carry;
+            next_cycle <= T0;
+        else
+            --case page boundary not crossed. do the fetch op.
+            d_print("(indir), y (next fetch)");
+            t0_cycle;
+        end if;
+
+    end if;
+end  procedure;
 
 --A.3. store operation.
 
@@ -1273,6 +1324,18 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#b1#, dsize) then
                     --(indir), y
                     d_print("lda");
+                    a2_indir_y;
+                    if exec_cycle = T4 then
+                        --lda.
+                        front_we(acc_cmd, '0');
+                        set_nz_from_bus;
+                    elsif exec_cycle = T5 then
+                        if ea_carry = '1' then
+                            --redo lda
+                            front_we(acc_cmd, '0');
+                            set_nz_from_bus;
+                        end if;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#a2#, dsize) then
                     --imm
@@ -1297,6 +1360,11 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#ae#, dsize) then
                     --abs
                     d_print("ldx");
+                    a2_abs;
+                    if exec_cycle = T3 then
+                        set_nz_from_bus;
+                        front_we(x_cmd, '0');
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#be#, dsize) then
                     --abs, y
@@ -1320,6 +1388,11 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#ac#, dsize) then
                     --abs
                     d_print("ldy");
+                    a2_abs;
+                    if exec_cycle = T3 then
+                        set_nz_from_bus;
+                        front_we(y_cmd, '0');
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#bc#, dsize) then
                     --abs, x
