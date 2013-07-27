@@ -1932,6 +1932,8 @@ end  procedure;
                 ----------------------------------------
                 elsif instruction = conv_std_logic_vector(16#90#, dsize) then
                     d_print("bcc");
+                    a58_branch (st_C, '0');
+
                 elsif instruction = conv_std_logic_vector(16#b0#, dsize) then
                     d_print("bcs");
                     a58_branch (st_C, '1');
