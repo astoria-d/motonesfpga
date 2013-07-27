@@ -734,6 +734,42 @@ begin
     end if;
 end  procedure;
 
+procedure a4_abs_x is
+begin
+    if exec_cycle = T1 then
+        fetch_low;
+    elsif exec_cycle = T2 then
+        abs_fetch_high;
+    elsif exec_cycle = T3 then
+        --T3 cycle discarded.
+        pg_next_n <= '1';
+        abs_latch_out;
+        ea_x_out;
+        dbuf_int_oe_n <= '0';
+        next_cycle <= T4;
+
+    elsif exec_cycle = T4 then
+        --t4 cycle fetch only.
+        abs_latch_out;
+        ea_x_out;
+        pg_next_n <= not ea_carry;
+        next_cycle <= T5;
+
+    elsif exec_cycle = T5 then
+        --t4 cycle redo fetch and save data in the alu register only.
+        arith_en_n <= '0';
+        next_cycle <= T6;
+
+    elsif exec_cycle = T6 then
+        --t5 cycle writes modified value.
+        r_nw <= '0';
+        arith_en_n <= '0';
+        dbuf_int_oe_n <= '1';
+        next_cycle <= T0;
+
+    end if;
+end  procedure;
+
 
 -- A.5.1 push stack
 procedure a51_push is
@@ -1640,6 +1676,10 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#ce#, dsize) then
                     --abs
                     d_print("dec");
+                    a4_abs;
+                    if exec_cycle = T5 then
+                        set_nz_from_bus;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#de#, dsize) then
                     --abs, x
@@ -1720,6 +1760,10 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#7e#, dsize) then
                     --abs, x
                     d_print("ror");
+                    a4_abs_x;
+                    if exec_cycle = T6 then
+                        set_nzc_from_alu;
+                    end if;
 
 
                 ----------------------------------------
