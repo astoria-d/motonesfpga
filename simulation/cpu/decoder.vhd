@@ -1092,6 +1092,13 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#6d#, dsize) then
                     --abs
                     d_print("adc");
+                    a2_abs;
+                    if exec_cycle = T3 then
+                        arith_en_n <= '0';
+                        back_oe(acc_cmd, '0');
+                        back_we(acc_cmd, '0');
+                        set_nvzc_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#7d#, dsize) then
                     --abs, x
