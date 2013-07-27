@@ -594,6 +594,18 @@ end procedure;
 
             elsif instruction (7 downto 5) = "111" then
                 d_print("sbc");
+                sel <= ALU_SBC;
+                d1 <= acc_out;
+                d2 <= int_d_bus;
+                d_oe_n <= '0';
+
+                acc_in <= d_out;
+                set_nz;
+                carry_out <= c;
+                overflow <= v;
+
+
+
             end if; --if instruction (7 downto 5) = "000" then
 
         elsif instruction (1 downto 0) = "10" then
@@ -882,7 +894,22 @@ end procedure;
         set_z(res(dsize - 1 downto 0));
 
     elsif sel = ALU_SBC then
-        ----
+        ---A - M - C -> A
+        res := ('0' & d1) - ('0' & d2) - carry_in;
+        d_out <= res(dsize - 1 downto 0);
+
+        --c Set if unsigned borrow not required; cleared if unsigned borrow.
+        carry_out <= not res(dsize);
+        --v Set if signed borrow not required; cleared if signed borrow.
+        if ((d1(dsize - 1) = d2(dsize - 1)) 
+            and (d1(dsize - 1) /= res(dsize - 1))) then
+            overflow <= '0';
+        else
+            overflow <= '1';
+        end if;
+        set_n(res(dsize - 1 downto 0));
+        set_z(res(dsize - 1 downto 0));
+
     elsif sel = ALU_CMP then
         res := ('0' & d1) - ('0' & d2);
         if (d1 >= d2) then

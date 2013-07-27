@@ -164,7 +164,7 @@ begin
     --nes ppu instance
     ppu_inst : ppu 
         port map (ppu_clk, ppu_ce_n, rst_n, r_nw, addr(2 downto 0), d_io, 
-                nmi_n, rd_n, wr_n, ale, vram_ad, vram_a,
+                nmi_n2, rd_n, wr_n, ale, vram_ad, vram_a,
                 vga_clk, h_sync_n, v_sync_n, r, g, b);
 
     ppu_addr_decoder : v_address_decoder generic map (size14, data_size) 
@@ -173,18 +173,18 @@ begin
     dummy_vga_disp : vga_device 
         port map (vga_clk, rst_n, h_sync_n, v_sync_n, r, g, b);
 
---    nmi_p: process
---    constant powerup_time : time := 5000 ns;
---    constant reset_time : time := 10 us;
---    begin
---        wait for powerup_time;
---        nmi_n  <= '1';
---        wait for reset_time;
---        wait for 46 us;
---        nmi_n  <= '0';
---
---        wait;
---    end process;
+    nmi_p: process
+    constant powerup_time : time := 5000 ns;
+    constant reset_time : time := 10 us;
+    begin
+        wait for powerup_time;
+        nmi_n  <= '1';
+        wait for reset_time;
+        wait for 46 us;
+        nmi_n  <= '0';
+
+        wait;
+    end process;
 
 end rtl;
 

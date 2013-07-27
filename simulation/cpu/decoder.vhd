@@ -1496,6 +1496,21 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#f9#, dsize) then
                     --abs, y
                     d_print("sbc");
+                    a2_abs_xy(false);
+                    if exec_cycle = T3 then
+                        arith_en_n <= '0';
+                        back_oe(acc_cmd, '0');
+                        back_we(acc_cmd, '0');
+                        set_nvzc_from_alu;
+                    elsif exec_cycle = T4 then
+                        if ea_carry = '1' then
+                            --redo
+                            arith_en_n <= '0';
+                            back_oe(acc_cmd, '0');
+                            back_we(acc_cmd, '0');
+                            set_nvzc_from_alu;
+                        end if;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#e1#, dsize) then
                     --(indir, x)
