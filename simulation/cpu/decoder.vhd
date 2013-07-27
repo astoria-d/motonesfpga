@@ -927,6 +927,11 @@ end  procedure;
                 if instruction = conv_std_logic_vector(16#0a#, dsize) then
                     --asl acc mode.
                     d_print("asl");
+                    arith_en_n <= '0';
+                    back_oe(acc_cmd, '0');
+                    front_we(acc_cmd, '0');
+                    set_zc_from_alu;
+                    single_inst;
 
                 elsif instruction = conv_std_logic_vector(16#18#, dsize) then
                     d_print("clc");
@@ -1906,7 +1911,50 @@ end  procedure;
                     end if;
 
                 elsif instruction = conv_std_logic_vector(16#6c#, dsize) then
-                    --(indir)
+                    --jmp (indir)
+                    if exec_cycle = T1 then
+                        d_print("jmp 2");
+                        --fetch next opcode (abs low).
+                        fetch_next;
+
+                        --latch abs low data.
+                        dbuf_int_oe_n <= '0';
+                        dl_al_we_n <= '0';
+                        next_cycle <= T2;
+                    elsif exec_cycle = T2 then
+                        d_print("jmp 3");
+                        dl_al_we_n <= '1';
+
+                        --fetch abs hi
+                        fetch_next;
+
+                        --latch  in dlh
+                        dbuf_int_oe_n <= '0';
+                        dl_ah_we_n <= '0';
+                        next_cycle <= T3;
+
+                    elsif exec_cycle = T3 then
+                        fetch_stop;
+                        dl_ah_we_n <= '1';
+
+                        --IAH/IAL > ADL
+                        dl_ah_oe_n <= '0';
+                        dl_al_oe_n <= '0';
+                        front_we(pcl_cmd, '0');
+                        next_cycle <= T4;
+
+                    elsif exec_cycle = T4 then
+                        dl_ah_oe_n <= '0';
+                        dl_al_oe_n <= '0';
+                        front_we(pcl_cmd, '1');
+
+                        --IAH/IAL+1 > ADH
+                        front_we(pch_cmd, '0');
+                        indir_n <= '0';
+
+                        next_cycle <= T0;
+
+                    end if;
 
 
                 ----------------------------------------
