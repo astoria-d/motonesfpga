@@ -335,8 +335,18 @@ end procedure;
             end if;
         end if;
     elsif (zp_n = '0') then
-        abh <= "00000000";
-        abl <= bal;
+        if (zp_xy_n <= '0') then
+            a_sel <= ADDR_ADC;
+            addr1 <= bal;
+            addr2 <= index_bus;
+            addr_c_in <= '0';
+
+            abh <= "00000000";
+            abl <= addr_out;
+        else
+            abh <= "00000000";
+            abl <= bal;
+        end if;
 
     elsif (abs_xy_n = '0') then
         if (pg_next_n = '0') then

@@ -506,6 +506,33 @@ begin
     end if;
 end  procedure;
 
+procedure a2_zp_xy (is_x : in boolean) is
+begin
+    if exec_cycle = T1 then
+        fetch_low;
+    elsif exec_cycle = T2 then
+        fetch_stop;
+        --output BAL only
+        fetch_stop;
+        dbuf_int_oe_n <= '0';
+        dl_al_we_n <= '1';
+
+        --calc zp.
+        dl_al_oe_n <= '0';
+        zp_n <= '0';
+        next_cycle <= T3;
+    elsif exec_cycle = T3 then
+        --t3 zp, xy 
+        zp_xy_n <= '0';
+        if (is_x = true) then
+            back_oe(x_cmd, '0');
+        else
+            back_oe(y_cmd, '0');
+        end if;
+        next_cycle <= T0;
+    end if;
+end  procedure;
+
 procedure a2_indir_y is
 begin
     if exec_cycle = T1 then
@@ -1351,6 +1378,11 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#b5#, dsize) then
                     --zp, x
                     d_print("lda");
+                    a2_zp_xy(true);
+                    if exec_cycle = T3 then
+                        front_we(acc_cmd, '0');
+                        set_nz_from_bus;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#ad#, dsize) then
                     --abs
@@ -1477,6 +1509,11 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#b4#, dsize) then
                     --zp, x
                     d_print("ldy");
+                    a2_zp_xy(true);
+                    if exec_cycle = T3 then
+                        front_we(y_cmd, '0');
+                        set_nz_from_bus;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#ac#, dsize) then
                     --abs

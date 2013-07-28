@@ -181,13 +181,16 @@ boundary_2_3:
 	lda	#$01
 	lda	#$01
 	lda	#$01
+
+	ror
 	lda	#$01
-	lda	#$01
-	lda	#$01
-    ror
+	lda	#$de
+	sta	$13
+
+
 ;;this is pch increment at next T1 cycle. 
-    ;;;@83fe
-	lda $09, x
+    ;;;@83ff
+	ldy $09, x
 
     nop
     nop
