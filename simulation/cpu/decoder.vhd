@@ -2222,15 +2222,23 @@ end  procedure;
                 back_we(pcl_cmd, '1');
                 --pch increment
                 back_we(pch_cmd, '0');
+                back_oe(pch_cmd, '0');
 
-                if ('0' & exec_cycle(4 downto 0) = T1) then
+                if ('0' & exec_cycle(4 downto 0) = T0) then
+                    --do the t0 identical routine.
+                    disable_pins;
+                    inst_we_n <= '1';
+                    r_nw <= '1';
+
+                elsif ('0' & exec_cycle(4 downto 0) = T1) then
                     --if fetch cycle, preserve instrution register
                     inst_we_n <= '1';
+
+                    --TODO: must handle for jmp case???
                 elsif ('0' & exec_cycle(4 downto 0) = T2) then
                     --bug!!!!!
                     --TODO: must disable previous we_n gate.
                 end if;
-                back_oe(pch_cmd, '0');
 
             end if; --if exec_cycle = T0 then
 
