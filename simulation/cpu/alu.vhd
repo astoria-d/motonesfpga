@@ -550,6 +550,14 @@ end procedure;
             carry_out <= c;
             output_d_bus;
 
+        elsif instruction = conv_std_logic_vector(16#6a#, dsize) then
+            --ror acc.
+            sel <= ALU_ROR;
+            d1 <= acc_out;
+            set_nz;
+            carry_out <= c;
+            output_d_bus;
+
         --instruction is aaabbbcc format.
         elsif instruction (1 downto 0) = "01" then
             if instruction (7 downto 5) = "000" then

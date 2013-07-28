@@ -1006,6 +1006,15 @@ end  procedure;
                     set_nzc_from_alu;
                     single_inst;
 
+                elsif instruction = conv_std_logic_vector(16#6a#, dsize) then
+                    --ror acc
+                    d_print("ror");
+                    arith_en_n <= '0';
+                    back_oe(acc_cmd, '0');
+                    front_we(acc_cmd, '0');
+                    set_nzc_from_alu;
+                    single_inst;
+
                 elsif instruction = conv_std_logic_vector(16#38#, dsize) then
                     d_print("sec");
                     set_flag0 ('1');
@@ -2212,6 +2221,9 @@ end  procedure;
                 if ('0' & exec_cycle(4 downto 0) = T1) then
                     --if fetch cycle, preserve instrution register
                     inst_we_n <= '1';
+                elsif ('0' & exec_cycle(4 downto 0) = T2) then
+                    --bug!!!!!
+                    --TODO: must disable previous we_n gate.
                 end if;
                 back_oe(pch_cmd, '0');
 
