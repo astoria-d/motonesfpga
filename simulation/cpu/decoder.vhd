@@ -279,7 +279,6 @@ begin
     pcl_inc_n <= '0';
     r_nw <= '1';
 
-    disable_pins;
     d_print(string'("fetch 1"));
 end  procedure;
 
@@ -289,6 +288,7 @@ end  procedure;
 procedure t0_cycle is
 begin
     if (nmi_n = '0' and nmi_handled_n = '1') then
+        --start nmi handling...
         disable_pins;
         pcl_cmd <= "1111";
         pch_cmd <= "1111";
@@ -298,6 +298,7 @@ begin
         next_cycle <= N1;
     else
         fetch_inst;
+        disable_pins;
         next_cycle <= T1;
     end if;
 end  procedure;
@@ -513,7 +514,6 @@ begin
     elsif exec_cycle = T2 then
         fetch_stop;
         --output BAL only
-        fetch_stop;
         dbuf_int_oe_n <= '0';
         dl_al_we_n <= '1';
 
@@ -2273,8 +2273,8 @@ end  procedure;
 
                     --TODO: must handle for jmp case???
                 elsif ('0' & exec_cycle(4 downto 0) = T2) then
-                    --bug!!!!!
-                    --TODO: must disable previous we_n gate.
+                    --disable previous we_n gate.
+                    dl_al_we_n <= '1';
                 end if;
 
             end if; --if exec_cycle = T0 then
