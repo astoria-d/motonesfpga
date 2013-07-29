@@ -2274,7 +2274,11 @@ end  procedure;
                     --TODO: must handle for jmp case???
                 elsif ('0' & exec_cycle(4 downto 0) = T2) then
                     --disable previous we_n gate.
+                    --t1 cycle is fetch low oprand.
                     dl_al_we_n <= '1';
+                elsif ('0' & exec_cycle(4 downto 0) = T3) then
+                    --t2 cycle is fetch high oprand.
+                    dl_ah_we_n <= '1';
                 end if;
 
             end if; --if exec_cycle = T0 then
