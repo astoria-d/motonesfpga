@@ -348,6 +348,122 @@ boundary_3_4:
     ;;;@88fd
 	sta	$06fc, x
 
+
+    ;;;;test...
+    STY   $0720
+    LDY   #$80
+    STY   $0721
+    ASL   
+    ASL   
+    ASL   
+    ASL   
+    STA   $06a0
+    DEC   $0730
+    DEC   $0731
+    DEC   $0732
+    LDA   #$0b
+    STA   $071e
+    ;;JSR   $9c22
+    LDA   $0750
+    ;;JSR   $9c09
+    AND   #$60
+    ASL   
+    ROL   
+    ROL   
+    ROL   
+    STA   $074e
+    ;;RTS   
+    TAY   
+    LDA   $0750
+    AND   #$1f
+    STA   $074f
+    LDA   $9ce0, y
+    CLC   
+    ADC   $074f
+    TAY   
+    LDA   $9ce4, y
+    STA   $e9
+    LDA   $9d06, y
+    STA   $ea
+    LDY   $074e
+    LDA   $9d28, y
+    CLC   
+    ADC   $074f
+    TAY   
+    LDA   $9d2c, y
+    STA   $e7
+    LDA   $9d4e, y
+    STA   $e8
+    LDY   #$00
+    LDA   ($e7), y
+    PHA   
+    AND   #$07
+    CMP   #$04
+    ;;BCC   +5
+    STA   $0741
+    PLA   
+    PHA   
+    AND   #$38
+    LSR   
+    LSR   
+    LSR   
+    STA   $0710
+    PLA   
+    AND   #$c0
+    CLC   
+    ROL   
+    ROL   
+    ROL   
+    STA   $0715
+    INY   
+    LDA   ($e7), y
+    PHA   
+    AND   #$0f
+    STA   $0727
+    PLA   
+    PHA   
+    AND   #$30
+    LSR   
+    LSR   
+    LSR   
+    LSR   
+    STA   $0742
+    PLA   
+    AND   #$c0
+    CLC   
+    ROL   
+    ROL   
+    ROL   
+    CMP   #$03
+    ;;BNE   5
+    STA   $0733
+    LDA   $e7
+    CLC   
+    ADC   #$02
+    STA   $e7
+    LDA   $e8
+    ADC   #$00
+    STA   $e8
+    ;;RTS   
+    LDA   $076a
+    ;;BNE   16
+    LDA   $075f
+    CMP   #$04
+    ;BCC   12
+    LDA   $075b
+    ;;BEQ   5
+    LDA   #$80
+    STA   $fb
+    LDA   #$01
+    STA   $0774
+    INC   $0772
+    ;;RTS   
+    LDA   $2002
+    PLA   
+    ORA   #$80
+    STA   $2000
+    rti
+
     nop
     nop
     nop

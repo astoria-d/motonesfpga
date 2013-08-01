@@ -1703,6 +1703,10 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#8c#, dsize) then
                     --abs
                     d_print("sty");
+                    a3_abs;
+                    if exec_cycle = T3 then
+                        front_oe(y_cmd, '0');
+                    end if;
 
 
                 ----------------------------------------
@@ -1937,6 +1941,73 @@ end  procedure;
                 -- A.5.5 return from interrupt
                 ----------------------------------------
                 elsif instruction = conv_std_logic_vector(16#40#, dsize) then
+                    if exec_cycle = T1 then
+                        d_print("rti 2");
+                        fetch_stop;
+
+                        --pop stack (decrement only)
+                        back_oe(sp_cmd, '0');
+                        back_we(sp_cmd, '0');
+                        sp_pop_n <= '0';
+                        sp_oe_n <= '0';
+
+                        next_cycle <= T2;
+                    elsif exec_cycle = T2 then
+                        d_print("rti 3");
+
+                        --pop p (status)
+                        back_oe(sp_cmd, '0');
+                        back_we(sp_cmd, '0');
+                        sp_pop_n <= '0';
+                        sp_oe_n <= '0';
+
+                        --load status reg
+                        stat_dec_oe_n <= '1';
+                        dbuf_int_oe_n <= '0';
+                        stat_bus_all_n <= '0';
+
+                        next_cycle <= T3;
+                    elsif exec_cycle = T3 then
+                        d_print("rti 4");
+                        stat_bus_all_n <= '1';
+
+                        --pop pcl
+                        back_oe(sp_cmd, '0');
+                        back_we(sp_cmd, '0');
+                        sp_pop_n <= '0';
+                        sp_oe_n <= '0';
+
+                        --load lo addr.
+                        dbuf_int_oe_n <= '0';
+                        front_we(pcl_cmd, '0');
+
+                        next_cycle <= T4;
+                    elsif exec_cycle = T4 then
+                        d_print("rti 5");
+                        --stack decrement stop.
+                        back_we(sp_cmd, '1');
+                        sp_pop_n <= '1';
+                        front_we(pcl_cmd, '1');
+
+                        --pop pch
+                        back_oe(sp_cmd, '0');
+                        sp_oe_n <= '0';
+                        --load hi addr.
+                        dbuf_int_oe_n <= '0';
+                        front_we(pch_cmd, '0');
+
+                        next_cycle <= T5;
+                    elsif exec_cycle = T5 then
+                        d_print("rti 5");
+                        back_oe(sp_cmd, '1');
+                        sp_oe_n <= '1';
+                        --load hi addr.
+                        dbuf_int_oe_n <= '1';
+                        front_we(pch_cmd, '1');
+
+                        --increment pc.
+                        next_cycle <= T0;
+                    end if; --if exec_cycle = T1 then
 
                 ----------------------------------------
                 -- A.5.6 jmp
