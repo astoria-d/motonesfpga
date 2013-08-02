@@ -382,6 +382,36 @@ boundary_3_4:
     ;;f1-e5=0c
     sbc #$e5
 
+    ;;cli/clv
+    cli
+    ldx #$c0
+    stx $2b
+    bit $2b
+    clv
+
+    ;;adc zp, x/abs, x/indir, y
+    lda #$11
+    ldx #$e4
+    sta $a4
+    ;11+81=92
+    lda #$81
+    adc $c0, x
+
+    stx $0734
+    ;93+e4=177
+    adc $0650, x
+
+    ldx #$c9
+    stx $07e8
+    lda #$34
+    sta $07
+    lda #$07
+    sta $08
+    ldy #$b4
+    ;c9+07=d0
+    adc ($07), y
+
+
     ;;infinite loop.
 mainloop:
 	jmp	mainloop
