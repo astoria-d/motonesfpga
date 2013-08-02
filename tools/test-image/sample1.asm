@@ -348,7 +348,47 @@ boundary_3_4:
     ;;;@88fd
 	sta	$06fc, x
 
+    nop
+    nop
+    nop
 
+    ;;;instruction coverage test....
+    ;;adc abs, y
+    ldy #$10
+    ldx #$fa
+    stx $0790
+    lda #$b0
+    adc $0780, y
+
+    clc
+    ldy #$ab
+    ldx #$fa
+    stx $082b
+    lda #$dd
+    adc $0780, y
+
+    ;;bit zp
+    ldx #$15
+    stx $2b
+    bit $2b
+    lda #$8a
+    bit $2b
+
+    ;;sbc imm
+    ;;8a-5c=2e
+    sbc #$5c
+    ;;2e-3d=f1
+    sbc #$3d
+    ;;f1-e5=0c
+    sbc #$e5
+
+    ;;infinite loop.
+mainloop:
+	jmp	mainloop
+.endproc
+
+
+nmi_test:
     ;;;;test...
     STY   $0720
     LDY   #$80
@@ -459,19 +499,10 @@ boundary_3_4:
     INC   $0772
     ;;RTS   
     LDA   $2002
-    PLA   
+    ;PLA   
     ORA   #$80
     STA   $2000
     rti
-
-    nop
-    nop
-    nop
-
-    ;;infinite loop.
-mainloop:
-	jmp	mainloop
-.endproc
 
 palettes:
 	.byte	$0f, $00, $10, $20
@@ -483,7 +514,7 @@ string:
 	.byte	"test2!"
 
 .segment "VECINFO"
-	.word	$0000
+	.word	nmi_test
 	.word	Reset
 	.word	$0000
 
