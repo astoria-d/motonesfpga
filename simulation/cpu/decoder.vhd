@@ -2164,6 +2164,8 @@ end  procedure;
 
                 elsif instruction = conv_std_logic_vector(16#30#, dsize) then
                     d_print("bmi");
+                    a58_branch (st_N, '1');
+
                 elsif instruction = conv_std_logic_vector(16#d0#, dsize) then
                     d_print("bne");
                     a58_branch (st_Z, '0');
