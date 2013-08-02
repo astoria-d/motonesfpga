@@ -1682,6 +1682,10 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#8e#, dsize) then
                     --abs
                     d_print("stx");
+                    a3_abs;
+                    if exec_cycle = T3 then
+                        front_oe(x_cmd, '0');
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#84#, dsize) then
                     --zp
