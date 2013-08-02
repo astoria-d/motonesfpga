@@ -258,7 +258,7 @@ begin
 
 end  procedure;
 
-procedure fetch_inst is
+procedure fetch_inst (inc_pcl : in std_logic) is
 begin
     if instruction = conv_std_logic_vector(16#4c#, dsize) then
         --if prior cycle is jump instruction, 
@@ -268,7 +268,7 @@ begin
         dl_al_oe_n <= '0';
         pcl_cmd <= "1110";
     else
-        --fetch opcode and phc increment.
+        --fetch opcode and pcl increment.
         pcl_cmd <= "1100";
         dl_al_oe_n <= '1';
     end if;
@@ -276,7 +276,7 @@ begin
     ad_oe_n <= '0';
     pch_cmd <= "1101";
     inst_we_n <= '0';
-    pcl_inc_n <= '0';
+    pcl_inc_n <= inc_pcl;
     r_nw <= '1';
 
     d_print(string'("fetch 1"));
@@ -287,18 +287,13 @@ end  procedure;
 ---cycle is bypassed and slided to T0.)
 procedure t0_cycle is
 begin
+    disable_pins;
     if (nmi_n = '0' and nmi_handled_n = '1') then
         --start nmi handling...
-        disable_pins;
-        pcl_cmd <= "1111";
-        pch_cmd <= "1111";
-        pcl_inc_n <= '1';
-        inst_we_n <= '1';
-        r_nw <= '1';
+        fetch_inst('1');
         next_cycle <= N1;
     else
-        fetch_inst;
-        disable_pins;
+        fetch_inst('0');
         next_cycle <= T1;
     end if;
 end  procedure;
@@ -1998,7 +1993,7 @@ end  procedure;
 
                         next_cycle <= T5;
                     elsif exec_cycle = T5 then
-                        d_print("rti 5");
+                        d_print("rti 6");
                         back_oe(sp_cmd, '1');
                         sp_oe_n <= '1';
                         --load hi addr.
@@ -2238,12 +2233,18 @@ end  procedure;
 
                 next_cycle <= R1;
             elsif exec_cycle = R1 or exec_cycle = N1 then
+                pcl_cmd <= "1111";
+                pcl_inc_n <= '1';
+                inst_we_n <= '1';
+                dl_al_oe_n <= '1';
+
                 --push pch.
                 d_print("R1");
                 ad_oe_n <= '0';
                 sp_push_n <= '0';
                 sp_oe_n <= '0';
-                front_oe(pch_cmd, '0');
+                pch_cmd <= "0111";
+                --front_oe(pch_cmd, '0');
                 back_oe(sp_cmd, '0');
                 back_we(sp_cmd, '0');
                 r_nw <= '0';
