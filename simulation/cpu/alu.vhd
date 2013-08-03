@@ -198,7 +198,7 @@ begin
             port map (d_oe_n, alu_out, d_out);
 
     -------------------------------
-    ---- address calucuration -----
+    ------ alu main process -------
     -------------------------------
     alu_p : process (
                     clk, 
@@ -271,6 +271,9 @@ end procedure;
 
     begin
 
+    -------------------------------
+    ----- address calcuration -----
+    -------------------------------
     if (pcl_inc_n = '0') then
         a_sel <= ADDR_INC;
         addr1 <= bal;
@@ -489,7 +492,7 @@ end procedure;
                 abl <= al_reg;
             end if;
         end if; -- if (exec_cycle = T2) then
-        end if; --if (clk'event and clk = '0') then
+        end if; --if (clk = '0') then
     else
         al_buf_we_n <= '1';
         ah_buf_we_n <= '1';
