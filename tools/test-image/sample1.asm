@@ -411,6 +411,27 @@ boundary_3_4:
     ;c9+07=d0
     adc ($07), y
 
+    ;;and zp, x/abs/abs, x/indir, y
+    lda #$f5
+    ldx #$e4
+    sta $a4
+    ;f5&5e=54
+    lda #$5e
+    and $c0, x
+
+    stx $0734
+    ;e4&54=44
+    and $0650, x
+
+    ldx #$c9
+    stx $07e8
+    lda #$34
+    sta $07
+    lda #$07
+    sta $08
+    ldy #$b4
+    ;c9&07=01
+    adc ($07), y
 
     ;;infinite loop.
 mainloop:

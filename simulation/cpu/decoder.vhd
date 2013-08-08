@@ -153,15 +153,21 @@ signal pch_inc_input : std_logic;
 ---for nmi handling
 signal nmi_handled_n : std_logic;
 
+-- page boundary handling
+signal a2_next_cycle    : std_logic_vector (5 downto 0);
+signal wait_a2_next     : std_logic;
+
 begin
 
-    
     ---pc page next is connected to top bit of exec_cycle
     pch_inc_input <= not exec_cycle(5);
     pch_inc_reg : d_flip_flop_bit 
             port map(set_clk, '1', '1', '0', pch_inc_input, pch_inc_n);
 
-    main_p : process (set_clk, res_n, nmi_n)
+    a2_next_cycle <= T4 when ea_carry = '1' else
+                    T0;
+
+    main_p : process (set_clk, res_n, nmi_n, a2_next_cycle)
 
 -------------------------------------------------------------
 -------------------------------------------------------------
@@ -256,6 +262,7 @@ begin
     n_vec_oe_n <= '1';
     i_vec_oe_n <= '1';
 
+    wait_a2_next <= '0';
 end  procedure;
 
 procedure fetch_inst (inc_pcl : in std_logic) is
@@ -477,28 +484,16 @@ begin
             ea_y_out;
         end if;
         dbuf_int_oe_n <= '0';
-        --instruction specific operation wriiten in the caller position.
-        next_cycle <= T4;
+
+        wait_a2_next <= '1';
+        next_cycle <= a2_next_cycle;
     elsif exec_cycle = T4 then
-        if ea_carry = '1' then
-            --case page boundary crossed.
-            d_print("absx 5 (page boudary crossed.)");
-            abs_latch_out;
-            if (is_x = true) then
-                ea_x_out;
-            else
-                ea_y_out;
-            end if;
-            dbuf_int_oe_n <= '0';
-            --next page.
-            pg_next_n <= not ea_carry;
-            --redo inst.
-            next_cycle <= T0;
-        else
-            --case page boundary not crossed. do the fetch op.
-            d_print("absx 5 (fetch)");
-            t0_cycle;
-        end if;
+        --case page boundary crossed.
+        --redo inst.
+        d_print("absx 5 (page boudary crossed.)");
+        --next page.
+        pg_next_n <= not ea_carry;
+        next_cycle <= T0;
     end if;
 end  procedure;
 
@@ -682,7 +677,6 @@ begin
         next_cycle <= T5;
 
     elsif exec_cycle = T5 then
-
         --page handling.
         back_oe(y_cmd, '1');
         indir_y_n <= '0';
@@ -870,7 +864,6 @@ begin
 
         next_cycle <= T3;
     elsif exec_cycle = T3 then
-
         if ea_carry = '1' then
             d_print("page crossed.");
             --page crossed. adh calc.
@@ -913,6 +906,19 @@ end  procedure;
             nmi_handled_n <= '1';
         end if;
 
+        if (a2_next_cycle'event) then
+            if (wait_a2_next = '1') then
+                next_cycle <= a2_next_cycle;
+                if (ea_carry = '1') then
+                    --close open gate if page boundary crossed.
+                    back_we(acc_cmd, '1');
+                    front_we(acc_cmd, '1');
+                    front_we(x_cmd, '1');
+                    front_we(y_cmd, '1');
+                end if;
+            end if;
+        end if;
+
         if (set_clk'event and set_clk = '1' and res_n = '1') then
             d_print(string'("-"));
 
@@ -952,7 +958,7 @@ end  procedure;
                     arith_en_n <= '0';
                     back_oe(acc_cmd, '0');
                     front_we(acc_cmd, '0');
-                    set_zc_from_alu;
+                    set_nzc_from_alu;
                     single_inst;
 
                 elsif instruction = conv_std_logic_vector(16#18#, dsize) then
@@ -1224,10 +1230,24 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#35#, dsize) then
                     --zp, x
                     d_print("and");
+                    a2_zp_xy(true);
+                    if exec_cycle = T3 then
+                        arith_en_n <= '0';
+                        back_oe(acc_cmd, '0');
+                        back_we(acc_cmd, '0');
+                        set_nz_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#2d#, dsize) then
                     --abs
                     d_print("and");
+                    a2_abs;
+                    if exec_cycle = T3 then
+                        arith_en_n <= '0';
+                        back_oe(acc_cmd, '0');
+                        back_we(acc_cmd, '0');
+                        set_nz_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#3d#, dsize) then
                     --abs, x
@@ -1250,6 +1270,20 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#39#, dsize) then
                     --abs, y
                     d_print("and");
+                    a2_abs_xy(false);
+                    if exec_cycle = T3 then
+                        arith_en_n <= '0';
+                        back_oe(acc_cmd, '0');
+                        back_we(acc_cmd, '0');
+                        set_nz_from_alu;
+                    elsif exec_cycle = T4 then
+                        if ea_carry = '1' then
+                            arith_en_n <= '0';
+                            back_oe(acc_cmd, '0');
+                            back_we(acc_cmd, '0');
+                            set_nz_from_alu;
+                        end if;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#21#, dsize) then
                     --(indir, x)
@@ -1258,6 +1292,21 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#31#, dsize) then
                     --(indir), y
                     d_print("and");
+                    a2_indir_y;
+                    if exec_cycle = T4 then
+                        arith_en_n <= '0';
+                        back_oe(acc_cmd, '0');
+                        back_we(acc_cmd, '0');
+                        set_nz_from_alu;
+                    elsif exec_cycle = T5 then
+                        if ea_carry = '1' then
+                            --redo
+                            arith_en_n <= '0';
+                            back_oe(acc_cmd, '0');
+                            back_we(acc_cmd, '0');
+                            set_nz_from_alu;
+                        end if;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#24#, dsize) then
                     --zp
