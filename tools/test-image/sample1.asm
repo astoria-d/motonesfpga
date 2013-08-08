@@ -358,6 +358,7 @@ boundary_3_4:
     ldx #$fa
     stx $0790
     lda #$b0
+    ;;fa+b0=aa
     adc $0780, y
 
     clc
@@ -365,6 +366,7 @@ boundary_3_4:
     ldx #$fa
     stx $082b
     lda #$dd
+    ;;fa+b0=aa
     adc $0780, y
 
     ;;bit zp
@@ -430,8 +432,20 @@ boundary_3_4:
     lda #$07
     sta $08
     ldy #$b4
+    ;no page crossing
     ;c9&07=01
-    adc ($07), y
+    and ($07), y
+
+    ldx #$c9
+    stx $0825
+    lda #$34
+    sta $07
+    lda #$07
+    sta $08
+    ldy #$f1
+    ;page crossing
+    ;c9&07=01
+    and ($07), y
 
     ;;infinite loop.
 mainloop:

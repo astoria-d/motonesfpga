@@ -154,8 +154,10 @@ signal pch_inc_input : std_logic;
 signal nmi_handled_n : std_logic;
 
 -- page boundary handling
-signal a2_next_cycle    : std_logic_vector (5 downto 0);
-signal wait_a2_next     : std_logic;
+signal a2_abs_xy_next_cycle     : std_logic_vector (5 downto 0);
+signal a2_indir_y_next_cycle    : std_logic_vector (5 downto 0);
+signal wait_a2_abs_xy_next      : std_logic;
+signal wait_a2_indir_y_next     : std_logic;
 
 begin
 
@@ -164,10 +166,12 @@ begin
     pch_inc_reg : d_flip_flop_bit 
             port map(set_clk, '1', '1', '0', pch_inc_input, pch_inc_n);
 
-    a2_next_cycle <= T4 when ea_carry = '1' else
+    a2_abs_xy_next_cycle <= T4 when ea_carry = '1' else
+                    T0;
+    a2_indir_y_next_cycle <= T5 when ea_carry = '1' else
                     T0;
 
-    main_p : process (set_clk, res_n, nmi_n, a2_next_cycle)
+    main_p : process (set_clk, res_n, nmi_n, a2_abs_xy_next_cycle, a2_indir_y_next_cycle)
 
 -------------------------------------------------------------
 -------------------------------------------------------------
@@ -262,7 +266,8 @@ begin
     n_vec_oe_n <= '1';
     i_vec_oe_n <= '1';
 
-    wait_a2_next <= '0';
+    wait_a2_abs_xy_next <= '0';
+    wait_a2_indir_y_next <= '0';
 end  procedure;
 
 procedure fetch_inst (inc_pcl : in std_logic) is
@@ -468,6 +473,15 @@ begin
     end if;
 end  procedure;
 
+procedure a2_page_next is
+begin
+    --close open gate if page boundary crossed.
+    back_we(acc_cmd, '1');
+    front_we(acc_cmd, '1');
+    front_we(x_cmd, '1');
+    front_we(y_cmd, '1');
+end  procedure;
+
 procedure a2_abs_xy (is_x : in boolean) is
 begin
     if exec_cycle = T1 then
@@ -485,8 +499,9 @@ begin
         end if;
         dbuf_int_oe_n <= '0';
 
-        wait_a2_next <= '1';
-        next_cycle <= a2_next_cycle;
+        wait_a2_abs_xy_next <= '1';
+        next_cycle <= a2_abs_xy_next_cycle;
+        d_print("absx step 1");
     elsif exec_cycle = T4 then
         --case page boundary crossed.
         --redo inst.
@@ -557,23 +572,16 @@ begin
         back_oe(y_cmd, '0');
         indir_y_n <= '0';
         dbuf_int_oe_n <= '0';
-        next_cycle <= T5;
 
+        wait_a2_indir_y_next <= '1';
+        next_cycle <= a2_indir_y_next_cycle;
     elsif exec_cycle = T5 then
-        if ea_carry = '1' then
-            --case page boundary crossed.
-            d_print("(indir), y (page boudary crossed.)");
-            back_oe(y_cmd, '1');
-            indir_y_n <= '0';
-            dbuf_int_oe_n <= '0';
-            pg_next_n <= not ea_carry;
-            next_cycle <= T0;
-        else
-            --case page boundary not crossed. do the fetch op.
-            d_print("(indir), y (next fetch)");
-            t0_cycle;
-        end if;
-
+        --case page boundary crossed.
+        --redo inst.
+        d_print("(indir), y (page boudary crossed.)");
+        --next page.
+        pg_next_n <= not ea_carry;
+        next_cycle <= T0;
     end if;
 end  procedure;
 
@@ -906,15 +914,23 @@ end  procedure;
             nmi_handled_n <= '1';
         end if;
 
-        if (a2_next_cycle'event) then
-            if (wait_a2_next = '1') then
-                next_cycle <= a2_next_cycle;
+
+        if (a2_abs_xy_next_cycle'event) then
+            d_print("ea_carry chagne.");
+            if (wait_a2_abs_xy_next = '1') then
+                d_print("absx step 2");
+                next_cycle <= a2_abs_xy_next_cycle;
                 if (ea_carry = '1') then
-                    --close open gate if page boundary crossed.
-                    back_we(acc_cmd, '1');
-                    front_we(acc_cmd, '1');
-                    front_we(x_cmd, '1');
-                    front_we(y_cmd, '1');
+                    a2_page_next;
+                end if;
+            end if;
+        end if;
+
+        if (a2_indir_y_next_cycle'event) then
+            if (wait_a2_indir_y_next = '1') then
+                next_cycle <= a2_indir_y_next_cycle;
+                if (ea_carry = '1') then
+                    a2_page_next;
                 end if;
             end if;
         end if;
