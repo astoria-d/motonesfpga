@@ -916,7 +916,6 @@ end  procedure;
 
 
         if (a2_abs_xy_next_cycle'event) then
-            d_print("ea_carry chagne.");
             if (wait_a2_abs_xy_next = '1') then
                 d_print("absx step 2");
                 next_cycle <= a2_abs_xy_next_cycle;
@@ -952,8 +951,7 @@ end  procedure;
                 if exec_cycle = T1 then
                     d_print("decode and execute inst: " 
                             & conv_hex8(conv_integer(instruction)));
-                    --disable pin since jmp instruction 
-                    --directly enters into t2 cycle.
+                    --disable pin for jmp instruction 
                     dl_al_oe_n <= '1';
                     back_we(pcl_cmd, '1');
                     front_we(pch_cmd, '1');
@@ -1168,36 +1166,22 @@ end  procedure;
                     --abs, x
                     d_print("adc");
                     a2_abs_xy(true);
-                    if exec_cycle = T3 then
+                    if exec_cycle = T3 or exec_cycle = T4 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
                         set_nvzc_from_alu;
-                    elsif exec_cycle = T4 then
-                        if ea_carry = '1' then
-                            arith_en_n <= '0';
-                            back_oe(acc_cmd, '0');
-                            back_we(acc_cmd, '0');
-                            set_nvzc_from_alu;
-                        end if;
                     end if;
 
                 elsif instruction  = conv_std_logic_vector(16#79#, dsize) then
                     --abs, y
                     d_print("adc");
                     a2_abs_xy(false);
-                    if exec_cycle = T3 then
+                    if exec_cycle = T3 or exec_cycle = T4 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
                         set_nvzc_from_alu;
-                    elsif exec_cycle = T4 then
-                        if ea_carry = '1' then
-                            arith_en_n <= '0';
-                            back_oe(acc_cmd, '0');
-                            back_we(acc_cmd, '0');
-                            set_nvzc_from_alu;
-                        end if;
                     end if;
 
                 elsif instruction  = conv_std_logic_vector(16#61#, dsize) then
@@ -1208,19 +1192,11 @@ end  procedure;
                     --(indir), y
                     d_print("adc");
                     a2_indir_y;
-                    if exec_cycle = T4 then
+                    if exec_cycle = T4 or exec_cycle = T5 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
                         set_nvzc_from_alu;
-                    elsif exec_cycle = T5 then
-                        if ea_carry = '1' then
-                            --redo
-                            arith_en_n <= '0';
-                            back_oe(acc_cmd, '0');
-                            back_we(acc_cmd, '0');
-                            set_nvzc_from_alu;
-                        end if;
                     end if;
 
                 elsif instruction  = conv_std_logic_vector(16#29#, dsize) then
@@ -1269,36 +1245,22 @@ end  procedure;
                     --abs, x
                     d_print("and");
                     a2_abs_xy(true);
-                    if exec_cycle = T3 then
+                    if exec_cycle = T3 or exec_cycle = T4 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
                         set_nz_from_alu;
-                    elsif exec_cycle = T4 then
-                        if ea_carry = '1' then
-                            arith_en_n <= '0';
-                            back_oe(acc_cmd, '0');
-                            back_we(acc_cmd, '0');
-                            set_nz_from_alu;
-                        end if;
                     end if;
 
                 elsif instruction  = conv_std_logic_vector(16#39#, dsize) then
                     --abs, y
                     d_print("and");
                     a2_abs_xy(false);
-                    if exec_cycle = T3 then
+                    if exec_cycle = T3 or exec_cycle = T4 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
                         set_nz_from_alu;
-                    elsif exec_cycle = T4 then
-                        if ea_carry = '1' then
-                            arith_en_n <= '0';
-                            back_oe(acc_cmd, '0');
-                            back_we(acc_cmd, '0');
-                            set_nz_from_alu;
-                        end if;
                     end if;
 
                 elsif instruction  = conv_std_logic_vector(16#21#, dsize) then
@@ -1309,19 +1271,11 @@ end  procedure;
                     --(indir), y
                     d_print("and");
                     a2_indir_y;
-                    if exec_cycle = T4 then
+                    if exec_cycle = T4 or exec_cycle = T5 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
                         set_nz_from_alu;
-                    elsif exec_cycle = T5 then
-                        if ea_carry = '1' then
-                            --redo
-                            arith_en_n <= '0';
-                            back_oe(acc_cmd, '0');
-                            back_we(acc_cmd, '0');
-                            set_nz_from_alu;
-                        end if;
                     end if;
 
                 elsif instruction  = conv_std_logic_vector(16#24#, dsize) then
@@ -1378,16 +1332,10 @@ end  procedure;
                     --abs, y
                     d_print("cmp");
                     a2_abs_xy(false);
-                    if exec_cycle = T3 then
+                    if exec_cycle = T3 or exec_cycle = T4 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         set_nzc_from_alu;
-                    elsif exec_cycle = T4 then
-                        if ea_carry = '1' then
-                            arith_en_n <= '0';
-                            back_oe(acc_cmd, '0');
-                            set_nzc_from_alu;
-                        end if;
                     end if;
 
                 elsif instruction  = conv_std_logic_vector(16#c1#, dsize) then
@@ -1518,32 +1466,20 @@ end  procedure;
                     --abs, x
                     d_print("lda");
                     a2_abs_xy(true);
-                    if exec_cycle = T3 then
+                    if exec_cycle = T3 or exec_cycle = T4 then
                         --lda.
                         front_we(acc_cmd, '0');
                         set_nz_from_bus;
-                    elsif exec_cycle = T4 then
-                        if ea_carry = '1' then
-                            --redo lda
-                            front_we(acc_cmd, '0');
-                            set_nz_from_bus;
-                        end if;
                     end if;
 
                 elsif instruction  = conv_std_logic_vector(16#b9#, dsize) then
                     --abs, y
                     d_print("lda");
                     a2_abs_xy(false);
-                    if exec_cycle = T3 then
+                    if exec_cycle = T3 or exec_cycle = T4 then
                         --lda.
                         front_we(acc_cmd, '0');
                         set_nz_from_bus;
-                    elsif exec_cycle = T4 then
-                        if ea_carry = '1' then
-                            --redo lda
-                            front_we(acc_cmd, '0');
-                            set_nz_from_bus;
-                        end if;
                     end if;
 
                 elsif instruction  = conv_std_logic_vector(16#a1#, dsize) then
@@ -1554,16 +1490,10 @@ end  procedure;
                     --(indir), y
                     d_print("lda");
                     a2_indir_y;
-                    if exec_cycle = T4 then
+                    if exec_cycle = T4 or exec_cycle = T5 then
                         --lda.
                         front_we(acc_cmd, '0');
                         set_nz_from_bus;
-                    elsif exec_cycle = T5 then
-                        if ea_carry = '1' then
-                            --redo lda
-                            front_we(acc_cmd, '0');
-                            set_nz_from_bus;
-                        end if;
                     end if;
 
                 elsif instruction  = conv_std_logic_vector(16#a2#, dsize) then
@@ -1599,15 +1529,9 @@ end  procedure;
                     --abs, y
                     d_print("ldx");
                     a2_abs_xy(false);
-                    if exec_cycle = T3 then
+                    if exec_cycle = T3 or exec_cycle = T4 then
                         front_we(x_cmd, '0');
                         set_nz_from_bus;
-                    elsif exec_cycle = T4 then
-                        if ea_carry = '1' then
-                            --redo
-                            front_we(x_cmd, '0');
-                            set_nz_from_bus;
-                        end if;
                     end if;
 
                 elsif instruction  = conv_std_logic_vector(16#a0#, dsize) then
@@ -1721,19 +1645,11 @@ end  procedure;
                     --abs, y
                     d_print("sbc");
                     a2_abs_xy(false);
-                    if exec_cycle = T3 then
+                    if exec_cycle = T3 or exec_cycle = T4 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
                         set_nvzc_from_alu;
-                    elsif exec_cycle = T4 then
-                        if ea_carry = '1' then
-                            --redo
-                            arith_en_n <= '0';
-                            back_oe(acc_cmd, '0');
-                            back_we(acc_cmd, '0');
-                            set_nvzc_from_alu;
-                        end if;
                     end if;
 
                 elsif instruction  = conv_std_logic_vector(16#e1#, dsize) then

@@ -366,7 +366,7 @@ boundary_3_4:
     ldx #$fa
     stx $082b
     lda #$dd
-    ;;fa+b0=aa
+    ;;fa+dd=d7
     adc $0780, y
 
     ;;bit zp
