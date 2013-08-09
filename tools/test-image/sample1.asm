@@ -447,6 +447,33 @@ boundary_3_4:
     ;c9&07=01
     and ($07), y
 
+    ;;cmp zp, x/abs/abs, x/indir, y
+    lda #$de
+    ldx #$e4
+    sta $a4
+    ;c5-de=-19 > (e7)
+    lda #$c5
+    cmp $c0, x
+
+    sec
+    lda #$75
+    stx $0734
+    ;75-e4=-6f > 91
+    cmp $0650, x
+
+    ldx #$c9
+    stx $0825
+    lda #$34
+    sta $07
+    lda #$07
+    sta $08
+    ldy #$f1
+    lda #$c9
+    ;page crossing
+    ;c9-c9=0
+    cmp ($07), y
+
+
     ;;infinite loop.
 mainloop:
 	jmp	mainloop

@@ -480,6 +480,7 @@ begin
     front_we(acc_cmd, '1');
     front_we(x_cmd, '1');
     front_we(y_cmd, '1');
+    stat_alu_we_n <= '1';
 end  procedure;
 
 procedure a2_abs_xy (is_x : in boolean) is
@@ -1319,14 +1320,32 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#d5#, dsize) then
                     --zp, x
                     d_print("cmp");
+                    a2_zp_xy(true);
+                    if exec_cycle = T3 then
+                        arith_en_n <= '0';
+                        back_oe(acc_cmd, '0');
+                        set_nzc_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#cd#, dsize) then
                     --abs
                     d_print("cmp");
+                    a2_abs;
+                    if exec_cycle = T3 then
+                        arith_en_n <= '0';
+                        back_oe(acc_cmd, '0');
+                        set_nzc_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#dd#, dsize) then
                     --abs, x
                     d_print("cmp");
+                    a2_abs_xy(true);
+                    if exec_cycle = T3 or exec_cycle = T4 then
+                        arith_en_n <= '0';
+                        back_oe(acc_cmd, '0');
+                        set_nzc_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#d9#, dsize) then
                     --abs, y
@@ -1345,6 +1364,12 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#d1#, dsize) then
                     --(indir), y
                     d_print("cmp");
+                    a2_indir_y;
+                    if exec_cycle = T4 or exec_cycle = T5 then
+                        arith_en_n <= '0';
+                        back_oe(acc_cmd, '0');
+                        set_nzc_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#e0#, dsize) then
                     --imm
