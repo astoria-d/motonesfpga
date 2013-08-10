@@ -1436,6 +1436,12 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#ec#, dsize) then
                     --abs
                     d_print("cpx");
+                    a2_abs;
+                    if exec_cycle = T3 then
+                        arith_en_n <= '0';
+                        back_oe(x_cmd, '0');
+                        set_nzc_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#c0#, dsize) then
                     --imm
@@ -1448,10 +1454,22 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#c4#, dsize) then
                     --zp
                     d_print("cpy");
+                    a2_zp;
+                    if exec_cycle = T2 then
+                        arith_en_n <= '0';
+                        back_oe(y_cmd, '0');
+                        set_nzc_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#cc#, dsize) then
                     --abs
                     d_print("cpy");
+                    a2_abs;
+                    if exec_cycle = T3 then
+                        arith_en_n <= '0';
+                        back_oe(y_cmd, '0');
+                        set_nzc_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#49#, dsize) then
                     --imm

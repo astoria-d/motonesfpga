@@ -493,6 +493,27 @@ boundary_3_4:
     ;80<1 = 00 w/ carry.
     rol $0734
 
+    ;;cpx abs
+    ;;cpy zp/abs
+    lda #$de
+    sta $03a4
+    ;c5-de=-19 > (e7)
+    ldx #$c5
+    cpx $03a4
+
+    sec
+    ldy #$75
+    ldx #$e4
+    stx $34
+    ;75-e4=-6f > 91
+    cpy $34
+
+    ldx #$c9
+    stx $0825
+    ldy #$c9
+    ;c9-c9=0
+    cpy $0825
+
 
     ;;infinite loop.
 mainloop:
