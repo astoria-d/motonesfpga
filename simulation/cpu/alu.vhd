@@ -633,8 +633,6 @@ end procedure;
                 carry_out <= c;
                 overflow <= v;
 
-
-
             end if; --if instruction (7 downto 5) = "000" then
 
         elsif instruction (1 downto 0) = "10" then
@@ -675,6 +673,9 @@ end procedure;
 
             if instruction (7 downto 5) = "000" then
                 d_print("asl");
+                sel <= ALU_ASL;
+                set_nz;
+                carry_out <= c;
 
             elsif instruction (7 downto 5) = "001" then
                 d_print("rol");
@@ -684,6 +685,9 @@ end procedure;
 
             elsif instruction (7 downto 5) = "010" then
                 d_print("lsr");
+                sel <= ALU_LSR;
+                set_nz;
+                carry_out <= c;
 
             elsif instruction (7 downto 5) = "011" then
                 --d_print("ror");

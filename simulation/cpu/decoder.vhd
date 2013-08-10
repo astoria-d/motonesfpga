@@ -1658,6 +1658,7 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#bc#, dsize) then
                     --abs, x
                     d_print("ldy");
+                    --todo....
 
                 elsif instruction  = conv_std_logic_vector(16#09#, dsize) then
                     --imm
@@ -1911,18 +1912,34 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#46#, dsize) then
                     --zp
                     d_print("lsr");
+                    a4_zp;
+                    if exec_cycle = T4 then
+                        set_zc_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#56#, dsize) then
                     --zp, x
                     d_print("lsr");
+                    a4_zp_x;
+                    if exec_cycle = T5 then
+                        set_zc_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#4e#, dsize) then
                     --abs
                     d_print("lsr");
+                    a4_abs;
+                    if exec_cycle = T5 then
+                        set_zc_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#5e#, dsize) then
                     --abs, x
                     d_print("lsr");
+                    a4_abs_x;
+                    if exec_cycle = T6 then
+                        set_zc_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#26#, dsize) then
                     --zp

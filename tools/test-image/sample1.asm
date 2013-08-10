@@ -514,6 +514,26 @@ boundary_3_4:
     ;c9-c9=0
     cpy $0825
 
+    ;;lsr zp/zp, x/abs/abs, x
+    lda #$de
+    ldx #$e4
+    sta $a4
+    ;de>1 =6f w/o carry
+    clc
+    lsr $c0, x
+    ;6f>1 =37  w/ carry
+    lsr $a4
+
+    ldx #$64
+    stx $0722
+    ;64>1 = 32 w/o carry
+    lsr $06be, x
+
+    ldx #$01
+    stx $0734
+    ;01>1 = 00 w/ carry.
+    lsr $0734
+
 
     ;;infinite loop.
 mainloop:
