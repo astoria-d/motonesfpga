@@ -1602,6 +1602,11 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#b6#, dsize) then
                     --zp, y
                     d_print("ldx");
+                    a2_zp_xy(false);
+                    if exec_cycle = T3 then
+                        front_we(x_cmd, '0');
+                        set_nz_from_bus;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#ae#, dsize) then
                     --abs
@@ -1658,7 +1663,11 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#bc#, dsize) then
                     --abs, x
                     d_print("ldy");
-                    --todo....
+                    a2_abs_xy(true);
+                    if exec_cycle = T3 or exec_cycle = T4 then
+                        set_nz_from_bus;
+                        front_we(y_cmd, '0');
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#09#, dsize) then
                     --imm

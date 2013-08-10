@@ -534,6 +534,22 @@ boundary_3_4:
     ;01>1 = 00 w/ carry.
     lsr $0734
 
+    ;;ldy abs, x
+    ;;ldx zp, y
+    ldx #$fa
+    stx $0820
+    ;;page cross
+    ldy $0726, x
+
+    ldx #$10
+    stx $0820
+    ;no page cross
+    ldy $0810, x
+
+    ldy #$10
+    sty $e0
+    ldx #$55
+    ldx $d0, y
 
     ;;infinite loop.
 mainloop:
