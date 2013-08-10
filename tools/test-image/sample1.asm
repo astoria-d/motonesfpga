@@ -473,6 +473,26 @@ boundary_3_4:
     ;c9-c9=0
     cmp ($07), y
 
+    ;;rol zp/zp, x/abs/abs, x
+    lda #$de
+    ldx #$e4
+    sta $a4
+    ;de<1 =bc w/ carry
+    clc
+    rol $c0, x
+    ;bc<1 =78  w/ carry
+    rol $a4
+
+    ldx #$64
+    stx $0722
+    ;64<1 = c8 w/o carry
+    rol $06be, x
+
+    ldx #$80
+    stx $0734
+    ;80<1 = 00 w/ carry.
+    rol $0734
+
 
     ;;infinite loop.
 mainloop:
