@@ -659,29 +659,29 @@ bl_test4:
     dex
     bpl bl_test3
 
-;    ;;ora zp, x/abs, x/indir, y
-;    lda #$de
-;    ldx #$e4
-;    sta $a4
-;    ;c5|de=df
-;    lda #$c5
-;    ora $c0, x
-;
-;    lda #$75
-;    stx $0734
-;    ;75|e4=f5
-;    cmp $0650, x
-;
-;    ldx #$c9
-;    stx $0825
-;    lda #$34
-;    sta $07
-;    lda #$07
-;    sta $08
-;    ldy #$f1
-;    ;page crossing
-;    ;07|c9=cf
-;    cmp ($07), y
+    ;;ora zp, x/abs, x/indir, y
+    lda #$de
+    ldx #$e4
+    sta $a4
+    ;c5|de=df
+    lda #$c5
+    ora $c0, x
+
+    lda #$75
+    stx $0734
+    ;75|e4=f5
+    ora $0650, x
+
+    ldx #$c9
+    stx $0825
+    lda #$34
+    sta $07
+    lda #$07
+    sta $08
+    ldy #$f1
+    ;page crossing
+    ;07|c9=cf
+    ora ($07), y
 
 
     ;;done...

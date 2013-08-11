@@ -1722,18 +1722,46 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#15#, dsize) then
                     --zp, x
                     d_print("ora");
+                    a2_zp_xy(true);
+                    if exec_cycle = T3 then
+                        arith_en_n <= '0';
+                        back_oe(acc_cmd, '0');
+                        back_we(acc_cmd, '0');
+                        set_nz_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#0d#, dsize) then
                     --abs
                     d_print("ora");
+                    a2_abs;
+                    if exec_cycle = T3 then
+                        arith_en_n <= '0';
+                        back_oe(acc_cmd, '0');
+                        back_we(acc_cmd, '0');
+                        set_nz_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#1d#, dsize) then
                     --abs, x
                     d_print("ora");
+                    a2_abs_xy(true);
+                    if exec_cycle = T3 or exec_cycle = T4 then
+                        arith_en_n <= '0';
+                        back_oe(acc_cmd, '0');
+                        back_we(acc_cmd, '0');
+                        set_nz_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#19#, dsize) then
                     --abs, y
                     d_print("ora");
+                    a2_abs_xy(false);
+                    if exec_cycle = T3 or exec_cycle = T4 then
+                        arith_en_n <= '0';
+                        back_oe(acc_cmd, '0');
+                        back_we(acc_cmd, '0');
+                        set_nz_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#01#, dsize) then
                     --(indir, x)
@@ -1742,6 +1770,13 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#11#, dsize) then
                     --(indir), y
                     d_print("ora");
+                    a2_indir_y;
+                    if exec_cycle = T4 or exec_cycle = T5 then
+                        arith_en_n <= '0';
+                        back_oe(acc_cmd, '0');
+                        back_we(acc_cmd, '0');
+                        set_nz_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#e9#, dsize) then
                     --imm
