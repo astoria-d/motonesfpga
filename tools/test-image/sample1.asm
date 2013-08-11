@@ -683,6 +683,15 @@ bl_test4:
     ;07|c9=cf
     ora ($07), y
 
+    ;;php/plp test
+    sec
+    sei
+    php
+
+    clc
+    cli
+    plp
+
 
     ;;done...
     ;;infinite loop.

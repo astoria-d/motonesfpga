@@ -2131,6 +2131,10 @@ end  procedure;
                 -- A.5.1 push/pull
                 elsif instruction = conv_std_logic_vector(16#08#, dsize) then
                     d_print("php");
+                    a51_push;
+                    if exec_cycle = T2 then
+                        stat_bus_oe_n <= '0';
+                    end if;
 
                 elsif instruction = conv_std_logic_vector(16#48#, dsize) then
                     d_print("pha");
@@ -2141,6 +2145,11 @@ end  procedure;
 
                 elsif instruction = conv_std_logic_vector(16#28#, dsize) then
                     d_print("plp");
+                    a52_pull;
+                    if exec_cycle = T3 then
+                        stat_dec_oe_n <= '1';
+                        stat_bus_all_n <= '0';
+                    end if;
 
                 elsif instruction = conv_std_logic_vector(16#68#, dsize) then
                     d_print("pla");
