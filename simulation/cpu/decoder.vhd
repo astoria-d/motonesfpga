@@ -1881,6 +1881,10 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#d6#, dsize) then
                     --zp, x
                     d_print("dec");
+                    a4_zp_x;
+                    if exec_cycle = T5 then
+                        set_nz_from_bus;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#ce#, dsize) then
                     --abs
@@ -1893,6 +1897,10 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#de#, dsize) then
                     --abs, x
                     d_print("dec");
+                    a4_abs_x;
+                    if exec_cycle = T6 then
+                        set_nz_from_bus;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#e6#, dsize) then
                     --zp
@@ -1905,6 +1913,10 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#f6#, dsize) then
                     --zp, x
                     d_print("inc");
+                    a4_zp_x;
+                    if exec_cycle = T5 then
+                        set_nz_from_bus;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#ee#, dsize) then
                     --abs
@@ -1917,6 +1929,10 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#fe#, dsize) then
                     --abs, x
                     d_print("inc");
+                    a4_abs_x;
+                    if exec_cycle = T6 then
+                        set_nz_from_bus;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#46#, dsize) then
                     --zp

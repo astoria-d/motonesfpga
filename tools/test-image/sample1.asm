@@ -551,6 +551,31 @@ boundary_3_4:
     ldx #$55
     ldx $d0, y
 
+    ;;dec zp, x/abs, x
+    ;;inc zp, x/abs, x
+    lda #$00
+    ldx #$e4
+    sta $88
+    ldy #$00
+    dec $a4, x
+
+    ldx #$64
+    stx $0722
+    dec $06be, x
+
+    lda #$fe
+    ldx #$e4
+    sta $88
+    inc $a4, x
+    inc $a4, x
+    inc $a4, x
+
+    ldx #$64
+    stx $0722
+    inc $06be, x
+
+
+    ;;done...
     ;;infinite loop.
 mainloop:
 	jmp	mainloop
