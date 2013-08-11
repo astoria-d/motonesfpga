@@ -598,6 +598,17 @@ boundary_3_4:
     stx $0722
     asl $06be,x
 
+    ;;sta zp,x
+    ;;stx zp,y
+    ;;sty zp,x
+    lda #$40
+    ldx #$e4
+    ldy #$c5
+    sta $a4, x
+    stx $a4, y
+    sty $a4, x
+
+
     ;;done...
     ;;infinite loop.
 mainloop:

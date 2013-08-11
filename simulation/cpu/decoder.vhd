@@ -605,6 +605,36 @@ begin
     end if;
 end  procedure;
 
+procedure a3_zp_xy (is_x : in boolean) is
+begin
+    if exec_cycle = T1 then
+        fetch_low;
+    elsif exec_cycle = T2 then
+        fetch_stop;
+        dbuf_int_oe_n <= '1';
+        dl_al_we_n <= '1';
+
+        --calc zp.
+        dl_al_oe_n <= '0';
+        zp_n <= '0';
+        next_cycle <= T3;
+    elsif exec_cycle = T3 then
+        --calc zp + index.
+        dl_al_oe_n <= '0';
+        zp_n <= '0';
+        zp_xy_n <= '0';
+        if (is_x = true) then
+            back_oe(x_cmd, '0');
+        else
+            back_oe(y_cmd, '0');
+        end if;
+
+        --write data
+        r_nw <= '0';
+        next_cycle <= T0;
+    end if;
+end  procedure;
+
 procedure a3_abs is
 begin
     if exec_cycle = T1 then
@@ -1773,6 +1803,10 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#95#, dsize) then
                     --zp, x
                     d_print("sta");
+                    a3_zp_xy(true);
+                    if exec_cycle = T2 then
+                        front_oe(acc_cmd, '0');
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#8d#, dsize) then
                     --abs
@@ -1821,6 +1855,10 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#96#, dsize) then
                     --zp, y
                     d_print("stx");
+                    a3_zp_xy(false);
+                    if exec_cycle = T2 then
+                        front_oe(x_cmd, '0');
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#8e#, dsize) then
                     --abs
@@ -1841,6 +1879,10 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#94#, dsize) then
                     --zp, x
                     d_print("sty");
+                    a3_zp_xy(true);
+                    if exec_cycle = T2 then
+                        front_oe(y_cmd, '0');
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#8c#, dsize) then
                     --abs
