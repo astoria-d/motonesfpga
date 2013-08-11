@@ -622,7 +622,7 @@ end procedure;
                 carry_out <= c;
 
             elsif instruction (7 downto 5) = "111" then
-                d_print("sbc");
+                --d_print("sbc");
                 sel <= ALU_SBC;
                 d1 <= acc_out;
                 d2 <= int_d_bus;
@@ -672,19 +672,19 @@ end procedure;
 
 
             if instruction (7 downto 5) = "000" then
-                d_print("asl");
+                --d_print("asl");
                 sel <= ALU_ASL;
                 set_nz;
                 carry_out <= c;
 
             elsif instruction (7 downto 5) = "001" then
-                d_print("rol");
+                --d_print("rol");
                 sel <= ALU_ROL;
                 set_nz;
                 carry_out <= c;
 
             elsif instruction (7 downto 5) = "010" then
-                d_print("lsr");
+                --d_print("lsr");
                 sel <= ALU_LSR;
                 set_nz;
                 carry_out <= c;
@@ -709,7 +709,7 @@ end procedure;
 
         elsif instruction (1 downto 0) = "00" then
             if instruction (7 downto 5) = "001" then
-                d_print("bit");
+                --d_print("bit");
                 sel <= ALU_BIT;
                 d1 <= acc_out;
                 d2 <= int_d_bus;

@@ -1857,18 +1857,34 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#06#, dsize) then
                     --zp
                     d_print("asl");
+                    a4_zp;
+                    if exec_cycle = T4 then
+                        set_nzc_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#16#, dsize) then
                     --zp, x
                     d_print("asl");
+                    a4_zp_x;
+                    if exec_cycle = T5 then
+                        set_nzc_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#0e#, dsize) then
                     --abs
                     d_print("asl");
+                    a4_abs;
+                    if exec_cycle = T5 then
+                        set_nzc_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#1e#, dsize) then
                     --abs, x
                     d_print("asl");
+                    a4_abs_x;
+                    if exec_cycle = T6 then
+                        set_nzc_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#c6#, dsize) then
                     --zp
@@ -2001,18 +2017,26 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#66#, dsize) then
                     --zp
                     d_print("ror");
---                    a4_zp;
---                    if exec_cycle = T4 then
---                        set_nzc_from_alu;
---                    end if;
+                    a4_zp;
+                    if exec_cycle = T4 then
+                        set_nzc_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#76#, dsize) then
                     --zp, x
                     d_print("ror");
+                    a4_zp_x;
+                    if exec_cycle = T5 then
+                        set_nzc_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#6e#, dsize) then
                     --abs
                     d_print("ror");
+                    a4_abs;
+                    if exec_cycle = T5 then
+                        set_nzc_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#7e#, dsize) then
                     --abs, x

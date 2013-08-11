@@ -574,6 +574,29 @@ boundary_3_4:
     stx $0722
     inc $06be, x
 
+    ;;ror zp/zp,x/abs
+    lda #$02
+    ldx #$e4
+    sta $88
+    ror $a4, x
+    ror $a4, x
+    ror $a4, x
+
+    ldx #$64
+    stx $0722
+    ror $0722
+
+    ;;asl zp/zp,x/abs/abs,x
+    lda #$40
+    ldx #$e4
+    sta $88
+    asl $88
+    asl $a4, x
+    asl $a4, x
+
+    ldx #$64
+    stx $0722
+    asl $06be,x
 
     ;;done...
     ;;infinite loop.
