@@ -940,18 +940,18 @@ end procedure;
         set_z(res(dsize - 1 downto 0));
 
     elsif sel = ALU_SBC then
-        ---A - M - C -> A
-        res := ('0' & d1) - ('0' & d2) - carry_in;
+        ---A - M - ~C -> A
+        res := ('0' & d1) - ('0' & d2) - not carry_in;
         d_out <= res(dsize - 1 downto 0);
 
         --c Set if unsigned borrow not required; cleared if unsigned borrow.
         carry_out <= not res(dsize);
-        --v Set if signed borrow not required; cleared if signed borrow.
-        if ((d1(dsize - 1) = d2(dsize - 1)) 
+        --v Set if signed borrow required; cleared if no signed borrow.
+        if ((d1(dsize - 1) /= d2(dsize - 1)) 
             and (d1(dsize - 1) /= res(dsize - 1))) then
-            overflow <= '0';
-        else
             overflow <= '1';
+        else
+            overflow <= '0';
         end if;
         set_n(res(dsize - 1 downto 0));
         set_z(res(dsize - 1 downto 0));

@@ -692,6 +692,65 @@ bl_test4:
     cli
     plp
 
+    ;;eor zp, x/abs, x/indir, y
+    lda #$de
+    ldx #$e4
+    sta $a4
+    ;c5^de=1b
+    lda #$c5
+    eor $c0, x
+
+    lda #$75
+    stx $0734
+    ;75^e4=91
+    eor $0650, x
+
+    ldx #$07
+    stx $0825
+    lda #$34
+    sta $07
+    lda #$07
+    sta $08
+    ldy #$f1
+    ;page crossing
+    ;07^07=00
+    eor ($07), y
+
+    ;;sbc zp, x/abs, x/indir, y
+    lda #$de
+    ldx #$e4
+    sta $a4
+    ;c5-de=-19 > e7
+    lda #$c5
+    sbc $c0, x
+
+    lda #$75
+    stx $0734
+    ;75-e4=-6f > 91
+    sbc $0650, x
+
+    ldx #$07
+    stx $07ef
+    lda #$34
+    sta $07
+    lda #$07
+    sta $08
+    ldy #$bb
+    ;07-07=00
+    sbc ($07), y
+
+    ;;bvs/bvc test
+    ;;-120=0x88
+    lda #$88
+bvs_test:
+    sbc #$10
+    bvs bvs_test
+    
+    lda #$5
+bvc_test:
+    sbc #$a
+    bvc bvc_test
+
 
     ;;done...
     ;;infinite loop.
