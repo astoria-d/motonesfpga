@@ -156,8 +156,10 @@ signal nmi_handled_n : std_logic;
 -- page boundary handling
 signal a2_abs_xy_next_cycle     : std_logic_vector (5 downto 0);
 signal a2_indir_y_next_cycle    : std_logic_vector (5 downto 0);
+signal a58_branch_next_cycle    : std_logic_vector (5 downto 0);
 signal wait_a2_abs_xy_next      : std_logic;
 signal wait_a2_indir_y_next     : std_logic;
+signal wait_a58_branch_next     : std_logic;
 
 begin
 
@@ -170,8 +172,11 @@ begin
                     T0;
     a2_indir_y_next_cycle <= T5 when ea_carry = '1' else
                     T0;
+    a58_branch_next_cycle <= T3 when ea_carry = '1' else
+                    T0;
 
-    main_p : process (set_clk, res_n, nmi_n, a2_abs_xy_next_cycle, a2_indir_y_next_cycle)
+    main_p : process (set_clk, res_n, nmi_n, 
+                     a2_abs_xy_next_cycle, a2_indir_y_next_cycle, a58_branch_next_cycle)
 
 -------------------------------------------------------------
 -------------------------------------------------------------
@@ -268,6 +273,7 @@ begin
 
     wait_a2_abs_xy_next <= '0';
     wait_a2_indir_y_next <= '0';
+    wait_a58_branch_next <= '0';
 end  procedure;
 
 procedure fetch_inst (inc_pcl : in std_logic) is
@@ -945,25 +951,20 @@ begin
         back_oe(pch_cmd, '0');
         back_we(pcl_cmd, '0');
 
-        next_cycle <= T3;
+        wait_a58_branch_next <= '1';
+        next_cycle <= a58_branch_next_cycle;
     elsif exec_cycle = T3 then
-        if ea_carry = '1' then
-            d_print("page crossed.");
-            --page crossed. adh calc.
-            back_we(pcl_cmd, '1');
-            back_oe(pcl_cmd, '0');
-            back_oe(pch_cmd, '0');
-            back_we(pch_cmd, '0');
-            dl_dh_oe_n <= '0';
+        d_print("page crossed.");
+        --page crossed. adh calc.
+        back_we(pcl_cmd, '1');
+        back_oe(pcl_cmd, '0');
+        back_oe(pch_cmd, '0');
+        back_we(pch_cmd, '0');
+        dl_dh_oe_n <= '0';
 
-            rel_calc_n <= '0';
-            pg_next_n <= not ea_carry;
-            next_cycle <= T0;
-        else
-            --no page boundary. 
-            --fetch cycle is done.
-            t0_cycle;
-        end if;
+        rel_calc_n <= '0';
+        pg_next_n <= '0';
+        next_cycle <= T0;
     end if;
 end  procedure;
 
@@ -1002,7 +1003,18 @@ end  procedure;
 
         if (a2_indir_y_next_cycle'event) then
             if (wait_a2_indir_y_next = '1') then
+                d_print("indir step 2");
                 next_cycle <= a2_indir_y_next_cycle;
+                if (ea_carry = '1') then
+                    a2_page_next;
+                end if;
+            end if;
+        end if;
+
+        if (a58_branch_next_cycle'event) then
+            if (wait_a58_branch_next = '1') then
+                d_print("branch step 2");
+                next_cycle <= a58_branch_next_cycle;
                 if (ea_carry = '1') then
                     a2_page_next;
                 end if;

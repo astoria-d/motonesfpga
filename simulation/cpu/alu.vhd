@@ -131,10 +131,6 @@ signal addr_out : std_logic_vector (dsize - 1 downto 0);
 signal addr_c_in : std_logic;
 signal addr_c : std_logic;
 
-signal ea_carry_reg_we_n : std_logic;
-signal ea_carry_reg_in : std_logic;
-signal ea_carry_reg : std_logic;
-
 signal pcl_carry_reg_in : std_logic;
 
 ----------- signals for arithmatic ----------
@@ -168,9 +164,6 @@ begin
             port map(clk, '1', '1', al_buf_we_n, al_reg_in, al_reg);
     ah_dff : d_flip_flop generic map (dsize) 
             port map(clk, '1', '1', ah_buf_we_n, ah_reg_in, ah_reg);
-
-    ea_carry_dff_bit : d_flip_flop_bit 
-            port map(clk, '1', '1', ea_carry_reg_we_n, ea_carry_reg_in, ea_carry_reg);
 
     --pcl carry flag set.
     pcl_carry_reg_in <= addr_c when pcl_inc_n = '0' else
@@ -403,13 +396,7 @@ end procedure;
             ---rel val is on the d_bus.
             addr2 <= int_d_bus;
             addr_back <= addr_out;
-
-            --sustain ea_carry in the register.
-            --because looop back bal is changed and it affect the result of
-            --EA in the next cycle.
-            ea_carry_reg_we_n <= '0';
-            ea_carry_reg_in <= addr_c;
-            ea_carry <= ea_carry_reg;
+            ea_carry <= addr_c;
 
             --keep the value in the cycle
             al_buf_we_n <= '0';
@@ -496,7 +483,6 @@ end procedure;
     else
         al_buf_we_n <= '1';
         ah_buf_we_n <= '1';
-        ea_carry_reg_we_n <= '1';
 
         abl <= bal;
         abh <= bah;

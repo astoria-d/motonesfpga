@@ -611,13 +611,6 @@ boundary_3_4:
     ;;branch page cross test.
     jmp bl_test0
 
-
-
-
-
-
-
-
 bl_test0:
     ldx #5
 bl_test1:
