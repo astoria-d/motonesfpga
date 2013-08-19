@@ -6,7 +6,6 @@ use ieee.std_logic_unsigned.all;
 entity ppu_render is 
     port (  clk         : in std_logic;
             rst_n       : in std_logic;
-            vblank_n    : out std_logic;
             rd_n        : out std_logic;
             wr_n        : out std_logic;
             ale         : out std_logic;
@@ -19,6 +18,7 @@ entity ppu_render is
             b           : out std_logic_vector (3 downto 0);
             ppu_ctrl        : in std_logic_vector (7 downto 0);
             ppu_mask        : in std_logic_vector (7 downto 0);
+            read_status     : in std_logic;
             ppu_status      : out std_logic_vector (7 downto 0);
             ppu_scroll_x    : in std_logic_vector (7 downto 0);
             ppu_scroll_y    : in std_logic_vector (7 downto 0);
@@ -605,7 +605,7 @@ begin
                 port map (clk_n, rst_n, spr_ptn_ce_n(i), spr_ptn_h_we_n(i), spr_ptn_in, spr_ptn_h(i));
     end generate;
 
-    clk_p : process (rst_n, clk) 
+    clk_p : process (rst_n, clk, read_status)
 
 procedure output_rgb is
 variable pl_addr : integer;
@@ -661,7 +661,6 @@ end;
             cnt_y_res_n <= '0';
             nt_we_n <= '1';
 
-            vblank_n <= '1';
             ppu_status <= (others => '0');
 
             b <= (others => '0');
@@ -1001,22 +1000,23 @@ end;
                 --flag operation
                 if ((cur_x = conv_std_logic_vector(1, X_SIZE)) and
                     (cur_y = conv_std_logic_vector(VSCAN + 1, X_SIZE))) then
-                    --start vblank.
-                    if (ppu_ctrl(PPUNEN) = '1') then
-                        vblank_n <= '0';
-                    end if;
+                    --vblank start
                     ppu_status(ST_VBL) <= '1';
                 elsif ((cur_x = conv_std_logic_vector(1, X_SIZE)) and
                     (cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE))) then
-
-                    --clear flag.
-                    vblank_n <= '1';
                     ppu_status(ST_SP0) <= '0';
+                    --vblank end
                     ppu_status(ST_VBL) <= '0';
                     --TODO: sprite overflow is not inplemented!
                     ppu_status(ST_SOF) <= '0';
                 end if;
             end if; --if (clk'event and clk = '1') then
+
+            if (read_status'event and read_status = '1') then
+                --reading ppu status clears vblank bit.
+                ppu_status(ST_VBL) <= '0';
+            end if;
+
         end if;--if (rst_n = '0') then
     end process;
 

@@ -28,7 +28,6 @@ architecture rtl of ppu is
 component ppu_render
     port (  clk         : in std_logic;
             rst_n       : in std_logic;
-            vblank_n    : out std_logic;
             rd_n        : out std_logic;
             wr_n        : out std_logic;
             ale         : out std_logic;
@@ -41,6 +40,7 @@ component ppu_render
             b           : out std_logic_vector (3 downto 0);
             ppu_ctrl        : in std_logic_vector (7 downto 0);
             ppu_mask        : in std_logic_vector (7 downto 0);
+            read_status     : in std_logic;
             ppu_status      : out std_logic_vector (7 downto 0);
             ppu_scroll_x    : in std_logic_vector (7 downto 0);
             ppu_scroll_y    : in std_logic_vector (7 downto 0);
@@ -123,6 +123,9 @@ constant PPUSCROLL : std_logic_vector(2 downto 0) := "101";
 constant PPUADDR   : std_logic_vector(2 downto 0) := "110";
 constant PPUDATA   : std_logic_vector(2 downto 0) := "111";
 
+constant PPUNEN    : integer := 7;  --nmi enable
+constant ST_VBL     : integer := 7;  --vblank
+
 signal clk_n            : std_logic;
 
 signal ppu_clk_cnt_res_n    : std_logic;
@@ -142,7 +145,9 @@ signal ppu_data_we_n    : std_logic;
 
 signal ppu_ctrl         : std_logic_vector (dsize - 1 downto 0);
 signal ppu_mask         : std_logic_vector (dsize - 1 downto 0);
+signal read_status      : std_logic;
 signal ppu_status       : std_logic_vector (dsize - 1 downto 0);
+signal ppu_stat_out     : std_logic_vector (dsize - 1 downto 0);
 signal oam_addr         : std_logic_vector (dsize - 1 downto 0);
 signal oam_data         : std_logic_vector (dsize - 1 downto 0);
 signal ppu_scroll_x     : std_logic_vector (dsize - 1 downto 0);
@@ -152,6 +157,8 @@ signal ppu_addr         : std_logic_vector (13 downto 0);
 signal ppu_addr_in      : std_logic_vector (13 downto 0);
 signal ppu_addr_cnt     : std_logic_vector (0 downto 0);
 signal ppu_data         : std_logic_vector (dsize - 1 downto 0);
+signal read_data_n      : std_logic;
+signal ppu_latch_rst_n  : std_logic;
 
 signal oam_bus_ce_n     : std_logic;
 signal plt_bus_ce_n     : std_logic;
@@ -161,10 +168,10 @@ signal oam_plt_data     : std_logic_vector (7 downto 0);
 
 begin
 
-    render_inst : ppu_render port map (clk, rst_n, vblank_n, 
+    render_inst : ppu_render port map (clk, rst_n,
             rd_n, wr_n, ale, vram_ad, vram_a,
             pos_x, pos_y, nes_r, nes_g, nes_b,
-            ppu_ctrl, ppu_mask, ppu_status, ppu_scroll_x, ppu_scroll_y,
+            ppu_ctrl, ppu_mask, read_status, ppu_status, ppu_scroll_x, ppu_scroll_y,
             r_nw, oam_bus_ce_n, plt_bus_ce_n, 
             oam_plt_addr, oam_plt_data);
 
@@ -184,6 +191,9 @@ begin
     ppu_mask_inst : d_flip_flop generic map(dsize)
             port map (clk_n, rst_n, '1', ppu_mask_we_n, cpu_d, ppu_mask);
 
+    ppu_status_inst : d_flip_flop generic map(dsize)
+            port map (read_status, rst_n, '1', '0', ppu_status, ppu_stat_out);
+
     oma_addr_inst : counter_register generic map(dsize, 1)
             port map (clk_n, rst_n, oam_addr_ce_n, oam_addr_we_n, cpu_d, oam_addr);
     oma_data_inst : d_flip_flop generic map(dsize)
@@ -194,18 +204,35 @@ begin
     ppu_scroll_y_inst : d_flip_flop generic map(dsize)
             port map (clk_n, rst_n, '1', ppu_scroll_y_we_n, cpu_d, ppu_scroll_y);
     ppu_scroll_cnt_inst : counter_register generic map (1, 1)
-            port map (clk_n, rst_n, ppu_scroll_cnt_ce_n, '1', (others => '0'), ppu_scroll_cnt);
+            port map (clk_n, ppu_latch_rst_n, ppu_scroll_cnt_ce_n, 
+                                            '1', (others => '0'), ppu_scroll_cnt);
 
     ppu_addr_inst : counter_register generic map(14, 1)
             port map (clk_n, rst_n, ppu_data_we_n, ppu_addr_we_n, ppu_addr_in, ppu_addr);
     ppu_addr_cnt_inst : counter_register generic map (1, 1)
-            port map (clk_n, rst_n, ppu_addr_cnt_ce_n, '1', (others => '0'), ppu_addr_cnt);
+            port map (clk_n, ppu_latch_rst_n, ppu_addr_cnt_ce_n, 
+                                            '1', (others => '0'), ppu_addr_cnt);
     ppu_data_inst : d_flip_flop generic map(dsize)
             port map (clk_n, rst_n, '1', ppu_data_we_n, cpu_d, ppu_data);
 
 
-    reg_set_p : process (rst_n, ce_n, r_nw, cpu_addr, cpu_d)
+    reg_set_p : process (rst_n, ce_n, r_nw, cpu_addr, cpu_d, 
+                        ppu_status(ST_VBL), ppu_ctrl(PPUNEN))
     begin
+        if (rst_n = '0') then
+            ppu_latch_rst_n <= '0';
+            vblank_n <= '1';
+        end if;
+
+        if (ppu_status(ST_VBL)'event or ppu_ctrl(PPUNEN)'event) then
+            if (ppu_status(ST_VBL) = '1' and ppu_ctrl(PPUNEN) = '1') then
+                --start vblank.
+                vblank_n <= '0';
+            else
+                --clear flag.
+                vblank_n <= '1';
+            end if;
+        end if;
 
         if (rst_n = '1' and ce_n = '0') then
 
@@ -276,7 +303,8 @@ begin
     end process;
 
     --cpu and ppu clock timing adjustment...
-    clk_cnt_set_p : process (rst_n, ce_n, r_nw, cpu_addr, cpu_d, clk, oam_plt_data, vram_ad)
+    clk_cnt_set_p : process (rst_n, ce_n, r_nw, cpu_addr, cpu_d, clk, 
+                                oam_plt_data, vram_ad, ppu_stat_out)
     begin
         if (rst_n = '1' and ce_n = '0') then
             --set counter=0 on register write.   
@@ -385,7 +413,14 @@ begin
             end if;
 
             if(cpu_addr = PPUSTATUS and r_nw = '1') then
-                cpu_d <= ppu_status;
+                cpu_d <= ppu_stat_out;
+                --reading status resets ppu_addr/scroll cnt.
+                ppu_latch_rst_n <= '0';
+                --notify reading status
+                read_status <= '1';
+            else
+                ppu_latch_rst_n <= '1';
+                read_status <= '0';
             end if;
 
         else
@@ -394,6 +429,8 @@ begin
             ppu_clk_cnt_res_n <= '0';
             oam_bus_ce_n     <= '1';
             oam_addr_ce_n <= '1';
+            ppu_latch_rst_n <= '1';
+            read_status <= '0';
 
             rd_n <= 'Z';
             wr_n <= 'Z';
