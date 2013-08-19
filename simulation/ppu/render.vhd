@@ -26,7 +26,8 @@ entity ppu_render is
             oam_bus_ce_n    : in std_logic;
             plt_bus_ce_n    : in std_logic;
             oam_plt_addr    : in std_logic_vector (7 downto 0);
-            oam_plt_data    : inout std_logic_vector (7 downto 0)
+            oam_plt_data    : inout std_logic_vector (7 downto 0);
+            v_bus_busy_n    : out std_logic
     );
 end ppu_render;
 
@@ -382,6 +383,7 @@ begin
                 (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                 cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
               '1';
+    v_bus_busy_n <= d_oe_n;
 
     io_cnt_inst : counter_register generic map (1, 1)
             port map (clk, cnt_x_res_n, '0', '1', (others => '0'), io_cnt);

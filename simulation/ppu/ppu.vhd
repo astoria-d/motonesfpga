@@ -48,7 +48,8 @@ component ppu_render
             oam_bus_ce_n    : in std_logic;
             plt_bus_ce_n    : in std_logic;
             oam_plt_addr    : in std_logic_vector (7 downto 0);
-            oam_plt_data    : inout std_logic_vector (7 downto 0)
+            oam_plt_data    : inout std_logic_vector (7 downto 0);
+            v_bus_busy_n    : out std_logic
     );
 end component;
 
@@ -157,8 +158,10 @@ signal ppu_addr         : std_logic_vector (13 downto 0);
 signal ppu_addr_in      : std_logic_vector (13 downto 0);
 signal ppu_addr_cnt     : std_logic_vector (0 downto 0);
 signal ppu_data         : std_logic_vector (dsize - 1 downto 0);
-signal read_data        : std_logic;
+signal ppu_data_out     : std_logic_vector (dsize - 1 downto 0);
+signal read_data_n      : std_logic;
 signal ppu_latch_rst_n  : std_logic;
+signal v_bus_busy_n     : std_logic;
 
 signal oam_bus_ce_n     : std_logic;
 signal plt_bus_ce_n     : std_logic;
@@ -173,7 +176,7 @@ begin
             pos_x, pos_y, nes_r, nes_g, nes_b,
             ppu_ctrl, ppu_mask, read_status, ppu_status, ppu_scroll_x, ppu_scroll_y,
             r_nw, oam_bus_ce_n, plt_bus_ce_n, 
-            oam_plt_addr, oam_plt_data);
+            oam_plt_addr, oam_plt_data, v_bus_busy_n);
 
     vga_inst : vga_ctl port map (clk, vga_clk, rst_n, 
             pos_x, pos_y, nes_r, nes_g, nes_b,
@@ -214,6 +217,9 @@ begin
                                             '1', (others => '0'), ppu_addr_cnt);
     ppu_data_inst : d_flip_flop generic map(dsize)
             port map (clk_n, rst_n, '1', ppu_data_we_n, cpu_d, ppu_data);
+
+    ppu_data_out_inst : d_flip_flop generic map(dsize)
+            port map (clk_n, rst_n, '1', read_data_n, ppu_data, ppu_data_out);
 
 
     reg_set_p : process (rst_n, ce_n, r_nw, cpu_addr, cpu_d, 
@@ -298,6 +304,12 @@ begin
                 ppu_addr_cnt_ce_n <= '1';
                 ppu_addr_we_n <= '1';
             end if;
+
+            if (cpu_addr = PPUDATA and r_nw = '0') then
+                read_data_n <= '0';
+            else
+                read_data_n <= '1';
+            end if;
         else
             ppu_ctrl_we_n    <= '1';
             ppu_mask_we_n    <= '1';
@@ -308,9 +320,8 @@ begin
             ppu_scroll_cnt_ce_n  <= '1';
             ppu_addr_we_n        <= '1';
             ppu_addr_cnt_ce_n    <= '1';
-
             read_status <= '0';
-            read_data <= '0';
+            read_data_n <= '1';
         end if; --if (rst_n = '1' and ce_n = '0') 
 
     end process;
@@ -388,6 +399,7 @@ begin
 
             if (cpu_addr = PPUDATA and ppu_clk_cnt = "00") then
                 ppu_data_we_n <= '0';
+                vram_a <= ppu_addr(13 downto 8);
                 if (ppu_addr(13 downto 8) = "111111") then
                     --case palette tbl.
                     plt_bus_ce_n <= '0';
