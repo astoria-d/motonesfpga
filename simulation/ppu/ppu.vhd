@@ -123,7 +123,7 @@ constant PPUSCROLL : std_logic_vector(2 downto 0) := "101";
 constant PPUADDR   : std_logic_vector(2 downto 0) := "110";
 constant PPUDATA   : std_logic_vector(2 downto 0) := "111";
 
-constant PPUNEN    : integer := 7;  --nmi enable
+constant PPUNEN     : integer := 7;  --nmi enable
 constant ST_VBL     : integer := 7;  --vblank
 
 signal clk_n            : std_logic;
@@ -157,7 +157,7 @@ signal ppu_addr         : std_logic_vector (13 downto 0);
 signal ppu_addr_in      : std_logic_vector (13 downto 0);
 signal ppu_addr_cnt     : std_logic_vector (0 downto 0);
 signal ppu_data         : std_logic_vector (dsize - 1 downto 0);
-signal read_data_n      : std_logic;
+signal read_data        : std_logic;
 signal ppu_latch_rst_n  : std_logic;
 
 signal oam_bus_ce_n     : std_logic;
@@ -249,6 +249,16 @@ begin
                 ppu_mask_we_n <= '1';
             end if;
 
+            if(cpu_addr = PPUSTATUS and r_nw = '1') then
+                --reading status resets ppu_addr/scroll cnt.
+                ppu_latch_rst_n <= '0';
+                --notify reading status
+                read_status <= '1';
+            else
+                ppu_latch_rst_n <= '1';
+                read_status <= '0';
+            end if;
+
             if(cpu_addr = OAMADDR) then
                 oam_addr_we_n <= '0';
             else
@@ -298,6 +308,9 @@ begin
             ppu_scroll_cnt_ce_n  <= '1';
             ppu_addr_we_n        <= '1';
             ppu_addr_cnt_ce_n    <= '1';
+
+            read_status <= '0';
+            read_data <= '0';
         end if; --if (rst_n = '1' and ce_n = '0') 
 
     end process;
@@ -414,13 +427,6 @@ begin
 
             if(cpu_addr = PPUSTATUS and r_nw = '1') then
                 cpu_d <= ppu_stat_out;
-                --reading status resets ppu_addr/scroll cnt.
-                ppu_latch_rst_n <= '0';
-                --notify reading status
-                read_status <= '1';
-            else
-                ppu_latch_rst_n <= '1';
-                read_status <= '0';
             end if;
 
         else
@@ -429,8 +435,6 @@ begin
             ppu_clk_cnt_res_n <= '0';
             oam_bus_ce_n     <= '1';
             oam_addr_ce_n <= '1';
-            ppu_latch_rst_n <= '1';
-            read_status <= '0';
 
             rd_n <= 'Z';
             wr_n <= 'Z';
