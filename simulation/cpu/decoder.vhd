@@ -2238,6 +2238,7 @@ end  procedure;
                     a52_pull;
                     if exec_cycle = T3 then
                         front_we(acc_cmd, '0');
+                        set_nz_from_bus;
                     end if;
 
 
