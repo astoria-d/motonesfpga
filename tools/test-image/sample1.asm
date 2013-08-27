@@ -744,6 +744,28 @@ bvc_test:
     sbc #$a
     bvc bvc_test
 
+    ;;;;vram access test...
+	lda	#$00
+	sta	$2001       ;;disable bg
+
+    LDA   #$1e
+    STA   $2006
+    LDA   #$c0
+    STA   $2006       ;;;ppuaddr=1ec0
+    LDA   #$03
+    STA   $01
+    LDY   #$00
+    STY   $00
+    LDA   $2007       ;;;;from here acc broke...
+    LDA   $2007
+
+    ;;show bg...
+	lda	#$1e
+	sta	$2001
+
+    ;;;enable nmi
+	lda	#$88
+	sta	$2000
 
     ;;done...
     ;;infinite loop.
