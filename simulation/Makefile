@@ -1,4 +1,4 @@
-DIRS=clock mem ppu dev cpu 
+DIRS=clock mem ppu apu cpu 
 MODULES=address_decoder.vhd motones_sim.vhd 
 WORKDIR=work
 TEST_MODULE = testbench_motones_sim.vhd
@@ -25,9 +25,12 @@ $(BIN): $(DIRS) $(OBJS)
 clean:
 	-rm $(OBJS)
 	-rm $(BIN)
-	-rm $(patsubst $(WORKDIR)/,$(WORKDIR)/e~, $(OBJS))
-	-rm *.o *.cf *.vcd
+	-rm $(subst .vhd,,$(WORKDIR)/e~$(TEST_MODULE)).o
+	-rm testbench.vcd*
 	
 rclean: clean
+	for dir in $(DIRS); do \
+		make -C $(ROOT_DIR)/$$dir clean; \
+	done
 	-rm $(WORKDIR)/*
 

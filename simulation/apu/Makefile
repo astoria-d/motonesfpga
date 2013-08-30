@@ -13,7 +13,8 @@ BIN=$(subst .vhd,, $(TEST_MODULE))
 OBJS = $(addprefix $(WORKDIR)/,$(addsuffix .o,$(basename $(MODULES) $(TEST_MODULE))))
 
 
-all: $(BIN)
+all: $(OBJS)
+test: $(BIN)
 
 $(WORKDIR)/%.o: %.vhd
 	ghdl -a $(GHDL_OPTION) $(subst .o,.vhd, $(subst $(WORKDIR)/,, $@))
@@ -24,6 +25,6 @@ $(BIN): $(OBJS)
 clean:
 	-rm $(OBJS)
 	-rm $(BIN)
-	-rm $(patsubst $(WORKDIR)/,$(WORKDIR)/e~, $(OBJS))
-	-rm *.o *.cf testbench.vcd*
+	-rm $(subst .vhd,,$(WORKDIR)/e~$(TEST_MODULE)).o
+	-rm testbench.vcd*
 
