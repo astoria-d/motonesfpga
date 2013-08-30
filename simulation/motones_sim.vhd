@@ -45,7 +45,8 @@ architecture rtl of motones_sim is
                 R_nW        : in std_logic; 
                 addr       : in std_logic_vector (abus_size - 1 downto 0);
                 d_io       : inout std_logic_vector (dbus_size - 1 downto 0);
-                ppu_ce_n    : out std_logic
+                ppu_ce_n    : out std_logic;
+                apu_ce_n    : out std_logic
     );
     end component;
 
@@ -93,6 +94,19 @@ architecture rtl of motones_sim is
             );
     end component;
 
+    component apu
+        port (  clk         : in std_logic;
+                ce_n        : in std_logic;
+                rst_n       : in std_logic;
+                r_nw        : in std_logic;
+                cpu_addr    : in std_logic_vector (4 downto 0);
+                cpu_d       : inout std_logic_vector (7 downto 0);
+                vram_ad     : inout std_logic_vector (7 downto 0);
+                vram_a      : out std_logic_vector (13 downto 8);
+                rdy         : out std_logic
+        );
+    end component;
+
     ---clock frequency = 21,477,270 (21 MHz)
     constant base_clock_time : time := 46 ns;
     constant vga_clk_time : time := 40 ns;
@@ -110,6 +124,7 @@ architecture rtl of motones_sim is
     signal d_io : std_logic_vector( data_size - 1 downto 0);
 
     signal ppu_ce_n : std_logic;
+    signal apu_ce_n : std_logic;
     signal rd_n     : std_logic;
     signal wr_n     : std_logic;
     signal ale      : std_logic;
@@ -129,7 +144,6 @@ architecture rtl of motones_sim is
 begin
 
     irq_n <= '0';
-    rdy <= '1';
 
     --- generate base clock.
     clock_p: process
@@ -159,7 +173,7 @@ begin
                 phi1, phi2, addr, d_io);
 
     addr_dec_inst : address_decoder generic map (addr_size, data_size) 
-        port map (phi2, r_nw, addr, d_io, ppu_ce_n);
+        port map (phi2, r_nw, addr, d_io, ppu_ce_n, apu_ce_n);
 
     --nes ppu instance
     ppu_inst : ppu 
@@ -169,6 +183,10 @@ begin
 
     ppu_addr_decoder : v_address_decoder generic map (size14, data_size) 
         port map (ppu_clk, rd_n, wr_n, ale, vram_ad, vram_a);
+
+    apu_inst : apu
+        port map (cpu_clk, apu_ce_n, rst_n, r_nw, addr(4 downto 0), d_io, 
+                vram_ad, vram_a, rdy);
 
     dummy_vga_disp : vga_device 
         port map (vga_clk, rst_n, h_sync_n, v_sync_n, r, g, b);

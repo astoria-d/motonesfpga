@@ -6,10 +6,11 @@ entity apu is
             ce_n        : in std_logic;
             rst_n       : in std_logic;
             r_nw        : in std_logic;
-            cpu_addr    : in std_logic_vector (2 downto 0);
+            cpu_addr    : in std_logic_vector (4 downto 0);
             cpu_d       : inout std_logic_vector (7 downto 0);
             vram_ad     : inout std_logic_vector (7 downto 0);
-            vram_a      : out std_logic_vector (13 downto 8)
+            vram_a      : out std_logic_vector (13 downto 8);
+            rdy         : out std_logic
     );
 end apu;
 
@@ -55,6 +56,8 @@ end  procedure;
 
 constant dsize     : integer := 8;
 
+constant OAM_DMA   : std_logic_vector(4 downto 0) := "10100";
+
 
 signal clk_n            : std_logic;
 
@@ -78,13 +81,13 @@ begin
 
         if (rst_n = '1' and ce_n = '0') then
 
---            if(cpu_addr = PPUCTRL) then
---                ppu_ctrl_we_n <= '0';
---            else
---                ppu_ctrl_we_n <= '1';
---            end if;
-
+            if(cpu_addr = OAM_DMA) then
+                rdy <= '0';
+            else
+                rdy <= '1';
+            end if;
         else
+            rdy <= '1';
         end if; --if (rst_n = '1' and ce_n = '0') 
 
     end process;
