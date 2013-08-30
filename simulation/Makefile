@@ -1,4 +1,4 @@
-DIRS=clock mem ppu cpu 
+DIRS=clock mem ppu dev cpu 
 MODULES=address_decoder.vhd motones_sim.vhd 
 WORKDIR=work
 TEST_MODULE = testbench_motones_sim.vhd
