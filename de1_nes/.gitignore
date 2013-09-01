@@ -3,4 +3,5 @@
 *.rpt
 *.pof
 *.sof
+*.bak
 db/*
