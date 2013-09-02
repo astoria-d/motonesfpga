@@ -1,0 +1,7 @@
+*.done
+*.summary
+*.rpt
+*.pof
+*.sof
+*.bak
+db/*
