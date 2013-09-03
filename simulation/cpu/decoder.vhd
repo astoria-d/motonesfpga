@@ -235,6 +235,16 @@ end  procedure;
 
 procedure disable_pins is
 begin
+--following pins are not set in this function.
+--            inst_we_n       : out std_logic;
+--            ad_oe_n         : out std_logic;
+--            dl_al_oe_n      : out std_logic;
+--            pcl_inc_n       : out std_logic;
+--            pch_inc_n       : out std_logic;
+--            pcl_cmd         : out std_logic_vector(3 downto 0);
+--            pch_cmd         : out std_logic_vector(3 downto 0);
+--            r_nw            : out std_logic
+
     --disable the last opration pins.
     dbuf_int_oe_n <= '1';
     dl_al_we_n <= '1';
@@ -1024,7 +1034,16 @@ end  procedure;
         if (set_clk'event and set_clk = '1' and res_n = '1') then
             d_print(string'("-"));
 
-            if exec_cycle = T0 then
+            if rdy = '0' then
+                disable_pins;
+                inst_we_n <= '1';
+                ad_oe_n <= '1';
+                dl_al_oe_n <= '1';
+                pcl_inc_n <= '1';
+                pcl_cmd <= "1111";
+                pch_cmd <= "1111";
+                r_nw <= '1';
+            elsif exec_cycle = T0 then
                 --cycle #1
                 t0_cycle;
 
@@ -2590,6 +2609,7 @@ end  procedure;
                 dl_ah_oe_n <= '1';
                 dl_dh_oe_n <= '1';
                 pcl_inc_n <= '1';
+                pch_inc_n <= '1';
                 pcl_cmd <= "1111";
                 pch_cmd <= "1111";
                 sp_cmd <= "1111";
@@ -2746,9 +2766,9 @@ end  procedure;
                     dl_ah_we_n <= '1';
                 end if;
 
-            end if; --if exec_cycle = T0 then
+            end if; --if rdy = '0' then
 
-        end if; --if (set_clk'event and set_clk = '1') 
+        end if; --if (set_clk'event and set_clk = '1' and res_n = '1') then
 
     end process;
 
