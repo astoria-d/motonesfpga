@@ -99,7 +99,7 @@ architecture rtl of motones_sim is
                 ce_n        : in std_logic;
                 rst_n       : in std_logic;
                 r_nw        : in std_logic;
-                cpu_addr    : in std_logic_vector (4 downto 0);
+                cpu_addr    : inout std_logic_vector (15 downto 0);
                 cpu_d       : inout std_logic_vector (7 downto 0);
                 vram_ad     : inout std_logic_vector (7 downto 0);
                 vram_a      : out std_logic_vector (13 downto 8);
@@ -185,7 +185,7 @@ begin
         port map (ppu_clk, rd_n, wr_n, ale, vram_ad, vram_a);
 
     apu_inst : apu
-        port map (cpu_clk, apu_ce_n, rst_n, r_nw, addr(4 downto 0), d_io, 
+        port map (cpu_clk, apu_ce_n, rst_n, r_nw, addr, d_io, 
                 vram_ad, vram_a, rdy);
 
     dummy_vga_disp : vga_device 

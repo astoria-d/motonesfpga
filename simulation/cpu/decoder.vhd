@@ -1037,7 +1037,7 @@ end  procedure;
             if rdy = '0' then
                 disable_pins;
                 inst_we_n <= '1';
-                ad_oe_n <= '1';
+                ad_oe_n <= '0';
                 dl_al_oe_n <= '1';
                 pcl_inc_n <= '1';
                 pcl_cmd <= "1111";
