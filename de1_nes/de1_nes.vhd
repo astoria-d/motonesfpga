@@ -128,10 +128,10 @@ begin
     clock_inst : clock_divider port map 
         (base_clk, rst_n, cpu_clk, ppu_clk, vga_clk);
 
---    --mos 6502 cpu instance
---    cpu_inst : mos6502 generic map (data_size, addr_size) 
---        port map (cpu_clk, rdy, rst_n, irq_n, nmi_n, dbe, r_nw, 
---                phi1, phi2, addr, d_io);
+    --mos 6502 cpu instance
+    cpu_inst : mos6502 generic map (data_size, addr_size) 
+        port map (cpu_clk, rdy, rst_n, irq_n, nmi_n, dbe, r_nw, 
+                phi1, phi2, addr, d_io);
 
     addr_dec_inst : address_decoder generic map (addr_size, data_size) 
         port map (phi2, r_nw, addr, d_io, ppu_ce_n);

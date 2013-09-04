@@ -977,20 +977,20 @@ end  procedure;
 
     begin
 
-        if (res_n = '0') then
-            --pc l/h is reset vector.
-            pcl_cmd <= "1110";
-            pch_cmd <= "1110";
-            next_cycle <= R0;
-        elsif (res_n'event and res_n = '1') then
-            pcl_cmd <= "1111";
-            pch_cmd <= "1111";
-        end if;
-
-        if (nmi_n'event and nmi_n = '1') then
-            --reset nmi handle status
-            nmi_handled_n := '1';
-        end if;
+--        if (res_n = '0') then
+--            --pc l/h is reset vector.
+--            pcl_cmd <= "1110";
+--            pch_cmd <= "1110";
+--            next_cycle <= R0;
+--        elsif (res_n'event and res_n = '1') then
+--            pcl_cmd <= "1111";
+--            pch_cmd <= "1111";
+--        end if;
+--
+--        if (nmi_n'event and nmi_n = '1') then
+--            --reset nmi handle status
+--            nmi_handled_n := '1';
+--        end if;
 
 
 --        if (a2_abs_xy_next_cycle'event) then
@@ -1025,7 +1025,10 @@ end  procedure;
 
         --if (set_clk'event and set_clk = '1' and res_n = '1') then
         if (res_n = '0') then
-			--nothing...
+            --pc l/h is reset vector.
+            pcl_cmd <= "1110";
+            pch_cmd <= "1110";
+            next_cycle <= R0;
 		elsif (rising_edge(set_clk)) then
             d_print(string'("-"));
 
