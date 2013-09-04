@@ -54,3 +54,5 @@ set_global_assignment -name VHDL_FILE cpu/mos6502.vhd
 set_global_assignment -name VHDL_FILE address_decoder.vhd
 set_global_assignment -name VHDL_FILE de1_nes.vhd
 set_global_assignment -name VECTOR_WAVEFORM_FILE de1_nes.vwf
+set_global_assignment -name EDA_SIMULATION_TOOL "ModelSim-Altera (VHDL)"
+set_global_assignment -name EDA_OUTPUT_DATA_FORMAT VHDL -section_id eda_simulation
