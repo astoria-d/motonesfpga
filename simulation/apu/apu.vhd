@@ -6,7 +6,7 @@ entity apu is
             ce_n        : in std_logic;
             rst_n       : in std_logic;
             r_nw        : in std_logic;
-            cpu_addr    : in std_logic_vector (4 downto 0);
+            cpu_addr    : inout std_logic_vector (15 downto 0);
             cpu_d       : inout std_logic_vector (7 downto 0);
             vram_ad     : inout std_logic_vector (7 downto 0);
             vram_a      : out std_logic_vector (13 downto 8);
@@ -55,9 +55,7 @@ begin
 end  procedure;
 
 constant dsize     : integer := 8;
-
 constant OAM_DMA   : std_logic_vector(4 downto 0) := "10100";
-
 
 signal clk_n            : std_logic;
 
@@ -66,32 +64,100 @@ signal oam_data         : std_logic_vector (dsize - 1 downto 0);
 
 signal oam_bus_ce_n     : std_logic;
 
+signal dma_addr         : std_logic_vector (dsize * 2 - 1 downto 0);
+signal dma_cnt_ce_n     : std_logic_vector(0 downto 0);
+signal dma_start_n      : std_logic;
+signal dma_end_n        : std_logic;
+signal dma_process_n    : std_logic;
+signal dma_rst_n        : std_logic;
+signal dma_status_we_n  : std_logic;
+signal dma_status       : std_logic_vector(0 downto 0);
+signal dma_next_status  : std_logic_vector(0 downto 0);
+
+constant DMA_ST_IDLE    : std_logic_vector(0 downto 0) := "0";
+constant DMA_ST_PROCESS : std_logic_vector(0 downto 0) := "1";
+
 begin
 
     clk_n <= not clk;
 
---    ppu_clk_cnt_inst : counter_register generic map (2, 1)
---            port map (clk_n, ppu_clk_cnt_res_n, '0', '1', (others => '0'), ppu_clk_cnt); 
---
---    ppu_ctrl_inst : d_flip_flop generic map(dsize)
---            port map (clk_n, rst_n, '1', ppu_ctrl_we_n, cpu_d, ppu_ctrl);
---
+    dma_rst_n <= not dma_process_n;
+
+    dma_l_up_inst : counter_register generic map (1, 1)
+            port map (clk_n, dma_rst_n, dma_process_n, '1', (others => '0'), dma_cnt_ce_n);
+
+    dma_l_inst : counter_register generic map (dsize, 1)
+            port map (clk, dma_rst_n, dma_cnt_ce_n(0), '1', (others => '0'), 
+                                                dma_addr(dsize - 1 downto 0));
+    dma_h_inst : d_flip_flop generic map(dsize)
+            port map (clk_n, '1', '1', dma_start_n, cpu_d, 
+                                                dma_addr(dsize * 2 - 1 downto dsize));
+
+    dma_status_inst : d_flip_flop generic map(1)
+            port map (clk_n, rst_n, '1', dma_status_we_n, dma_next_status, dma_status);
+
+    dma_val_inst : d_flip_flop generic map(dsize)
+            port map (clk_n, rst_n, '1', dma_process_n, cpu_d, oam_data);
+
+    cpu_addr <= dma_addr when dma_process_n = '0' else
+                (others => 'Z');
+
+    --apu register access process
     reg_set_p : process (rst_n, ce_n, r_nw, cpu_addr, cpu_d)
     begin
-
         if (rst_n = '1' and ce_n = '0') then
-
-            if(cpu_addr = OAM_DMA) then
-                rdy <= '0';
+            if(cpu_addr(4 downto 0) = OAM_DMA and r_nw = '0') then
+                dma_start_n <= '0';
             else
-                rdy <= '1';
+                dma_start_n <= '1';
             end if;
         else
-            rdy <= '1';
+            dma_start_n <= '1';
         end if; --if (rst_n = '1' and ce_n = '0') 
-
     end process;
 
+    --dma operation process
+    dma_p : process (rst_n, clk)
+    begin
+        if (rst_n = '0') then
+            dma_next_status <= DMA_ST_IDLE;
+            dma_end_n <= '1';
+            rdy <= '1';
+            dma_process_n <= '1';
+        else
+            if (clk'event and clk = '0') then
+                if (dma_start_n = '0') then
+                    --pull rdy pin down to stop cpu bus accessing.
+                    rdy <= '0';
+                end if;
+                if (dma_end_n = '0') then
+                    --pull rdy pin up to re-enable cpu bus accessing.
+                    rdy <= '1';
+                end if;
+            end if;
+
+            if (clk'event and clk = '1') then
+                if (dma_status = DMA_ST_IDLE) then
+                    if (dma_start_n = '0') then
+                        dma_status_we_n <= '0';
+                        dma_next_status <= DMA_ST_PROCESS;
+                    end if;
+                    dma_process_n <= '1';
+                    dma_end_n <= '1';
+                elsif (dma_status = DMA_ST_PROCESS) then
+                    if (dma_addr(dsize - 1 downto 0) = "11111111" and dma_cnt_ce_n(0) = '1') then
+                        dma_status_we_n <= '0';
+                        dma_next_status <= DMA_ST_IDLE;
+                        dma_end_n <= '0';
+                    else
+                        dma_status_we_n <= '1';
+                        dma_process_n <= '0';
+                        dma_end_n <= '1';
+                    end if;
+                end if;--if (dma_status = DMA_ST_IDLE) then
+            end if;--if (clk'event and clk = '1') then
+        end if;
+    end process;
 
 end rtl;
 
