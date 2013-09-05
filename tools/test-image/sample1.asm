@@ -75,9 +75,9 @@ copypal:
 	dey
 	bne	copypal
 
-	lda	#$21
+	lda	#$20
 	sta	$2006
-	lda	#$c9
+	lda	#$ab
 	sta	$2006
 	ldx	#$00
 	ldy	#$0d

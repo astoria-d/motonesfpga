@@ -641,8 +641,6 @@ begin
 --        d_print("output_rgb");
 --        d_print("pl_addr:" & conv_hex8(pl_addr));
 --        d_print("pl_index:" & conv_hex8(pl_index));
---        d_print("rgb:" &
---            conv_hex16(nes_color_palette(pl_index)));
     end if;
 
     if (dot_output = true) then
@@ -650,6 +648,10 @@ begin
         b <= nes_color_palette(pl_index) (11 downto 8);
         g <= nes_color_palette(pl_index) (7 downto 4);
         r <= nes_color_palette(pl_index) (3 downto 0);
+        d_print("rgb:" &
+            conv_hex8(nes_color_palette(pl_index) (11 downto 8)) &
+            conv_hex8(nes_color_palette(pl_index) (7 downto 4)) &
+            conv_hex8(nes_color_palette(pl_index) (3 downto 0)));
     else
         b <= (others => '0');
         g <= (others => '0');
@@ -878,8 +880,6 @@ end;
                         spr_attr_we_n <= "11111111";
                         spr_ptn_l_we_n <= "11111111";
                         spr_ptn_h_we_n <= "11111111";
-                        spr_x_ce_n <= "11111111";
-                        spr_ptn_ce_n <= "11111111";
 
                     --sprite pattern fetch
                     elsif (cur_x > conv_std_logic_vector(256, X_SIZE) and 
@@ -983,6 +983,9 @@ end;
                                 spr_ptn_ce_n(i) <= '0';
                             end if;
                         end loop;
+                    else
+                        spr_x_ce_n <= "11111111";
+                        spr_ptn_ce_n <= "11111111";
                     end if; --if ((cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) 
                 end if; --if (ppu_mask(PPUSSP) = '1') then
 
