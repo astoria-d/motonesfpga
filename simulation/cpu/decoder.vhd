@@ -1042,7 +1042,7 @@ end  procedure;
                 pcl_inc_n <= '1';
                 pcl_cmd <= "1111";
                 pch_cmd <= "1111";
-                r_nw <= '1';
+                r_nw <= 'Z';
             elsif exec_cycle = T0 then
                 --cycle #1
                 t0_cycle;

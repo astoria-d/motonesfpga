@@ -363,7 +363,7 @@ begin
                 cpu_d <= (others => 'Z');
                 oam_addr_ce_n <= '1';
                 oam_bus_ce_n <= '1';
-            end if;
+            end if; --if (cpu_addr = OAMDATA and ppu_clk_cnt = "00") then
 
             --vram address access.
             if (cpu_addr = PPUADDR and ppu_clk_cnt = "00") then
@@ -395,7 +395,7 @@ begin
                 end if;
             else
                 ale <= '0';
-            end if;
+            end if; --if (cpu_addr = PPUADDR and ppu_clk_cnt = "00") then
 
             if (cpu_addr = PPUDATA and ppu_clk_cnt = "00") then
                 ppu_data_we_n <= '0';
@@ -427,7 +427,7 @@ begin
                 ppu_data_we_n <= '1';
                 rd_n <= '1';
                 wr_n <= '1';
-            end if;
+            end if; --if (cpu_addr = PPUDATA and ppu_clk_cnt = "00") then
 
             --sustain cpu output data when reading.
             if (cpu_addr = PPUDATA and r_nw = '1' and ppu_clk_cnt /= "00") then
@@ -455,7 +455,7 @@ begin
             vram_ad <= (others => 'Z');
             vram_a <= (others => 'Z');
             cpu_d <= (others => 'Z');
-        end if;
+        end if; --if (rst_n = '1' and ce_n = '0') then
     end process;
 
 end rtl;
