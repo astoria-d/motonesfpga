@@ -55,14 +55,13 @@ end  procedure;
 constant dsize     : integer := 8;
 constant OAM_DMA   : std_logic_vector(4 downto 0) := "10100";
 
---oam_addr=0x2003
+--oamaddr=0x2003
 constant OAMADDR   : std_logic_vector(15 downto 0) := "0010000000000011";
---oam_data=0x2004
+--oamdata=0x2004
 constant OAMDATA   : std_logic_vector(15 downto 0) := "0010000000000100";
 
 signal clk_n            : std_logic;
 
-signal oam_addr         : std_logic_vector (dsize - 1 downto 0);
 signal oam_data         : std_logic_vector (dsize - 1 downto 0);
 
 signal oam_bus_ce_n     : std_logic;
