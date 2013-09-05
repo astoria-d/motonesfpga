@@ -240,7 +240,6 @@ begin
 --            ad_oe_n         : out std_logic;
 --            dl_al_oe_n      : out std_logic;
 --            pcl_inc_n       : out std_logic;
---            pch_inc_n       : out std_logic;
 --            pcl_cmd         : out std_logic_vector(3 downto 0);
 --            pch_cmd         : out std_logic_vector(3 downto 0);
 --            r_nw            : out std_logic
@@ -2609,7 +2608,6 @@ end  procedure;
                 dl_ah_oe_n <= '1';
                 dl_dh_oe_n <= '1';
                 pcl_inc_n <= '1';
-                pch_inc_n <= '1';
                 pcl_cmd <= "1111";
                 pch_cmd <= "1111";
                 sp_cmd <= "1111";

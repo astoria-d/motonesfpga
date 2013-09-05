@@ -199,7 +199,7 @@ begin
                     pcl_inc_n, pch_inc_n, sp_oe_n, sp_push_n, sp_pop_n,
                     abs_xy_n, pg_next_n, zp_n, zp_xy_n, rel_calc_n, 
                     indir_n, indir_x_n, indir_y_n, 
-                    index_bus, bal, bal, addr_c_in, addr_out, addr_c,
+                    index_bus, bal, bah, addr_c_in, addr_out, addr_c,
 
                     --for arithmatic operation.
                     arith_en_n,
