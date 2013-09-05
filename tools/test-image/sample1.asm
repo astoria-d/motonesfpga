@@ -95,7 +95,7 @@ copymap:
 	sta	$2005
 
     ;;show test msg.
-	lda	#$08
+	lda	#$00
 	sta	$2000
 	lda	#$1e
 	sta	$2001
@@ -801,7 +801,7 @@ copymap:
 	sta	$2001
 
     ;;;enable nmi
-	lda	#$88
+	lda	#$80
 	sta	$2000
 
     ;;done...
