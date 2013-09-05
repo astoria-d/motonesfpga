@@ -30,6 +30,8 @@
 
     ;;dma test data.
     ldy #$00
+    ldx #$41
+    stx $00
     ldx #$00
 dma_set:
     ;;y pos
@@ -37,7 +39,13 @@ dma_set:
     sta $0200, y
     iny
     ;;tile index
-    tya
+    lda $00
+    cmp #$5b
+    bne inc_tile
+    lda #$41
+    sta $00
+inc_tile:
+    inc $00
     sta $0200, y
     iny
     ;;attribute
@@ -46,7 +54,7 @@ dma_set:
     iny
     ;;x pos
     txa
-    adc #$06
+    adc #$03
     tax
     rol
     sta $0200, y
