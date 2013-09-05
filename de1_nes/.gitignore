@@ -4,4 +4,7 @@
 *.pof
 *.sof
 *.bak
+*.jpg
+*.html
 db/*
+no-need/*

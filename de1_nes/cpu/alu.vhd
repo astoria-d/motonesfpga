@@ -199,7 +199,7 @@ begin
                     pcl_inc_n, pch_inc_n, sp_oe_n, sp_push_n, sp_pop_n,
                     abs_xy_n, pg_next_n, zp_n, zp_xy_n, rel_calc_n, 
                     indir_n, indir_x_n, indir_y_n, 
-                    index_bus, bal, bal, addr_c_in, addr_out, addr_c,
+                    index_bus, bal, bah, addr_c_in, addr_out, addr_c,
 
                     --for arithmatic operation.
                     arith_en_n,
@@ -632,29 +632,29 @@ end procedure;
             d1 <= arith_reg_out;
             int_d_bus <= d_out;
 
-            if (clk = '0') then
-                --d_print("clk hi");
-                if (m2m_stat_1 = '0') then
-                    --first cycle. keep input variable.
-                    --d_print("inc first.");
-                    m2m_stat_1 <= '1';
-                    arith_buf_we_n <= '0';
-                    arith_buf_oe_n <= '1';
-                    d_oe_n <= '1';
-
-                end if;
-            end if;
-
-            if (clk'event and clk = '0') then
-                if (m2m_stat_2 = '0') then
-                    --second cycle read from register, output modified data.
-                    --d_print("inc second...");
-                    m2m_stat_2 <= '1';
-                    arith_buf_we_n <= '1';
-                    arith_buf_oe_n <= '0';
-                    d_oe_n <= '0';
-                end if;
-            end if;
+--            if (clk = '0') then
+--                --d_print("clk hi");
+--                if (m2m_stat_1 = '0') then
+--                    --first cycle. keep input variable.
+--                    --d_print("inc first.");
+--                    m2m_stat_1 <= '1';
+--                    arith_buf_we_n <= '0';
+--                    arith_buf_oe_n <= '1';
+--                    d_oe_n <= '1';
+--
+--                end if;
+--            end if;
+--
+--            if (clk'event and clk = '0') then
+--                if (m2m_stat_2 = '0') then
+--                    --second cycle read from register, output modified data.
+--                    --d_print("inc second...");
+--                    m2m_stat_2 <= '1';
+--                    arith_buf_we_n <= '1';
+--                    arith_buf_oe_n <= '0';
+--                    d_oe_n <= '0';
+--                end if;
+--            end if;
 
 
             if instruction (7 downto 5) = "000" then

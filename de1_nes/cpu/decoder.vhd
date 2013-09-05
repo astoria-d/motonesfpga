@@ -150,9 +150,6 @@ constant st_C : integer := 0;
 ---for pch_inc_n.
 signal pch_inc_input : std_logic;
 
----for nmi handling
-signal nmi_handled_n : std_logic;
-
 -- page boundary handling
 signal a2_abs_xy_next_cycle     : std_logic_vector (5 downto 0);
 signal a2_indir_y_next_cycle    : std_logic_vector (5 downto 0);
@@ -177,6 +174,10 @@ begin
 
     main_p : process (set_clk, res_n, nmi_n, 
                      a2_abs_xy_next_cycle, a2_indir_y_next_cycle, a58_branch_next_cycle)
+
+---for nmi handling
+variable nmi_handled_n : std_logic;
+
 
 -------------------------------------------------------------
 -------------------------------------------------------------
@@ -973,55 +974,62 @@ end  procedure;
 ---------------- main state machine start.... ---------------
 -------------------------------------------------------------
 -------------------------------------------------------------
+
     begin
 
+--        if (res_n = '0') then
+--            --pc l/h is reset vector.
+--            pcl_cmd <= "1110";
+--            pch_cmd <= "1110";
+--            next_cycle <= R0;
+--        elsif (res_n'event and res_n = '1') then
+--            pcl_cmd <= "1111";
+--            pch_cmd <= "1111";
+--        end if;
+--
+--        if (nmi_n'event and nmi_n = '1') then
+--            --reset nmi handle status
+--            nmi_handled_n := '1';
+--        end if;
+
+
+--        if (a2_abs_xy_next_cycle'event) then
+--            if (wait_a2_abs_xy_next = '1') then
+--                d_print("absx step 2");
+--                next_cycle <= a2_abs_xy_next_cycle;
+--                if (ea_carry = '1') then
+--                    a2_page_next;
+--                end if;
+--            end if;
+--        end if;
+--
+--        if (a2_indir_y_next_cycle'event) then
+--            if (wait_a2_indir_y_next = '1') then
+--                d_print("indir step 2");
+--                next_cycle <= a2_indir_y_next_cycle;
+--                if (ea_carry = '1') then
+--                    a2_page_next;
+--                end if;
+--            end if;
+--        end if;
+--
+--        if (a58_branch_next_cycle'event) then
+--            if (wait_a58_branch_next = '1') then
+--                d_print("branch step 2");
+--                next_cycle <= a58_branch_next_cycle;
+--                if (ea_carry = '1') then
+--                    a2_page_next;
+--                end if;
+--            end if;
+--        end if;
+
+        --if (set_clk'event and set_clk = '1' and res_n = '1') then
         if (res_n = '0') then
             --pc l/h is reset vector.
             pcl_cmd <= "1110";
             pch_cmd <= "1110";
             next_cycle <= R0;
-        elsif (res_n'event and res_n = '1') then
-            pcl_cmd <= "1111";
-            pch_cmd <= "1111";
-        end if;
-
-        if (nmi_n'event and nmi_n = '1') then
-            --reset nmi handle status
-            nmi_handled_n <= '1';
-        end if;
-
-
-        if (a2_abs_xy_next_cycle'event) then
-            if (wait_a2_abs_xy_next = '1') then
-                d_print("absx step 2");
-                next_cycle <= a2_abs_xy_next_cycle;
-                if (ea_carry = '1') then
-                    a2_page_next;
-                end if;
-            end if;
-        end if;
-
-        if (a2_indir_y_next_cycle'event) then
-            if (wait_a2_indir_y_next = '1') then
-                d_print("indir step 2");
-                next_cycle <= a2_indir_y_next_cycle;
-                if (ea_carry = '1') then
-                    a2_page_next;
-                end if;
-            end if;
-        end if;
-
-        if (a58_branch_next_cycle'event) then
-            if (wait_a58_branch_next = '1') then
-                d_print("branch step 2");
-                next_cycle <= a58_branch_next_cycle;
-                if (ea_carry = '1') then
-                    a2_page_next;
-                end if;
-            end if;
-        end if;
-
-        if (set_clk'event and set_clk = '1' and res_n = '1') then
+		elsif (rising_edge(set_clk)) then
             d_print(string'("-"));
 
             if exec_cycle = T0 then
@@ -2621,7 +2629,7 @@ end  procedure;
                 r_vec_oe_n <= '1';
                 n_vec_oe_n <= '1';
                 i_vec_oe_n <= '1';
-                nmi_handled_n <= '1';
+                nmi_handled_n := '1';
                 r_nw <= '1';
 
                 next_cycle <= R1;
@@ -2711,7 +2719,7 @@ end  procedure;
                 indir_n <= '0';
 
                 if exec_cycle = N5 then
-                    nmi_handled_n <= '0';
+                    nmi_handled_n := '0';
                 end if;
                 --start execute cycle.
                 next_cycle <= T0;
