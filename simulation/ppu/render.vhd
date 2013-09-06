@@ -94,6 +94,14 @@ component ram
     );
 end component;
 
+component palette_ram
+    generic (abus_size : integer := 16; dbus_size : integer := 8);
+    port (  ce_n, oe_n, we_n  : in std_logic;   --select pin active low.
+            addr              : in std_logic_vector (abus_size - 1 downto 0);
+            d_io              : inout std_logic_vector (dbus_size - 1 downto 0)
+    );
+end component;
+
 procedure d_print(msg : string) is
 use std.textio.all;
 use ieee.std_logic_textio.all;
@@ -512,7 +520,9 @@ begin
                     when ppu_mask(PPUSBG) = '1' and cur_y(4) = '1' and
                         (cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
                         (cur_y < conv_std_logic_vector(VSCAN, X_SIZE)) else
-                (others => 'Z');
+                ---else: no output color >> universal bg color output.
+                --0x3f00 is the universal bg palette.
+                (others => '0');    
 
     plt_r_n <= not r_nw when plt_bus_ce_n = '0' else
                 '0' when ppu_mask(PPUSBG) = '1' else
@@ -523,7 +533,7 @@ begin
             port map (r_nw, oam_plt_data, plt_data);
     plt_d_buf_r : tri_state_buffer generic map (dsize)
             port map (r_n, plt_data, oam_plt_data);
-    palette_inst : ram generic map (5, dsize)
+    palette_inst : palette_ram generic map (5, dsize)
             port map (plt_ram_ce_n, plt_r_n, plt_w_n, plt_addr, plt_data);
 
     ---primary oam
@@ -643,20 +653,16 @@ begin
 --        d_print("pl_index:" & conv_hex8(pl_index));
     end if;
 
-    if (dot_output = true) then
-        pl_index := conv_integer(plt_data(5 downto 0));
-        b <= nes_color_palette(pl_index) (11 downto 8);
-        g <= nes_color_palette(pl_index) (7 downto 4);
-        r <= nes_color_palette(pl_index) (3 downto 0);
-        d_print("rgb:" &
-            conv_hex8(nes_color_palette(pl_index) (11 downto 8)) &
-            conv_hex8(nes_color_palette(pl_index) (7 downto 4)) &
-            conv_hex8(nes_color_palette(pl_index) (3 downto 0)));
-    else
-        b <= (others => '0');
-        g <= (others => '0');
-        r <= (others => '0');
-    end if; --if (dot_output = false) then
+    --if or if not bg/sprite is shown, output color anyway 
+    --sinse universal bg color is included..
+    pl_index := conv_integer(plt_data(5 downto 0));
+    b <= nes_color_palette(pl_index) (11 downto 8);
+    g <= nes_color_palette(pl_index) (7 downto 4);
+    r <= nes_color_palette(pl_index) (3 downto 0);
+    d_print("rgb:" &
+        conv_hex8(nes_color_palette(pl_index) (11 downto 8)) &
+        conv_hex8(nes_color_palette(pl_index) (7 downto 4)) &
+        conv_hex8(nes_color_palette(pl_index) (3 downto 0)));
 end;
 
     begin
@@ -989,18 +995,12 @@ end;
                     end if; --if ((cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) 
                 end if; --if (ppu_mask(PPUSSP) = '1') then
 
-                if (ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') then
-                    --output visible area only.
-                    if ((cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
-                        (cur_y < conv_std_logic_vector(VSCAN, X_SIZE))) then
-                        --output image.
-                        output_rgb;
-                    end if;
-                else
-                    b <= (others => '1');
-                    g <= (others => '0');
-                    r <= (others => '1');
-                end if;--if (ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') then
+                --output visible area only.
+                if ((cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
+                    (cur_y < conv_std_logic_vector(VSCAN, X_SIZE))) then
+                    --output image.
+                    output_rgb;
+                end if;
 
                 --flag operation
                 if ((cur_x = conv_std_logic_vector(1, X_SIZE)) and

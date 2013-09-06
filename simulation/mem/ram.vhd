@@ -42,3 +42,40 @@ begin
     end process;
 end rtl;
 
+-----------------------------------------------------
+-----------------------------------------------------
+-------------------- palette ram -------------------- 
+-----------------------------------------------------
+-----------------------------------------------------
+
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity palette_ram is 
+    generic (abus_size : integer := 16; dbus_size : integer := 8);
+    port (  ce_n, oe_n, we_n : in std_logic;   --select pin active low.
+            addr             : in std_logic_vector (abus_size - 1 downto 0);
+            d_io             : inout std_logic_vector (dbus_size - 1 downto 0)
+        );
+end palette_ram;
+
+architecture rtl of palette_ram is
+component ram
+    generic (abus_size : integer := 5; dbus_size : integer := 8);
+    port (  ce_n, oe_n, we_n  : in std_logic;   --select pin active low.
+            addr              : in std_logic_vector (abus_size - 1 downto 0);
+            d_io              : inout std_logic_vector (dbus_size - 1 downto 0)
+    );
+end component;
+
+signal plt_addr    : std_logic_vector (abus_size - 1 downto 0);
+begin
+    --palette ram is following characteristic.
+    --Addresses $3F10/$3F14/$3F18/$3F1C are mirrors of $3F00/$3F04/$3F08/$3F0C
+    plt_addr <= "0" & addr(3 downto 0) when addr (4) = '1' and addr (1) = '0' and addr (0) = '0' else
+                addr;
+    palette_ram_inst : ram generic map (abus_size, dbus_size)
+            port map (ce_n, oe_n, we_n, plt_addr, d_io);
+
+end rtl;
+

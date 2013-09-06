@@ -213,9 +213,6 @@ begin
             port map (clk_n, ppu_latch_rst_n, ppu_scroll_cnt_ce_n, 
                                             '1', (others => '0'), ppu_scroll_cnt);
 
---    ppu_addr_inst : counter_register generic map(14, 1)
---            port map (clk_n, rst_n, ppu_data_we_n, ppu_addr_we_n, ppu_addr_in, ppu_addr);
-
     ppu_addr_inst_inc1 : counter_register generic map(14, 1)
             port map (clk_n, rst_n, ppu_data_we_n, ppu_addr_we_n, ppu_addr_in, ppu_addr_inc1);
     ppu_addr_inst_inc32 : counter_register generic map(14, 32)
