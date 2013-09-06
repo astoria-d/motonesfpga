@@ -90,13 +90,31 @@ copymap:
 	dey
 	bne	copymap
 
+    ;;;vertical show test.
+	lda	#$04
+	sta	$2000
+
+	lda	#$20
+	sta	$2006
+	lda	#$cb
+	sta	$2006
+	ldx	#$00
+	ldy	#$0d
+
+    ;;load name table.
+copymap2:
+	lda	string, x
+	sta	$2007
+	inx
+	dey
+	bne	copymap2
+
+    ;;scroll reg set.
 	lda	#$00
 	sta	$2005
 	sta	$2005
 
     ;;show test msg.
-	lda	#$00
-	sta	$2000
 	lda	#$1e
 	sta	$2001
 
