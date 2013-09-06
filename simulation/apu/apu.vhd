@@ -112,6 +112,7 @@ begin
         if (rst_n = '1' and ce_n = '0') then
             if (r_nw = '0') then
                 --apu write
+                cpu_d <= (others => 'Z');
                 if (cpu_addr(4 downto 0) = OAM_DMA) then
                     dma_start_n <= '0';
                 else
