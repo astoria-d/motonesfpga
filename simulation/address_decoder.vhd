@@ -220,7 +220,7 @@ begin
                         nt1_ce_n <= '1';
                         if (wr_n = '0') then
                             --write
-                            nt0_ce_n <= not clk;
+                            nt0_ce_n <= clk;
                         elsif (rd_n = '0') then 
                             --read
                             nt0_ce_n <= '0';
@@ -232,7 +232,7 @@ begin
                         nt0_ce_n <= '1';
                         if (wr_n = '0') then
                             --write
-                            nt1_ce_n <= not clk;
+                            nt1_ce_n <= clk;
                         elsif (rd_n = '0') then 
                             --read
                             nt1_ce_n <= '0';
@@ -248,7 +248,7 @@ begin
                         nt1_ce_n <= '1';
                         if (wr_n = '0') then
                             --write
-                            nt0_ce_n <= not clk;
+                            nt0_ce_n <= clk;
                         elsif (rd_n = '0') then 
                             --read
                             nt0_ce_n <= '0';
@@ -260,7 +260,7 @@ begin
                         nt0_ce_n <= '1';
                         if (wr_n = '0') then
                             --write
-                            nt1_ce_n <= not clk;
+                            nt1_ce_n <= clk;
                         elsif (rd_n = '0') then 
                             --read
                             nt1_ce_n <= '0';
