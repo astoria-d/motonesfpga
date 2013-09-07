@@ -1034,6 +1034,7 @@ end  procedure;
             d_print(string'("-"));
 
             if rdy = '0' then
+                --case dma is runnting.
                 disable_pins;
                 inst_we_n <= '1';
                 ad_oe_n <= '0';

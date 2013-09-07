@@ -539,7 +539,7 @@ begin
     return hex_chr(tmp2 + 1) & hex_chr(tmp1 + 1);
 end;
     begin
-        if (set_clk = '0' and exec_cycle = "000000") then
+        if (set_clk = '0' and rdy = '1' and exec_cycle = "000000") then
             --show pc on the T0 (fetch) cycle.
             d_print("pc : " & conv_hex8(conv_integer(abh)) 
                     & conv_hex8(conv_integer(abl)));
