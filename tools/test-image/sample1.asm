@@ -136,31 +136,31 @@ copymap:
 ;;	dey
 ;;	bne	copymap2
 
-    ;;vram read test
-	lda	#$20
-	sta	$2006
-	lda	#$ab
-	sta	$2006
-
-    ldx #$0a
-    lda $2007
-load_vram:
-    lda $2007
-    dex
-    bne load_vram
-
-    ;;palette read test
-	lda	#$3f
-	sta	$2006
-	lda	#$00
-	sta	$2006
-
-    ldx #$0a
-    lda $2007
-load_plt:
-    lda $2007
-    dex
-    bne load_plt
+;;    ;;vram read test
+;;	lda	#$20
+;;	sta	$2006
+;;	lda	#$ab
+;;	sta	$2006
+;;
+;;    ldx #$0a
+;;    lda $2007
+;;load_vram:
+;;    lda $2007
+;;    dex
+;;    bne load_vram
+;;
+;;    ;;palette read test
+;;	lda	#$3f
+;;	sta	$2006
+;;	lda	#$00
+;;	sta	$2006
+;;
+;;    ldx #$0a
+;;    lda $2007
+;;load_plt:
+;;    lda $2007
+;;    dex
+;;    bne load_plt
 
     ;;scroll reg set.
 	lda	#$00
@@ -874,6 +874,22 @@ load_plt:
     ;;;enable nmi
 	lda	#$80
 	sta	$2000
+
+    ;;read ppu status reg while displaying
+    ;;vram read test
+    ldx #$0a
+l1:
+    nop
+    dex
+    bne l1
+
+    ldx #$0a
+read_status:
+    lda $2002
+    dex
+    bne read_status
+
+
 
     ;;done...
     ;;infinite loop.
