@@ -161,6 +161,7 @@ signal ppu_addr_inc32   : std_logic_vector (13 downto 0);
 signal ppu_addr_in      : std_logic_vector (13 downto 0);
 signal ppu_addr_cnt     : std_logic_vector (0 downto 0);
 signal ppu_data         : std_logic_vector (dsize - 1 downto 0);
+signal ppu_data_in      : std_logic_vector (dsize - 1 downto 0);
 signal ppu_data_out     : std_logic_vector (dsize - 1 downto 0);
 signal read_data_n      : std_logic;
 signal ppu_latch_rst_n  : std_logic;
@@ -169,8 +170,9 @@ signal v_bus_busy_n     : std_logic;
 signal oam_bus_ce_n     : std_logic;
 signal plt_bus_ce_n     : std_logic;
 
-signal oam_plt_addr     : std_logic_vector (7 downto 0);
-signal oam_plt_data     : std_logic_vector (7 downto 0);
+signal oam_plt_addr     : std_logic_vector (dsize - 1 downto 0);
+signal oam_plt_data     : std_logic_vector (dsize - 1 downto 0);
+signal plt_data_out     : std_logic_vector (dsize - 1 downto 0);
 
 begin
 
@@ -227,9 +229,14 @@ begin
     ppu_data_inst : d_flip_flop generic map(dsize)
             port map (clk_n, rst_n, '1', ppu_data_we_n, cpu_d, ppu_data);
 
-    ppu_data_out_inst : d_flip_flop generic map(dsize)
-            port map (clk_n, rst_n, '1', read_data_n, ppu_data, ppu_data_out);
+    ppu_data_in_inst : d_flip_flop generic map(dsize)
+            port map (clk_n, rst_n, '1', ppu_data_we_n, vram_ad, ppu_data_in);
 
+    ppu_data_out_inst : d_flip_flop generic map(dsize)
+            port map (read_data_n, rst_n, '1', '0', ppu_data_in, ppu_data_out);
+
+    plt_data_out_inst : d_flip_flop generic map(dsize)
+            port map (clk_n, rst_n, '1', ppu_data_we_n, oam_plt_data, plt_data_out);
 
     reg_set_p : process (rst_n, ce_n, r_nw, cpu_addr, cpu_d, 
                         ppu_status(ST_VBL), ppu_ctrl(PPUNEN))
@@ -314,7 +321,7 @@ begin
                 ppu_addr_we_n <= '1';
             end if;
 
-            if (cpu_addr = PPUDATA and r_nw = '0') then
+            if (cpu_addr = PPUDATA and r_nw = '1') then
                 read_data_n <= '0';
             else
                 read_data_n <= '1';
@@ -427,8 +434,7 @@ begin
                     if (r_nw = '0') then
                         vram_ad <= cpu_d;
                     else
-                        vram_ad <= (others => 'Z');
-                        cpu_d <= vram_ad;
+                        cpu_d <= ppu_data_out;
                     end if;
                 end if;
             else
@@ -440,7 +446,11 @@ begin
 
             --sustain cpu output data when reading.
             if (cpu_addr = PPUDATA and r_nw = '1' and ppu_clk_cnt /= "00") then
-                cpu_d <= ppu_data;
+                if (ppu_addr(13 downto 8) = "111111") then
+                    cpu_d <= plt_data_out;
+                else
+                    cpu_d <= ppu_data_out;
+                end if;
             end if;
             if (cpu_addr = OAMDATA and r_nw = '1' and ppu_clk_cnt /= "00") then
                 cpu_d <= oam_data;

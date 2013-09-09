@@ -23,74 +23,74 @@
 	sta	$2000
 	sta	$2001
 
+;;;    ;;;carry flag set.
+;;;    lda #$ff
+;;;    adc #$01
+;;;    jmp branch_boundary_test1
+;;;    ;;fill dummy data to test page boundary instruction.
+;;;    .byte $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f
+;;;    .byte $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f
+;;;    .byte $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f
+;;;    .byte $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f
+;;;    .byte $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f
+;;;    .byte $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f
+;;;    .byte $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f
+;;;    .byte $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f
+;;;    .byte $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f
+;;;    .byte $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f
+;;;    .byte $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f
+;;;    .byte $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f
+;;;    .byte $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f
+;;;    .byte $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f
+;;;    .byte $00
+;;;    ;;;single byte instruction page boundary test.
+;;;branch_boundary_test1:
+;;;    BCS   br_ad1
+;;;    AND   #$fb      ;;this is skipped.
+;;;br_ad1:
+;;;    STA   $2000
+;;;
+;;;    ;;dma test data.
+;;;    ldy #$00
+;;;    ldx #$41
+;;;    stx $00
+;;;    ldx #$00
+;;;dma_set:
+;;;    ;;y pos
+;;;    txa
+;;;    sta $0200, y
+;;;    iny
+;;;    ;;tile index
+;;;    lda $00
+;;;    cmp #$5b
+;;;    bne inc_tile
+;;;    lda #$41
+;;;    sta $00
+;;;inc_tile:
+;;;    inc $00
+;;;    sta $0200, y
+;;;    iny
+;;;    ;;attribute
+;;;    lda #$01
+;;;    sta $0200, y
+;;;    iny
+;;;    ;;x pos
+;;;    txa
+;;;    adc #$03
+;;;    tax
+;;;    rol
+;;;    sta $0200, y
+;;;    iny
+;;;    bne dma_set
+
+;;;    ;;dma start.
+;;;    lda #$02
+;;;    sta $4014
+
 	lda	#$3f
 	sta	$2006
 	lda	#$00
 	sta	$2006
-
-    ;;;carry flag set.
-    lda #$ff
-    adc #$01
-    jmp branch_boundary_test1
-    ;;fill dummy data to test page boundary instruction.
-    .byte $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f
-    .byte $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f
-    .byte $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f
-    .byte $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f
-    .byte $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f
-    .byte $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f
-    .byte $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f
-    .byte $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f
-    .byte $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f
-    .byte $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f
-    .byte $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f
-    .byte $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f
-    .byte $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f
-    .byte $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f
-    .byte $00
-    ;;;single byte instruction page boundary test.
-branch_boundary_test1:
-    BCS   br_ad1
-    AND   #$fb      ;;this is skipped.
-br_ad1:
-    STA   $2000
-
-    ;;dma test data.
-    ldy #$00
-    ldx #$41
-    stx $00
-    ldx #$00
-dma_set:
-    ;;y pos
-    txa
-    sta $0200, y
-    iny
-    ;;tile index
-    lda $00
-    cmp #$5b
-    bne inc_tile
-    lda #$41
-    sta $00
-inc_tile:
-    inc $00
-    sta $0200, y
-    iny
-    ;;attribute
-    lda #$01
-    sta $0200, y
-    iny
-    ;;x pos
-    txa
-    adc #$03
-    tax
-    rol
-    sta $0200, y
-    iny
-    bne dma_set
-
-    ;;dma start.
-    lda #$02
-    sta $4014
 
     ;;load palette.
 	ldx	#$00
@@ -117,24 +117,50 @@ copymap:
 	dey
 	bne	copymap
 
-    ;;;vertical show test.
-	lda	#$04
-	sta	$2000
+;;    ;;;vertical show test.
+;;	lda	#$04
+;;	sta	$2000
+;;
+;;	lda	#$20
+;;	sta	$2006
+;;	lda	#$cb
+;;	sta	$2006
+;;	ldx	#$00
+;;	ldy	#$0d
+;;
+;;    ;;load name table.
+;;copymap2:
+;;	lda	string, x
+;;	sta	$2007
+;;	inx
+;;	dey
+;;	bne	copymap2
 
+    ;;vram read test
 	lda	#$20
 	sta	$2006
-	lda	#$cb
+	lda	#$ab
 	sta	$2006
-	ldx	#$00
-	ldy	#$0d
 
-    ;;load name table.
-copymap2:
-	lda	string, x
-	sta	$2007
-	inx
-	dey
-	bne	copymap2
+    ldx #$0a
+    lda $2007
+load_vram:
+    lda $2007
+    dex
+    bne load_vram
+
+    ;;palette read test
+	lda	#$3f
+	sta	$2006
+	lda	#$00
+	sta	$2006
+
+    ldx #$0a
+    lda $2007
+load_plt:
+    lda $2007
+    dex
+    bne load_plt
 
     ;;scroll reg set.
 	lda	#$00
