@@ -440,8 +440,8 @@ begin
             else
                 plt_bus_ce_n <= '1';
                 ppu_data_we_n <= '1';
-                rd_n <= '1';
-                wr_n <= '1';
+                rd_n <= 'Z';
+                wr_n <= 'Z';
             end if; --if (cpu_addr = PPUDATA and ppu_clk_cnt = "00") then
 
             --sustain cpu output data when reading.
