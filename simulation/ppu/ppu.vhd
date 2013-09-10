@@ -471,6 +471,7 @@ begin
             oam_bus_ce_n     <= '1';
             oam_addr_ce_n <= '1';
             ppu_addr_cnt_ce_n    <= '1';
+            ppu_latch_rst_n <= '1';
 
             rd_n <= 'Z';
             wr_n <= 'Z';
