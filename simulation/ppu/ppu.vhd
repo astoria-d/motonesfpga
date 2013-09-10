@@ -241,10 +241,6 @@ begin
     reg_set_p : process (rst_n, ce_n, r_nw, cpu_addr, cpu_d, 
                         ppu_status(ST_VBL), ppu_ctrl(PPUNEN))
     begin
-        if (rst_n = '0') then
-            ppu_latch_rst_n <= '0';
-            vblank_n <= '1';
-        end if;
 
         if (ppu_status(ST_VBL)'event or ppu_ctrl(PPUNEN)'event) then
             if (ppu_status(ST_VBL) = '1' and ppu_ctrl(PPUNEN) = '1') then
@@ -256,7 +252,9 @@ begin
             end if;
         end if;
 
-        if (rst_n = '1' and ce_n = '0') then
+        if (rst_n = '0') then
+            vblank_n <= '1';
+        elsif (rst_n = '1' and ce_n = '0') then
 
             --register set.
             if(cpu_addr = PPUCTRL) then
@@ -272,14 +270,9 @@ begin
             end if;
 
             if(cpu_addr = PPUSTATUS and r_nw = '1') then
-                --reading status resets ppu_addr/scroll cnt.
-                !!!!this is wrong?????
-                look at simulation at 663 us
-                ppu_latch_rst_n <= '0';
                 --notify reading status
                 read_status <= '1';
             else
-                ppu_latch_rst_n <= '1';
                 read_status <= '0';
             end if;
 
@@ -345,7 +338,9 @@ begin
     clk_cnt_set_p : process (rst_n, ce_n, r_nw, cpu_addr, cpu_d, clk, 
                                 oam_plt_data, vram_ad, ppu_stat_out)
     begin
-        if (rst_n = '1' and ce_n = '0') then
+        if (rst_n = '0') then
+            ppu_latch_rst_n <= '0';
+        elsif (rst_n = '1' and ce_n = '0') then
             --set counter=0 on register write.   
             if (ce_n'event or r_nw'event or cpu_addr'event or (cpu_d'event and r_nw = '0')) then
                 ppu_clk_cnt_res_n <= '0';
@@ -358,6 +353,13 @@ begin
                     ppu_clk_cnt_res_n <= '0';
                 elsif (ppu_clk_cnt = "00") then
                     ppu_clk_cnt_res_n <= '1';
+                end if;
+
+                if (read_status = '1') then
+                    --reading status resets ppu_addr/scroll cnt.
+                    ppu_latch_rst_n <= '0';
+                else
+                    ppu_latch_rst_n <= '1';
                 end if;
                 --d_print("clk event");
             end if;
@@ -477,7 +479,7 @@ begin
             vram_ad <= (others => 'Z');
             vram_a <= (others => 'Z');
             cpu_d <= (others => 'Z');
-        end if; --if (rst_n = '1' and ce_n = '0') then
+        end if; --if (rst_n = '0') then
     end process;
 
 end rtl;

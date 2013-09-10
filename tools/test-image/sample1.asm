@@ -93,7 +93,6 @@ goto_next3:
     lda nt1, y
     sta $2007
     iny
-    inc $00
     dex
     bpl nt_st
 
@@ -141,13 +140,22 @@ add_nl:
     txa
     pha
 
-    lda #$20
+    lda $01
     sta $2006
 
     lda $00
-    adc #21
+    adc #$20
     sta $00
     sta $2006
+
+    bcc no_carry
+    lda $01
+    adc #$00
+    sta $01
+    sta $2006
+    lda $00
+    sta $2006
+no_carry:
 
     pla
     tax
