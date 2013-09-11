@@ -66,10 +66,10 @@ copymap:
 
     lda #$20
     sta $2006
-    lda #$c5
+    lda #$80
     sta $2006
 
-    lda #$c5
+    lda #$80
     sta $00
     lda #$20
     sta $01
@@ -110,6 +110,10 @@ goto_next3:
 	lda	#$80
 	sta	$2000
 
+    ;;done...
+    ;;infinite loop.
+mainloop:
+
     ;;read ppu status reg while displaying
     ;;vram read test
     ldx #$0a
@@ -124,9 +128,6 @@ read_status:
     dex
     bne read_status
 
-    ;;done...
-    ;;infinite loop.
-mainloop:
 	jmp	mainloop
 .endproc
 
