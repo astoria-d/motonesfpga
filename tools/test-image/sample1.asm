@@ -97,10 +97,29 @@ goto_next3:
     bpl nt_st
 
 
-    ;;show test msg.
-	lda	#$1e
-	sta	$2001
+    ;;load attr tbl.
+    ldy #$00
+    ldx #$04
 
+    lda #$23
+    sta $2006
+    lda #$c8
+    sta $2006
+
+at_st:
+    lda at1, y
+    sta $2007
+    iny
+    dex
+    bpl at_st
+
+    ;;set universal bg color.
+    lda #$3f
+    sta $2006
+    lda #$10
+    sta $2006
+    lda #$3d
+    sta $2007
 
     ;;show bg...
 	lda	#$1e
@@ -168,11 +187,16 @@ nt1:
 	.byte	$41, $42, $43, $44, $45, $46, $47, $48, $49, $4a, $4b
 	.byte	$30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $3a
 
+at1:
+	.byte	$1b, $e4, $a5, $5a
+
 palettes:
+;;;bg palette
 	.byte	$0f, $00, $10, $20
-	.byte	$0f, $06, $16, $26
+	.byte	$0f, $04, $14, $24
 	.byte	$0f, $08, $18, $28
-	.byte	$0f, $0a, $1a, $2a
+	.byte	$0f, $0c, $1c, $2c
+;;;spr palette
 	.byte	$0f, $00, $10, $20
 	.byte	$0f, $06, $16, $26
 	.byte	$0f, $08, $18, $28
