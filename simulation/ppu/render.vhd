@@ -514,10 +514,12 @@ begin
                         (spr_ptn_h(7)(0) or spr_ptn_l(7)(0)) = '1' else
                 "0" & disp_attr(1 downto 0) & disp_ptn_h(0) & disp_ptn_l(0) 
                     when ppu_mask(PPUSBG) = '1' and cur_y(4) = '0' and
+                        ((disp_ptn_h(0) or disp_ptn_l(0)) = '1') and
                         (cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
                         (cur_y < conv_std_logic_vector(VSCAN, X_SIZE)) else
                 "0" & disp_attr(5 downto 4) & disp_ptn_h(0) & disp_ptn_l(0)
                     when ppu_mask(PPUSBG) = '1' and cur_y(4) = '1' and
+                        ((disp_ptn_h(0) or disp_ptn_l(0)) = '1') and
                         (cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
                         (cur_y < conv_std_logic_vector(VSCAN, X_SIZE)) else
                 ---else: no output color >> universal bg color output.
