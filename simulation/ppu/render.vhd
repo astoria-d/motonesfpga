@@ -736,7 +736,8 @@ end;
                     end if;
 
                     ----fetch attr table byte.
-                    if (cur_x (4 downto 0) = "00011" ) then
+                    if (cur_x (4 downto 0) = "11011" or 
+                            cur_x = conv_std_logic_vector(HSCAN_NEXT_START + 3, X_SIZE)) then
                         --attribute table is loaded every 32 cycle.
                         --attr table at 0x23c0
                         vram_addr(dsize - 1 downto 0) <= "11000000" +
@@ -744,7 +745,8 @@ end;
                         vram_addr(asize - 1 downto dsize) <= "10" &
                                 ppu_ctrl(PPUBNA downto 0) & "11";
                     end if;--if (cur_x (2 downto 0) = "010" ) then
-                    if (cur_x (4 downto 0) = "00100" ) then
+                    if (cur_x (4 downto 0) = "11100" or 
+                            cur_x = conv_std_logic_vector(HSCAN_NEXT_START + 4, X_SIZE)) then
                         attr_we_n <= '0';
                     else
                         attr_we_n <= '1';
