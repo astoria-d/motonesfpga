@@ -124,7 +124,7 @@ at_st:
     ;;set scroll reg.
     lda #$03
     sta $2005
-    lda #$03
+    lda #$00
     sta $2005
 
     ;;show bg...
