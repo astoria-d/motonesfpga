@@ -121,6 +121,12 @@ at_st:
     lda #$3d
     sta $2007
 
+    ;;set scroll reg.
+    lda #$03
+    sta $2005
+    lda #$03
+    sta $2005
+
     ;;show bg...
 	lda	#$1e
 	sta	$2001
