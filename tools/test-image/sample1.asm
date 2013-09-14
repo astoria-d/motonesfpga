@@ -122,10 +122,11 @@ at_st:
     sta $2007
 
     ;;set scroll reg.
-    lda #$03
-    sta $2005
-    lda #$00
-    sta $2005
+    lda #05
+    sta $0300
+    lda #00
+    sta $0301
+    jsr set_scroll
 
     ;;set next page name table
     ldy #$00
@@ -174,6 +175,7 @@ read_status:
 
 
 nmi_test:
+    jsr set_scroll
 
     rti
 
@@ -201,6 +203,17 @@ no_carry:
 
     pla
     tax
+    rts
+
+set_scroll:
+    lda $0300
+    sta $2005
+    adc #$01
+    sta $0300
+    lda $0301
+    sta $2005
+    adc #04
+;;    sta $0301
     rts
 
 nt1:
