@@ -404,11 +404,11 @@ begin
     --take scroll position into account
     scrl_x <= cur_x + ppu_scroll_x
                     when cur_x + ppu_scroll_x <= "101010100" else
-              cur_x + ppu_scroll_x + "110101101";
+              cur_x + ppu_scroll_x + "010101011"; -- << +511-340 = 171.
 
     scrl_y <= cur_y + ppu_scroll_y
                     when cur_y + ppu_scroll_y <= "100000101" else
-              cur_y + ppu_scroll_y + "111111100";
+              cur_y + ppu_scroll_y + "011111010"; -- << +511-261 = 251.
 
     ---x pos is 8 cycle ahead of current pos.
     next_x <= scrl_x + "000010000" 
