@@ -114,12 +114,9 @@ at_st:
     bpl at_st
 
     ;;set universal bg color.
-    lda #$3f
-    sta $2006
-    lda #$10
-    sta $2006
     lda #$3d
-    sta $2007
+    sta $0302
+    jsr set_bg_col
 
     ;;set scroll reg.
     lda #05
@@ -176,6 +173,7 @@ read_status:
 
 nmi_test:
     jsr set_scroll
+    jsr set_bg_col
 
     rti
 
@@ -208,12 +206,31 @@ no_carry:
 set_scroll:
     lda $0300
     sta $2005
-    adc #$01
+    clc
+    adc #$05
     sta $0300
     lda $0301
     sta $2005
+    clc
     adc #04
 ;;    sta $0301
+    rts
+
+set_bg_col:
+    lda #$3f
+    sta $2006
+    lda #$10
+    sta $2006
+    lda $0302
+    sta $2007
+    cmp #$30
+    bne bg_dec
+    lda #$3d
+    sta $0302
+    jmp bg_done
+bg_dec:
+    dec $0302
+bg_done:
     rts
 
 nt1:

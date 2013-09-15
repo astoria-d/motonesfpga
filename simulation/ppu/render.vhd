@@ -248,7 +248,6 @@ signal clk_n            : std_logic;
 
 --timing adjust
 signal io_cnt           : std_logic_vector(0 downto 0);
-signal vram_io          : std_logic;
 
 --vram i/o
 signal io_oe_n          : std_logic;
@@ -359,19 +358,17 @@ begin
 
     cnt_x_en_n <= '0';
 
-    vram_io <= not io_cnt(0) when ppu_scroll_x(0) = '0' else
-               io_cnt(0);
-    ale <= vram_io when ppu_mask(PPUSBG) = '1' and
+    ale <= io_cnt(0) when ppu_mask(PPUSBG) = '1' and
                 (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                 cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
-           vram_io when ppu_mask(PPUSSP) = '1' and
+           io_cnt(0) when ppu_mask(PPUSSP) = '1' and
                 (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                 cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
            'Z';
-    rd_n <= vram_io when ppu_mask(PPUSBG) = '1' and
+    rd_n <= io_cnt(0) when ppu_mask(PPUSBG) = '1' and
                 (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                 cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
-            vram_io when ppu_mask(PPUSSP) = '1' and
+            io_cnt(0) when ppu_mask(PPUSSP) = '1' and
                 (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                 cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
             'Z';
@@ -382,10 +379,10 @@ begin
                 (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                 cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
             'Z';
-    io_oe_n <= not vram_io when ppu_mask(PPUSBG) = '1' and
+    io_oe_n <= not io_cnt(0) when ppu_mask(PPUSBG) = '1' and
                 (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                 cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
-               not vram_io when ppu_mask(PPUSSP) = '1' and
+               not io_cnt(0) when ppu_mask(PPUSSP) = '1' and
                 (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                 cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
                '1';
