@@ -398,7 +398,7 @@ begin
     io_cnt_inst : counter_register generic map (1, 1)
             port map (clk, scrl_x_res_n, '0', '1', (others => '0'), io_cnt);
 
-    ---x pos is 16 + scroll cycle ahead of current pos.
+    ---prefetch x pos is 16 + scroll cycle ahead of current pos.
     prf_x <= cur_x + ppu_scroll_x + "000010000" 
                     when cur_x <  conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE) else
               cur_x + ppu_scroll_x + "010111011"; -- +16 -341
@@ -604,26 +604,22 @@ begin
 
 
    --reverse bit when NOT SPRHFL is set (.nes file format bit endian).
-   spr_ptn_in <= vram_ad 
-        when spr_attr(conv_integer(s_oam_addr_cpy(4 downto 2)))(SPRHFL) = '1' else
+   spr_ptn_in <= vram_ad when spr_attr(conv_integer(s_oam_addr_cpy(4 downto 2)))(SPRHFL) = '1' else
                 (vram_ad(0) & vram_ad(1) & vram_ad(2) & vram_ad(3) & 
                  vram_ad(4) & vram_ad(5) & vram_ad(6) & vram_ad(7));
     --array instances...
     spr_inst : for i in 0 to 7 generate
         spr_x_inst : counter_register generic map(dsize, 16#ff#)
-                port map (clk_n, rst_n, spr_x_ce_n(i), spr_x_we_n(i), 
-                                            s_oam_data, spr_x_cnt(i));
+                port map (clk_n, rst_n, spr_x_ce_n(i), spr_x_we_n(i), s_oam_data, spr_x_cnt(i));
 
         spr_attr_inst : d_flip_flop generic map(dsize)
                 port map (clk_n, rst_n, '1', spr_attr_we_n(i), s_oam_data, spr_attr(i));
 
         spr_ptn_l_inst : shift_register generic map(dsize, 1)
-                port map (clk_n, rst_n, spr_ptn_ce_n(i), spr_ptn_l_we_n(i), 
-                                                    spr_ptn_in, spr_ptn_l(i));
+                port map (clk_n, rst_n, spr_ptn_ce_n(i), spr_ptn_l_we_n(i), spr_ptn_in, spr_ptn_l(i));
 
         spr_ptn_h_inst : shift_register generic map(dsize, 1)
-                port map (clk_n, rst_n, spr_ptn_ce_n(i), spr_ptn_h_we_n(i), 
-                                                    spr_ptn_in, spr_ptn_h(i));
+                port map (clk_n, rst_n, spr_ptn_ce_n(i), spr_ptn_h_we_n(i), spr_ptn_in, spr_ptn_h(i));
     end generate;
 
     clk_p : process (rst_n, clk, read_status)
@@ -802,7 +798,7 @@ end;
                             --vram addr is incremented every 8 cycle.
                             vram_addr <= "0" & ppu_ctrl(PPUBPA) & 
                                             disp_nt(dsize - 1 downto 0) 
-                                            & "0"  & prf_y(2  downto 0) + "00000000001000";
+                                                & "0"  & prf_y(2 downto 0) + "00000000001000";
                         end if; --if (prf_x (2 downto 0) = "110" ) then
                         if (prf_x (2 downto 0) = "000" and prf_x /= "000000000") then
                             ptn_h_we_n <= '0';
@@ -817,8 +813,7 @@ end;
                         (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                         cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE))) then
                     --secondary oam clear
-                    if (cur_x /= "000000000" and 
-                            cur_x <= conv_std_logic_vector(64, X_SIZE)) then
+                    if (cur_x /= "000000000" and cur_x <= conv_std_logic_vector(64, X_SIZE)) then
                         if (cur_x(0) = '0') then
                             --write secondary oam on even cycle
                             s_oam_r_n <= '1';
@@ -842,8 +837,7 @@ end;
                         --http://wiki.nesdev.com/w/index.php/PPU_sprite_evaluation
                         --e.g., when overflow happens, it just ignore subsequent entry.
                         --old secondary sprite entry.
-                        if (p_oam_cnt = "00000000" and 
-                                cur_x > conv_std_logic_vector(192, X_SIZE)) then
+                        if (p_oam_cnt = "00000000" and cur_x > conv_std_logic_vector(192, X_SIZE)) then
                             p_oam_cnt_wrap_n <= '0';
                         end if;
 
@@ -875,10 +869,8 @@ end;
 
                             if (oam_ev_status = EV_STAT_COMP) then
                                 --check y range.
-                                if (cur_y < "000000110" and 
-                                        oam_data <= cur_y + "000000001") or 
-                                    (cur_y >= "000000110" and 
-                                     oam_data <= cur_y + "000000001" and 
+                                if (cur_y < "000000110" and oam_data <= cur_y + "000000001") or 
+                                    (cur_y >= "000000110" and oam_data <= cur_y + "000000001" and 
                                              oam_data >= cur_y - "000000110") then
                                     oam_ev_status <= EV_STAT_CP1;
                                     s_oam_cnt_ce_n <= '0';
@@ -953,16 +945,15 @@ end;
 
                         ----fetch pattern table low byte.
                         if (cur_x (2 downto 0) = "101" ) then
-                            if (spr_attr(conv_integer(s_oam_addr_cpy(4 downto 2)))(SPRVFL) 
-                                                                                = '0') then
+                            if (spr_attr(conv_integer(s_oam_addr_cpy(4 downto 2)))(SPRVFL) = '0') then
                                 vram_addr <= "0" & ppu_ctrl(PPUSPA) & 
                                             spr_tile_tmp(dsize - 1 downto 0) & "0" & 
-                                            (prf_y(2 downto 0) - spr_y_tmp(2 downto 0));
+                                            (cur_y(2 downto 0) + "001" - spr_y_tmp(2 downto 0));
                             else
                                 --flip sprite vertically.
                                 vram_addr <= "0" & ppu_ctrl(PPUSPA) & 
-                                        spr_tile_tmp(dsize - 1 downto 0) & "0" & 
-                                        (spr_y_tmp(2 downto 0) - prf_y(2 downto 0) - "001");
+                                            spr_tile_tmp(dsize - 1 downto 0) & "0" & 
+                                            (spr_y_tmp(2 downto 0) - cur_y(2 downto 0) - "010");
                             end if;
                         end if;
 
@@ -974,18 +965,17 @@ end;
 
                         ----fetch pattern table high byte.
                         if (cur_x (2 downto 0) = "111" ) then
-                            if (spr_attr(conv_integer(s_oam_addr_cpy(4 downto 2)))(SPRVFL) 
-                                                                                = '0') then
+                            if (spr_attr(conv_integer(s_oam_addr_cpy(4 downto 2)))(SPRVFL) = '0') then
                                 vram_addr <= "0" & ppu_ctrl(PPUSPA) & 
                                             spr_tile_tmp(dsize - 1 downto 0) & "0" & 
-                                            (prf_y(2 downto 0) - spr_y_tmp(2 downto 0))
-                                                + "00000000001000";
+                                            (cur_y(2 downto 0) - spr_y_tmp(2 downto 0))
+                                                + "00000000001001";
                             else
                                 --flip sprite vertically.
                                 vram_addr <= "0" & ppu_ctrl(PPUSPA) & 
                                             spr_tile_tmp(dsize - 1 downto 0) & "0"  & 
-                                            (spr_y_tmp(2 downto 0) - prf_y(2 downto 0))
-                                                + "00000000000111";
+                                            (spr_y_tmp(2 downto 0) - cur_y(2 downto 0))
+                                                + "00000000000110";
                             end if;
                         end if;
 
@@ -993,15 +983,13 @@ end;
                             spr_ptn_h_we_n(conv_integer(s_oam_addr_cpy(4 downto 2))) <= '0';
                             s_oam_addr_cpy_ce_n <= '0';
                         else
-                            spr_ptn_h_we_n(conv_integer(s_oam_addr_cpy(4 downto 2) - "001")) 
-                                                                                    <= '1';
+                            spr_ptn_h_we_n(conv_integer(s_oam_addr_cpy(4 downto 2) - "001")) <= '1';
                         end if;
 
                     elsif (cur_x > conv_std_logic_vector(320, X_SIZE)) then
                         --clear last write enable.
                         spr_ptn_h_we_n <= "11111111";
-                    end if;--if (cur_x /= "000000000" and 
-                                --cur_x <= conv_std_logic_vector(64, X_SIZE))
+                    end if;--if (cur_x /= "000000000" and cur_x <= conv_std_logic_vector(64, X_SIZE))
 
                     --display sprite.
                     if ((cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
