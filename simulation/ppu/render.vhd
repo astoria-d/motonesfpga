@@ -400,7 +400,8 @@ begin
 
     ---prefetch x pos is 16 + scroll cycle ahead of current pos.
     prf_x <= cur_x + ppu_scroll_x + "000010000" 
-                    when cur_x <  conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE) else
+                    when cur_x + ppu_scroll_x + "000010000" <
+                            conv_std_logic_vector(HSCAN_MAX, X_SIZE) else
               cur_x + ppu_scroll_x + "010111011"; -- +16 -341
     prf_y <= cur_y + ppu_scroll_y
                     when prf_x <=  conv_std_logic_vector(HSCAN, X_SIZE) and prf_x > cur_x else
