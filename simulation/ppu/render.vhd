@@ -976,14 +976,14 @@ end;
                             if (spr_attr(conv_integer(s_oam_addr_cpy(4 downto 2)))(SPRVFL) = '0') then
                                 vram_addr <= "0" & ppu_ctrl(PPUSPA) & 
                                             spr_tile_tmp(dsize - 1 downto 0) & "0" & 
-                                            (cur_y(2 downto 0) - spr_y_tmp(2 downto 0))
-                                                + "00000000001001";
+                                            (cur_y(2 downto 0) + "001" - spr_y_tmp(2 downto 0))
+                                                + "00000000001000";
                             else
                                 --flip sprite vertically.
                                 vram_addr <= "0" & ppu_ctrl(PPUSPA) & 
                                             spr_tile_tmp(dsize - 1 downto 0) & "0"  & 
-                                            (spr_y_tmp(2 downto 0) - cur_y(2 downto 0))
-                                                + "00000000000110";
+                                            (spr_y_tmp(2 downto 0) - cur_y(2 downto 0) - "010")
+                                                + "00000000001000";
                             end if;
                         end if;
 
