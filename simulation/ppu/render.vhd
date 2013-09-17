@@ -247,15 +247,15 @@ constant nes_color_palette : nes_color_array := (
 signal clk_n            : std_logic;
 
 --timing adjust
-signal io_cnt           : std_logic_vector(0 downto 0);
+signal bg_io_cnt        : std_logic_vector(0 downto 0);
+signal spr_io_cnt       : std_logic_vector(0 downto 0);
 
 --vram i/o
 signal io_oe_n          : std_logic;
-signal d_oe_n           : std_logic;
+signal ah_oe_n          : std_logic;
 
-signal cnt_x_en_n    : std_logic;
 signal cnt_x_res_n   : std_logic;
-signal scrl_x_res_n  : std_logic;
+signal bg_cnt_res_n  : std_logic;
 signal cnt_y_en_n    : std_logic;
 signal cnt_y_res_n   : std_logic;
 
@@ -356,47 +356,54 @@ begin
 
     clk_n <= not clk;
 
-    cnt_x_en_n <= '0';
-
-    ale <= io_cnt(0) when ppu_mask(PPUSBG) = '1' and
+    ale <= bg_io_cnt(0) when ppu_mask(PPUSBG) = '1' and
                 (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
-                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
-           io_cnt(0) when ppu_mask(PPUSSP) = '1' and
+                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) and
+                (cur_x <= conv_std_logic_vector(HSCAN, X_SIZE) or
+                cur_x > conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE)) else
+           spr_io_cnt(0) when ppu_mask(PPUSSP) = '1' and
                 (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
-                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
+                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) and
+                (cur_x > conv_std_logic_vector(256, X_SIZE) and 
+                cur_x <= conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE)) else
            'Z';
-    rd_n <= io_cnt(0) when ppu_mask(PPUSBG) = '1' and
+
+    rd_n <= bg_io_cnt(0) when ppu_mask(PPUSBG) = '1' and
                 (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
-                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
-            io_cnt(0) when ppu_mask(PPUSSP) = '1' and
+                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) and
+                (cur_x <= conv_std_logic_vector(HSCAN, X_SIZE) or
+                cur_x > conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE)) else
+           spr_io_cnt(0) when ppu_mask(PPUSSP) = '1' and
+                (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) and
+                (cur_x > conv_std_logic_vector(256, X_SIZE) and 
+                cur_x <= conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE)) else
+            'Z';
+    wr_n <= '1' when (ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
                 (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                 cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
             'Z';
-    wr_n <= '1' when ppu_mask(PPUSBG) = '1' and
+    io_oe_n <= not bg_io_cnt(0) when ppu_mask(PPUSBG) = '1' and
                 (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
-                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
-            '1' when ppu_mask(PPUSSP) = '1' and
+                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) and
+                (cur_x <= conv_std_logic_vector(HSCAN, X_SIZE) or
+                cur_x > conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE)) else
+           not spr_io_cnt(0) when ppu_mask(PPUSSP) = '1' and
                 (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
-                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
-            'Z';
-    io_oe_n <= not io_cnt(0) when ppu_mask(PPUSBG) = '1' and
-                (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
-                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
-               not io_cnt(0) when ppu_mask(PPUSSP) = '1' and
-                (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
-                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
+                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) and
+                (cur_x > conv_std_logic_vector(256, X_SIZE) and 
+                cur_x <= conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE)) else
                '1';
-    d_oe_n <= '0' when ppu_mask(PPUSBG) = '1' and
-                (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
-                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
-              '0' when ppu_mask(PPUSSP) = '1' and
+    ah_oe_n <= '0' when (ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
                 (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                 cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
               '1';
-    v_bus_busy_n <= d_oe_n;
+    v_bus_busy_n <= ah_oe_n;
 
-    io_cnt_inst : counter_register generic map (1, 1)
-            port map (clk, scrl_x_res_n, '0', '1', (others => '0'), io_cnt);
+    bg_io_cnt_inst : counter_register generic map (1, 1)
+            port map (clk, bg_cnt_res_n, '0', '1', (others => '0'), bg_io_cnt);
+    spr_io_cnt_inst : counter_register generic map (1, 1)
+            port map (clk, cnt_x_res_n, '0', '1', (others => '0'), spr_io_cnt);
 
     ---prefetch x pos is 16 + scroll cycle ahead of current pos.
     prf_x <= cur_x + ppu_scroll_x + "000010000" 
@@ -412,7 +419,7 @@ begin
 
     --current x,y pos
     cur_x_inst : counter_register generic map (X_SIZE, 1)
-            port map (clk_n, cnt_x_res_n, cnt_x_en_n, '1', (others => '0'), cur_x);
+            port map (clk_n, cnt_x_res_n, '0', '1', (others => '0'), cur_x);
     cur_y_inst : counter_register generic map (X_SIZE, 1)
             port map (clk_n, cnt_y_res_n, cnt_y_en_n, '1', (others => '0'), cur_y);
 
@@ -452,7 +459,7 @@ begin
             port map (io_oe_n, vram_addr(dsize - 1 downto 0), vram_ad);
 
     vram_a_buf : tri_state_buffer generic map (6)
-            port map (d_oe_n, vram_addr(asize - 1 downto dsize), vram_a);
+            port map (ah_oe_n, vram_addr(asize - 1 downto dsize), vram_a);
 
     pos_x <= cur_x;
     pos_y <= cur_y;
@@ -674,9 +681,9 @@ end;
     begin
         if (rst_n = '0') then
             cnt_x_res_n <= '0';
-            scrl_x_res_n <= '0';
             cnt_y_res_n <= '0';
             nt_we_n <= '1';
+            bg_cnt_res_n <= '0';
 
             ppu_status <= (others => '0');
 
@@ -703,9 +710,9 @@ end;
 
                 if (clk = '0' and 
                         prf_x = conv_std_logic_vector(HSCAN_MAX - 1, X_SIZE)) then
-                    scrl_x_res_n <= '0';
+                    bg_cnt_res_n <= '0';
                 else
-                    scrl_x_res_n <= '1';
+                    bg_cnt_res_n <= '1';
                 end if;
             end if; --if (clk'event) then
 
@@ -907,7 +914,7 @@ end;
 
                     --sprite pattern fetch
                     elsif (cur_x > conv_std_logic_vector(256, X_SIZE) and 
-                            cur_x <= conv_std_logic_vector(320, X_SIZE)) then
+                            cur_x <= conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE)) then
 
                         s_oam_addr_cpy_n <= '0';
                         s_oam_r_n <= '0';
