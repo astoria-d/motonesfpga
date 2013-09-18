@@ -769,7 +769,7 @@ end;
                                 ("00" & prf_y(7 downto 5) & prf_x(7 downto 5));
                         vram_addr(asize - 1 downto dsize) <= "10" &
                                 ppu_ctrl(PPUBNA downto 0) & "11"
-                                    + ("000" & prf_x(dsize));
+                                    + ("000" & prf_x(dsize) & "00");
                     end if;
                     if (prf_x (4 downto 0) = "00100") then
                         attr_we_n <= '0';
