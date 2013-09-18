@@ -760,6 +760,7 @@ end;
                         nt_we_n <= '1';
                     end if;
 
+                    --TODO must load 8 cycle each for the first two tiles!!!
                     ----fetch attr table byte.
                     if (prf_x (4 downto 0) = "00011") then
                         --attribute table is loaded every 32 cycle.
