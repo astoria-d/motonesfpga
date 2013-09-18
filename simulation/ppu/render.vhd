@@ -707,7 +707,10 @@ end;
                 end if;
 
                 if (clk = '0' and 
-                        cur_x = conv_std_logic_vector(HSCAN - 1, X_SIZE)) then
+                        ppu_scroll_x(0) = '0' and cur_x = conv_std_logic_vector(HSCAN, X_SIZE)) then
+                    bg_cnt_res_n <= '0';
+                elsif (clk = '0' and 
+                        ppu_scroll_x(0) = '1' and cur_x = conv_std_logic_vector(HSCAN - 1, X_SIZE)) then
                     bg_cnt_res_n <= '0';
                 else
                     bg_cnt_res_n <= '1';
