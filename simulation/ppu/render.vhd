@@ -761,7 +761,7 @@ end;
                     end if;
 
                     ----fetch attr table byte.
-                    if (prf_x (4 downto 0) = "11011") then
+                    if (prf_x (4 downto 0) = "00011") then
                         --attribute table is loaded every 32 cycle.
                         --attr table at 0x23c0
                         vram_addr(dsize - 1 downto 0) <= "11000000" +
@@ -770,12 +770,12 @@ end;
                                 ppu_ctrl(PPUBNA downto 0) & "11"
                                     + ("000" & prf_x(dsize));
                     end if;
-                    if (prf_x (4 downto 0) = "11100") then
+                    if (prf_x (4 downto 0) = "00100") then
                         attr_we_n <= '0';
                     else
                         attr_we_n <= '1';
                     end if;
-                    if (prf_x (4 downto 0) = "00000") then
+                    if (prf_x (4 downto 0) = "10000") then
                         disp_attr_we_n <= '0';
                     else
                         disp_attr_we_n <= '1';
