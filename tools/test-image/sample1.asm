@@ -62,44 +62,23 @@ copymap:
 ;;;;----------------------
     ;;load name tbl.
     ldy #$00
-    ldx #$2c
+    ldx #$40    ;;name table entry cnt.
 
     lda #$20
     sta $2006
     lda #$80
     sta $2006
-
-    lda #$80
-    sta $00
-    lda #$20
-    sta $01
 
 nt_st:
-    cpy #$0b
-    bne goto_next1
-    jsr add_nl
-    jmp goto_next3
-goto_next1:
-    cpy #$16
-    bne goto_next2
-    jsr add_nl
-    jmp goto_next3
-goto_next2:
-    cpy #$21
-    bne goto_next3
-    jsr add_nl
-goto_next3:
-
     lda nt1, y
     sta $2007
     iny
     dex
     bpl nt_st
 
-
     ;;load attr tbl.
     ldy #$00
-    ldx #$04
+    ldx #$08    ;;attribute entry cnt
 
     lda #$23
     sta $2006
@@ -119,7 +98,8 @@ at_st:
     jsr set_bg_col
 
     ;;set scroll reg.
-    lda #05
+    ;;lda #$a6
+    lda #$05
     sta $0300
     lda #00
     sta $0301
@@ -140,6 +120,52 @@ nt2_st:
     iny
     dex
     bpl nt2_st
+
+    ;;next page attr.
+    lda #$27
+    sta $2006
+    lda #$d0
+    sta $2006
+
+    lda #$e4
+    sta $2007
+
+;;;    ;;dma test data.
+;;;    ldy #$00
+;;;    ldx #$41
+;;;    stx $00
+;;;    ldx #$00
+;;;dma_set:
+;;;    ;;y pos
+;;;    txa
+;;;    sta $0200, y
+;;;    iny
+;;;    ;;tile index
+;;;    lda $00
+;;;    cmp #$5b
+;;;    bne inc_tile
+;;;    lda #$41
+;;;    sta $00
+;;;inc_tile:
+;;;    inc $00
+;;;    sta $0200, y
+;;;    iny
+;;;    ;;attribute
+;;;    lda #$01
+;;;    sta $0200, y
+;;;    iny
+;;;    ;;x pos
+;;;    txa
+;;;    adc #$03
+;;;    tax
+;;;    rol
+;;;    sta $0200, y
+;;;    iny
+;;;    bne dma_set
+;;;
+;;;    ;;dma start.
+;;;    lda #$02
+;;;    sta $4014
 
     ;;show bg...
 	lda	#$1e
@@ -234,16 +260,17 @@ bg_done:
     rts
 
 nt1:
-	.byte	$61, $62, $63, $64, $65, $66, $67, $68, $69, $6a, $6b
-	.byte	$30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $3a
-	.byte	$41, $42, $43, $44, $45, $46, $47, $48, $49, $4a, $4b
-	.byte	$30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $3a
+	.byte	$41, $42, $43, $44, $45, $46, $47, $48, $49, $4a, $4b, $4c, $4d, $4e, $4f, $50
+	.byte	$61, $62, $63, $64, $65, $66, $67, $68, $69, $6a, $6b, $6c, $6d, $6e, $6f, $70
+	.byte	$80, $81, $82, $83, $84, $85, $86, $87, $88, $89, $8a, $8b, $8c, $8d, $8e, $8f
+	.byte	$90, $91, $92, $93, $94, $95, $96, $97, $98, $99, $9a, $9b, $9c, $9d, $9e, $9f
 nt2:
 	.byte	$6b, $6a, $69, $68, $67, $66, $65, $64, $63, $62, $61
 	.byte	$30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $3a
 
 at1:
 	.byte	$1b, $e4, $a5, $5a
+	.byte	$e4, $1b, $5a, $a5
 
 palettes:
 ;;;bg palette
