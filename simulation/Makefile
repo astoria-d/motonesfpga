@@ -1,5 +1,5 @@
 DIRS=clock mem ppu apu cpu 
-MODULES=address_decoder.vhd motones_sim.vhd 
+MODULES=motonesfpga_common.vhd address_decoder.vhd motones_sim.vhd 
 WORKDIR=work
 TEST_MODULE = testbench_motones_sim.vhd
 

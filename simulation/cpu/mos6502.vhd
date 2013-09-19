@@ -519,25 +519,9 @@ begin
 ------------------------------------------------------------
 
     dbg_p : process (set_clk)
-use std.textio.all;
-use ieee.std_logic_textio.all;
+use work.motonesfpga_common.all;
 use ieee.std_logic_unsigned.conv_integer;
 
-procedure d_print(msg : string) is
-variable out_l : line;
-begin
-    write(out_l, msg);
-    writeline(output, out_l);
-end  procedure;
-
-function conv_hex8(ival : integer) return string is
-variable tmp1, tmp2 : integer;
-variable hex_chr: string (1 to 16) := "0123456789abcdef";
-begin
-    tmp2 := (ival mod 16 ** 2) / 16 ** 1;
-    tmp1 := ival mod 16 ** 1;
-    return hex_chr(tmp2 + 1) & hex_chr(tmp1 + 1);
-end;
     begin
         if (set_clk = '0' and rdy = '1' and exec_cycle = "000000") then
             --show pc on the T0 (fetch) cycle.

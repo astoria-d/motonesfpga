@@ -43,15 +43,6 @@ component counter_register
     );
 end component;
 
-procedure d_print(msg : string) is
-use std.textio.all;
-use ieee.std_logic_textio.all;
-variable out_l : line;
-begin
-    write(out_l, msg);
-    writeline(output, out_l);
-end  procedure;
-
 constant dsize     : integer := 8;
 constant OAM_DMA   : std_logic_vector(4 downto 0) := "10100";
 constant OAM_JP1   : std_logic_vector(4 downto 0) := "10110";

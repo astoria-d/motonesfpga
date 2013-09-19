@@ -1,5 +1,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use work.motonesfpga_common.all;
 
 entity ppu is 
     port (  clk         : in std_logic;
@@ -97,15 +98,6 @@ component counter_register
             q           : out std_logic_vector(dsize - 1 downto 0)
     );
 end component;
-
-procedure d_print(msg : string) is
-use std.textio.all;
-use ieee.std_logic_textio.all;
-variable out_l : line;
-begin
-    write(out_l, msg);
-    writeline(output, out_l);
-end  procedure;
 
 signal pos_x       : std_logic_vector (8 downto 0);
 signal pos_y       : std_logic_vector (8 downto 0);

@@ -2,6 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_arith.conv_std_logic_vector;
 use ieee.std_logic_unsigned.conv_integer;
+use work.motonesfpga_common.all;
 
 entity decoder is 
     generic (dsize : integer := 8);
@@ -72,25 +73,6 @@ component d_flip_flop_bit
             q       : out std_logic
         );
 end component;
-
-procedure d_print(msg : string) is
-use std.textio.all;
-use ieee.std_logic_textio.all;
-variable out_l : line;
-begin
-    write(out_l, msg);
-    writeline(output, out_l);
-end  procedure;
-
----ival : 0x0000 - 0xffff
-function conv_hex8(ival : integer) return string is
-variable tmp1, tmp2 : integer;
-variable hex_chr: string (1 to 16) := "0123456789abcdef";
-begin
-    tmp2 := (ival mod 16 ** 2) / 16 ** 1;
-    tmp1 := ival mod 16 ** 1;
-    return hex_chr(tmp2 + 1) & hex_chr(tmp1 + 1);
-end;
 
 --cycle bit format 
 -- bit 5    : pcl increment carry flag
