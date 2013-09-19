@@ -54,8 +54,9 @@ begin
     ppu_clk <= not loop2(0);
 	vga_clk <= base_clk;
 
-	cpu_we_n <= '0' when loop6 = "011" else
-				 '1';
+	cpu_we_n <= '0' when loop6 = "001" else
+                '0' when loop6 = "100" else
+				'1';
     ppu_clk_cnt : counter_register generic map (1) port map 
         (base_clk, reset_n, '0', '1', (others=>'0'), loop2);
 
@@ -69,11 +70,13 @@ begin
     begin
         if (reset_n = '0') then
             cpu_cnt_rst_n <= '0';
-        elsif (base_clk'event and base_clk = '1') then
-            if (loop6 = "101") then
-                cpu_cnt_rst_n <= '0';
-            else
-                cpu_cnt_rst_n <= '1';
+        else
+            if (base_clk'event and base_clk = '1') then
+                if (loop6 = "101") then
+                    cpu_cnt_rst_n <= '0';
+                else
+                    cpu_cnt_rst_n <= '1';
+                end if;
             end if;
         end if;
     end process;
