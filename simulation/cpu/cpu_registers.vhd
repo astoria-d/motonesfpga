@@ -77,7 +77,7 @@ end rtl;
 library ieee;
 use ieee.std_logic_1164.all;
 
-entity latch is 
+entity data_latch is 
     generic (
             dsize : integer := 8
             );
@@ -86,9 +86,9 @@ entity latch is
             d       : in std_logic_vector (dsize - 1 downto 0);
             q       : out std_logic_vector (dsize - 1 downto 0)
         );
-end latch;
+end data_latch;
 
-architecture rtl of latch is
+architecture rtl of data_latch is
 begin
 
     process (clk, d)
@@ -222,7 +222,7 @@ entity data_bus_buffer is
 end data_bus_buffer;
 
 architecture rtl of data_bus_buffer is
-component latch
+component data_latch
     generic (
             dsize : integer := 8
             );
@@ -253,12 +253,12 @@ begin
     wr_clk <= (not r_nw) and clk;
 
     --read from i/o to cpu
-    latch_r : latch generic map (dsize) 
+    latch_r : data_latch generic map (dsize) 
                     port map(rd_clk, ext_dbus, read_buf);
     read_tsb : tri_state_buffer generic map (dsize) 
                     port map(int_oe_n, read_buf, int_dbus);
     --write from cpu to io
-    latch_w : latch generic map (dsize) 
+    latch_w : data_latch generic map (dsize) 
                     port map(wr_clk, int_dbus, write_buf);
     write_tsb : tri_state_buffer generic map (dsize) 
                     port map(r_nw, write_buf, ext_dbus);
@@ -286,7 +286,7 @@ end input_data_latch;
 
 architecture rtl of input_data_latch is
 
-component latch
+component data_latch
     generic (
             dsize : integer := 8
             );
@@ -313,7 +313,7 @@ signal latch_buf : std_logic_vector (dsize - 1 downto 0);
 
 begin
     latch_clk <= (not we_n) and clk;
-    latch_inst : latch generic map (dsize) 
+    latch_inst : data_latch generic map (dsize) 
                     port map(latch_clk, int_dbus, latch_buf);
     iput_data_tsb : tri_state_buffer generic map (dsize) 
                     port map(oe_n, latch_buf, alu_bus);

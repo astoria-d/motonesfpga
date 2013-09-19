@@ -137,7 +137,7 @@ end ls373;
 
 architecture rtl of ls373 is
 
-component latch
+component data_latch
     generic (
             dsize : integer := 8
             );
@@ -162,7 +162,7 @@ end component;
 signal q_out       : std_logic_vector (dsize - 1 downto 0);
 
 begin
-    ls373_inst : latch generic map (dsize)
+    ls373_inst : data_latch generic map (dsize)
             port map (c, d, q_out);
     tsb_inst : tri_state_buffer generic map (dsize)
             port map (oc_n, q_out, q);
