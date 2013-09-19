@@ -35,7 +35,8 @@ architecture rtl of motones_sim is
         port (  base_clk    : in std_logic;
                 reset_n     : in std_logic;
                 cpu_clk     : out std_logic;
-                ppu_clk     : out std_logic
+                ppu_clk     : out std_logic;
+                vga_clk     : out std_logic
             );
     end component;
 
@@ -106,8 +107,9 @@ architecture rtl of motones_sim is
     end component;
 
     ---clock frequency = 21,477,270 (21 MHz)
-    constant base_clock_time : time := 46 ns;
-    constant vga_clk_time : time := 40 ns;
+    --constant base_clock_time : time := 46 ns;
+    --base clock frequency shares vga clock.
+    constant base_clock_time : time := 40 ns;
     constant data_size : integer := 8;
     constant addr_size : integer := 16;
     constant size14    : integer := 14;
@@ -152,18 +154,9 @@ begin
         wait for base_clock_time / 2;
     end process;
 
-    --- generate test vga clock.
-    vga_clock_p : process
-    begin
-        vga_clk <= '1';
-        wait for vga_clk_time / 2;
-        vga_clk <= '0';
-        wait for vga_clk_time / 2;
-    end process;
-
     --ppu/cpu clock generator
     clock_inst : clock_divider port map 
-        (base_clk, rst_n, cpu_clk, ppu_clk);
+        (base_clk, rst_n, cpu_clk, ppu_clk, vga_clk);
 
     --mos 6502 cpu instance
     cpu_inst : mos6502 generic map (data_size, addr_size) 

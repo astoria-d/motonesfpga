@@ -66,7 +66,7 @@ copymap:
 
     lda #$20
     sta $2006
-    lda #$80
+    lda #$c0
     sta $2006
 
 nt_st:
@@ -111,7 +111,7 @@ at_st:
 
     lda #$24
     sta $2006
-    lda #$80
+    lda #$c0
     sta $2006
 
 nt2_st:

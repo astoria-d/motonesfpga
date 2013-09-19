@@ -10,7 +10,8 @@ architecture stimulus of testbench_clock_divider is
         port (  base_clk    : in std_logic;
                 reset_n     : in std_logic;
                 cpu_clk     : out std_logic;
-                ppu_clk     : out std_logic
+                ppu_clk     : out std_logic;
+                vga_clk     : out std_logic
             );
     end component;
 
@@ -18,10 +19,10 @@ architecture stimulus of testbench_clock_divider is
     constant base_clock_time : time := 46 ns;
     constant reset_time : time := 100 ns;
 
-    signal bbase, rreset_n, ccpu, pppu : std_logic;
+    signal bbase, rreset_n, ccpu, pppu, vvga : std_logic;
 
 begin
-    dut: clock_divider port map (bbase, rreset_n, ccpu, pppu);
+    dut: clock_divider port map (bbase, rreset_n, ccpu, pppu, vvga);
 
     clock_p: process
     begin
