@@ -10,3 +10,6 @@ db/*
 no-need/*
 simulation/*
 undo_redo.txt
+*.work
+*.nes
+serv_req_info.txt

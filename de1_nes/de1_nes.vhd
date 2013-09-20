@@ -9,6 +9,14 @@ use ieee.std_logic_unsigned.conv_integer;
 
 entity de1_nes is 
     port (
+
+    signal dbg_cpu_clk  : out std_logic;
+    signal dbg_ppu_clk  : out std_logic;
+    signal dbg_addr : out std_logic_vector( 16 - 1 downto 0);
+    signal dbg_d_io : out std_logic_vector( 8 - 1 downto 0);
+    signal dbg_vram_ad  : out std_logic_vector (7 downto 0);
+    signal dbg_vram_a   : out std_logic_vector (13 downto 8);
+
         base_clk 	: in std_logic;
         rst_n     	: in std_logic;
         joypad1     : in std_logic_vector(7 downto 0);
@@ -157,6 +165,15 @@ begin
 
     apu_inst : apu
         port map (cpu_clk, apu_ce_n, rst_n, r_nw, addr, d_io, rdy);
+
+
+--    dbg_cpu_clk  <= cpu_clk;
+--    dbg_ppu_clk  <= ppu_clk;
+--    dbg_addr <= addr;
+    dbg_d_io <= d_io;
+--    dbg_vram_ad  <= vram_ad ;
+--    dbg_vram_a   <= vram_a  ;
+
 
 end rtl;
 
