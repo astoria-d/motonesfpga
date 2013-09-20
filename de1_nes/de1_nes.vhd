@@ -8,17 +8,17 @@ use ieee.std_logic_unsigned.conv_integer;
 --  
 
 entity de1_nes is 
-    port (  
-		base_clk 	: in std_logic;
-		rst_n     	: in std_logic;
-		dbg_pin0	: out std_logic;
-		dbg_pin1	: out std_logic;
-		dbg_pin2	: out std_logic;
-		dbg_pin3	: out std_logic;
-		dbg_pin4	: out std_logic;
-		dbg_pin5	: out std_logic;
-		dbg_pin6	: out std_logic;
-		dbg_pin7	: out std_logic
+    port (
+        base_clk 	: in std_logic;
+        rst_n     	: in std_logic;
+        joypad1     : in std_logic_vector(7 downto 0);
+        joypad2     : in std_logic_vector(7 downto 0);
+        vga_clk     : out std_logic;
+        h_sync_n    : out std_logic;
+        v_sync_n    : out std_logic;
+        r           : out std_logic_vector(3 downto 0);
+        g           : out std_logic_vector(3 downto 0);
+        b           : out std_logic_vector(3 downto 0)
          );
 end de1_nes;
 
@@ -45,8 +45,8 @@ architecture rtl of de1_nes is
         port (  base_clk    : in std_logic;
                 reset_n     : in std_logic;
                 cpu_clk     : out std_logic;
-				ppu_clk     : out std_logic;
-				vga_clk     : out std_logic
+                ppu_clk     : out std_logic;
+                vga_clk     : out std_logic
             );
     end component;
 
@@ -56,7 +56,8 @@ architecture rtl of de1_nes is
                 R_nW        : in std_logic; 
                 addr       : in std_logic_vector (abus_size - 1 downto 0);
                 d_io       : inout std_logic_vector (dbus_size - 1 downto 0);
-                ppu_ce_n    : out std_logic
+                ppu_ce_n    : out std_logic;
+                apu_ce_n    : out std_logic
     );
     end component;
 
@@ -93,12 +94,24 @@ architecture rtl of de1_nes is
             );
     end component;
 
+    component apu
+        port (  clk         : in std_logic;
+                ce_n        : in std_logic;
+                rst_n       : in std_logic;
+                r_nw        : inout std_logic;
+                cpu_addr    : inout std_logic_vector (15 downto 0);
+                cpu_d       : inout std_logic_vector (7 downto 0);
+                rdy         : out std_logic
+        );
+    end component;
+
     constant data_size : integer := 8;
     constant addr_size : integer := 16;
     constant size14    : integer := 14;
 
     signal cpu_clk  : std_logic;
     signal ppu_clk  : std_logic;
+    signal vga_out_clk   : std_logic;
 
     signal rdy, irq_n, nmi_n, dbe, r_nw : std_logic;
     signal phi1, phi2 : std_logic;
@@ -106,27 +119,24 @@ architecture rtl of de1_nes is
     signal d_io : std_logic_vector( data_size - 1 downto 0);
 
     signal ppu_ce_n : std_logic;
+    signal apu_ce_n : std_logic;
     signal rd_n     : std_logic;
     signal wr_n     : std_logic;
     signal ale      : std_logic;
     signal vram_ad  : std_logic_vector (7 downto 0);
     signal vram_a   : std_logic_vector (13 downto 8);
 
-    signal vga_clk     : std_logic;
-    signal h_sync_n    : std_logic;
-    signal v_sync_n    : std_logic;
-    signal r           : std_logic_vector(3 downto 0);
-    signal g           : std_logic_vector(3 downto 0);
-    signal b           : std_logic_vector(3 downto 0);
+    --test...
+    signal nmi_n2 : std_logic;
 
 begin
 
     irq_n <= '0';
-    rdy <= '1';
+    vga_clk <= vga_out_clk;
 
     --ppu/cpu clock generator
     clock_inst : clock_divider port map 
-        (base_clk, rst_n, cpu_clk, ppu_clk, vga_clk);
+        (base_clk, rst_n, cpu_clk, ppu_clk, vga_out_clk);
 
     --mos 6502 cpu instance
     cpu_inst : mos6502 generic map (data_size, addr_size) 
@@ -134,21 +144,19 @@ begin
                 phi1, phi2, addr, d_io);
 
     addr_dec_inst : address_decoder generic map (addr_size, data_size) 
-        port map (phi2, r_nw, addr, d_io, ppu_ce_n);
+        port map (phi2, r_nw, addr, d_io, ppu_ce_n, apu_ce_n);
 
     --nes ppu instance
---    ppu_inst : ppu 
---        port map (ppu_clk, ppu_ce_n, rst_n, r_nw, addr(2 downto 0), d_io, 
---                nmi_n, rd_n, wr_n, ale, vram_ad, vram_a,
---                vga_clk, h_sync_n, v_sync_n, r, g, b);
+    ppu_inst : ppu 
+        port map (ppu_clk, ppu_ce_n, rst_n, r_nw, addr(2 downto 0), d_io, 
+                nmi_n, rd_n, wr_n, ale, vram_ad, vram_a,
+                vga_out_clk, h_sync_n, v_sync_n, r, g, b);
 
---    ppu_addr_decoder : v_address_decoder generic map (size14, data_size) 
---        port map (ppu_clk, rd_n, wr_n, ale, vram_ad, vram_a);
+    ppu_addr_decoder : v_address_decoder generic map (size14, data_size) 
+        port map (ppu_clk, rd_n, wr_n, ale, vram_ad, vram_a);
 
------debug-----
-	dbg_pin0 <= cpu_clk;
-	dbg_pin1 <= ppu_clk;
-	dbg_pin2 <= vga_clk;
+    apu_inst : apu
+        port map (cpu_clk, apu_ce_n, rst_n, r_nw, addr, d_io, rdy);
 
 end rtl;
 
