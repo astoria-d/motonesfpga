@@ -2,6 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_arith.conv_std_logic_vector;
 use ieee.std_logic_unsigned.conv_integer;
+use work.motonesfpga_common.all;
 
 entity decoder is 
     generic (dsize : integer := 8);
@@ -72,25 +73,6 @@ component d_flip_flop_bit
             q       : out std_logic
         );
 end component;
-
-procedure d_print(msg : string) is
-use std.textio.all;
-use ieee.std_logic_textio.all;
-variable out_l : line;
-begin
-    write(out_l, msg);
-    writeline(output, out_l);
-end  procedure;
-
----ival : 0x0000 - 0xffff
-function conv_hex8(ival : integer) return string is
-variable tmp1, tmp2 : integer;
-variable hex_chr: string (1 to 16) := "0123456789abcdef";
-begin
-    tmp2 := (ival mod 16 ** 2) / 16 ** 1;
-    tmp1 := ival mod 16 ** 1;
-    return hex_chr(tmp2 + 1) & hex_chr(tmp1 + 1);
-end;
 
 --cycle bit format 
 -- bit 5    : pcl increment carry flag
@@ -240,7 +222,6 @@ begin
 --            ad_oe_n         : out std_logic;
 --            dl_al_oe_n      : out std_logic;
 --            pcl_inc_n       : out std_logic;
---            pch_inc_n       : out std_logic;
 --            pcl_cmd         : out std_logic_vector(3 downto 0);
 --            pch_cmd         : out std_logic_vector(3 downto 0);
 --            r_nw            : out std_logic
@@ -1035,6 +1016,7 @@ end  procedure;
             d_print(string'("-"));
 
             if rdy = '0' then
+                --case dma is runnting.
                 disable_pins;
                 inst_we_n <= '1';
                 ad_oe_n <= '0';
@@ -1042,7 +1024,7 @@ end  procedure;
                 pcl_inc_n <= '1';
                 pcl_cmd <= "1111";
                 pch_cmd <= "1111";
-                r_nw <= '1';
+                r_nw <= 'Z';
             elsif exec_cycle = T0 then
                 --cycle #1
                 t0_cycle;
@@ -2609,7 +2591,6 @@ end  procedure;
                 dl_ah_oe_n <= '1';
                 dl_dh_oe_n <= '1';
                 pcl_inc_n <= '1';
-                pch_inc_n <= '1';
                 pcl_cmd <= "1111";
                 pch_cmd <= "1111";
                 sp_cmd <= "1111";
@@ -2761,6 +2742,7 @@ end  procedure;
                     --disable previous we_n gate.
                     --t1 cycle is fetch low oprand.
                     dl_al_we_n <= '1';
+                    dl_ah_we_n <= '1';
                 elsif ('0' & exec_cycle(4 downto 0) = T3) then
                     --t2 cycle is fetch high oprand.
                     dl_ah_we_n <= '1';

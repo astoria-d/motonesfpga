@@ -5,6 +5,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use ieee.std_logic_arith.conv_std_logic_vector;
+use work.motonesfpga_common.all;
 
 entity alu is 
     generic (   dsize : integer := 8
@@ -199,7 +200,7 @@ begin
                     pcl_inc_n, pch_inc_n, sp_oe_n, sp_push_n, sp_pop_n,
                     abs_xy_n, pg_next_n, zp_n, zp_xy_n, rel_calc_n, 
                     indir_n, indir_x_n, indir_y_n, 
-                    index_bus, bal, bal, addr_c_in, addr_out, addr_c,
+                    index_bus, bal, bah, addr_c_in, addr_out, addr_c,
 
                     --for arithmatic operation.
                     arith_en_n,
@@ -245,15 +246,6 @@ begin
     else
         int_d_bus <= arith_reg_out;
     end if;
-end  procedure;
-
-procedure d_print(msg : string) is
-use std.textio.all;
-use ieee.std_logic_textio.all;
-variable out_l : line;
-begin
-    write(out_l, msg);
-    writeline(output, out_l);
 end  procedure;
 
 procedure set_nz is
@@ -838,15 +830,6 @@ entity alu_core is
 end alu_core;
 
 architecture rtl of alu_core is
-
-procedure d_print(msg : string) is
-use std.textio.all;
-use ieee.std_logic_textio.all;
-variable out_l : line;
-begin
---    write(out_l, msg);
---    writeline(output, out_l);
-end  procedure;
 
 constant ALU_AND    : std_logic_vector (3 downto 0) := "0000";
 constant ALU_EOR    : std_logic_vector (3 downto 0) := "0001";

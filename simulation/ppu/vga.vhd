@@ -2,6 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.conv_integer;
 use ieee.std_logic_arith.conv_std_logic_vector;
+use work.motonesfpga_common.all;
 
 entity vga_ctl is 
     port (  ppu_clk     : in std_logic;
@@ -35,38 +36,6 @@ component counter_register
             q           : out std_logic_vector(dsize - 1 downto 0)
     );
 end component;
-
-procedure d_print(msg : string) is
-use std.textio.all;
-use ieee.std_logic_textio.all;
-variable out_l : line;
-begin
---    write(out_l, msg);
---    writeline(output, out_l);
-end  procedure;
-
-function conv_hex8(ival : integer) return string is
-variable tmp1, tmp2 : integer;
-variable hex_chr: string (1 to 16) := "0123456789abcdef";
-begin
-    tmp2 := (ival mod 16 ** 2) / 16 ** 1;
-    tmp1 := ival mod 16 ** 1;
-    return hex_chr(tmp2 + 1) & hex_chr(tmp1 + 1);
-end;
-
-function conv_hex16(ival : integer) return string is
-variable tmp1, tmp2 : integer;
-variable hex_chr: string (1 to 16) := "0123456789abcdef";
-begin
-    tmp2 := ival / 256;
-    tmp1 := ival mod 256;
-    return conv_hex8(tmp2) & conv_hex8(tmp1);
-end;
-
-function conv_hex8(ival : std_logic_vector) return string is
-begin
-    return conv_hex8(conv_integer(ival));
-end;
 
 constant COLOR_SIZE         : integer := 12;
 constant VGA_SIZE           : integer := 10;
@@ -201,7 +170,7 @@ begin
                     vga_x < conv_std_logic_vector(VGA_W + H_FP + H_SP, VGA_SIZE)) then
                     h_sync_n <= '0';
 
-                    d_print("vga_ctl: h_sync.");
+                    --d_print("vga_ctl: h_sync.");
                 else
                     h_sync_n <= '1';
                 end if;
@@ -210,7 +179,7 @@ begin
                     vga_y < conv_std_logic_vector(VGA_H + V_FP + V_SP, VGA_SIZE)) then
                     v_sync_n <= '0';
 
-                    d_print("vga_ctl: v_sync.");
+                    --d_print("vga_ctl: v_sync.");
                 else
                     v_sync_n <= '1';
                 end if;
@@ -232,6 +201,7 @@ end rtl;
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.conv_integer;
+use work.motonesfpga_common.all;
 
 entity vga_device is 
     port (  vga_clk     : in std_logic;
@@ -256,33 +226,6 @@ constant H_BP    : integer := 48;
 constant V_FP    : integer := 10;
 constant V_SP    : integer := 2;
 constant V_BP    : integer := 33;
-
-procedure d_print(msg : string) is
-use std.textio.all;
-use ieee.std_logic_textio.all;
-variable out_l : line;
-begin
---    write(out_l, msg);
---    writeline(output, out_l);
-end  procedure;
-
-function conv_hex8(ival : integer) return string is
-variable tmp1, tmp2 : integer;
-variable hex_chr: string (1 to 16) := "0123456789abcdef";
-begin
-    tmp2 := (ival mod 16 ** 2) / 16 ** 1;
-    tmp1 := ival mod 16 ** 1;
-    return hex_chr(tmp2 + 1) & hex_chr(tmp1 + 1);
-end;
-
-function conv_hex16(ival : integer) return string is
-variable tmp1, tmp2 : integer;
-variable hex_chr: string (1 to 16) := "0123456789abcdef";
-begin
-    tmp2 := ival / 256;
-    tmp1 := ival mod 256;
-    return conv_hex8(tmp2) & conv_hex8(tmp1);
-end;
 
 function conv_color_hex (
             r           : in std_logic_vector(3 downto 0);
@@ -320,14 +263,14 @@ begin
         if (rst_n = '0') then
             x := 0;
             y := 0;
-            d_print("vga_device: ****");
+            --d_print("vga_device: ****");
         else
             if (vga_clk'event and vga_clk = '1') then
                 if ( x < VGA_W and y < VGA_H) then
                     --d_print(conv_color_hex(r, g, b));
                     write_vga_pipe(conv_color_hex(b, g, r));
                     --write_vga_pipe("0" & conv_hex8(x));
-                    d_print("vga_device: rgb out x:" & conv_hex16(x));
+                    --d_print("vga_device: rgb out x:" & conv_hex16(x));
                 end if;
 
                 if (x = VGA_W_MAX - 1) then
@@ -343,12 +286,12 @@ begin
             end if;
 
             if (h_sync_n'event and h_sync_n = '0') then
-                d_print("vga_device: h_sync");
+                --d_print("vga_device: h_sync");
                 write_vga_pipe("---");
                 x := VGA_W + H_FP + 1;
             end if;
             if (v_sync_n'event and v_sync_n = '0') then
-                d_print("vga_device: v_sync");
+                --d_print("vga_device: v_sync");
                 write_vga_pipe("___");
                 y := VGA_H + V_FP + 1;
             end if;
