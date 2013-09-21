@@ -16,7 +16,6 @@ simulation/modelsim/msim_transcript
 simulation/modelsim/*.vho
 simulation/modelsim/*.xrf
 simulation/modelsim/*.sdo
-simulation/modelsim/modelsim.ini
 simulation/modelsim/vsim.wlf
 undo_redo.txt
 *.work
