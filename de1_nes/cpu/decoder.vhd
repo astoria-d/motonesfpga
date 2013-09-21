@@ -1013,6 +1013,10 @@ end  procedure;
 --        end if;
 
         if (res_n = '0') then
+            --pc l/h is reset vector.
+            pcl_cmd <= "1110";
+            pch_cmd <= "1110";
+            next_cycle <= R0;
         elsif (set_clk'event and set_clk = '1' and res_n = '1') then
             d_print(string'("-"));
 

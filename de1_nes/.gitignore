@@ -8,7 +8,15 @@
 *.html
 db/*
 no-need/*
-simulation/*
+simulation/modelsim/gate_work/*
+simulation/modelsim/rtl_work/*
+simulation/modelsim/*.do.bak*
+simulation/modelsim/msim_transcript
+simulation/modelsim/*.vho
+simulation/modelsim/*.xrf
+simulation/modelsim/*.sdo
+simulation/modelsim/modelsim.ini
+simulation/modelsim/vsim.wlf
 undo_redo.txt
 *.work
 *.nes

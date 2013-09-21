@@ -170,7 +170,7 @@ begin
 --    dbg_cpu_clk  <= cpu_clk;
 --    dbg_ppu_clk  <= ppu_clk;
 --    dbg_addr <= addr;
-    dbg_d_io <= d_io;
+--    dbg_d_io <= d_io;
 --    dbg_vram_ad  <= vram_ad ;
 --    dbg_vram_a   <= vram_a  ;
 
