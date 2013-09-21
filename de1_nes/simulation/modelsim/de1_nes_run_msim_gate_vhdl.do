@@ -14,4 +14,6 @@ vsim -t 1ps +transport_int_delays +transport_path_delays -sdftyp /sim_board=de1_
 add wave *
 view structure
 view signals
-run -all
+#run -all
+run 100 us
+
