@@ -6,6 +6,7 @@
 *.bak
 *.jpg
 *.html
+*.qws
 db/*
 no-need/*
 simulation/modelsim/gate_work/*
