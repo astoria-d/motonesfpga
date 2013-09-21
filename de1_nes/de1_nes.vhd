@@ -17,6 +17,10 @@ entity de1_nes is
     signal dbg_vram_ad  : out std_logic_vector (7 downto 0);
     signal dbg_vram_a   : out std_logic_vector (13 downto 8);
 
+---monitor inside cpu
+    signal dbg_instruction  : out std_logic_vector(7 downto 0);
+    signal dbg_int_d_bus  : out std_logic_vector(7 downto 0);
+
         base_clk 	: in std_logic;
         rst_n     	: in std_logic;
         joypad1     : in std_logic_vector(7 downto 0);
@@ -35,7 +39,11 @@ architecture rtl of de1_nes is
         generic (   dsize : integer := 8;
                     asize : integer :=16
                 );
-        port (  input_clk   : in std_logic; --phi0 input pin.
+        port (  
+    signal dbg_instruction  : out std_logic_vector(7 downto 0);
+    signal dbg_int_d_bus  : out std_logic_vector(7 downto 0);
+
+                input_clk   : in std_logic; --phi0 input pin.
                 rdy         : in std_logic;
                 rst_n       : in std_logic;
                 irq_n       : in std_logic;
@@ -148,17 +156,20 @@ begin
 
     --mos 6502 cpu instance
     cpu_inst : mos6502 generic map (data_size, addr_size) 
-        port map (cpu_clk, rdy, rst_n, irq_n, nmi_n, dbe, r_nw, 
+        port map (
+    dbg_instruction,
+    dbg_int_d_bus,
+                cpu_clk, rdy, rst_n, irq_n, nmi_n, dbe, r_nw, 
                 phi1, phi2, addr, d_io);
 
     addr_dec_inst : address_decoder generic map (addr_size, data_size) 
         port map (phi2, r_nw, addr, d_io, ppu_ce_n, apu_ce_n);
 
-    --nes ppu instance
-    ppu_inst : ppu 
-        port map (ppu_clk, ppu_ce_n, rst_n, r_nw, addr(2 downto 0), d_io, 
-                nmi_n, rd_n, wr_n, ale, vram_ad, vram_a,
-                vga_out_clk, h_sync_n, v_sync_n, r, g, b);
+--    --nes ppu instance
+--    ppu_inst : ppu 
+--        port map (ppu_clk, ppu_ce_n, rst_n, r_nw, addr(2 downto 0), d_io, 
+--                nmi_n, rd_n, wr_n, ale, vram_ad, vram_a,
+--                vga_out_clk, h_sync_n, v_sync_n, r, g, b);
 
     ppu_addr_decoder : v_address_decoder generic map (size14, data_size) 
         port map (ppu_clk, rd_n, wr_n, ale, vram_ad, vram_a);
@@ -166,11 +177,10 @@ begin
     apu_inst : apu
         port map (cpu_clk, apu_ce_n, rst_n, r_nw, addr, d_io, rdy);
 
-
---    dbg_cpu_clk  <= cpu_clk;
---    dbg_ppu_clk  <= ppu_clk;
---    dbg_addr <= addr;
---    dbg_d_io <= d_io;
+    dbg_cpu_clk <= cpu_clk;
+    dbg_ppu_clk <= ppu_clk;
+    dbg_addr <= addr;
+    dbg_d_io <= d_io;
 --    dbg_vram_ad  <= vram_ad ;
 --    dbg_vram_a   <= vram_a  ;
 

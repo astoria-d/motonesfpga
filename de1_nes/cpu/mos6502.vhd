@@ -5,7 +5,11 @@ entity mos6502 is
     generic (   dsize : integer := 8;
                 asize : integer :=16
             );
-    port (  input_clk   : in std_logic; --phi0 input pin.
+    port (  
+    signal dbg_instruction  : out std_logic_vector(7 downto 0);
+    signal dbg_int_d_bus  : out std_logic_vector(7 downto 0);
+
+            input_clk   : in std_logic; --phi0 input pin.
             rdy         : in std_logic;
             rst_n       : in std_logic;
             irq_n       : in std_logic;
@@ -317,6 +321,9 @@ end component;
     signal check_bit     : std_logic_vector(1 to 5);
 
 begin
+
+    dbg_instruction <= instruction;
+    dbg_int_d_bus <= int_d_bus;
 
 
     -- clock generate.

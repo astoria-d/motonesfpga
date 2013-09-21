@@ -63,9 +63,9 @@ begin
         when (r_nw = '0' and ((addr(15) or addr(14) or addr(13)) = '0')) else
         "ZZZZZZZZ";
     ram_oe_n <= not R_nW;
-    ramport : ram generic map (ram_2k, dsize)
-            port map (ram_ce_n, ram_oe_n, R_nW, 
-                    addr(ram_2k - 1 downto 0), ram_io);
+--    ramport : ram generic map (ram_2k, dsize)
+--            port map (ram_ce_n, ram_oe_n, R_nW, 
+--                    addr(ram_2k - 1 downto 0), ram_io);
 
     --must explicitly drive to for inout port.
     d_io <= ram_io 

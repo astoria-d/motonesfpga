@@ -9,11 +9,22 @@ vcom -93 -work work {de1_nes.vho}
 
 vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/de1_nes/testbench_motones_sim.vhd}
 
-vsim -t 1ps +transport_int_delays +transport_path_delays -sdftyp /sim_board=de1_nes_vhd.sdo -L cycloneii -L gate_work -L work testbench_motones_sim
+vsim -t 10ps +transport_int_delays +transport_path_delays -sdftyp /sim_board=de1_nes_vhd.sdo -L cycloneii -L gate_work -L work testbench_motones_sim
 
-add wave *
+#add wave *
+
+add wave sim:/testbench_motones_sim/sim_board/rst_n
+add wave sim:/testbench_motones_sim/sim_board/dbg_ppu_clk
+add wave sim:/testbench_motones_sim/sim_board/dbg_cpu_clk
+
+add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_addr
+add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_d_io
+
+add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_instruction
+add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_int_d_bus
+
 view structure
 view signals
 #run -all
-run 100 us
+run 10 us
 
