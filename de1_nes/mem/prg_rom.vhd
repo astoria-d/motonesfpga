@@ -46,8 +46,28 @@ function rom_fill return rom_array is
         return ret;
     end rom_fill;
 
+function init_rom
+    return rom_array is 
+    variable tmp : rom_array := (others => (others => '0'));
+    use ieee.numeric_std.to_unsigned;
+begin 
+    for addr_pos in 0 to 2**abus_size - 1 loop 
+        -- Initialize each address with the address itself
+        tmp(addr_pos) := std_logic_vector(to_unsigned(addr_pos, dbus_size));
+    end loop;
+    return tmp;
+end init_rom;
+
+-- Declare the ROM signal and specify a default value.	Quartus II
+-- will create a memory initialization file (.mif) based on the 
+-- default value.
+
 --itinialize with the rom_fill function.
-constant p_rom : rom_array := rom_fill;
+signal p_rom : rom_array := rom_fill;
+
+--signal p_rom : rom_array := init_rom;
+--attribute ram_init_file : string;
+--attribute ram_init_file of p_rom : signal is "sample1-prg.hex";
 
 begin
 

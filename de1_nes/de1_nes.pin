@@ -82,16 +82,16 @@ GND*                         : A6        :        :                   :         
 GND*                         : A7        :        :                   :         : 3         :                
 GND*                         : A8        :        :                   :         : 3         :                
 GND*                         : A9        :        :                   :         : 3         :                
-GND*                         : A10       :        :                   :         : 3         :                
+vga_clk                      : A10       : output : 3.3-V LVTTL       :         : 3         : N              
 GND*                         : A11       :        :                   :         : 3         :                
 GND+                         : A12       :        :                   :         : 4         :                
-dbg_int_d_bus[2]             : A13       : output : 3.3-V LVTTL       :         : 4         : N              
-dbg_addr[4]                  : A14       : output : 3.3-V LVTTL       :         : 4         : N              
-dbg_int_d_bus[0]             : A15       : output : 3.3-V LVTTL       :         : 4         : N              
-dbg_int_d_bus[6]             : A16       : output : 3.3-V LVTTL       :         : 4         : N              
-GND*                         : A17       :        :                   :         : 4         :                
+dbg_int_d_bus[5]             : A13       : output : 3.3-V LVTTL       :         : 4         : N              
+dbg_int_d_bus[0]             : A14       : output : 3.3-V LVTTL       :         : 4         : N              
+dbg_int_d_bus[7]             : A15       : output : 3.3-V LVTTL       :         : 4         : N              
+dbg_addr[3]                  : A16       : output : 3.3-V LVTTL       :         : 4         : N              
+dbg_addr[5]                  : A17       : output : 3.3-V LVTTL       :         : 4         : N              
 GND*                         : A18       :        :                   :         : 4         :                
-GND*                         : A19       :        :                   :         : 4         :                
+dbg_vram_a[9]                : A19       : output : 3.3-V LVTTL       :         : 4         : N              
 GND*                         : A20       :        :                   :         : 4         :                
 VCCIO4                       : A21       : power  :                   : 3.3V    : 4         :                
 GND                          : A22       : gnd    :                   :         :           :                
@@ -99,82 +99,82 @@ VCCIO1                       : AA1       : power  :                   : 3.3V    
 GND                          : AA2       : gnd    :                   :         :           :                
 GND*                         : AA3       :        :                   :         : 8         :                
 GND*                         : AA4       :        :                   :         : 8         :                
-g[2]                         : AA5       : output : 3.3-V LVTTL       :         : 8         : N              
-GND*                         : AA6       :        :                   :         : 8         :                
+GND*                         : AA5       :        :                   :         : 8         :                
+joypad1[5]                   : AA6       : input  : 3.3-V LVTTL       :         : 8         : N              
 GND*                         : AA7       :        :                   :         : 8         :                
 GND*                         : AA8       :        :                   :         : 8         :                
-joypad1[2]                   : AA9       : input  : 3.3-V LVTTL       :         : 8         : N              
-dbg_d_io[3]                  : AA10      : output : 3.3-V LVTTL       :         : 8         : N              
-dbg_d_io[7]                  : AA11      : output : 3.3-V LVTTL       :         : 8         : N              
-dbg_addr[15]                 : AA12      : output : 3.3-V LVTTL       :         : 7         : N              
-dbg_addr[1]                  : AA13      : output : 3.3-V LVTTL       :         : 7         : N              
-dbg_instruction[2]           : AA14      : output : 3.3-V LVTTL       :         : 7         : N              
+GND*                         : AA9       :        :                   :         : 8         :                
+GND*                         : AA10      :        :                   :         : 8         :                
+dbg_vram_a[12]               : AA11      : output : 3.3-V LVTTL       :         : 8         : N              
+joypad2[5]                   : AA12      : input  : 3.3-V LVTTL       :         : 7         : N              
+GND*                         : AA13      :        :                   :         : 7         :                
+GND*                         : AA14      :        :                   :         : 7         :                
 GND*                         : AA15      :        :                   :         : 7         :                
-dbg_addr[8]                  : AA16      : output : 3.3-V LVTTL       :         : 7         : N              
-joypad1[5]                   : AA17      : input  : 3.3-V LVTTL       :         : 7         : N              
-dbg_vram_ad[2]               : AA18      : output : 3.3-V LVTTL       :         : 7         : N              
-GND*                         : AA19      :        :                   :         : 7         :                
+dbg_instruction[5]           : AA16      : output : 3.3-V LVTTL       :         : 7         : N              
+h_sync_n                     : AA17      : output : 3.3-V LVTTL       :         : 7         : N              
+GND*                         : AA18      :        :                   :         : 7         :                
+dbg_vram_ad[4]               : AA19      : output : 3.3-V LVTTL       :         : 7         : N              
 GND*                         : AA20      :        :                   :         : 7         :                
 GND                          : AA21      : gnd    :                   :         :           :                
 VCCIO6                       : AA22      : power  :                   : 3.3V    : 6         :                
 GND                          : AB1       : gnd    :                   :         :           :                
 VCCIO8                       : AB2       : power  :                   : 3.3V    : 8         :                
-dbg_vram_a[12]               : AB3       : output : 3.3-V LVTTL       :         : 8         : N              
-GND*                         : AB4       :        :                   :         : 8         :                
+g[3]                         : AB3       : output : 3.3-V LVTTL       :         : 8         : N              
+joypad1[6]                   : AB4       : input  : 3.3-V LVTTL       :         : 8         : N              
 GND*                         : AB5       :        :                   :         : 8         :                
 GND*                         : AB6       :        :                   :         : 8         :                
-GND*                         : AB7       :        :                   :         : 8         :                
-GND*                         : AB8       :        :                   :         : 8         :                
+joypad2[4]                   : AB7       : input  : 3.3-V LVTTL       :         : 8         : N              
+dbg_vram_ad[0]               : AB8       : output : 3.3-V LVTTL       :         : 8         : N              
 GND*                         : AB9       :        :                   :         : 8         :                
-dbg_instruction[0]           : AB10      : output : 3.3-V LVTTL       :         : 8         : N              
-dbg_d_io[5]                  : AB11      : output : 3.3-V LVTTL       :         : 8         : N              
-dbg_instruction[6]           : AB12      : output : 3.3-V LVTTL       :         : 7         : N              
-dbg_addr[2]                  : AB13      : output : 3.3-V LVTTL       :         : 7         : N              
-dbg_cpu_clk                  : AB14      : output : 3.3-V LVTTL       :         : 7         : N              
-dbg_instruction[3]           : AB15      : output : 3.3-V LVTTL       :         : 7         : N              
-dbg_instruction[5]           : AB16      : output : 3.3-V LVTTL       :         : 7         : N              
+dbg_instruction[7]           : AB10      : output : 3.3-V LVTTL       :         : 8         : N              
+GND*                         : AB11      :        :                   :         : 8         :                
+GND*                         : AB12      :        :                   :         : 7         :                
+GND*                         : AB13      :        :                   :         : 7         :                
+dbg_instruction[6]           : AB14      : output : 3.3-V LVTTL       :         : 7         : N              
+GND*                         : AB15      :        :                   :         : 7         :                
+GND*                         : AB16      :        :                   :         : 7         :                
 GND*                         : AB17      :        :                   :         : 7         :                
 GND*                         : AB18      :        :                   :         : 7         :                
-b[3]                         : AB19      : output : 3.3-V LVTTL       :         : 7         : N              
-GND*                         : AB20      :        :                   :         : 7         :                
+GND*                         : AB19      :        :                   :         : 7         :                
+joypad1[0]                   : AB20      : input  : 3.3-V LVTTL       :         : 7         : N              
 VCCIO7                       : AB21      : power  :                   : 3.3V    : 7         :                
 GND                          : AB22      : gnd    :                   :         :           :                
 VCCIO2                       : B1        : power  :                   : 3.3V    : 2         :                
 GND                          : B2        : gnd    :                   :         :           :                
 GND*                         : B3        :        :                   :         : 3         :                
-GND*                         : B4        :        :                   :         : 3         :                
-g[0]                         : B5        : output : 3.3-V LVTTL       :         : 3         : N              
+dbg_vram_a[10]               : B4        : output : 3.3-V LVTTL       :         : 3         : N              
+GND*                         : B5        :        :                   :         : 3         :                
 GND*                         : B6        :        :                   :         : 3         :                
 GND*                         : B7        :        :                   :         : 3         :                
 GND*                         : B8        :        :                   :         : 3         :                
-GND*                         : B9        :        :                   :         : 3         :                
+joypad2[2]                   : B9        : input  : 3.3-V LVTTL       :         : 3         : N              
 GND*                         : B10       :        :                   :         : 3         :                
-vga_clk                      : B11       : output : 3.3-V LVTTL       :         : 3         : N              
+dbg_instruction[1]           : B11       : output : 3.3-V LVTTL       :         : 3         : N              
 GND+                         : B12       :        :                   :         : 4         :                
-dbg_ppu_clk                  : B13       : output : 3.3-V LVTTL       :         : 4         : N              
-dbg_addr[0]                  : B14       : output : 3.3-V LVTTL       :         : 4         : N              
-dbg_int_d_bus[4]             : B15       : output : 3.3-V LVTTL       :         : 4         : N              
-GND*                         : B16       :        :                   :         : 4         :                
-joypad2[0]                   : B17       : input  : 3.3-V LVTTL       :         : 4         : N              
+dbg_int_d_bus[2]             : B13       : output : 3.3-V LVTTL       :         : 4         : N              
+dbg_int_d_bus[3]             : B14       : output : 3.3-V LVTTL       :         : 4         : N              
+dbg_addr[1]                  : B15       : output : 3.3-V LVTTL       :         : 4         : N              
+dbg_addr[2]                  : B16       : output : 3.3-V LVTTL       :         : 4         : N              
+dbg_addr[15]                 : B17       : output : 3.3-V LVTTL       :         : 4         : N              
 GND*                         : B18       :        :                   :         : 4         :                
-joypad2[3]                   : B19       : input  : 3.3-V LVTTL       :         : 4         : N              
+GND*                         : B19       :        :                   :         : 4         :                
 GND*                         : B20       :        :                   :         : 4         :                
 GND                          : B21       : gnd    :                   :         :           :                
 VCCIO5                       : B22       : power  :                   : 3.3V    : 5         :                
-dbg_vram_ad[3]               : C1        : output : 3.3-V LVTTL       :         : 2         : N              
+GND*                         : C1        :        :                   :         : 2         :                
 GND*                         : C2        :        :                   :         : 2         :                
 ~nCSO~ / RESERVED_INPUT_WITH_WEAK_PULLUP : C3        : input  : 3.3-V LVTTL       :         : 2         : N              
 ~ASDO~ / RESERVED_INPUT_WITH_WEAK_PULLUP : C4        : input  : 3.3-V LVTTL       :         : 2         : N              
 GND                          : C5        : gnd    :                   :         :           :                
 VCCIO3                       : C6        : power  :                   : 3.3V    : 3         :                
-joypad1[0]                   : C7        : input  : 3.3-V LVTTL       :         : 3         : N              
+GND*                         : C7        :        :                   :         : 3         :                
 GND                          : C8        : gnd    :                   :         :           :                
-dbg_vram_ad[5]               : C9        : output : 3.3-V LVTTL       :         : 3         : N              
-dbg_vram_a[10]               : C10       : output : 3.3-V LVTTL       :         : 3         : N              
+GND*                         : C9        :        :                   :         : 3         :                
+GND*                         : C10       :        :                   :         : 3         :                
 VCCIO3                       : C11       : power  :                   : 3.3V    : 3         :                
 VCCIO4                       : C12       : power  :                   : 3.3V    : 4         :                
-dbg_int_d_bus[1]             : C13       : output : 3.3-V LVTTL       :         : 4         : N              
-GND*                         : C14       :        :                   :         : 4         :                
+dbg_int_d_bus[6]             : C13       : output : 3.3-V LVTTL       :         : 4         : N              
+dbg_addr[9]                  : C14       : output : 3.3-V LVTTL       :         : 4         : N              
 GND                          : C15       : gnd    :                   :         :           :                
 GND*                         : C16       :        :                   :         : 4         :                
 GND*                         : C17       :        :                   :         : 4         :                
@@ -187,38 +187,38 @@ GND*                         : D1        :        :                   :         
 GND*                         : D2        :        :                   :         : 2         :                
 GND*                         : D3        :        :                   :         : 2         :                
 GND*                         : D4        :        :                   :         : 2         :                
-dbg_vram_a[11]               : D5        : output : 3.3-V LVTTL       :         : 2         : N              
+GND*                         : D5        :        :                   :         : 2         :                
 GND*                         : D6        :        :                   :         : 2         :                
-dbg_vram_ad[4]               : D7        : output : 3.3-V LVTTL       :         : 3         : N              
+GND*                         : D7        :        :                   :         : 3         :                
 GND*                         : D8        :        :                   :         : 3         :                
 GND*                         : D9        :        :                   :         : 3         :                
 GND                          : D10       : gnd    :                   :         :           :                
-GND*                         : D11       :        :                   :         : 3         :                
+dbg_instruction[3]           : D11       : output : 3.3-V LVTTL       :         : 3         : N              
 base_clk                     : D12       : input  : 3.3-V LVTTL       :         : 3         : Y              
 GND                          : D13       : gnd    :                   :         :           :                
-dbg_int_d_bus[7]             : D14       : output : 3.3-V LVTTL       :         : 4         : N              
-GND*                         : D15       :        :                   :         : 4         :                
+dbg_addr[14]                 : D14       : output : 3.3-V LVTTL       :         : 4         : N              
+dbg_addr[10]                 : D15       : output : 3.3-V LVTTL       :         : 4         : N              
 GND*                         : D16       :        :                   :         : 4         :                
 VCCIO4                       : D17       : power  :                   : 3.3V    : 4         :                
 GND                          : D18       : gnd    :                   :         :           :                
-GND*                         : D19       :        :                   :         : 5         :                
+dbg_vram_ad[3]               : D19       : output : 3.3-V LVTTL       :         : 5         : N              
 GND*                         : D20       :        :                   :         : 5         :                
 GND*                         : D21       :        :                   :         : 5         :                
-joypad2[6]                   : D22       : input  : 3.3-V LVTTL       :         : 5         : N              
+GND*                         : D22       :        :                   :         : 5         :                
 GND*                         : E1        :        :                   :         : 2         :                
-GND*                         : E2        :        :                   :         : 2         :                
+joypad1[1]                   : E2        : input  : 3.3-V LVTTL       :         : 2         : N              
 GND*                         : E3        :        :                   :         : 2         :                
 GND*                         : E4        :        :                   :         : 2         :                
 VCCD_PLL3                    : E5        : power  :                   : 1.2V    :           :                
 VCCA_PLL3                    : E6        : power  :                   : 1.2V    :           :                
-GND*                         : E7        :        :                   :         : 3         :                
-v_sync_n                     : E8        : output : 3.3-V LVTTL       :         : 3         : N              
+r[0]                         : E7        : output : 3.3-V LVTTL       :         : 3         : N              
+GND*                         : E8        :        :                   :         : 3         :                
 GND*                         : E9        :        :                   :         : 3         :                
 VCCIO3                       : E10       : power  :                   : 3.3V    : 3         :                
-GND*                         : E11       :        :                   :         : 3         :                
+dbg_instruction[4]           : E11       : output : 3.3-V LVTTL       :         : 3         : N              
 GND+                         : E12       :        :                   :         : 3         :                
 VCCIO4                       : E13       : power  :                   : 3.3V    : 4         :                
-GND*                         : E14       :        :                   :         : 4         :                
+dbg_addr[11]                 : E14       : output : 3.3-V LVTTL       :         : 4         : N              
 GND*                         : E15       :        :                   :         : 4         :                
 GNDA_PLL2                    : E16       : gnd    :                   :         :           :                
 GND_PLL2                     : E17       : gnd    :                   :         :           :                
@@ -226,22 +226,22 @@ GND*                         : E18       :        :                   :         
 GND*                         : E19       :        :                   :         : 5         :                
 GND*                         : E20       :        :                   :         : 5         :                
 GND*                         : E21       :        :                   :         : 5         :                
-b[2]                         : E22       : output : 3.3-V LVTTL       :         : 5         : N              
+GND*                         : E22       :        :                   :         : 5         :                
 GND*                         : F1        :        :                   :         : 2         :                
-GND*                         : F2        :        :                   :         : 2         :                
-joypad2[1]                   : F3        : input  : 3.3-V LVTTL       :         : 2         : N              
+b[0]                         : F2        : output : 3.3-V LVTTL       :         : 2         : N              
+GND*                         : F3        :        :                   :         : 2         :                
 GND*                         : F4        :        :                   :         : 2         :                
 GND_PLL3                     : F5        : gnd    :                   :         :           :                
 GND_PLL3                     : F6        : gnd    :                   :         :           :                
 GNDA_PLL3                    : F7        : gnd    :                   :         :           :                
-joypad1[4]                   : F8        : input  : 3.3-V LVTTL       :         : 3         : N              
+dbg_vram_a[8]                : F8        : output : 3.3-V LVTTL       :         : 3         : N              
 GND*                         : F9        :        :                   :         : 3         :                
 GND*                         : F10       :        :                   :         : 3         :                
 GND*                         : F11       :        :                   :         : 3         :                
-dbg_addr[5]                  : F12       : output : 3.3-V LVTTL       :         : 4         : N              
-dbg_int_d_bus[3]             : F13       : output : 3.3-V LVTTL       :         : 4         : N              
-GND*                         : F14       :        :                   :         : 4         :                
-dbg_addr[6]                  : F15       : output : 3.3-V LVTTL       :         : 4         : N              
+dbg_addr[6]                  : F12       : output : 3.3-V LVTTL       :         : 4         : N              
+dbg_addr[13]                 : F13       : output : 3.3-V LVTTL       :         : 4         : N              
+dbg_addr[4]                  : F14       : output : 3.3-V LVTTL       :         : 4         : N              
+dbg_addr[8]                  : F15       : output : 3.3-V LVTTL       :         : 4         : N              
 VCCA_PLL2                    : F16       : power  :                   : 1.2V    :           :                
 VCCD_PLL2                    : F17       : power  :                   : 1.2V    :           :                
 GND_PLL2                     : F18       : gnd    :                   :         :           :                
@@ -253,48 +253,48 @@ NC                           : G1        :        :                   :         
 NC                           : G2        :        :                   :         :           :                
 GND*                         : G3        :        :                   :         : 2         :                
 GND                          : G4        : gnd    :                   :         :           :                
-joypad2[2]                   : G5        : input  : 3.3-V LVTTL       :         : 2         : N              
-GND*                         : G6        :        :                   :         : 2         :                
-b[0]                         : G7        : output : 3.3-V LVTTL       :         : 3         : N              
-dbg_vram_a[8]                : G8        : output : 3.3-V LVTTL       :         : 3         : N              
+GND*                         : G5        :        :                   :         : 2         :                
+joypad2[6]                   : G6        : input  : 3.3-V LVTTL       :         : 2         : N              
+joypad1[3]                   : G7        : input  : 3.3-V LVTTL       :         : 3         : N              
+GND*                         : G8        :        :                   :         : 3         :                
 VCCIO3                       : G9        : power  :                   : 3.3V    : 3         :                
 GND                          : G10       : gnd    :                   :         :           :                
-r[1]                         : G11       : output : 3.3-V LVTTL       :         : 3         : N              
-dbg_int_d_bus[5]             : G12       : output : 3.3-V LVTTL       :         : 4         : N              
+GND*                         : G11       :        :                   :         : 3         :                
+dbg_int_d_bus[4]             : G12       : output : 3.3-V LVTTL       :         : 4         : N              
 GND                          : G13       : gnd    :                   :         :           :                
 VCCIO4                       : G14       : power  :                   : 3.3V    : 4         :                
-dbg_vram_a[9]                : G15       : output : 3.3-V LVTTL       :         : 4         : N              
-r[0]                         : G16       : output : 3.3-V LVTTL       :         : 4         : N              
-dbg_vram_a[13]               : G17       : output : 3.3-V LVTTL       :         : 5         : N              
+dbg_addr[7]                  : G15       : output : 3.3-V LVTTL       :         : 4         : N              
+GND*                         : G16       :        :                   :         : 4         :                
+GND*                         : G17       :        :                   :         : 5         :                
 GND*                         : G18       :        :                   :         : 5         :                
 VCCIO5                       : G19       : power  :                   : 3.3V    : 5         :                
 GND*                         : G20       :        :                   :         : 5         :                
 GND*                         : G21       :        :                   :         : 5         :                
 r[2]                         : G22       : output : 3.3-V LVTTL       :         : 5         : N              
-dbg_d_io[4]                  : H1        : output : 3.3-V LVTTL       :         : 2         : N              
-dbg_d_io[1]                  : H2        : output : 3.3-V LVTTL       :         : 2         : N              
+GND*                         : H1        :        :                   :         : 2         :                
+GND*                         : H2        :        :                   :         : 2         :                
 GND*                         : H3        :        :                   :         : 2         :                
-dbg_vram_ad[7]               : H4        : output : 3.3-V LVTTL       :         : 2         : N              
+GND*                         : H4        :        :                   :         : 2         :                
 GND*                         : H5        :        :                   :         : 2         :                
 GND*                         : H6        :        :                   :         : 2         :                
 GND*                         : H7        :        :                   :         : 3         :                
-GND*                         : H8        :        :                   :         : 3         :                
+dbg_vram_ad[2]               : H8        : output : 3.3-V LVTTL       :         : 3         : N              
 GND*                         : H9        :        :                   :         : 3         :                
-joypad1[1]                   : H10       : input  : 3.3-V LVTTL       :         : 3         : N              
-dbg_vram_ad[1]               : H11       : output : 3.3-V LVTTL       :         : 3         : N              
-dbg_addr[14]                 : H12       : output : 3.3-V LVTTL       :         : 4         : N              
-GND*                         : H13       :        :                   :         : 4         :                
-joypad1[3]                   : H14       : input  : 3.3-V LVTTL       :         : 4         : N              
+GND*                         : H10       :        :                   :         : 3         :                
+dbg_addr[0]                  : H11       : output : 3.3-V LVTTL       :         : 3         : N              
+dbg_int_d_bus[1]             : H12       : output : 3.3-V LVTTL       :         : 4         : N              
+dbg_addr[12]                 : H13       : output : 3.3-V LVTTL       :         : 4         : N              
+GND*                         : H14       :        :                   :         : 4         :                
 GND*                         : H15       :        :                   :         : 4         :                
 GND*                         : H16       :        :                   :         : 5         :                
 GND*                         : H17       :        :                   :         : 5         :                
 GND*                         : H18       :        :                   :         : 5         :                
-GND*                         : H19       :        :                   :         : 5         :                
+dbg_d_io[0]                  : H19       : output : 3.3-V LVTTL       :         : 5         : N              
 GND                          : H20       : gnd    :                   :         :           :                
 NC                           : H21       :        :                   :         :           :                
 NC                           : H22       :        :                   :         :           :                
-dbg_d_io[6]                  : J1        : output : 3.3-V LVTTL       :         : 2         : N              
-dbg_d_io[2]                  : J2        : output : 3.3-V LVTTL       :         : 2         : N              
+dbg_cpu_clk                  : J1        : output : 3.3-V LVTTL       :         : 2         : N              
+GND*                         : J2        :        :                   :         : 2         :                
 NC                           : J3        :        :                   :         :           :                
 GND*                         : J4        :        :                   :         : 2         :                
 NC                           : J5        :        :                   :         :           :                
@@ -306,15 +306,15 @@ VCCINT                       : J10       : power  :                   : 1.2V    
 VCCINT                       : J11       : power  :                   : 1.2V    :           :                
 VCCINT                       : J12       : power  :                   : 1.2V    :           :                
 VCCINT                       : J13       : power  :                   : 1.2V    :           :                
-GND*                         : J14       :        :                   :         : 4         :                
+joypad2[0]                   : J14       : input  : 3.3-V LVTTL       :         : 4         : N              
 GND*                         : J15       :        :                   :         : 5         :                
 VCCIO5                       : J16       : power  :                   : 3.3V    : 5         :                
 GND*                         : J17       :        :                   :         : 5         :                
 GND*                         : J18       :        :                   :         : 5         :                
 GND*                         : J19       :        :                   :         : 5         :                
-GND*                         : J20       :        :                   :         : 5         :                
-GND*                         : J21       :        :                   :         : 5         :                
-GND*                         : J22       :        :                   :         : 5         :                
+dbg_d_io[4]                  : J20       : output : 3.3-V LVTTL       :         : 5         : N              
+dbg_d_io[7]                  : J21       : output : 3.3-V LVTTL       :         : 5         : N              
+dbg_d_io[1]                  : J22       : output : 3.3-V LVTTL       :         : 5         : N              
 nCE                          : K1        :        :                   :         : 2         :                
 TCK                          : K2        : input  :                   :         : 2         :                
 GND                          : K3        : gnd    :                   :         :           :                
@@ -334,9 +334,9 @@ GND                          : K16       : gnd    :                   :         
 NC                           : K17       :        :                   :         :           :                
 NC                           : K18       :        :                   :         :           :                
 GND                          : K19       : gnd    :                   :         :           :                
-GND*                         : K20       :        :                   :         : 5         :                
-GND*                         : K21       :        :                   :         : 5         :                
-GND*                         : K22       :        :                   :         : 5         :                
+b[2]                         : K20       : output : 3.3-V LVTTL       :         : 5         : N              
+dbg_d_io[3]                  : K21       : output : 3.3-V LVTTL       :         : 5         : N              
+dbg_ppu_clk                  : K22       : output : 3.3-V LVTTL       :         : 5         : N              
 GND+                         : L1        :        :                   :         : 2         :                
 GND+                         : L2        :        :                   :         : 2         :                
 VCCIO2                       : L3        : power  :                   : 3.3V    : 2         :                
@@ -355,7 +355,7 @@ NC                           : L15       :        :                   :         
 NC                           : L16       :        :                   :         :           :                
 NC                           : L17       :        :                   :         :           :                
 GND*                         : L18       :        :                   :         : 5         :                
-GND*                         : L19       :        :                   :         : 5         :                
+dbg_d_io[5]                  : L19       : output : 3.3-V LVTTL       :         : 5         : N              
 VCCIO5                       : L20       : power  :                   : 3.3V    : 5         :                
 GND+                         : L21       :        :                   :         : 5         :                
 GND+                         : L22       :        :                   :         : 5         :                
@@ -364,7 +364,7 @@ GND+                         : M2        :        :                   :         
 VCCIO1                       : M3        : power  :                   : 3.3V    : 1         :                
 GND                          : M4        : gnd    :                   :         :           :                
 GND*                         : M5        :        :                   :         : 1         :                
-GND*                         : M6        :        :                   :         : 1         :                
+r[3]                         : M6        : output : 3.3-V LVTTL       :         : 1         : N              
 NC                           : M7        :        :                   :         :           :                
 NC                           : M8        :        :                   :         :           :                
 VCCINT                       : M9        : power  :                   : 1.2V    :           :                
@@ -376,8 +376,8 @@ VCCINT                       : M14       : power  :                   : 1.2V    
 NC                           : M15       :        :                   :         :           :                
 NC                           : M16       :        :                   :         :           :                
 MSEL0                        : M17       :        :                   :         : 6         :                
-GND*                         : M18       :        :                   :         : 6         :                
-dbg_addr[3]                  : M19       : output : 3.3-V LVTTL       :         : 6         : N              
+dbg_d_io[2]                  : M18       : output : 3.3-V LVTTL       :         : 6         : N              
+GND*                         : M19       :        :                   :         : 6         :                
 VCCIO6                       : M20       : power  :                   : 3.3V    : 6         :                
 GND+                         : M21       :        :                   :         : 6         :                
 GND+                         : M22       :        :                   :         : 6         :                
@@ -395,23 +395,23 @@ GND                          : N11       : gnd    :                   :         
 GND                          : N12       : gnd    :                   :         :           :                
 GND                          : N13       : gnd    :                   :         :           :                
 VCCINT                       : N14       : power  :                   : 1.2V    :           :                
-GND*                         : N15       :        :                   :         : 6         :                
+joypad1[4]                   : N15       : input  : 3.3-V LVTTL       :         : 6         : N              
 GND                          : N16       : gnd    :                   :         :           :                
 MSEL1                        : N17       :        :                   :         : 6         :                
 CONF_DONE                    : N18       :        :                   :         : 6         :                
 GND                          : N19       : gnd    :                   :         :           :                
 nSTATUS                      : N20       :        :                   :         : 6         :                
-dbg_addr[9]                  : N21       : output : 3.3-V LVTTL       :         : 6         : N              
-dbg_addr[11]                 : N22       : output : 3.3-V LVTTL       :         : 6         : N              
+GND*                         : N21       :        :                   :         : 6         :                
+dbg_d_io[6]                  : N22       : output : 3.3-V LVTTL       :         : 6         : N              
 GND*                         : P1        :        :                   :         : 1         :                
-GND*                         : P2        :        :                   :         : 1         :                
+b[1]                         : P2        : output : 3.3-V LVTTL       :         : 1         : N              
 GND*                         : P3        :        :                   :         : 1         :                
 NC                           : P4        :        :                   :         :           :                
 GND*                         : P5        :        :                   :         : 1         :                
-h_sync_n                     : P6        : output : 3.3-V LVTTL       :         : 1         : N              
+v_sync_n                     : P6        : output : 3.3-V LVTTL       :         : 1         : N              
 VCCIO1                       : P7        : power  :                   : 3.3V    : 1         :                
 GND*                         : P8        :        :                   :         : 8         :                
-joypad2[7]                   : P9        : input  : 3.3-V LVTTL       :         : 8         : N              
+GND*                         : P9        :        :                   :         : 8         :                
 VCCINT                       : P10       : power  :                   : 1.2V    :           :                
 VCCINT                       : P11       : power  :                   : 1.2V    :           :                
 VCCINT                       : P12       : power  :                   : 1.2V    :           :                
@@ -430,19 +430,19 @@ GND*                         : R2        :        :                   :         
 GND                          : R3        : gnd    :                   :         :           :                
 NC                           : R4        :        :                   :         :           :                
 GND*                         : R5        :        :                   :         : 1         :                
-r[3]                         : R6        : output : 3.3-V LVTTL       :         : 1         : N              
-joypad2[4]                   : R7        : input  : 3.3-V LVTTL       :         : 1         : N              
-GND*                         : R8        :        :                   :         : 1         :                
+GND*                         : R6        :        :                   :         : 1         :                
+GND*                         : R7        :        :                   :         : 1         :                
+g[2]                         : R8        : output : 3.3-V LVTTL       :         : 1         : N              
 GND*                         : R9        :        :                   :         : 8         :                
 GND*                         : R10       :        :                   :         : 8         :                
 GND*                         : R11       :        :                   :         : 8         :                
-dbg_instruction[4]           : R12       : output : 3.3-V LVTTL       :         : 7         : N              
+dbg_instruction[0]           : R12       : output : 3.3-V LVTTL       :         : 7         : N              
 GND*                         : R13       :        :                   :         : 7         :                
 GND*                         : R14       :        :                   :         : 7         :                
 GND*                         : R15       :        :                   :         : 7         :                
 GND*                         : R16       :        :                   :         : 7         :                
 GND*                         : R17       :        :                   :         : 6         :                
-g[1]                         : R18       : output : 3.3-V LVTTL       :         : 6         : N              
+GND*                         : R18       :        :                   :         : 6         :                
 GND*                         : R19       :        :                   :         : 6         :                
 GND*                         : R20       :        :                   :         : 6         :                
 GND*                         : R21       :        :                   :         : 6         :                
@@ -453,46 +453,46 @@ GND*                         : T3        :        :                   :         
 VCCIO1                       : T4        : power  :                   : 3.3V    : 1         :                
 GND*                         : T5        :        :                   :         : 1         :                
 GND*                         : T6        :        :                   :         : 1         :                
-b[1]                         : T7        : output : 3.3-V LVTTL       :         : 8         : N              
+joypad2[7]                   : T7        : input  : 3.3-V LVTTL       :         : 8         : N              
 GND*                         : T8        :        :                   :         : 8         :                
 VCCIO8                       : T9        : power  :                   : 3.3V    : 8         :                
 GND                          : T10       : gnd    :                   :         :           :                
 GND*                         : T11       :        :                   :         : 8         :                
-dbg_addr[7]                  : T12       : output : 3.3-V LVTTL       :         : 7         : N              
+dbg_instruction[2]           : T12       : output : 3.3-V LVTTL       :         : 7         : N              
 GND                          : T13       : gnd    :                   :         :           :                
 VCCIO7                       : T14       : power  :                   : 3.3V    : 7         :                
-g[3]                         : T15       : output : 3.3-V LVTTL       :         : 7         : N              
+GND*                         : T15       :        :                   :         : 7         :                
 GND*                         : T16       :        :                   :         : 7         :                
 GND_PLL4                     : T17       : gnd    :                   :         :           :                
 GND*                         : T18       :        :                   :         : 6         :                
 VCCIO6                       : T19       : power  :                   : 3.3V    : 6         :                
 GND                          : T20       : gnd    :                   :         :           :                
-GND*                         : T21       :        :                   :         : 6         :                
-dbg_instruction[7]           : T22       : output : 3.3-V LVTTL       :         : 6         : N              
-joypad1[6]                   : U1        : input  : 3.3-V LVTTL       :         : 1         : N              
-GND*                         : U2        :        :                   :         : 1         :                
+dbg_vram_a[13]               : T21       : output : 3.3-V LVTTL       :         : 6         : N              
+GND*                         : T22       :        :                   :         : 6         :                
+r[1]                         : U1        : output : 3.3-V LVTTL       :         : 1         : N              
+dbg_vram_ad[6]               : U2        : output : 3.3-V LVTTL       :         : 1         : N              
 GND*                         : U3        :        :                   :         : 1         :                
 GND*                         : U4        :        :                   :         : 1         :                
 GND_PLL1                     : U5        : gnd    :                   :         :           :                
 VCCD_PLL1                    : U6        : power  :                   : 1.2V    :           :                
 VCCA_PLL1                    : U7        : power  :                   : 1.2V    :           :                
 GND*                         : U8        :        :                   :         : 8         :                
-dbg_vram_ad[6]               : U9        : output : 3.3-V LVTTL       :         : 8         : N              
+b[3]                         : U9        : output : 3.3-V LVTTL       :         : 8         : N              
 GND*                         : U10       :        :                   :         : 8         :                
 GND+                         : U11       :        :                   :         : 8         :                
 GND+                         : U12       :        :                   :         : 8         :                
-dbg_instruction[1]           : U13       : output : 3.3-V LVTTL       :         : 7         : N              
+dbg_vram_ad[5]               : U13       : output : 3.3-V LVTTL       :         : 7         : N              
 GND*                         : U14       :        :                   :         : 7         :                
 GND*                         : U15       :        :                   :         : 7         :                
 VCCA_PLL4                    : U16       : power  :                   : 1.2V    :           :                
 VCCD_PLL4                    : U17       : power  :                   : 1.2V    :           :                
 GND*                         : U18       :        :                   :         : 6         :                
-GND*                         : U19       :        :                   :         : 6         :                
+joypad1[7]                   : U19       : input  : 3.3-V LVTTL       :         : 6         : N              
 GND*                         : U20       :        :                   :         : 6         :                
 GND*                         : U21       :        :                   :         : 6         :                
 GND*                         : U22       :        :                   :         : 6         :                
 GND*                         : V1        :        :                   :         : 1         :                
-GND*                         : V2        :        :                   :         : 1         :                
+g[1]                         : V2        : output : 3.3-V LVTTL       :         : 1         : N              
 GND                          : V3        : gnd    :                   :         :           :                
 GND*                         : V4        :        :                   :         : 1         :                
 GND_PLL1                     : V5        : gnd    :                   :         :           :                
@@ -504,7 +504,7 @@ VCCIO8                       : V10       : power  :                   : 3.3V    
 GND*                         : V11       :        :                   :         : 8         :                
 GND+                         : V12       :        :                   :         : 7         :                
 VCCIO7                       : V13       : power  :                   : 3.3V    : 7         :                
-dbg_addr[10]                 : V14       : output : 3.3-V LVTTL       :         : 7         : N              
+GND*                         : V14       :        :                   :         : 7         :                
 GND*                         : V15       :        :                   :         : 7         :                
 GNDA_PLL4                    : V16       : gnd    :                   :         :           :                
 GND                          : V17       : gnd    :                   :         :           :                
@@ -513,46 +513,46 @@ GND*                         : V19       :        :                   :         
 GND*                         : V20       :        :                   :         : 6         :                
 GND*                         : V21       :        :                   :         : 6         :                
 GND*                         : V22       :        :                   :         : 6         :                
-GND*                         : W1        :        :                   :         : 1         :                
+dbg_vram_ad[7]               : W1        : output : 3.3-V LVTTL       :         : 1         : N              
 GND*                         : W2        :        :                   :         : 1         :                
 GND*                         : W3        :        :                   :         : 1         :                
 GND*                         : W4        :        :                   :         : 1         :                
 GND*                         : W5        :        :                   :         : 1         :                
 VCCIO8                       : W6        : power  :                   : 3.3V    : 8         :                
 GND*                         : W7        :        :                   :         : 8         :                
-GND*                         : W8        :        :                   :         : 8         :                
+joypad1[2]                   : W8        : input  : 3.3-V LVTTL       :         : 8         : N              
 GND*                         : W9        :        :                   :         : 8         :                
 GND                          : W10       : gnd    :                   :         :           :                
-dbg_d_io[0]                  : W11       : output : 3.3-V LVTTL       :         : 8         : N              
+GND*                         : W11       :        :                   :         : 8         :                
 GND+                         : W12       :        :                   :         : 7         :                
 GND                          : W13       : gnd    :                   :         :           :                
-dbg_addr[12]                 : W14       : output : 3.3-V LVTTL       :         : 7         : N              
-GND*                         : W15       :        :                   :         : 7         :                
-joypad1[7]                   : W16       : input  : 3.3-V LVTTL       :         : 7         : N              
+GND*                         : W14       :        :                   :         : 7         :                
+dbg_vram_a[11]               : W15       : output : 3.3-V LVTTL       :         : 7         : N              
+dbg_vram_ad[1]               : W16       : output : 3.3-V LVTTL       :         : 7         : N              
 VCCIO7                       : W17       : power  :                   : 3.3V    : 7         :                
 NC                           : W18       :        :                   :         :           :                
 GND                          : W19       : gnd    :                   :         :           :                
 ~LVDS91p/nCEO~               : W20       : output : 3.3-V LVTTL       :         : 6         : N              
 GND*                         : W21       :        :                   :         : 6         :                
-joypad2[5]                   : W22       : input  : 3.3-V LVTTL       :         : 6         : N              
+GND*                         : W22       :        :                   :         : 6         :                
 GND*                         : Y1        :        :                   :         : 1         :                
 GND*                         : Y2        :        :                   :         : 1         :                
-GND*                         : Y3        :        :                   :         : 1         :                
+joypad2[3]                   : Y3        : input  : 3.3-V LVTTL       :         : 1         : N              
 GND*                         : Y4        :        :                   :         : 1         :                
 GND*                         : Y5        :        :                   :         : 8         :                
-GND*                         : Y6        :        :                   :         : 8         :                
+g[0]                         : Y6        : output : 3.3-V LVTTL       :         : 8         : N              
 GND*                         : Y7        :        :                   :         : 8         :                
 GND                          : Y8        : gnd    :                   :         :           :                
-dbg_vram_ad[0]               : Y9        : output : 3.3-V LVTTL       :         : 8         : N              
+GND*                         : Y9        :        :                   :         : 8         :                
 GND*                         : Y10       :        :                   :         : 8         :                
 VCCIO8                       : Y11       : power  :                   : 3.3V    : 8         :                
 VCCIO7                       : Y12       : power  :                   : 3.3V    : 7         :                
-dbg_addr[13]                 : Y13       : output : 3.3-V LVTTL       :         : 7         : N              
+GND*                         : Y13       :        :                   :         : 7         :                
 GND*                         : Y14       :        :                   :         : 7         :                
 GND                          : Y15       : gnd    :                   :         :           :                
 GND*                         : Y16       :        :                   :         : 7         :                
 GND*                         : Y17       :        :                   :         : 7         :                
-GND*                         : Y18       :        :                   :         : 6         :                
+joypad2[1]                   : Y18       : input  : 3.3-V LVTTL       :         : 6         : N              
 GND*                         : Y19       :        :                   :         : 6         :                
 GND*                         : Y20       :        :                   :         : 6         :                
 GND*                         : Y21       :        :                   :         : 6         :                

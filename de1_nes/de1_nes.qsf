@@ -71,3 +71,4 @@ set_global_assignment -name EDA_TEST_BENCH_MODULE_NAME testbench_clock_divider -
 set_global_assignment -name EDA_TEST_BENCH_RUN_SIM_FOR "100 us" -section_id testbench_motones_sim
 set_global_assignment -name EDA_TEST_BENCH_FILE testbench_motones_sim.vhd -section_id testbench_motones_sim
 set_global_assignment -name EDA_TEST_BENCH_FILE testbench_clock_divider.vhd -section_id testbench_clock_divider
+set_location_assignment LCCOMB_X22_Y13_N8 -to "mos6502:cpu_inst|alu:alu_inst|alu_core:alu_inst|Equal8~65"

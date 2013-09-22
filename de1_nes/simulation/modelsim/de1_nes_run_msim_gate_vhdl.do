@@ -14,7 +14,7 @@ vsim -t 10ps +transport_int_delays +transport_path_delays -sdftyp /sim_board=de1
 #add wave *
 
 add wave sim:/testbench_motones_sim/sim_board/rst_n
-add wave sim:/testbench_motones_sim/sim_board/dbg_ppu_clk
+##add wave sim:/testbench_motones_sim/sim_board/dbg_ppu_clk
 add wave sim:/testbench_motones_sim/sim_board/dbg_cpu_clk
 
 add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_addr

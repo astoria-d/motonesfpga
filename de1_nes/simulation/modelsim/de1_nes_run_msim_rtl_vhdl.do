@@ -27,18 +27,14 @@ vsim -t 1ps -L lpm -L altera -L altera_mf -L sgate -L cycloneii -L rtl_work -L w
 
 ##add wave sim:/testbench_motones_sim/sim_board/ppu_clk
 
-add wave sim:/testbench_motones_sim/sim_board/rst_n
-add wave sim:/testbench_motones_sim/sim_board/r_nw
+add wave sim:/testbench_motones_sim/sim_board/rst_n;
+add wave sim:/testbench_motones_sim/sim_board/r_nw;
 add wave sim:/testbench_motones_sim/sim_board/cpu_clk
-
 add wave -radix hex sim:/testbench_motones_sim/sim_board/addr
 add wave -radix hex sim:/testbench_motones_sim/sim_board/d_io
-
 add wave -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/instruction
 add wave -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/int_d_bus
-
 add wave -divider regs
-
 add wave -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/acc/q
 add wave -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/sp/q
 add wave -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/status_register/status_val

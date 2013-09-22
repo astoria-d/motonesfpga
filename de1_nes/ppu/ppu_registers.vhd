@@ -113,6 +113,8 @@ begin
             d_in <= d;
         elsif (ce_n = '0') then
             d_in <= q_out + inc;
+        else
+            d_in <= (others => 'Z');
         end if;
     end process;
 
