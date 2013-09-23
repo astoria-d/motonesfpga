@@ -20,6 +20,7 @@ entity de1_nes is
 ---monitor inside cpu
     signal dbg_instruction  : out std_logic_vector(7 downto 0);
     signal dbg_int_d_bus  : out std_logic_vector(7 downto 0);
+    signal dbg_exec_cycle      : out std_logic_vector (5 downto 0);
 
 --NES instance
         base_clk 	: in std_logic;
@@ -43,6 +44,7 @@ architecture rtl of de1_nes is
         port (  
     signal dbg_instruction  : out std_logic_vector(7 downto 0);
     signal dbg_int_d_bus  : out std_logic_vector(7 downto 0);
+    signal dbg_exec_cycle      : out std_logic_vector (5 downto 0);
 
                 input_clk   : in std_logic; --phi0 input pin.
                 rdy         : in std_logic;
@@ -161,6 +163,7 @@ begin
         port map (
     dbg_instruction,
     dbg_int_d_bus,
+    dbg_exec_cycle,
                 cpu_clk, rdy, rst_n, irq_n, nmi_n, dbe, r_nw, 
                 phi1, phi2, addr, d_io);
 
@@ -183,7 +186,7 @@ begin
     dbg_ppu_clk <= ppu_clk;
     dbg_mem_clk <= mem_clk;
     dbg_addr <= addr;
---    dbg_d_io <= d_io;
+    dbg_d_io <= d_io;
 --    dbg_vram_ad  <= vram_ad ;
 --    dbg_vram_a   <= vram_a  ;
 

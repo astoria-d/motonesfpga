@@ -22,6 +22,7 @@ add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_d_io
 
 add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_instruction
 add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_int_d_bus
+add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_exec_cycle
 
 view structure
 view signals

@@ -66,15 +66,15 @@ architecture stimulus of testbench_motones_sim is
     constant base_clock_time : time := 40 ns;
 
 
-    signal dbg_cpu_clk  : out std_logic;
-    signal dbg_ppu_clk  : out std_logic;
-    signal dbg_mem_clk  : out std_logic;
-    signal dbg_addr : out std_logic_vector( 16 - 1 downto 0);
-    signal dbg_d_io : out std_logic_vector( 8 - 1 downto 0);
-    signal dbg_vram_ad  : out std_logic_vector (7 downto 0);
-    signal dbg_vram_a   : out std_logic_vector (13 downto 8);
-    signal dbg_instruction  : out std_logic_vector(7 downto 0);
-    signal dbg_int_d_bus  : out std_logic_vector(7 downto 0);
+    signal dbg_cpu_clk  : std_logic;
+    signal dbg_ppu_clk  : std_logic;
+    signal dbg_mem_clk  : std_logic;
+    signal dbg_addr : std_logic_vector( 16 - 1 downto 0);
+    signal dbg_d_io : std_logic_vector( 8 - 1 downto 0);
+    signal dbg_vram_ad  : std_logic_vector (7 downto 0);
+    signal dbg_vram_a   : std_logic_vector (13 downto 8);
+    signal dbg_instruction  : std_logic_vector(7 downto 0);
+    signal dbg_int_d_bus  : std_logic_vector(7 downto 0);
 
 begin
 

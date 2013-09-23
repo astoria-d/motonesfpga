@@ -45,6 +45,7 @@ architecture rtl of address_decoder is
     constant dsize : integer := 8;
     constant ram_2k : integer := 11;      --2k = 11 bit width.
     constant rom_32k : integer := 15;     --32k = 15 bit width.
+    constant rom_4k : integer := 12;     --4k = 12 bit width.
 
     constant CPU_DST : time := 100 ns;    --write data setup time.
 
@@ -55,12 +56,34 @@ architecture rtl of address_decoder is
     signal ram_oe_n : std_logic;
     signal ram_io : std_logic_vector (dsize - 1 downto 0);
     
+    
+    component single_port_rom
+    generic 
+    (
+        DATA_WIDTH : natural := 8;
+        ADDR_WIDTH : natural := 8
+    );
+    port 
+    (
+        clk		: in std_logic;
+        ce		: in std_logic;
+        addr            : in std_logic_vector (ADDR_WIDTH - 1 downto 0);
+        q		: out std_logic_vector((DATA_WIDTH -1) downto 0)
+    );
+end component;
+
 begin
 
     rom_ce_n <= '0' when (addr(15) = '1' and R_nW = '1') else
              '1' ;
-    romport : prg_rom generic map (rom_32k, dsize)
-            port map (mem_clk, rom_ce_n, addr(rom_32k - 1 downto 0), rom_out);
+
+--    romport : prg_rom generic map (rom_32k, dsize)
+--            port map (mem_clk, rom_ce_n, addr(rom_32k - 1 downto 0), rom_out);
+    --mask address 4k.
+    romport : prg_rom generic map (rom_4k, dsize)
+            port map (mem_clk, rom_ce_n, addr(rom_4k - 1 downto 0), rom_out);
+--    romport : single_port_rom generic map (dsize, rom_4k)
+--            port map (mem_clk, rom_ce_n, addr(rom_4k - 1 downto 0), rom_out);
 
     ram_io <= d_io 
         when (r_nw = '0' and ((addr(15) or addr(14) or addr(13)) = '0')) else

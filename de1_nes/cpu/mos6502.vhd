@@ -8,6 +8,7 @@ entity mos6502 is
     port (  
     signal dbg_instruction  : out std_logic_vector(7 downto 0);
     signal dbg_int_d_bus  : out std_logic_vector(7 downto 0);
+    signal dbg_exec_cycle      : out std_logic_vector (5 downto 0);
 
             input_clk   : in std_logic; --phi0 input pin.
             rdy         : in std_logic;
@@ -322,8 +323,10 @@ end component;
 
 begin
 
+    ----for debug monitoring....
     dbg_instruction <= instruction;
     dbg_int_d_bus <= int_d_bus;
+    dbg_exec_cycle <= exec_cycle;
 
 
     -- clock generate.
