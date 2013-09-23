@@ -188,16 +188,16 @@ begin
     irq_n <= '0';
     vga_clk <= vga_out_clk;
 
-    pcl_inst : counter_register generic map (14) port map
-        (cpu_clk, rst_n, '0', '1', (others => '0'), addr(13 downto 0));
+    pcl_inst : counter_register generic map (16) port map
+        (cpu_clk, rst_n, '0', '1', (others => '0'), addr(15 downto 0));
 
---    rom_inst : prg_rom generic map (15, 8) port map
---        ('0', '0', '1', addr(14 downto 0), d_io);
+--    rom_inst : prg_rom generic map (12, 8) port map
+--        ('0', '0', '1', addr(11 downto 0), d_io);
 
-    addr (15 downto 14) <= (others => '0');
+--    addr (15 downto 14) <= (others => '0');
 
-    rom_inst : single_port_rom generic map (8, 15) port map
-        (base_clk, '0', addr(14 downto 0), d_io);
+    rom_inst : single_port_rom generic map (8, 12) port map
+        (base_clk, '0', addr(11 downto 0), d_io);
 
     dbg_addr <= addr;
     dbg_d_io <= d_io;
