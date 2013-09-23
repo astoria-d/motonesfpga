@@ -11,6 +11,7 @@
 *.qdf
 *.jdi
 *.pin
+*.old
 db/*
 incremental_db/*
 no-need/*
