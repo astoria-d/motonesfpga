@@ -7,6 +7,7 @@ entity clock_divider is
             reset_n     : in std_logic;
             cpu_clk     : out std_logic;
             ppu_clk     : out std_logic;
+            mem_clk     : out std_logic;
             vga_clk     : out std_logic
         );
 end clock_divider;
@@ -53,7 +54,8 @@ begin
 	cpu_clk <= cpu_clk_new;
     ppu_clk <= not loop2(0);
 	vga_clk <= base_clk;
-
+    mem_clk <= base_clk;
+    
 	cpu_we_n <= '0' when loop6 = "001" else
                 '0' when loop6 = "100" else
 				'1';
