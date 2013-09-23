@@ -11,6 +11,13 @@ in_file=$in_name.nes
 out_file1=$in_name-prg.bin
 out_file2=$in_name-chr.bin
 
-dd if=$in_file of=$out_file1 bs=16 skip=1 count=2048
-dd if=$in_file of=$out_file2 bs=16 skip=2049
+echo in_file=$in_name.nes
+echo out_file1=$in_name-prg.bin
+echo out_file2=$in_name-chr.bin
 
+echo "processing...."
+
+dd if=$in_file of=$out_file1 bs=16 skip=1 count=2048 2> /dev/null
+dd if=$in_file of=$out_file2 bs=16 skip=2049 2> /dev/null
+
+echo "done."
