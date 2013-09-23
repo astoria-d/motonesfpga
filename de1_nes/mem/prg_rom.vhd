@@ -64,23 +64,25 @@ end init_rom;
 -- will create a memory initialization file (.mif) based on the 
 -- default value.
 
+--for GHDL environment
 --itinialize with the rom_fill function.
-signal p_rom : rom_array := rom_fill;
+--signal p_rom : rom_array := rom_fill;
 
---signal p_rom : rom_array := init_rom;
---attribute ram_init_file : string;
---attribute ram_init_file of p_rom : signal is "sample1-prg.hex";
+--for Quartus II environment
+signal p_rom : rom_array;
+attribute ram_init_file : string;
+attribute ram_init_file of p_rom : signal is "sample1-prg.hex";
 
 begin
 
     p : process (ce_n, addr)
     begin
     if(rising_edge(clk)) then
-    if (ce_n = '0') then
-        data <= p_rom(conv_integer(addr));
-    else
-        data <= (others => 'Z');
-    end if;
+        if (ce_n = '0') then
+            data <= p_rom(conv_integer(addr));
+        else
+            data <= (others => 'Z');
+        end if;
     end if;
     end process;
 end rtl;

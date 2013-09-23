@@ -42,21 +42,6 @@ architecture rtl of address_decoder is
         );
     end component;
 
-component single_port_rom
-    generic 
-    (
-        DATA_WIDTH : natural := 8;
-        ADDR_WIDTH : natural := 8
-    );
-    port 
-    (
-        clk		: in std_logic;
-        ce		: in std_logic;
-        addr            : in std_logic_vector (ADDR_WIDTH - 1 downto 0);
-        q		: out std_logic_vector((DATA_WIDTH -1) downto 0)
-    );
-end component;
-
     constant dsize : integer := 8;
     constant ram_2k : integer := 11;      --2k = 11 bit width.
     constant rom_32k : integer := 15;     --32k = 15 bit width.
@@ -74,9 +59,7 @@ begin
 
     rom_ce_n <= '0' when (addr(15) = '1' and R_nW = '1') else
              '1' ;
---    romport : prg_rom generic map (rom_32k, dsize)
---            port map (mem_clk, rom_ce_n, addr(rom_32k - 1 downto 0), rom_out);
-    prg_romp_inst : single_port_rom generic map (8, 15)
+    romport : prg_rom generic map (rom_32k, dsize)
             port map (mem_clk, rom_ce_n, addr(rom_32k - 1 downto 0), rom_out);
 
     ram_io <= d_io 

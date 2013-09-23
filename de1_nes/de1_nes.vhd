@@ -147,21 +147,6 @@ architecture rtl of de1_nes is
     signal vram_ad  : std_logic_vector (7 downto 0);
     signal vram_a   : std_logic_vector (13 downto 8);
 
-component single_port_rom
-    generic 
-    (
-        DATA_WIDTH : natural := 8;
-        ADDR_WIDTH : natural := 8
-    );
-    port 
-    (
-        clk		: in std_logic;
-        ce		: in std_logic;
-        addr            : in std_logic_vector (ADDR_WIDTH - 1 downto 0);
-        q		: out std_logic_vector((DATA_WIDTH -1) downto 0)
-    );
-end component;
-
 begin
 
     irq_n <= '0';
@@ -179,11 +164,8 @@ begin
                 cpu_clk, rdy, rst_n, irq_n, nmi_n, dbe, r_nw, 
                 phi1, phi2, addr, d_io);
 
---    addr_dec_inst : address_decoder generic map (addr_size, data_size) 
---        port map (phi2, mem_clk, r_nw, addr, d_io, ppu_ce_n, apu_ce_n);
-
-    rom_inst : single_port_rom generic map (8, 15) port map
-        (base_clk, '0', addr(14 downto 0), d_io);
+    addr_dec_inst : address_decoder generic map (addr_size, data_size) 
+        port map (phi2, mem_clk, r_nw, addr, d_io, ppu_ce_n, apu_ce_n);
 
 --    --nes ppu instance
 --    ppu_inst : ppu 

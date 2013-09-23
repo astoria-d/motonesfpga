@@ -9,6 +9,8 @@
 *.qws
 *.smsg
 *.qdf
+*.jdi
+*.pin
 db/*
 incremental_db/*
 no-need/*
