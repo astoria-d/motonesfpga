@@ -5,6 +5,7 @@ use ieee.std_logic_1164.all;
 entity address_decoder is
 generic (abus_size : integer := 16; dbus_size : integer := 8);
     port (  phi2        : in std_logic; --dropping edge syncronized clock.
+            mem_clk     : in std_logic;
             R_nW        : in std_logic; -- active high on read / active low on write.
             addr        : in std_logic_vector (abus_size - 1 downto 0);
             d_io        : inout std_logic_vector (dbus_size - 1 downto 0);
@@ -33,7 +34,9 @@ architecture rtl of address_decoder is
     end component;
     component prg_rom
         generic (abus_size : integer := 15; dbus_size : integer := 8);
-        port (  ce_n            : in std_logic;     --active low.
+        port (
+                clk             : in std_logic;
+                ce_n            : in std_logic;     --active low.
                 addr            : in std_logic_vector (abus_size - 1 downto 0);
                 data            : out std_logic_vector (dbus_size - 1 downto 0)
         );
@@ -42,6 +45,7 @@ architecture rtl of address_decoder is
     constant dsize : integer := 8;
     constant ram_2k : integer := 11;      --2k = 11 bit width.
     constant rom_32k : integer := 15;     --32k = 15 bit width.
+    constant rom_4k : integer := 12;     --4k = 12 bit width.
 
     constant CPU_DST : time := 100 ns;    --write data setup time.
 
@@ -52,20 +56,42 @@ architecture rtl of address_decoder is
     signal ram_oe_n : std_logic;
     signal ram_io : std_logic_vector (dsize - 1 downto 0);
     
+    
+    component single_port_rom
+    generic 
+    (
+        DATA_WIDTH : natural := 8;
+        ADDR_WIDTH : natural := 8
+    );
+    port 
+    (
+        clk		: in std_logic;
+        ce		: in std_logic;
+        addr            : in std_logic_vector (ADDR_WIDTH - 1 downto 0);
+        q		: out std_logic_vector((DATA_WIDTH -1) downto 0)
+    );
+end component;
+
 begin
 
     rom_ce_n <= '0' when (addr(15) = '1' and R_nW = '1') else
              '1' ;
-    romport : prg_rom generic map (rom_32k, dsize)
-            port map (rom_ce_n, addr(rom_32k - 1 downto 0), rom_out);
+
+--    romport : prg_rom generic map (rom_32k, dsize)
+--            port map (mem_clk, rom_ce_n, addr(rom_32k - 1 downto 0), rom_out);
+    --mask address 4k.
+    romport : prg_rom generic map (rom_4k, dsize)
+            port map (mem_clk, rom_ce_n, addr(rom_4k - 1 downto 0), rom_out);
+--    romport : single_port_rom generic map (dsize, rom_4k)
+--            port map (mem_clk, rom_ce_n, addr(rom_4k - 1 downto 0), rom_out);
 
     ram_io <= d_io 
         when (r_nw = '0' and ((addr(15) or addr(14) or addr(13)) = '0')) else
         "ZZZZZZZZ";
     ram_oe_n <= not R_nW;
-    ramport : ram generic map (ram_2k, dsize)
-            port map (ram_ce_n, ram_oe_n, R_nW, 
-                    addr(ram_2k - 1 downto 0), ram_io);
+--    ramport : ram generic map (ram_2k, dsize)
+--            port map (ram_ce_n, ram_oe_n, R_nW, 
+--                    addr(ram_2k - 1 downto 0), ram_io);
 
     --must explicitly drive to for inout port.
     d_io <= ram_io 
@@ -220,7 +246,7 @@ begin
                         nt1_ce_n <= '1';
                         if (wr_n = '0') then
                             --write
-                            nt0_ce_n <= not clk;
+                            nt0_ce_n <= clk;
                         elsif (rd_n = '0') then 
                             --read
                             nt0_ce_n <= '0';
@@ -232,7 +258,7 @@ begin
                         nt0_ce_n <= '1';
                         if (wr_n = '0') then
                             --write
-                            nt1_ce_n <= not clk;
+                            nt1_ce_n <= clk;
                         elsif (rd_n = '0') then 
                             --read
                             nt1_ce_n <= '0';
@@ -248,7 +274,7 @@ begin
                         nt1_ce_n <= '1';
                         if (wr_n = '0') then
                             --write
-                            nt0_ce_n <= not clk;
+                            nt0_ce_n <= clk;
                         elsif (rd_n = '0') then 
                             --read
                             nt0_ce_n <= '0';
@@ -260,7 +286,7 @@ begin
                         nt0_ce_n <= '1';
                         if (wr_n = '0') then
                             --write
-                            nt1_ce_n <= not clk;
+                            nt1_ce_n <= clk;
                         elsif (rd_n = '0') then 
                             --read
                             nt1_ce_n <= '0';

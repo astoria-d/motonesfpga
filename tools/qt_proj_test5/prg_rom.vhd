@@ -8,11 +8,9 @@ use work.motonesfpga_common.all;
 --asyncronous rom
 entity prg_rom is 
     generic (abus_size : integer := 15; dbus_size : integer := 8);
-    port (
-            clk             : in std_logic;
-            ce_n            : in std_logic;     --active low.
+    port (  ce_n, oe_n, we_n : in std_logic;   --select pin active low.
             addr            : in std_logic_vector (abus_size - 1 downto 0);
-            data            : out std_logic_vector (dbus_size - 1 downto 0)
+            data            : inout std_logic_vector (dbus_size - 1 downto 0)
         );
 end prg_rom;
 
@@ -64,32 +62,23 @@ end init_rom;
 -- will create a memory initialization file (.mif) based on the 
 -- default value.
 
---for GHDL environment
 --itinialize with the rom_fill function.
 --signal p_rom : rom_array := rom_fill;
 
---for Quartus II environment
-signal p_rom : rom_array;
+signal p_rom : rom_array := init_rom;
 attribute ram_init_file : string;
 attribute ram_init_file of p_rom : signal is "sample1-prg.hex";
 
 begin
-
-    p : process (ce_n, addr)
+    p_read : process (ce_n, oe_n, addr)
     begin
-    if(rising_edge(clk)) then
-        if (ce_n = '0') then
-            data <= p_rom(conv_integer(addr));
-        else
-            data <= (others => 'Z');
-        end if;
+    if (ce_n= '0' and we_n = '1' and oe_n = '0') then
+        data <=  p_rom(conv_integer(addr));
+    else
+        data <= (others => 'Z');
     end if;
     end process;
 end rtl;
-
-
-
-
 
 
 
@@ -145,4 +134,3 @@ use ieee.std_logic_unsigned.conv_integer;
     end process;
 
 end rtl;
-

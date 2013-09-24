@@ -5,7 +5,12 @@ entity mos6502 is
     generic (   dsize : integer := 8;
                 asize : integer :=16
             );
-    port (  input_clk   : in std_logic; --phi0 input pin.
+    port (  
+    signal dbg_instruction  : out std_logic_vector(7 downto 0);
+    signal dbg_int_d_bus  : out std_logic_vector(7 downto 0);
+    signal dbg_exec_cycle      : out std_logic_vector (5 downto 0);
+
+            input_clk   : in std_logic; --phi0 input pin.
             rdy         : in std_logic;
             rst_n       : in std_logic;
             irq_n       : in std_logic;
@@ -318,6 +323,11 @@ end component;
 
 begin
 
+    ----for debug monitoring....
+    dbg_instruction <= instruction;
+    dbg_int_d_bus <= int_d_bus;
+    dbg_exec_cycle <= exec_cycle;
+
 
     -- clock generate.
     phi1 <= input_clk;
@@ -519,27 +529,11 @@ begin
 ------------------------------------------------------------
 
     dbg_p : process (set_clk)
-use std.textio.all;
---use ieee.std_logic_textio.all;
+use work.motonesfpga_common.all;
 use ieee.std_logic_unsigned.conv_integer;
 
-procedure d_print(msg : string) is
-variable out_l : line;
-begin
---    write(out_l, msg);
---    writeline(output, out_l);
-end  procedure;
-
-function conv_hex8(ival : integer) return string is
-variable tmp1, tmp2 : integer;
-variable hex_chr: string (1 to 16) := "0123456789abcdef";
-begin
-    tmp2 := (ival mod 16 ** 2) / 16 ** 1;
-    tmp1 := ival mod 16 ** 1;
-    return hex_chr(tmp2 + 1) & hex_chr(tmp1 + 1);
-end;
     begin
-        if (set_clk = '0' and exec_cycle = "000000") then
+        if (set_clk = '0' and rdy = '1' and exec_cycle = "000000") then
             --show pc on the T0 (fetch) cycle.
             d_print("pc : " & conv_hex8(conv_integer(abh)) 
                     & conv_hex8(conv_integer(abl)));

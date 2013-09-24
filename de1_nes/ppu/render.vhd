@@ -2,6 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_arith.conv_std_logic_vector;
 use ieee.std_logic_unsigned.all;
+use work.motonesfpga_common.all;
 
 entity ppu_render is 
     port (  clk         : in std_logic;
@@ -94,42 +95,13 @@ component ram
     );
 end component;
 
-procedure d_print(msg : string) is
-use std.textio.all;
---use ieee.std_logic_textio.all;
-variable out_l : line;
-begin
---    write(out_l, msg);
---    writeline(output, out_l);
-end  procedure;
-
-function conv_hex8(ival : integer) return string is
-variable tmp1, tmp2 : integer;
-variable hex_chr: string (1 to 16) := "0123456789abcdef";
-begin
-    tmp2 := (ival mod 16 ** 2) / 16 ** 1;
-    tmp1 := ival mod 16 ** 1;
-    return hex_chr(tmp2 + 1) & hex_chr(tmp1 + 1);
-end;
-
-function conv_hex8(ival : std_logic_vector) return string is
-begin
-    return conv_hex8(conv_integer(ival));
-end;
-
-function conv_hex16(ival : integer) return string is
-variable tmp1, tmp2 : integer;
-variable hex_chr: string (1 to 16) := "0123456789abcdef";
-begin
-    tmp2 := ival / 256;
-    tmp1 := ival mod 256;
-    return conv_hex8(tmp2) & conv_hex8(tmp1);
-end;
-
-function conv_hex16(ival : std_logic_vector) return string is
-begin
-    return conv_hex16(conv_integer(ival));
-end;
+component palette_ram
+    generic (abus_size : integer := 16; dbus_size : integer := 8);
+    port (  ce_n, oe_n, we_n  : in std_logic;   --select pin active low.
+            addr              : in std_logic_vector (abus_size - 1 downto 0);
+            d_io              : inout std_logic_vector (dbus_size - 1 downto 0)
+    );
+end component;
 
 constant X_SIZE       : integer := 9;
 constant dsize        : integer := 8;
@@ -239,21 +211,25 @@ constant nes_color_palette : nes_color_array := (
 signal clk_n            : std_logic;
 
 --timing adjust
-signal io_cnt           : std_logic_vector(0 downto 0);
+signal bg_io_cnt        : std_logic_vector(0 downto 0);
+signal spr_io_cnt       : std_logic_vector(0 downto 0);
 
 --vram i/o
 signal io_oe_n          : std_logic;
-signal d_oe_n           : std_logic;
+signal ah_oe_n          : std_logic;
 
-signal cnt_x_en_n    : std_logic;
 signal cnt_x_res_n   : std_logic;
+signal bg_cnt_res_n  : std_logic;
 signal cnt_y_en_n    : std_logic;
 signal cnt_y_res_n   : std_logic;
 
+--current drawing position 340 x 261
 signal cur_x            : std_logic_vector(X_SIZE - 1 downto 0);
 signal cur_y            : std_logic_vector(X_SIZE - 1 downto 0);
-signal next_x           : std_logic_vector(X_SIZE - 1 downto 0);
-signal next_y           : std_logic_vector(X_SIZE - 1 downto 0);
+--bg prefetch position (scroll + 16 cycle ahead of current pos)
+--511 x 239 (or 255 x 479)
+signal prf_x            : std_logic_vector(X_SIZE - 1 downto 0);
+signal prf_y            : std_logic_vector(X_SIZE - 1 downto 0);
 
 signal nt_we_n          : std_logic;
 signal disp_nt          : std_logic_vector (dsize - 1 downto 0);
@@ -263,8 +239,6 @@ signal attr_we_n        : std_logic;
 signal attr_val         : std_logic_vector (dsize - 1 downto 0);
 signal disp_attr_we_n   : std_logic;
 signal disp_attr        : std_logic_vector (dsize - 1 downto 0);
-
-signal ptn_en_n         : std_logic;
 
 signal ptn_l_we_n       : std_logic;
 signal ptn_l_in         : std_logic_vector (dsize - 1 downto 0);
@@ -346,61 +320,72 @@ begin
 
     clk_n <= not clk;
 
-    cnt_x_en_n <= '0';
-
-    ale <= io_cnt(0) when ppu_mask(PPUSBG) = '1' and
+    ale <= bg_io_cnt(0) when ppu_mask(PPUSBG) = '1' and
                 (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
-                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
-           io_cnt(0) when ppu_mask(PPUSSP) = '1' and
+                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) and
+                (cur_x <= conv_std_logic_vector(HSCAN, X_SIZE) or
+                cur_x > conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE)) else
+           spr_io_cnt(0) when ppu_mask(PPUSSP) = '1' and
                 (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
-                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
+                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) and
+                (cur_x > conv_std_logic_vector(256, X_SIZE) and 
+                cur_x <= conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE)) else
            'Z';
-    rd_n <= io_cnt(0) when ppu_mask(PPUSBG) = '1' and
+
+    rd_n <= bg_io_cnt(0) when ppu_mask(PPUSBG) = '1' and
                 (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
-                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
-            io_cnt(0) when ppu_mask(PPUSSP) = '1' and
+                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) and
+                (cur_x <= conv_std_logic_vector(HSCAN, X_SIZE) or
+                cur_x > conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE)) else
+           spr_io_cnt(0) when ppu_mask(PPUSSP) = '1' and
+                (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) and
+                (cur_x > conv_std_logic_vector(256, X_SIZE) and 
+                cur_x <= conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE)) else
+            'Z';
+    wr_n <= '1' when (ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
                 (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                 cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
             'Z';
-    wr_n <= '1' when ppu_mask(PPUSBG) = '1' and
+    io_oe_n <= not bg_io_cnt(0) when ppu_mask(PPUSBG) = '1' and
                 (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
-                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
-            '1' when ppu_mask(PPUSSP) = '1' and
+                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) and
+                (cur_x <= conv_std_logic_vector(HSCAN, X_SIZE) or
+                cur_x > conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE)) else
+           not spr_io_cnt(0) when ppu_mask(PPUSSP) = '1' and
                 (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
-                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
-            'Z';
-    io_oe_n <= not io_cnt(0) when ppu_mask(PPUSBG) = '1' and
-                (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
-                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
-               not io_cnt(0) when ppu_mask(PPUSSP) = '1' and
-                (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
-                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
+                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) and
+                (cur_x > conv_std_logic_vector(256, X_SIZE) and 
+                cur_x <= conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE)) else
                '1';
-    d_oe_n <= '0' when ppu_mask(PPUSBG) = '1' and
-                (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
-                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
-              '0' when ppu_mask(PPUSSP) = '1' and
+    ah_oe_n <= '0' when (ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
                 (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                 cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
               '1';
-    v_bus_busy_n <= d_oe_n;
+    v_bus_busy_n <= ah_oe_n;
 
-    io_cnt_inst : counter_register generic map (1, 1)
-            port map (clk, cnt_x_res_n, '0', '1', (others => '0'), io_cnt);
+    bg_io_cnt_inst : counter_register generic map (1, 1)
+            port map (clk, bg_cnt_res_n, '0', '1', (others => '0'), bg_io_cnt);
+    spr_io_cnt_inst : counter_register generic map (1, 1)
+            port map (clk, cnt_x_res_n, '0', '1', (others => '0'), spr_io_cnt);
 
-    ---x pos is 8 cycle ahead of current pos.
-    next_x <= cur_x + "000010000" 
-                    when cur_x <  conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE) else
-              cur_x + "011000000";
-    next_y <= cur_y 
-                    when cur_x <=  conv_std_logic_vector(HSCAN, X_SIZE) else
-              "000000000" 
-                    when cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE) else
-              cur_y + "000000001";
+    ---bg prefetch x pos is 16 + scroll cycle ahead of current pos.
+    prf_x <= cur_x + ppu_scroll_x + "000010000" 
+                    when cur_x < conv_std_logic_vector(HSCAN, X_SIZE) else
+             cur_x + ppu_scroll_x + "010111011"; -- +16 -341
+
+    prf_y <= cur_y + ppu_scroll_y
+                    when cur_x < conv_std_logic_vector(HSCAN, X_SIZE) and
+                         cur_y + ppu_scroll_y <
+                            conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE) else
+             cur_y + ppu_scroll_y + "000000001" 
+                    when cur_y + ppu_scroll_y <
+                            conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE) else
+             "000000000"; 
 
     --current x,y pos
     cur_x_inst : counter_register generic map (X_SIZE, 1)
-            port map (clk_n, cnt_x_res_n, cnt_x_en_n, '1', (others => '0'), cur_x);
+            port map (clk_n, cnt_x_res_n, '0', '1', (others => '0'), cur_x);
     cur_y_inst : counter_register generic map (X_SIZE, 1)
             port map (clk_n, cnt_y_res_n, cnt_y_en_n, '1', (others => '0'), cur_y);
 
@@ -421,26 +406,22 @@ begin
                  vram_ad(4) & vram_ad(5) & vram_ad(6) & vram_ad(7)) & 
                 disp_ptn_h (dsize downto 1);
 
-    ptn_en_n <= '1' when cur_x = conv_std_logic_vector(0, X_SIZE) else
-                '0' when cur_x <= conv_std_logic_vector(HSCAN_NEXT_EXTRA, X_SIZE) else
-                '1';
-
     ptn_l_inst : d_flip_flop generic map(dsize)
             port map (clk_n, rst_n, '1', ptn_l_we_n, ptn_l_in, ptn_l_val);
 
     disp_ptn_l_in <= ptn_l_val & disp_ptn_l (dsize downto 1);
     disp_ptn_l_inst : shift_register generic map(dsize * 2, 1)
-            port map (clk_n, rst_n, ptn_en_n, ptn_h_we_n, disp_ptn_l_in, disp_ptn_l);
+            port map (clk_n, rst_n, '0', ptn_h_we_n, disp_ptn_l_in, disp_ptn_l);
 
     ptn_h_inst : shift_register generic map(dsize * 2, 1)
-            port map (clk_n, rst_n, ptn_en_n, ptn_h_we_n, ptn_h_in, disp_ptn_h);
+            port map (clk_n, rst_n, '0', ptn_h_we_n, ptn_h_in, disp_ptn_h);
 
     --vram i/o
     vram_io_buf : tri_state_buffer generic map (dsize)
             port map (io_oe_n, vram_addr(dsize - 1 downto 0), vram_ad);
 
     vram_a_buf : tri_state_buffer generic map (6)
-            port map (d_oe_n, vram_addr(asize - 1 downto dsize), vram_a);
+            port map (ah_oe_n, vram_addr(asize - 1 downto dsize), vram_a);
 
     pos_x <= cur_x;
     pos_y <= cur_y;
@@ -506,13 +487,17 @@ begin
                         (spr_ptn_h(7)(0) or spr_ptn_l(7)(0)) = '1' else
                 "0" & disp_attr(1 downto 0) & disp_ptn_h(0) & disp_ptn_l(0) 
                     when ppu_mask(PPUSBG) = '1' and cur_y(4) = '0' and
+                        ((disp_ptn_h(0) or disp_ptn_l(0)) = '1') and
                         (cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
                         (cur_y < conv_std_logic_vector(VSCAN, X_SIZE)) else
                 "0" & disp_attr(5 downto 4) & disp_ptn_h(0) & disp_ptn_l(0)
                     when ppu_mask(PPUSBG) = '1' and cur_y(4) = '1' and
+                        ((disp_ptn_h(0) or disp_ptn_l(0)) = '1') and
                         (cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
                         (cur_y < conv_std_logic_vector(VSCAN, X_SIZE)) else
-                (others => 'Z');
+                ---else: no output color >> universal bg color output.
+                --0x3f00 is the universal bg palette.
+                (others => '0');    
 
     plt_r_n <= not r_nw when plt_bus_ce_n = '0' else
                 '0' when ppu_mask(PPUSBG) = '1' else
@@ -523,7 +508,7 @@ begin
             port map (r_nw, oam_plt_data, plt_data);
     plt_d_buf_r : tri_state_buffer generic map (dsize)
             port map (r_n, plt_data, oam_plt_data);
-    palette_inst : ram generic map (5, dsize)
+    palette_inst : palette_ram generic map (5, dsize)
             port map (plt_ram_ce_n, plt_r_n, plt_w_n, plt_addr, plt_data);
 
     ---primary oam
@@ -641,20 +626,18 @@ begin
 --        d_print("output_rgb");
 --        d_print("pl_addr:" & conv_hex8(pl_addr));
 --        d_print("pl_index:" & conv_hex8(pl_index));
---        d_print("rgb:" &
---            conv_hex16(nes_color_palette(pl_index)));
     end if;
 
-    if (dot_output = true) then
-        pl_index := conv_integer(plt_data(5 downto 0));
-        b <= nes_color_palette(pl_index) (11 downto 8);
-        g <= nes_color_palette(pl_index) (7 downto 4);
-        r <= nes_color_palette(pl_index) (3 downto 0);
-    else
-        b <= (others => '0');
-        g <= (others => '0');
-        r <= (others => '0');
-    end if; --if (dot_output = false) then
+    --if or if not bg/sprite is shown, output color anyway 
+    --sinse universal bg color is included..
+    pl_index := conv_integer(plt_data(5 downto 0));
+    b <= nes_color_palette(pl_index) (11 downto 8);
+    g <= nes_color_palette(pl_index) (7 downto 4);
+    r <= nes_color_palette(pl_index) (3 downto 0);
+--    d_print("rgb:" &
+--        conv_hex8(nes_color_palette(pl_index) (11 downto 8)) &
+--        conv_hex8(nes_color_palette(pl_index) (7 downto 4)) &
+--        conv_hex8(nes_color_palette(pl_index) (3 downto 0)));
 end;
 
     begin
@@ -662,6 +645,7 @@ end;
             cnt_x_res_n <= '0';
             cnt_y_res_n <= '0';
             nt_we_n <= '1';
+            bg_cnt_res_n <= '0';
 
             ppu_status <= (others => '0');
 
@@ -669,23 +653,33 @@ end;
             g <= (others => '0');
             r <= (others => '0');
         else
-            if (clk'event) then
-                --x pos reset.
-                if (clk = '0' and 
-                        cur_x = conv_std_logic_vector(HSCAN_MAX - 1, X_SIZE)) then
-                    cnt_x_res_n <= '0';
-
-                    --y pos reset.
-                    if (cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) then
-                        cnt_y_res_n <= '0';
-                    else
-                        cnt_y_res_n <= '1';
-                    end if;
-                else
-                    cnt_x_res_n <= '1';
-                    cnt_y_res_n <= '1';
-                end if;
-            end if; --if (clk'event) then
+--            if (clk'event) then
+--                --x pos reset.
+--                if (clk = '0' and 
+--                        cur_x = conv_std_logic_vector(HSCAN_MAX - 1, X_SIZE)) then
+--                    cnt_x_res_n <= '0';
+--
+--                    --y pos reset.
+--                    if (cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) then
+--                        cnt_y_res_n <= '0';
+--                    else
+--                        cnt_y_res_n <= '1';
+--                    end if;
+--                else
+--                    cnt_x_res_n <= '1';
+--                    cnt_y_res_n <= '1';
+--                end if;
+--
+--                if (clk = '0' and 
+--                        ppu_scroll_x(0) = '0' and cur_x = conv_std_logic_vector(HSCAN, X_SIZE)) then
+--                    bg_cnt_res_n <= '0';
+--                elsif (clk = '0' and 
+--                        ppu_scroll_x(0) = '1' and cur_x = conv_std_logic_vector(HSCAN - 1, X_SIZE)) then
+--                    bg_cnt_res_n <= '0';
+--                else
+--                    bg_cnt_res_n <= '1';
+--                end if;
+--            end if; --if (clk'event) then
 
             if (clk'event and clk = '1') then
                 --y pos increment.
@@ -704,84 +698,87 @@ end;
 
                 --fetch bg pattern and display.
                 if (ppu_mask(PPUSBG) = '1' and 
+                        (cur_x <= conv_std_logic_vector(HSCAN, X_SIZE) or
+                        cur_x > conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE)) and
                         (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                         cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE))) then
+                    --visible area bg image
+
                     d_print("*");
                     d_print("cur_x: " & conv_hex16(conv_integer(cur_x)));
                     d_print("cur_y: " & conv_hex16(conv_integer(cur_y)));
 
                     ----fetch next tile byte.
-                    if (cur_x (2 downto 0) = "001" ) then
+                    if (prf_x (2 downto 0) = "001") then
                         --vram addr is incremented every 8 cycle.
                         --name table at 0x2000
                         vram_addr(9 downto 0) 
-                            <= next_y(dsize - 1 downto 3) 
-                                & next_x(dsize - 1 downto 3);
-                        vram_addr(asize - 1 downto 10) <= "10" & ppu_ctrl(PPUBNA downto 0);
+                            <= prf_y(dsize - 1 downto 3) 
+                                & prf_x(dsize - 1 downto 3);
+                        vram_addr(asize - 1 downto 10) <= "10" & ppu_ctrl(PPUBNA downto 0) 
+                                                        + ("000" & prf_x(dsize));
                     end if;
-                    if (cur_x (2 downto 0) = "010" ) then
+                    if (prf_x (2 downto 0) = "010") then
                         nt_we_n <= '0';
                     else
                         nt_we_n <= '1';
                     end if;
 
+                    --TODO must load 8 cycle each for the first two tiles!!!
                     ----fetch attr table byte.
-                    if (cur_x (4 downto 0) = "00011" ) then
+                    if (prf_x (4 downto 0) = "00011") then
                         --attribute table is loaded every 32 cycle.
                         --attr table at 0x23c0
                         vram_addr(dsize - 1 downto 0) <= "11000000" +
-                                ("00" & next_y(7 downto 5) & next_x(7 downto 5));
+                                ("00" & prf_y(7 downto 5) & prf_x(7 downto 5));
                         vram_addr(asize - 1 downto dsize) <= "10" &
-                                ppu_ctrl(PPUBNA downto 0) & "11";
-                    end if;--if (cur_x (2 downto 0) = "010" ) then
-                    if (cur_x (4 downto 0) = "00100" ) then
+                                ppu_ctrl(PPUBNA downto 0) & "11"
+                                    + ("000" & prf_x(dsize) & "00");
+                    end if;
+                    if (prf_x (4 downto 0) = "00100") then
                         attr_we_n <= '0';
                     else
                         attr_we_n <= '1';
                     end if;
-                    if (cur_x (4 downto 0) = "00000" ) then
+                    if (prf_x (4 downto 0) = "10000") then
                         disp_attr_we_n <= '0';
                     else
                         disp_attr_we_n <= '1';
                     end if;
                     ---attribute is shifted every 16 bit.
-                    if (cur_x (3 downto 0) = "0000" ) then
+                    if (prf_x (3 downto 0) = "0000") then
                         attr_ce_n <= '0';
                     else
                         attr_ce_n <= '1';
                     end if;
                     
-                    --visible area bg image
-                    if ((cur_x <= conv_std_logic_vector(HSCAN, X_SIZE)) or
-                        cur_x > conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE)) then
-
                         ----fetch pattern table low byte.
-                        if (cur_x (2 downto 0) = "101" ) then
+                        if (prf_x (2 downto 0) = "101") then
                             --vram addr is incremented every 8 cycle.
                             vram_addr <= "0" & ppu_ctrl(PPUBPA) & 
                                             disp_nt(dsize - 1 downto 0) 
-                                                & "0"  & next_y(2  downto 0);
-                        end if;--if (cur_x (2 downto 0) = "100" ) then
-                        if (cur_x (2 downto 0) = "110" ) then
+                                                & "0"  & prf_y(2  downto 0);
+                        end if;
+                        if (prf_x (2 downto 0) = "110") then
                             ptn_l_we_n <= '0';
                         else
                             ptn_l_we_n <= '1';
                         end if;
 
                         ----fetch pattern table high byte.
-                        if (cur_x (2 downto 0) = "111" ) then
+                        if (prf_x (2 downto 0) = "111") then
                             --vram addr is incremented every 8 cycle.
                             vram_addr <= "0" & ppu_ctrl(PPUBPA) & 
                                             disp_nt(dsize - 1 downto 0) 
-                                                & "0"  & next_y(2  downto 0) + "00000000001000";
-                        end if; --if (cur_x (2 downto 0) = "110" ) then
-                        if (cur_x (2 downto 0) = "000" and cur_x /= "000000000") then
+                                                & "0"  & prf_y(2 downto 0) + "00000000001000";
+                        end if;
+                        if (prf_x (2 downto 0) = "000") then
                             ptn_h_we_n <= '0';
                         else
                             ptn_h_we_n <= '1';
-                        end if;--if (cur_x (2 downto 0) = "001" ) then
-                    end if; --if (cur_x <= conv_std_logic_vector(HSCAN, X_SIZE)) and
-                end if;--if (ppu_mask(PPUSBG) = '1') then
+                        end if;
+
+                end if;--if (ppu_mask(PPUSBG) = '1') and
 
                 --fetch sprite and display.
                 if (ppu_mask(PPUSSP) = '1' and
@@ -878,12 +875,10 @@ end;
                         spr_attr_we_n <= "11111111";
                         spr_ptn_l_we_n <= "11111111";
                         spr_ptn_h_we_n <= "11111111";
-                        spr_x_ce_n <= "11111111";
-                        spr_ptn_ce_n <= "11111111";
 
                     --sprite pattern fetch
                     elsif (cur_x > conv_std_logic_vector(256, X_SIZE) and 
-                            cur_x <= conv_std_logic_vector(320, X_SIZE)) then
+                            cur_x <= conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE)) then
 
                         s_oam_addr_cpy_n <= '0';
                         s_oam_r_n <= '0';
@@ -925,12 +920,12 @@ end;
                             if (spr_attr(conv_integer(s_oam_addr_cpy(4 downto 2)))(SPRVFL) = '0') then
                                 vram_addr <= "0" & ppu_ctrl(PPUSPA) & 
                                             spr_tile_tmp(dsize - 1 downto 0) & "0" & 
-                                            (next_y(2 downto 0) - spr_y_tmp(2 downto 0));
+                                            (cur_y(2 downto 0) + "001" - spr_y_tmp(2 downto 0));
                             else
                                 --flip sprite vertically.
                                 vram_addr <= "0" & ppu_ctrl(PPUSPA) & 
                                             spr_tile_tmp(dsize - 1 downto 0) & "0" & 
-                                            (spr_y_tmp(2 downto 0) - next_y(2 downto 0) - "001");
+                                            (spr_y_tmp(2 downto 0) - cur_y(2 downto 0) - "010");
                             end if;
                         end if;
 
@@ -945,14 +940,14 @@ end;
                             if (spr_attr(conv_integer(s_oam_addr_cpy(4 downto 2)))(SPRVFL) = '0') then
                                 vram_addr <= "0" & ppu_ctrl(PPUSPA) & 
                                             spr_tile_tmp(dsize - 1 downto 0) & "0" & 
-                                            (next_y(2 downto 0) - spr_y_tmp(2 downto 0))
+                                            (cur_y(2 downto 0) + "001" - spr_y_tmp(2 downto 0))
                                                 + "00000000001000";
                             else
                                 --flip sprite vertically.
                                 vram_addr <= "0" & ppu_ctrl(PPUSPA) & 
                                             spr_tile_tmp(dsize - 1 downto 0) & "0"  & 
-                                            (spr_y_tmp(2 downto 0) - next_y(2 downto 0))
-                                                + "00000000000111";
+                                            (spr_y_tmp(2 downto 0) - cur_y(2 downto 0) - "010")
+                                                + "00000000001000";
                             end if;
                         end if;
 
@@ -983,21 +978,18 @@ end;
                                 spr_ptn_ce_n(i) <= '0';
                             end if;
                         end loop;
+                    else
+                        spr_x_ce_n <= "11111111";
+                        spr_ptn_ce_n <= "11111111";
                     end if; --if ((cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) 
                 end if; --if (ppu_mask(PPUSSP) = '1') then
 
-                if (ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') then
-                    --output visible area only.
-                    if ((cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
-                        (cur_y < conv_std_logic_vector(VSCAN, X_SIZE))) then
-                        --output image.
-                        output_rgb;
-                    end if;
-                else
-                    b <= (others => '1');
-                    g <= (others => '0');
-                    r <= (others => '1');
-                end if;--if (ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') then
+                --output visible area only.
+                if ((cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
+                    (cur_y < conv_std_logic_vector(VSCAN, X_SIZE))) then
+                    --output image.
+                    output_rgb;
+                end if;
 
                 --flag operation
                 if ((cur_x = conv_std_logic_vector(1, X_SIZE)) and
@@ -1014,10 +1006,10 @@ end;
                 end if;
             end if; --if (clk'event and clk = '1') then
 
-            if (read_status'event and read_status = '1') then
-                --reading ppu status clears vblank bit.
-                ppu_status(ST_VBL) <= '0';
-            end if;
+--            if (read_status'event and read_status = '1') then
+--                --reading ppu status clears vblank bit.
+--                ppu_status(ST_VBL) <= '0';
+--            end if;
 
         end if;--if (rst_n = '0') then
     end process;

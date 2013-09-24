@@ -2,6 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_arith.conv_std_logic_vector;
 use ieee.std_logic_unsigned.conv_integer;
+use work.motonesfpga_common.all;
 
 entity decoder is 
     generic (dsize : integer := 8);
@@ -73,25 +74,6 @@ component d_flip_flop_bit
         );
 end component;
 
-procedure d_print(msg : string) is
-use std.textio.all;
---use ieee.std_logic_textio.all;
-variable out_l : line;
-begin
---    write(out_l, msg);
---    writeline(output, out_l);
-end  procedure;
-
----ival : 0x0000 - 0xffff
-function conv_hex8(ival : integer) return string is
-variable tmp1, tmp2 : integer;
-variable hex_chr: string (1 to 16) := "0123456789abcdef";
-begin
-    tmp2 := (ival mod 16 ** 2) / 16 ** 1;
-    tmp1 := ival mod 16 ** 1;
-    return hex_chr(tmp2 + 1) & hex_chr(tmp1 + 1);
-end;
-
 --cycle bit format 
 -- bit 5    : pcl increment carry flag
 -- bit 4,3  : cycle type: 00 normal, 01 reset , 10 nmi, 11 irq 
@@ -150,6 +132,9 @@ constant st_C : integer := 0;
 ---for pch_inc_n.
 signal pch_inc_input : std_logic;
 
+---for nmi handling
+signal nmi_handled_n : std_logic;
+
 -- page boundary handling
 signal a2_abs_xy_next_cycle     : std_logic_vector (5 downto 0);
 signal a2_indir_y_next_cycle    : std_logic_vector (5 downto 0);
@@ -174,10 +159,6 @@ begin
 
     main_p : process (set_clk, res_n, nmi_n, 
                      a2_abs_xy_next_cycle, a2_indir_y_next_cycle, a58_branch_next_cycle)
-
----for nmi handling
-variable nmi_handled_n : std_logic;
-
 
 -------------------------------------------------------------
 -------------------------------------------------------------
@@ -236,6 +217,15 @@ end  procedure;
 
 procedure disable_pins is
 begin
+--following pins are not set in this function.
+--            inst_we_n       : out std_logic;
+--            ad_oe_n         : out std_logic;
+--            dl_al_oe_n      : out std_logic;
+--            pcl_inc_n       : out std_logic;
+--            pcl_cmd         : out std_logic_vector(3 downto 0);
+--            pch_cmd         : out std_logic_vector(3 downto 0);
+--            r_nw            : out std_logic
+
     --disable the last opration pins.
     dbuf_int_oe_n <= '1';
     dl_al_we_n <= '1';
@@ -974,7 +964,6 @@ end  procedure;
 ---------------- main state machine start.... ---------------
 -------------------------------------------------------------
 -------------------------------------------------------------
-
     begin
 
 --        if (res_n = '0') then
@@ -986,10 +975,10 @@ end  procedure;
 --            pcl_cmd <= "1111";
 --            pch_cmd <= "1111";
 --        end if;
---
+
 --        if (nmi_n'event and nmi_n = '1') then
 --            --reset nmi handle status
---            nmi_handled_n := '1';
+--            nmi_handled_n <= '1';
 --        end if;
 
 
@@ -1023,16 +1012,25 @@ end  procedure;
 --            end if;
 --        end if;
 
-        --if (set_clk'event and set_clk = '1' and res_n = '1') then
         if (res_n = '0') then
             --pc l/h is reset vector.
             pcl_cmd <= "1110";
             pch_cmd <= "1110";
             next_cycle <= R0;
-		elsif (rising_edge(set_clk)) then
+        elsif (set_clk'event and set_clk = '1' and res_n = '1') then
             d_print(string'("-"));
 
-            if exec_cycle = T0 then
+            if rdy = '0' then
+                --case dma is runnting.
+                disable_pins;
+                inst_we_n <= '1';
+                ad_oe_n <= '0';
+                dl_al_oe_n <= '1';
+                pcl_inc_n <= '1';
+                pcl_cmd <= "1111";
+                pch_cmd <= "1111";
+                r_nw <= 'Z';
+            elsif exec_cycle = T0 then
                 --cycle #1
                 t0_cycle;
 
@@ -2629,7 +2627,7 @@ end  procedure;
                 r_vec_oe_n <= '1';
                 n_vec_oe_n <= '1';
                 i_vec_oe_n <= '1';
-                nmi_handled_n := '1';
+                nmi_handled_n <= '1';
                 r_nw <= '1';
 
                 next_cycle <= R1;
@@ -2719,7 +2717,7 @@ end  procedure;
                 indir_n <= '0';
 
                 if exec_cycle = N5 then
-                    nmi_handled_n := '0';
+                    nmi_handled_n <= '0';
                 end if;
                 --start execute cycle.
                 next_cycle <= T0;
@@ -2749,14 +2747,15 @@ end  procedure;
                     --disable previous we_n gate.
                     --t1 cycle is fetch low oprand.
                     dl_al_we_n <= '1';
+                    dl_ah_we_n <= '1';
                 elsif ('0' & exec_cycle(4 downto 0) = T3) then
                     --t2 cycle is fetch high oprand.
                     dl_ah_we_n <= '1';
                 end if;
 
-            end if; --if exec_cycle = T0 then
+            end if; --if rdy = '0' then
 
-        end if; --if (set_clk'event and set_clk = '1') 
+        end if; --if (set_clk'event and set_clk = '1' and res_n = '1') then
 
     end process;
 

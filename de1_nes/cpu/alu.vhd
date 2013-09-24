@@ -5,6 +5,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use ieee.std_logic_arith.conv_std_logic_vector;
+use work.motonesfpga_common.all;
 
 entity alu is 
     generic (   dsize : integer := 8
@@ -245,15 +246,6 @@ begin
     else
         int_d_bus <= arith_reg_out;
     end if;
-end  procedure;
-
-procedure d_print(msg : string) is
-use std.textio.all;
---use ieee.std_logic_textio.all;
---variable out_l : line;
-begin
---    write(out_l, msg);
---    writeline(output, out_l);
 end  procedure;
 
 procedure set_nz is
@@ -632,19 +624,19 @@ end procedure;
             d1 <= arith_reg_out;
             int_d_bus <= d_out;
 
---            if (clk = '0') then
---                --d_print("clk hi");
---                if (m2m_stat_1 = '0') then
---                    --first cycle. keep input variable.
---                    --d_print("inc first.");
---                    m2m_stat_1 <= '1';
---                    arith_buf_we_n <= '0';
---                    arith_buf_oe_n <= '1';
---                    d_oe_n <= '1';
---
---                end if;
---            end if;
---
+            if (clk = '0') then
+                --d_print("clk hi");
+                if (m2m_stat_1 = '0') then
+                    --first cycle. keep input variable.
+                    --d_print("inc first.");
+                    m2m_stat_1 <= '1';
+                    arith_buf_we_n <= '0';
+                    arith_buf_oe_n <= '1';
+                    d_oe_n <= '1';
+
+                end if;
+            end if;
+
 --            if (clk'event and clk = '0') then
 --                if (m2m_stat_2 = '0') then
 --                    --second cycle read from register, output modified data.
@@ -838,15 +830,6 @@ entity alu_core is
 end alu_core;
 
 architecture rtl of alu_core is
-
-procedure d_print(msg : string) is
-use std.textio.all;
---use ieee.std_logic_textio.all;
-variable out_l : line;
-begin
---    write(out_l, msg);
---    writeline(output, out_l);
-end  procedure;
 
 constant ALU_AND    : std_logic_vector (3 downto 0) := "0000";
 constant ALU_EOR    : std_logic_vector (3 downto 0) := "0001";
