@@ -25,6 +25,8 @@ simulation/modelsim/*.sdo*
 simulation/modelsim/*.sft
 simulation/modelsim/vsim.wlf
 simulation/modelsim/work/*
+simulation/modelsim/transcript
+simulation/modelsim/motones_modelsim.cr.mti
 undo_redo.txt
 *.work
 *.nes

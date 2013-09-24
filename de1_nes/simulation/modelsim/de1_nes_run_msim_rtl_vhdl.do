@@ -47,3 +47,5 @@ add wave -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/y/q
 view structure
 view signals
 run 100 us
+wave zoom full
+
