@@ -3,6 +3,7 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.conv_integer;
 use ieee.std_logic_arith.conv_std_logic_vector;
 use std.textio.all;
+use work.motonesfpga_common.all;
 
 --asyncronous rom
 entity chr_rom is 
@@ -26,7 +27,6 @@ function rom_fill return rom_array is
     FILE nes_file : binary_file OPEN read_mode IS "rom-file.nes" ;
     variable read_data : character;
     variable i : integer;
-    variable out_line : line;
     variable ret : rom_array;
     begin
         --skip first 16 bit data(NES cardridge header part.)
@@ -43,8 +43,7 @@ function rom_fill return rom_array is
             ret(i) :=
                 conv_std_logic_vector(character'pos(read_data), 8);
         end loop;
-        write(out_line, string'("chr rom file load success."));
-        writeline(output, out_line);
+        d_print("chr rom file load success.");
         return ret;
     end rom_fill;
 
@@ -54,7 +53,6 @@ function vmirror return std_logic is
     variable read_data : character;
     variable i : integer;
     variable ret : std_logic_vector(7 downto 0);
-    variable out_line : line;
     begin
         --read NES cardridge header part
         for i in 0 to 15 loop
@@ -64,8 +62,7 @@ function vmirror return std_logic is
                     conv_std_logic_vector(character'pos(read_data), 8);
             end if;
         end loop;
-        write(out_line, string'("nes header read ok."));
-        writeline(output, out_line);
+        d_print("nes header read ok.");
         return ret(0);
     end vmirror;
 
