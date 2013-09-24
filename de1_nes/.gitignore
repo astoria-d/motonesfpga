@@ -12,6 +12,7 @@
 *.jdi
 *.pin
 *.old
+*.log
 db/*
 incremental_db/*
 no-need/*

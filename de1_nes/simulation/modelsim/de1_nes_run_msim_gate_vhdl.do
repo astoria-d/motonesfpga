@@ -15,21 +15,30 @@ vsim -t 10ps +transport_int_delays +transport_path_delays -sdftyp /sim_board=de1
 
 add wave sim:/testbench_motones_sim/sim_board/rst_n
 ##add wave sim:/testbench_motones_sim/sim_board/dbg_ppu_clk
-add wave sim:/testbench_motones_sim/sim_board/dbg_cpu_clk
+##add wave  sim:/testbench_motones_sim/sim_board/dbg_mem_clk
 
-add wave  sim:/testbench_motones_sim/sim_board/dbg_mem_clk
+add wave sim:/testbench_motones_sim/sim_board/dbg_r_nw
+
+add wave sim:/testbench_motones_sim/sim_board/dbg_cpu_clk
 
 add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_addr
 add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_d_io
 
 add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_instruction
 add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_int_d_bus
+
 add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_exec_cycle
+
+add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_index_bus;
+add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_acc_bus;
+add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_status;
+
+
 
 view structure
 view signals
 #run -all
-run 10 us
+run 35 us
 
 #wave zoom range 3339700 ps 5138320 ps
 wave zoom full

@@ -13,14 +13,18 @@ entity de1_nes is
     signal dbg_cpu_clk  : out std_logic;
     signal dbg_ppu_clk  : out std_logic;
     signal dbg_mem_clk  : out std_logic;
-    signal dbg_addr : out std_logic_vector( 16 - 1 downto 0);
-    signal dbg_d_io : out std_logic_vector( 8 - 1 downto 0);
+    signal dbg_r_nw     : out std_logic;
+    signal dbg_addr     : out std_logic_vector( 16 - 1 downto 0);
+    signal dbg_d_io     : out std_logic_vector( 8 - 1 downto 0);
     signal dbg_vram_ad  : out std_logic_vector (7 downto 0);
     signal dbg_vram_a   : out std_logic_vector (13 downto 8);
 ---monitor inside cpu
     signal dbg_instruction  : out std_logic_vector(7 downto 0);
-    signal dbg_int_d_bus  : out std_logic_vector(7 downto 0);
-    signal dbg_exec_cycle      : out std_logic_vector (5 downto 0);
+    signal dbg_int_d_bus    : out std_logic_vector(7 downto 0);
+    signal dbg_exec_cycle   : out std_logic_vector (5 downto 0);
+    signal dbg_index_bus    : out std_logic_vector(7 downto 0);
+    signal dbg_acc_bus      : out std_logic_vector(7 downto 0);
+    signal dbg_status       : out std_logic_vector(7 downto 0);
 
 --NES instance
         base_clk 	: in std_logic;
@@ -45,6 +49,9 @@ architecture rtl of de1_nes is
     signal dbg_instruction  : out std_logic_vector(7 downto 0);
     signal dbg_int_d_bus  : out std_logic_vector(7 downto 0);
     signal dbg_exec_cycle      : out std_logic_vector (5 downto 0);
+    signal dbg_index_bus    : out std_logic_vector(7 downto 0);
+    signal dbg_acc_bus      : out std_logic_vector(7 downto 0);
+    signal dbg_status       : out std_logic_vector(7 downto 0);
 
                 input_clk   : in std_logic; --phi0 input pin.
                 rdy         : in std_logic;
@@ -191,6 +198,9 @@ begin
     dbg_instruction,
     dbg_int_d_bus,
     dbg_exec_cycle,
+    dbg_index_bus,
+    dbg_acc_bus,
+    dbg_status,
                 cpu_clk, '1', --rdy, -----for testing...
                 rst_n, irq_n, nmi_n, dbe, r_nw, 
                 phi1, phi2, addr, d_io);
@@ -223,6 +233,7 @@ begin
     dbg_cpu_clk <= cpu_clk;
     dbg_ppu_clk <= ppu_clk;
     dbg_mem_clk <= mem_clk;
+    dbg_r_nw <= r_nw;
     dbg_addr <= addr;
     dbg_d_io <= d_io;
 --    dbg_vram_ad  <= vram_ad ;
