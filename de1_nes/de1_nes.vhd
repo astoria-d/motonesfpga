@@ -152,6 +152,7 @@ architecture rtl of de1_nes is
 
     constant ram_2k : integer := 11;      --2k = 11 bit width.
     constant rom_32k : integer := 15;     --32k = 15 bit width.
+    constant rom_4k : integer := 12;     --4k = 12 bit width. (for test use)
     
 
     signal cpu_clk  : std_logic;
@@ -190,15 +191,18 @@ begin
     dbg_instruction,
     dbg_int_d_bus,
     dbg_exec_cycle,
-                cpu_clk, rdy, rst_n, irq_n, nmi_n, dbe, r_nw, 
+                cpu_clk, '1', --rdy, -----for testing...
+                rst_n, irq_n, nmi_n, dbe, r_nw, 
                 phi1, phi2, addr, d_io);
 
     addr_dec_inst : address_decoder generic map (addr_size, data_size) 
         port map (phi2, mem_clk, r_nw, addr, d_io, rom_ce_n, ram_ce_n, ppu_ce_n, apu_ce_n);
 
     --main ROM/RAM instance
-    prg_rom_inst : prg_rom generic map (rom_32k, data_size)
-            port map (mem_clk, rom_ce_n, addr(rom_32k - 1 downto 0), d_io);
+--    prg_rom_inst : prg_rom generic map (rom_32k, data_size)
+--            port map (mem_clk, rom_ce_n, addr(rom_32k - 1 downto 0), d_io);
+    prg_rom_inst : prg_rom generic map (rom_4k, data_size)
+            port map (mem_clk, rom_ce_n, addr(rom_4k - 1 downto 0), d_io);
 
     ram_oe_n <= not R_nW;
 --    prg_ram_inst : ram generic map (ram_2k, data_size)

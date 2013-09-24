@@ -1017,7 +1017,7 @@ end  procedure;
             pcl_cmd <= "1110";
             pch_cmd <= "1110";
             next_cycle <= R0;
-        elsif (set_clk'event and set_clk = '1' and res_n = '1') then
+        elsif (rising_edge(set_clk)) then
             d_print(string'("-"));
 
             if rdy = '0' then

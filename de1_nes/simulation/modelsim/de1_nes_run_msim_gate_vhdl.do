@@ -17,6 +17,7 @@ add wave sim:/testbench_motones_sim/sim_board/rst_n
 ##add wave sim:/testbench_motones_sim/sim_board/dbg_ppu_clk
 add wave sim:/testbench_motones_sim/sim_board/dbg_cpu_clk
 
+
 add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_addr
 add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_d_io
 
