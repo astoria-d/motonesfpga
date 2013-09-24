@@ -46,6 +46,7 @@ architecture rtl of motones_sim is
                 reset_n     : in std_logic;
                 cpu_clk     : out std_logic;
                 ppu_clk     : out std_logic;
+                mem_clk     : out std_logic;
                 vga_clk     : out std_logic
             );
     end component;
@@ -53,6 +54,7 @@ architecture rtl of motones_sim is
     component address_decoder
     generic (abus_size : integer := 16; dbus_size : integer := 8);
         port (  phi2        : in std_logic;
+                mem_clk     : in std_logic;
                 R_nW        : in std_logic; 
                 addr       : in std_logic_vector (abus_size - 1 downto 0);
                 d_io       : inout std_logic_vector (dbus_size - 1 downto 0);
@@ -111,6 +113,7 @@ architecture rtl of motones_sim is
 
     signal cpu_clk  : std_logic;
     signal ppu_clk  : std_logic;
+    signal mem_clk  : std_logic;
     signal vga_out_clk   : std_logic;
 
     signal rdy, irq_n, nmi_n, dbe, r_nw : std_logic;
@@ -136,7 +139,7 @@ begin
 
     --ppu/cpu clock generator
     clock_inst : clock_divider port map 
-        (base_clk, rst_n, cpu_clk, ppu_clk, vga_out_clk);
+        (base_clk, rst_n, cpu_clk, ppu_clk, mem_clk, vga_out_clk);
 
     --mos 6502 cpu instance
     cpu_inst : mos6502 generic map (data_size, addr_size) 
@@ -144,7 +147,7 @@ begin
                 phi1, phi2, addr, d_io);
 
     addr_dec_inst : address_decoder generic map (addr_size, data_size) 
-        port map (phi2, r_nw, addr, d_io, ppu_ce_n, apu_ce_n);
+        port map (phi2, mem_clk, r_nw, addr, d_io, ppu_ce_n, apu_ce_n);
 
     --nes ppu instance
     ppu_inst : ppu 

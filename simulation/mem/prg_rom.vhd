@@ -3,11 +3,14 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.conv_integer;
 use ieee.std_logic_arith.conv_std_logic_vector;
 use std.textio.all;
+use work.motonesfpga_common.all;
 
---asyncronous rom
+--syncronous rom
 entity prg_rom is 
     generic (abus_size : integer := 15; dbus_size : integer := 8);
-    port (  ce_n            : in std_logic;     --active low.
+    port (
+            clk             : in std_logic;
+            ce_n            : in std_logic;     --active low.
             addr            : in std_logic_vector (abus_size - 1 downto 0);
             data            : out std_logic_vector (dbus_size - 1 downto 0)
         );
@@ -29,7 +32,6 @@ function rom_fill return rom_array is
     FILE nes_file : binary_file OPEN read_mode IS "rom-file.nes" ;
     variable read_data : character;
     variable i : integer;
-    variable out_line : line;
     variable ret : rom_array;
     begin
         --skip first 16 bit data(NES cardridge header part.)
@@ -42,22 +44,45 @@ function rom_fill return rom_array is
             ret(i) :=
                 conv_std_logic_vector(character'pos(read_data), 8);
         end loop;
-        write(out_line, string'("file load success."));
-        writeline(output, out_line);
+        d_print("file load success.");
         return ret;
     end rom_fill;
 
+function init_rom
+    return rom_array is 
+    variable tmp : rom_array := (others => (others => '0'));
+    use ieee.numeric_std.to_unsigned;
+begin 
+    for addr_pos in 0 to 2**abus_size - 1 loop 
+        -- Initialize each address with the address itself
+        tmp(addr_pos) := std_logic_vector(to_unsigned(addr_pos, dbus_size));
+    end loop;
+    return tmp;
+end init_rom;
+
+-- Declare the ROM signal and specify a default value.	Quartus II
+-- will create a memory initialization file (.mif) based on the 
+-- default value.
+
+--for GHDL environment
 --itinialize with the rom_fill function.
-constant p_rom : rom_array := rom_fill;
+signal p_rom : rom_array := rom_fill;
+
+----for Quartus II environment
+--signal p_rom : rom_array;
+--attribute ram_init_file : string;
+--attribute ram_init_file of p_rom : signal is "sample1-prg.hex";
 
 begin
 
-    p : process (ce_n, addr)
+    p : process (clk)
     begin
-    if (ce_n = '0') then
-        data <= p_rom(conv_integer(addr));
-    else
-        data <= (others => 'Z');
+    if(rising_edge(clk)) then
+        if (ce_n = '0') then
+            data <= p_rom(conv_integer(addr));
+        else
+            data <= (others => 'Z');
+        end if;
     end if;
     end process;
 end rtl;

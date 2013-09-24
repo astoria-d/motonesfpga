@@ -5,6 +5,7 @@ use ieee.std_logic_1164.all;
 entity address_decoder is
 generic (abus_size : integer := 16; dbus_size : integer := 8);
     port (  phi2        : in std_logic; --dropping edge syncronized clock.
+            mem_clk     : in std_logic;
             R_nW        : in std_logic; -- active high on read / active low on write.
             addr        : in std_logic_vector (abus_size - 1 downto 0);
             d_io        : inout std_logic_vector (dbus_size - 1 downto 0);
@@ -33,7 +34,9 @@ architecture rtl of address_decoder is
     end component;
     component prg_rom
         generic (abus_size : integer := 15; dbus_size : integer := 8);
-        port (  ce_n            : in std_logic;     --active low.
+        port (
+                clk             : in std_logic;
+                ce_n            : in std_logic;     --active low.
                 addr            : in std_logic_vector (abus_size - 1 downto 0);
                 data            : out std_logic_vector (dbus_size - 1 downto 0)
         );
@@ -57,7 +60,7 @@ begin
     rom_ce_n <= '0' when (addr(15) = '1' and R_nW = '1') else
              '1' ;
     romport : prg_rom generic map (rom_32k, dsize)
-            port map (rom_ce_n, addr(rom_32k - 1 downto 0), rom_out);
+            port map (mem_clk, rom_ce_n, addr(rom_32k - 1 downto 0), rom_out);
 
     ram_io <= d_io 
         when (r_nw = '0' and ((addr(15) or addr(14) or addr(13)) = '0')) else
