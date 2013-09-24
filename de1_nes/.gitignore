@@ -24,6 +24,7 @@ simulation/modelsim/*.xrf
 simulation/modelsim/*.sdo*
 simulation/modelsim/*.sft
 simulation/modelsim/vsim.wlf
+simulation/modelsim/work/*
 undo_redo.txt
 *.work
 *.nes
