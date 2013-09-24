@@ -49,8 +49,9 @@ architecture stimulus of testbench_motones_sim is
 
     ---clock frequency = 21,477,270 (21 MHz)
     --constant base_clock_time : time := 46 ns;
-    --base clock frequency shares vga clock.
-    constant base_clock_time : time := 40 ns;
+
+    --DE1 base clock = 50 MHz
+    constant base_clock_time : time := 20 ns;
 
 begin
 

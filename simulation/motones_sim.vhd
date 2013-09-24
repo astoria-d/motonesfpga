@@ -176,6 +176,7 @@ begin
     addr_dec_inst : address_decoder generic map (addr_size, data_size) 
         port map (phi2, mem_clk, r_nw, addr, d_io, rom_ce_n, ram_ce_n, ppu_ce_n, apu_ce_n);
 
+    --main ROM/RAM instance
     prg_rom_inst : prg_rom generic map (rom_32k, data_size)
             port map (mem_clk, rom_ce_n, addr(rom_32k - 1 downto 0), d_io);
 

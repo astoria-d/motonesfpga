@@ -11,18 +11,20 @@ architecture stimulus of testbench_clock_divider is
                 reset_n     : in std_logic;
                 cpu_clk     : out std_logic;
                 ppu_clk     : out std_logic;
+                mem_clk     : out std_logic;
                 vga_clk     : out std_logic
             );
     end component;
 
     ---clock frequency = 21,477,270 (21 MHz)
-    constant base_clock_time : time := 46 ns;
+    ---DE1 clock frequency = 50 MHz
+    constant base_clock_time : time := 20 ns;
     constant reset_time : time := 100 ns;
 
-    signal bbase, rreset_n, ccpu, pppu, vvga : std_logic;
+    signal bbase, rreset_n, ccpu, pppu, mmem, vvga : std_logic;
 
 begin
-    dut: clock_divider port map (bbase, rreset_n, ccpu, pppu, vvga);
+    dut: clock_divider port map (bbase, rreset_n, ccpu, pppu, mmem, vvga);
 
     clock_p: process
     begin
