@@ -42,6 +42,9 @@ add wave -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/x/q
 add wave -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/y/q
 
 
+add wave -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/status_reg
+
+
 ###add wave sim:/testbench_motones_sim/sim_board/cpu_inst/*
 
 view structure
