@@ -156,9 +156,6 @@ architecture rtl of motones_sim is
     signal vram_ad  : std_logic_vector (7 downto 0);
     signal vram_a   : std_logic_vector (13 downto 8);
 
-    --test...
-    signal nmi_n2 : std_logic;
-
 begin
 
     irq_n <= '0';

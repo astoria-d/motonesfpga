@@ -5,7 +5,7 @@ use ieee.std_logic_arith.conv_std_logic_vector;
 use std.textio.all;
 use work.motonesfpga_common.all;
 
---asyncronous rom
+--syncronous rom
 entity prg_rom is 
     generic (abus_size : integer := 15; dbus_size : integer := 8);
     port (
@@ -75,7 +75,7 @@ attribute ram_init_file of p_rom : signal is "sample1-prg.hex";
 
 begin
 
-    p : process (ce_n, addr)
+    p : process (clk)
     begin
     if(rising_edge(clk)) then
         if (ce_n = '0') then
@@ -85,64 +85,5 @@ begin
         end if;
     end if;
     end process;
-end rtl;
-
-
-
-
-
-
-
--- Quartus II VHDL Template
--- Single-Port ROM
-
-library ieee;
-use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
-
-entity single_port_rom is
-
-    generic 
-    (
-        DATA_WIDTH : natural := 8;
-        ADDR_WIDTH : natural := 8
-    );
-
-    port 
-    (
-        clk		: in std_logic;
-        ce		: in std_logic;
-        addr            : in std_logic_vector (ADDR_WIDTH - 1 downto 0);
-        q		: out std_logic_vector((DATA_WIDTH -1) downto 0)
-    );
-
-end entity;
-
-architecture rtl of single_port_rom is
-
-    -- Build a 2-D array type for the RoM
-    subtype word_t is std_logic_vector((DATA_WIDTH-1) downto 0);
-    type memory_t is array(2**ADDR_WIDTH-1 downto 0) of word_t;
-
-    signal rom : memory_t;
-
-attribute ram_init_file : string;
-attribute ram_init_file of rom:
-signal is "sample1-prg.hex";
-    
-    begin
-
-    process(clk)
-use ieee.std_logic_unsigned.conv_integer;
-    begin
-    if(rising_edge(clk)) then
-        if (ce = '0') then
-        q <= rom(conv_integer(addr));
-        else
-            q <= (others => 'Z');
-        end if;
-    end if;
-    end process;
-
 end rtl;
 
