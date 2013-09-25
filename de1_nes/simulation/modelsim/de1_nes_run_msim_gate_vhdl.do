@@ -44,7 +44,7 @@ add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_y
 
 add wave -divider debug
 
-add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_dec_oe_n
+#add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_dec_oe_n
 #add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_dec_val
 #add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_int_dbus
 
