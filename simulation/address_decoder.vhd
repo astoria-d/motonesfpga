@@ -81,8 +81,12 @@ generic (abus_size : integer := 14; dbus_size : integer := 8);
             rd_n        : in std_logic;
             wr_n        : in std_logic;
             ale         : in std_logic;
-            vram_ad     : inout std_logic_vector (7 downto 0);
-            vram_a      : in std_logic_vector (13 downto 8)
+            v_addr      : in std_logic_vector (13 downto 0);
+            v_data      : in std_logic_vector (7 downto 0);
+            nt_v_mirror : in std_logic;
+            pt_ce_n     : out std_logic;
+            nt0_ce_n    : out std_logic;
+            nt1_ce_n    : out std_logic
         );
 end v_address_decoder;
 
@@ -98,73 +102,15 @@ end v_address_decoder;
 -- $3F20-$3FFF  $0080   Mirrors of $3F00-$3F1F
 
 architecture rtl of v_address_decoder is
-    component ram
-        generic (abus_size : integer := 16; dbus_size : integer := 8);
-        port (  ce_n, oe_n, we_n  : in std_logic;   --select pin active low.
-                addr              : in std_logic_vector (abus_size - 1 downto 0);
-                d_io              : inout std_logic_vector (dbus_size - 1 downto 0)
-        );
-    end component;
-
-    component chr_rom
-        generic (abus_size : integer := 13; dbus_size : integer := 8);
-        port (  ce_n            : in std_logic;     --active low.
-                addr            : in std_logic_vector (abus_size - 1 downto 0);
-                data            : out std_logic_vector (dbus_size - 1 downto 0);
-                nt_v_mirror     : out std_logic
-        );
-    end component;
-
-    component ls373
-        generic (
-            dsize : integer := 8
-        );
-        port (  c         : in std_logic;
-                oc_n      : in std_logic;
-                d         : in std_logic_vector(dsize - 1 downto 0);
-                q         : out std_logic_vector(dsize - 1 downto 0)
-        );
-    end component;
-
-    constant dsize : integer := 8;
-    constant vram_1k : integer := 10;      --2k = 11 bit width.
-    constant chr_rom_8k : integer := 13;     --32k = 15 bit width.
-
-    signal v_addr : std_logic_vector (13 downto 0);
-    --signal nt_v_mirror2  : std_logic;
-    signal nt_v_mirror  : std_logic;
-
-    signal pt_ce_n : std_logic;
-    signal nt0_ce_n : std_logic;
-    signal nt1_ce_n : std_logic;
 
 begin
-
-    --transparent d-latch
-    latch_inst : ls373 generic map (dsize)
-                port map(ale, '0', vram_ad, v_addr(7 downto 0));
-    v_addr (13 downto 8) <= vram_a;
 
     --pattern table
     pt_ce_n <= '0' when (v_addr(13) = '0' and rd_n = '0') else
              '1' ;
-    --nt_v_mirror <= '0';
-    pattern_tbl : chr_rom generic map (chr_rom_8k, dsize)
-            port map (pt_ce_n, v_addr(chr_rom_8k - 1 downto 0), vram_ad, nt_v_mirror);
-
-    --name table/attr table
-    name_tbl0 : ram generic map (vram_1k, dsize)
-            port map (nt0_ce_n, rd_n, wr_n, 
-                    v_addr(vram_1k - 1 downto 0), vram_ad);
-
-    name_tbl1 : ram generic map (vram_1k, dsize)
-            port map (nt1_ce_n, rd_n, wr_n, 
-                    v_addr(vram_1k - 1 downto 0), vram_ad);
-
-    --palette table data is stored in the inside ppu
 
     --ram io timing.
-    main_p : process (clk, v_addr, vram_ad, wr_n)
+    main_p : process (clk, v_addr, v_data, wr_n)
     begin
         if (v_addr(13) = '1') then
             ---name tbl

@@ -111,9 +111,33 @@ architecture rtl of motones_sim is
                 rd_n        : in std_logic;
                 wr_n        : in std_logic;
                 ale         : in std_logic;
-                vram_ad     : inout std_logic_vector (7 downto 0);
-                vram_a      : in std_logic_vector (13 downto 8)
+                v_addr      : in std_logic_vector (13 downto 0);
+                v_data      : in std_logic_vector (7 downto 0);
+                nt_v_mirror : in std_logic;
+                pt_ce_n     : out std_logic;
+                nt0_ce_n    : out std_logic;
+                nt1_ce_n    : out std_logic
             );
+    end component;
+
+    component chr_rom
+        generic (abus_size : integer := 13; dbus_size : integer := 8);
+        port (  ce_n            : in std_logic;     --active low.
+                addr            : in std_logic_vector (abus_size - 1 downto 0);
+                data            : out std_logic_vector (dbus_size - 1 downto 0);
+                nt_v_mirror     : out std_logic
+        );
+    end component;
+
+    component ls373
+        generic (
+            dsize : integer := 8
+        );
+        port (  c         : in std_logic;
+                oc_n      : in std_logic;
+                d         : in std_logic_vector(dsize - 1 downto 0);
+                q         : out std_logic_vector(dsize - 1 downto 0)
+        );
     end component;
 
     component apu
@@ -129,11 +153,12 @@ architecture rtl of motones_sim is
 
     constant data_size : integer := 8;
     constant addr_size : integer := 16;
-    constant size14    : integer := 14;
+    constant vram_size14    : integer := 14;
 
     constant ram_2k : integer := 11;      --2k = 11 bit width.
     constant rom_32k : integer := 15;     --32k = 15 bit width.
-    
+    constant vram_1k : integer := 10;      --1k = 10 bit width.
+    constant chr_rom_8k : integer := 13;     --32k = 15 bit width.
 
     signal cpu_clk  : std_logic;
     signal ppu_clk  : std_logic;
@@ -150,11 +175,18 @@ architecture rtl of motones_sim is
     signal ram_oe_n : std_logic;
     signal ppu_ce_n : std_logic;
     signal apu_ce_n : std_logic;
+
     signal rd_n     : std_logic;
     signal wr_n     : std_logic;
     signal ale      : std_logic;
     signal vram_ad  : std_logic_vector (7 downto 0);
     signal vram_a   : std_logic_vector (13 downto 8);
+    signal v_addr   : std_logic_vector (13 downto 0);
+    signal nt_v_mirror  : std_logic;
+    signal pt_ce_n  : std_logic;
+    signal nt0_ce_n : std_logic;
+    signal nt1_ce_n : std_logic;
+
 
 begin
 
@@ -187,9 +219,28 @@ begin
                 nmi_n, rd_n, wr_n, ale, vram_ad, vram_a,
                 vga_out_clk, h_sync_n, v_sync_n, r, g, b);
 
-    ppu_addr_decoder : v_address_decoder generic map (size14, data_size) 
-        port map (ppu_clk, rd_n, wr_n, ale, vram_ad, vram_a);
+    ppu_addr_decoder : v_address_decoder generic map (vram_size14, data_size) 
+        port map (ppu_clk, rd_n, wr_n, ale, v_addr, vram_ad, 
+                nt_v_mirror, pt_ce_n, nt0_ce_n, nt1_ce_n);
 
+    ---VRAM/CHR ROM instances
+    v_addr (13 downto 8) <= vram_a;
+
+    --transparent d-latch
+    latch_inst : ls373 generic map (data_size)
+                port map(ale, '0', vram_ad, v_addr(7 downto 0));
+
+    pattern_tbl : chr_rom generic map (chr_rom_8k, data_size)
+            port map (pt_ce_n, v_addr(chr_rom_8k - 1 downto 0), vram_ad, nt_v_mirror);
+
+    --name table/attr table
+    name_tbl0 : ram generic map (vram_1k, data_size)
+            port map (nt0_ce_n, rd_n, wr_n, v_addr(vram_1k - 1 downto 0), vram_ad);
+
+    name_tbl1 : ram generic map (vram_1k, data_size)
+            port map (nt1_ce_n, rd_n, wr_n, v_addr(vram_1k - 1 downto 0), vram_ad);
+
+    --APU/DMA instance
     apu_inst : apu
         port map (cpu_clk, apu_ce_n, rst_n, r_nw, addr, d_io, rdy);
 
