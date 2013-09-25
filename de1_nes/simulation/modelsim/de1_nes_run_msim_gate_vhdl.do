@@ -29,16 +29,24 @@ add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_int_d_bus
 
 add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_exec_cycle
 
-add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_index_bus;
-add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_acc_bus;
-add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_status;
+add wave -divider regs
 
+#add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_index_bus;
+#add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_acc_bus;
+##    dbg_pcl, dbg_pch, 
+
+add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_acc
+add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_sp
+add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_status;
+add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_x
+add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_y
 
 
 view structure
 view signals
 #run -all
 run 35 us
+##run 10 us
 
 #wave zoom range 3339700 ps 5138320 ps
 wave zoom full

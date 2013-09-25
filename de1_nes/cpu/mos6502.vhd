@@ -9,9 +9,13 @@ entity mos6502 is
     signal dbg_instruction  : out std_logic_vector(7 downto 0);
     signal dbg_int_d_bus    : out std_logic_vector(7 downto 0);
     signal dbg_exec_cycle   : out std_logic_vector (5 downto 0);
-    signal dbg_index_bus    : out std_logic_vector(7 downto 0);
-    signal dbg_acc_bus      : out std_logic_vector(7 downto 0);
+--    signal dbg_index_bus    : out std_logic_vector(7 downto 0);
+--    signal dbg_acc_bus      : out std_logic_vector(7 downto 0);
     signal dbg_status       : out std_logic_vector(7 downto 0);
+    signal dbg_pcl, dbg_pch, dbg_sp, dbg_x, dbg_y, dbg_acc       : out std_logic_vector(7 downto 0);
+    signal dbg_dec_oe_n    : out std_logic;
+    signal dbg_dec_val     : out std_logic_vector (7 downto 0);
+    signal dbg_int_dbus    : out std_logic_vector (7 downto 0);
 
             input_clk   : in std_logic; --phi0 input pin.
             rdy         : in std_logic;
@@ -150,6 +154,8 @@ component dual_dff
             dsize : integer := 8
             );
     port (  
+            dbg_out_port    : out std_logic_vector (dsize - 1 downto 0);
+
             clk             : in std_logic;
             res_n           : in std_logic;
             set_n           : in std_logic;
@@ -202,6 +208,10 @@ component processor_status
             dsize : integer := 8
             );
     port (  
+    signal dbg_dec_oe_n    : out std_logic;
+    signal dbg_dec_val     : out std_logic_vector (dsize - 1 downto 0);
+    signal dbg_int_dbus    : out std_logic_vector (dsize - 1 downto 0);
+    
             clk         : in std_logic;
             res_n       : in std_logic;
             dec_oe_n    : in std_logic;
@@ -324,14 +334,16 @@ end component;
 
     signal check_bit     : std_logic_vector(1 to 5);
 
+    --signal dbg_pcl, dbg_pch, dbg_sp, dbg_x, dbg_y, dbg_acc       : std_logic_vector(7 downto 0);
+
 begin
 
     ----for debug monitoring....
     dbg_instruction <= instruction;
     dbg_int_d_bus <= int_d_bus;
     dbg_exec_cycle <= exec_cycle;
-    dbg_index_bus <= index_bus;
-    dbg_acc_bus <= acc_out;
+--    dbg_index_bus <= index_bus;
+--    dbg_acc_bus <= acc_out;
     dbg_status <= status_reg;
 
 
@@ -476,13 +488,17 @@ begin
             port map(trigger_clk, inst_rst_n, '1', inst_we_n, d_io, instruction);
 
     pcl_inst : dual_dff generic map (dsize) 
-            port map(trigger_clk, rst_n, '1', pcl_cmd, int_d_bus, addr_back, bal);
+            port map(dbg_pcl, trigger_clk, rst_n, '1', pcl_cmd, int_d_bus, addr_back, bal);
     pch_inst : dual_dff generic map (dsize) 
-            port map(trigger_clk, rst_n, '1', pch_cmd, int_d_bus, addr_back, bah);
+            port map(dbg_pch, trigger_clk, rst_n, '1', pch_cmd, int_d_bus, addr_back, bah);
 
     --status register
     status_register : processor_status generic map (dsize) 
-            port map (trigger_clk, rst_n, 
+            port map (
+    dbg_dec_oe_n,
+    dbg_dec_val,
+    dbg_int_dbus,
+                    trigger_clk, rst_n, 
                     stat_dec_oe_n, stat_bus_oe_n, 
                     stat_set_flg_n, stat_flg, stat_bus_all_n, stat_bus_nz_n, 
                     stat_alu_we_n, alu_n, alu_v, alu_z, alu_c, stat_c,
@@ -490,15 +506,15 @@ begin
 
 
     sp : dual_dff generic map (dsize) 
-            port map(trigger_clk, rst_n, '1', sp_cmd, int_d_bus, addr_back, bal);
+            port map(dbg_sp, trigger_clk, rst_n, '1', sp_cmd, int_d_bus, addr_back, bal);
 
     x : dual_dff generic map (dsize) 
-            port map(trigger_clk, rst_n, '1', x_cmd, int_d_bus, null_bus, index_bus);
+            port map(dbg_x, trigger_clk, rst_n, '1', x_cmd, int_d_bus, null_bus, index_bus);
     y : dual_dff generic map (dsize) 
-            port map(trigger_clk, rst_n, '1', y_cmd, int_d_bus, null_bus, index_bus);
+            port map(dbg_y, trigger_clk, rst_n, '1', y_cmd, int_d_bus, null_bus, index_bus);
 
     acc : dual_dff generic map (dsize) 
-            port map(trigger_clk, rst_n, '1', acc_cmd, int_d_bus, acc_in, acc_out);
+            port map(dbg_acc, trigger_clk, rst_n, '1', acc_cmd, int_d_bus, acc_in, acc_out);
 
     --adh output is controlled by decoder.
     adh_buf : tri_state_buffer generic map (dsize)
