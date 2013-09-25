@@ -24,6 +24,17 @@ add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_instruction
 add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_int_d_bus
 
 
+
+add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_status
+add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_dec_oe_n
+add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_status_val
+add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_stat_we_n
+
 view structure
 view signals
-run 10 us
+
+###run 10 us
+run 4 us
+
+wave zoom full
+
