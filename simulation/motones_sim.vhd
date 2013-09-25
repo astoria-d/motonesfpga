@@ -227,7 +227,7 @@ begin
     v_addr (13 downto 8) <= vram_a;
 
     --transparent d-latch
-    latch_inst : ls373 generic map (data_size)
+    vram_latch : ls373 generic map (data_size)
                 port map(ale, '0', vram_ad, v_addr(7 downto 0));
 
     vchr_rom : chr_rom generic map (chr_rom_8k, data_size)
