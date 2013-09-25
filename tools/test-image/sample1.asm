@@ -287,6 +287,12 @@ palettes:
 string:
 	.byte	"test2!"
 
+;;;for DE1 internal memory constraints.
+.segment "VECINFO_4k"
+	.word	nmi_test
+	.word	Reset
+	.word	$0000
+
 .segment "VECINFO"
 	.word	nmi_test
 	.word	Reset
