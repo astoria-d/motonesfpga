@@ -230,14 +230,14 @@ begin
     latch_inst : ls373 generic map (data_size)
                 port map(ale, '0', vram_ad, v_addr(7 downto 0));
 
-    pattern_tbl : chr_rom generic map (chr_rom_8k, data_size)
+    vchr_rom : chr_rom generic map (chr_rom_8k, data_size)
             port map (pt_ce_n, v_addr(chr_rom_8k - 1 downto 0), vram_ad, nt_v_mirror);
 
     --name table/attr table
-    name_tbl0 : ram generic map (vram_1k, data_size)
+    vram_nt0 : ram generic map (vram_1k, data_size)
             port map (nt0_ce_n, rd_n, wr_n, v_addr(vram_1k - 1 downto 0), vram_ad);
 
-    name_tbl1 : ram generic map (vram_1k, data_size)
+    vram_nt1 : ram generic map (vram_1k, data_size)
             port map (nt1_ce_n, rd_n, wr_n, v_addr(vram_1k - 1 downto 0), vram_ad);
 
     --APU/DMA instance
