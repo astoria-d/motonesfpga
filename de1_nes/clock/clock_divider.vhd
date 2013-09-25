@@ -71,16 +71,16 @@ begin
 	vga_clk <= not loop8(0);
     mem_clk <= base_clk;
     
-	cpu_we_n <= '0' when loop24 = "00011" else
+    cpu_we_n <= '0' when loop24 = "00011" else
                 '0' when loop24 = "01111" else
-				'1';
+                '1';
     ppu_clk_cnt : counter_register generic map (3) port map 
         (base_clk, reset_n, '0', '1', (others=>'0'), loop8);
 
-	cpu_clk_cnt : counter_register generic map (5) port map 
+    cpu_clk_cnt : counter_register generic map (5) port map 
         (base_clk_n, cpu_cnt_rst_n, '0', '1', (others=>'0'), loop24);
 
-    cpu_clk_cnt2 : d_flip_flop_bit port map 
+    cpu_clk_inst : d_flip_flop_bit port map 
         (base_clk, reset_n, '1', cpu_we_n, cpu_clk_old, cpu_clk_new);
 
     clock_p : process (base_clk)
