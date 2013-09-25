@@ -20,6 +20,18 @@ architecture stimulus of testbench_motones_sim is
 ---monitor inside cpu
     signal dbg_instruction  : out std_logic_vector(7 downto 0);
     signal dbg_int_d_bus  : out std_logic_vector(7 downto 0);
+    signal dbg_exec_cycle   : out std_logic_vector (5 downto 0);
+--    signal dbg_index_bus    : out std_logic_vector(7 downto 0);
+--    signal dbg_acc_bus      : out std_logic_vector(7 downto 0);
+    signal dbg_status       : out std_logic_vector(7 downto 0);
+    signal dbg_pcl, dbg_pch, dbg_sp, dbg_x, dbg_y, dbg_acc       : out std_logic_vector(7 downto 0);
+    signal dbg_dec_oe_n    : out std_logic;
+    signal dbg_dec_val     : out std_logic_vector (7 downto 0);
+    signal dbg_int_dbus    : out std_logic_vector (7 downto 0);
+--    signal dbg_status_val    : out std_logic_vector (7 downto 0);
+    signal dbg_stat_we_n    : out std_logic;
+    
+    
 --NES instance
             base_clk 	: in std_logic;
             rst_n     	: in std_logic;
@@ -75,6 +87,16 @@ architecture stimulus of testbench_motones_sim is
     signal dbg_vram_a   : std_logic_vector (13 downto 8);
     signal dbg_instruction  : std_logic_vector(7 downto 0);
     signal dbg_int_d_bus  : std_logic_vector(7 downto 0);
+    signal dbg_exec_cycle   : std_logic_vector (5 downto 0);
+--    signal dbg_index_bus    : std_logic_vector(7 downto 0);
+--    signal dbg_acc_bus      : std_logic_vector(7 downto 0);
+    signal dbg_status       : std_logic_vector(7 downto 0);
+    signal dbg_pcl, dbg_pch, dbg_sp, dbg_x, dbg_y, dbg_acc       : std_logic_vector(7 downto 0);
+    signal dbg_dec_oe_n    : std_logic;
+    signal dbg_dec_val     : std_logic_vector (7 downto 0);
+    signal dbg_int_dbus    : std_logic_vector (7 downto 0);
+--    signal dbg_status_val    : std_logic_vector (7 downto 0);
+    signal dbg_stat_we_n    : std_logic;
 
 begin
 
@@ -88,6 +110,18 @@ dbg_vram_ad,
 dbg_vram_a,
 dbg_instruction,
 dbg_int_d_bus,
+dbg_exec_cycle   ,
+--dbg_index_bus    ,
+--dbg_acc_bus      ,
+dbg_status       ,
+dbg_pcl, dbg_pch, dbg_sp, dbg_x, dbg_y, dbg_acc       ,
+dbg_dec_oe_n    ,
+dbg_dec_val     ,
+dbg_int_dbus    ,
+--dbg_status_val    ,
+dbg_stat_we_n    ,
+
+
     
     base_clk, reset_input, joypad1, joypad2, 
             vga_clk, h_sync_n, v_sync_n, r, g, b);

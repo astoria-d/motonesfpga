@@ -16,6 +16,8 @@ entity mos6502 is
     signal dbg_dec_oe_n    : out std_logic;
     signal dbg_dec_val     : out std_logic_vector (7 downto 0);
     signal dbg_int_dbus    : out std_logic_vector (7 downto 0);
+--    signal dbg_status_val    : out std_logic_vector (7 downto 0);
+    signal dbg_stat_we_n    : out std_logic;
 
             input_clk   : in std_logic; --phi0 input pin.
             rdy         : in std_logic;
@@ -211,6 +213,8 @@ component processor_status
     signal dbg_dec_oe_n    : out std_logic;
     signal dbg_dec_val     : out std_logic_vector (dsize - 1 downto 0);
     signal dbg_int_dbus    : out std_logic_vector (dsize - 1 downto 0);
+--    signal dbg_status_val    : out std_logic_vector (7 downto 0);
+    signal dbg_stat_we_n    : out std_logic;
     
             clk         : in std_logic;
             res_n       : in std_logic;
@@ -498,6 +502,8 @@ begin
     dbg_dec_oe_n,
     dbg_dec_val,
     dbg_int_dbus,
+--    dbg_status_val,
+    dbg_stat_we_n    ,
                     trigger_clk, rst_n, 
                     stat_dec_oe_n, stat_bus_oe_n, 
                     stat_set_flg_n, stat_flg, stat_bus_all_n, stat_bus_nz_n, 

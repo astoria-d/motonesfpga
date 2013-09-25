@@ -29,6 +29,8 @@ entity de1_nes is
     signal dbg_dec_oe_n    : out std_logic;
     signal dbg_dec_val     : out std_logic_vector (7 downto 0);
     signal dbg_int_dbus    : out std_logic_vector (7 downto 0);
+--    signal dbg_status_val    : out std_logic_vector (7 downto 0);
+    signal dbg_stat_we_n    : out std_logic;
 
 --NES instance
         base_clk 	: in std_logic;
@@ -60,6 +62,8 @@ architecture rtl of de1_nes is
     signal dbg_dec_oe_n    : out std_logic;
     signal dbg_dec_val     : out std_logic_vector (7 downto 0);
     signal dbg_int_dbus    : out std_logic_vector (7 downto 0);
+--    signal dbg_status_val    : out std_logic_vector (7 downto 0);
+    signal dbg_stat_we_n    : out std_logic;
 
                 input_clk   : in std_logic; --phi0 input pin.
                 rdy         : in std_logic;
@@ -245,6 +249,8 @@ begin
     dbg_dec_oe_n,
     dbg_dec_val,
     dbg_int_dbus,
+--    dbg_status_val    ,
+    dbg_stat_we_n    ,
 
                 cpu_clk, '1', --rdy, -----for testing...
                 rst_n, irq_n, nmi_n, dbe, r_nw, 

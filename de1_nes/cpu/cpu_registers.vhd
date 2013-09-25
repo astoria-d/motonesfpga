@@ -339,6 +339,8 @@ entity processor_status is
     signal dbg_dec_oe_n    : out std_logic;
     signal dbg_dec_val     : out std_logic_vector (7 downto 0);
     signal dbg_int_dbus    : out std_logic_vector (7 downto 0);
+--    signal dbg_status_val    : out std_logic_vector (7 downto 0);
+    signal dbg_stat_we_n    : out std_logic;
 
     
             clk         : in std_logic;
@@ -407,10 +409,12 @@ begin
     stat_c <= status_val(0);
 
     dbg_dec_oe_n    <= dec_oe_n    ;
-    dbg_dec_val     <= dec_val     ;
-    dbg_int_dbus    <= int_dbus    ;
+    --dbg_dec_val     <= dec_val     ;
+    --dbg_int_dbus    <= int_dbus    ;
+    --dbg_status_val <= status_val;
+    dbg_stat_we_n <= we_n;
 
-main_p : process (clk, res_n, we_n, dec_val, int_dbus, 
+    main_p : process (clk, res_n, we_n, dec_val, int_dbus, 
                             alu_n, alu_v, alu_z, alu_c)
     variable tmp : std_logic_vector (dsize - 1 downto 0);
     begin
