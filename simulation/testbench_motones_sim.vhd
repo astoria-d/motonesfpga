@@ -44,8 +44,8 @@ architecture stimulus of testbench_motones_sim is
     signal joypad1     : std_logic_vector(7 downto 0);
     signal joypad2     : std_logic_vector(7 downto 0);
 
-    constant powerup_time   : time := 5000 ns;
-    constant reset_time     : time := 10 us;
+    constant powerup_time   : time := 2 us;
+    constant reset_time     : time := 2 us;
 
     ---clock frequency = 21,477,270 (21 MHz)
     --constant base_clock_time : time := 46 ns;
