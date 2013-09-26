@@ -132,7 +132,7 @@ begin
             port map (clk, cnt_rst_n, '0', '1', (others => '0'), clk_cnt);
 
     sync_ce_n <= '0' when ce_n = '0' and oe_n = '0' and we_n = '1' else
-                 '0' when ce_n = '0' and oe_n = '1' and we_n = '0' and clk_cnt = "000010" else
+                 '0' when ce_n = '0' and oe_n = '1' and we_n = '0' and clk_cnt = "000001" else
                  '1';
 
 end rtl;
