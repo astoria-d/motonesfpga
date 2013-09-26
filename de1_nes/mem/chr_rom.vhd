@@ -8,7 +8,9 @@ use work.motonesfpga_common.all;
 --asyncronous rom
 entity chr_rom is 
     generic (abus_size : integer := 13; dbus_size : integer := 8);
-    port (  ce_n            : in std_logic;     --active low.
+    port (  
+            clk             : in std_logic;
+            ce_n            : in std_logic;     --active low.
             addr            : in std_logic_vector (abus_size - 1 downto 0);
             data            : out std_logic_vector (dbus_size - 1 downto 0);
             nt_v_mirror     : out std_logic
@@ -73,12 +75,14 @@ begin
     
     nt_v_mirror <= vmirror;
 
-    p : process (ce_n, addr)
+    p : process (clk)
     begin
-    if (ce_n = '0') then
-        data <= p_rom(conv_integer(addr));
-    else
-        data <= (others => 'Z');
+    if (rising_edge(clk)) then
+        if (ce_n = '0') then
+            data <= p_rom(conv_integer(addr));
+        else
+            data <= (others => 'Z');
+        end if;
     end if;
     end process;
 end rtl;

@@ -27,6 +27,18 @@ end address_decoder;
 -- * */
 
 architecture rtl of address_decoder is
+
+component ram_ctrl
+    port (  
+            clk              : in std_logic;
+            ce_n, oe_n, we_n : in std_logic;
+            sync_ce_n        : out std_logic
+        );
+end component;
+
+signal ram_ce_n_in    : std_logic;
+signal r_n            : std_logic;
+
 begin
 
     rom_ce_n <= '0' when (addr(15) = '1' and R_nW = '1') else
@@ -40,6 +52,10 @@ begin
             when (addr(15) = '0' and addr(14) = '1' and addr(13) = '0')  else
                 '1';
 
+    r_n <= not r_nw;
+    ram_ctl_inst : ram_ctrl
+            port map (mem_clk, ram_ce_n_in, r_n, r_nw, ram_ce_n);
+
     --ram io timing.
     main_p : process (phi2, addr, d_io, R_nW)
     begin
@@ -50,15 +66,15 @@ begin
             if (R_nW = '0') then
                 --write
                 --write timing slided by half clock.
-                ram_ce_n <= not phi2;
+                ram_ce_n_in <= not phi2;
             elsif (R_nW = '1') then 
                 --read
-                ram_ce_n <= '0';
+                ram_ce_n_in <= '0';
             else
-                ram_ce_n <= '1';
+                ram_ce_n_in <= '1';
             end if;
         else
-            ram_ce_n <= '1';
+            ram_ce_n_in <= '1';
         end if;
     end process;
 

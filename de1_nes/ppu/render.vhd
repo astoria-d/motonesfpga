@@ -6,6 +6,7 @@ use work.motonesfpga_common.all;
 
 entity ppu_render is 
     port (  clk         : in std_logic;
+            mem_clk     : in std_logic;
             rst_n       : in std_logic;
             rd_n        : out std_logic;
             wr_n        : out std_logic;
@@ -89,7 +90,9 @@ end component;
 
 component ram
     generic (abus_size : integer := 16; dbus_size : integer := 8);
-    port (  ce_n, oe_n, we_n  : in std_logic;   --select pin active low.
+    port (  
+            clk               : in std_logic;
+            ce_n, oe_n, we_n  : in std_logic;   --select pin active low.
             addr              : in std_logic_vector (abus_size - 1 downto 0);
             d_io              : inout std_logic_vector (dbus_size - 1 downto 0)
     );
@@ -97,7 +100,9 @@ end component;
 
 component palette_ram
     generic (abus_size : integer := 16; dbus_size : integer := 8);
-    port (  ce_n, oe_n, we_n  : in std_logic;   --select pin active low.
+    port (  
+            clk               : in std_logic;
+            ce_n, oe_n, we_n  : in std_logic;   --select pin active low.
             addr              : in std_logic_vector (abus_size - 1 downto 0);
             d_io              : inout std_logic_vector (dbus_size - 1 downto 0)
     );
@@ -509,7 +514,7 @@ begin
     plt_d_buf_r : tri_state_buffer generic map (dsize)
             port map (r_n, plt_data, oam_plt_data);
     palette_inst : palette_ram generic map (5, dsize)
-            port map (plt_ram_ce_n, plt_r_n, plt_w_n, plt_addr, plt_data);
+            port map (mem_clk, plt_ram_ce_n, plt_r_n, plt_w_n, plt_addr, plt_data);
 
     ---primary oam
     oam_ram_ce_n <= clk when oam_bus_ce_n = '0' and r_nw = '0' else
@@ -540,7 +545,7 @@ begin
     oam_d_buf_r : tri_state_buffer generic map (dsize)
             port map (r_n, oam_data, oam_plt_data);
     primary_oam_inst : ram generic map (dsize, dsize)
-            port map (oam_ram_ce_n, oam_r_n, oam_w_n, oam_addr, oam_data);
+            port map (mem_clk, oam_ram_ce_n, oam_r_n, oam_w_n, oam_addr, oam_data);
 
     ---secondary oam
     p_oam_cnt_inst : counter_register generic map (dsize, 4)
@@ -562,10 +567,10 @@ begin
                                 cur_x > conv_std_logic_vector(256, X_SIZE) and
                                 cur_x <= conv_std_logic_vector(320, X_SIZE) and
                                 s_oam_addr_cpy_n = '0' else
-                    '1';
+                      '1';
 
     secondary_oam_inst : ram generic map (5, dsize)
-            port map (s_oam_ram_ce_n, s_oam_r_n, s_oam_w_n, s_oam_addr, s_oam_data);
+            port map (mem_clk, s_oam_ram_ce_n, s_oam_r_n, s_oam_w_n, s_oam_addr, s_oam_data);
 
     spr_y_inst : d_flip_flop generic map(dsize)
             port map (clk_n, p_oam_cnt_res_n, '1', spr_y_we_n, s_oam_data, spr_y_tmp);
