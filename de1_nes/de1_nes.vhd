@@ -271,9 +271,9 @@ begin
             port map (mem_clk, rom_ce_n, addr(rom_4k - 1 downto 0), d_io);
 
     ram_oe_n <= not R_nW;
---    prg_ram_inst : ram generic map (ram_2k, data_size)
---            port map (mem_clk, ram_ce_n, ram_oe_n, R_nW, addr(ram_2k - 1 downto 0), d_io);
---
+    prg_ram_inst : ram generic map (ram_2k, data_size)
+            port map (mem_clk, ram_ce_n, ram_oe_n, R_nW, addr(ram_2k - 1 downto 0), d_io);
+
 --    --nes ppu instance
 --    ppu_inst : ppu 
 --        port map (ppu_clk, mem_clk, ppu_ce_n, rst_n, r_nw, addr(2 downto 0), d_io, 

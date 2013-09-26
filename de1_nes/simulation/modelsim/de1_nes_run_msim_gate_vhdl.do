@@ -57,11 +57,10 @@ add wave -divider debug
 view structure
 view signals
 #run -all
-run 35 us
-#run 10 us
+run 10 us
 
 #wave zoom range 3339700 ps 5138320 ps
 wave zoom full
 
-run 15 us
+run 1000 us
 

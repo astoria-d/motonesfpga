@@ -74,17 +74,6 @@ component d_flip_flop_bit
         );
 end component;
 
-component tri_state_buffer
-    generic (
-            dsize : integer := 8
-            );
-    port (  
-            oe_n    : in std_logic;
-            d       : in std_logic_vector (dsize - 1 downto 0);
-            q       : out std_logic_vector (dsize - 1 downto 0)
-        );
-end component;
-
 --cycle bit format 
 -- bit 5    : pcl increment carry flag
 -- bit 4,3  : cycle type: 00 normal, 01 reset , 10 nmi, 11 irq 
@@ -154,10 +143,6 @@ signal wait_a2_abs_xy_next      : std_logic;
 signal wait_a2_indir_y_next     : std_logic;
 signal wait_a58_branch_next     : std_logic;
 
-signal wk_status_rd_n           : std_logic;
-signal wk_status_wr_n           : std_logic;
-signal status_reg_in            : std_logic_vector(dsize - 1 downto 0);
-
 begin
 
     ---pc page next is connected to top bit of exec_cycle
@@ -171,13 +156,6 @@ begin
                     T0;
     a58_branch_next_cycle <= T3 when ea_carry = '1' else
                     T0;
-
-    stat_dec_oe_n <= wk_status_rd_n;
-    --wk_status_wr_n <= '1';
-    wk_status_wr_n <= not wk_status_rd_n;
-    --status_reg <= (others => 'Z');
-    status_reg_tsb : tri_state_buffer generic map (dsize) 
-        port map(wk_status_wr_n, status_reg_in, status_reg);
 
     main_p : process (set_clk, res_n, nmi_n, 
                      a2_abs_xy_next_cycle, a2_indir_y_next_cycle, a58_branch_next_cycle)
@@ -233,7 +211,8 @@ end procedure;
 
 procedure read_status is
 begin
-    wk_status_rd_n <= '0';
+    status_reg <= (others => 'Z');
+    stat_dec_oe_n <= '0';
 end  procedure;
 
 procedure disable_pins is
@@ -355,61 +334,61 @@ procedure set_zc_from_alu is
 begin
     --status register n/z bit update.
     stat_alu_we_n <= '0';
-    wk_status_rd_n <= '1';
-    status_reg_in <= "00000011";
+    stat_dec_oe_n <= '1';
+    status_reg <= "00000011";
 end  procedure;
 
 procedure set_nz_from_alu is
 begin
     --status register n/z/c bit update.
     stat_alu_we_n <= '0';
-    wk_status_rd_n <= '1';
-    status_reg_in <= "10000010";
+    stat_dec_oe_n <= '1';
+    status_reg <= "10000010";
 end  procedure;
 
 procedure set_nzc_from_alu is
 begin
     --status register n/z/c bit update.
     stat_alu_we_n <= '0';
-    wk_status_rd_n <= '1';
-    status_reg_in <= "10000011";
+    stat_dec_oe_n <= '1';
+    status_reg <= "10000011";
 end  procedure;
 
 procedure set_nvz_from_alu is
 begin
     --status register n/z/v bit update.
     stat_alu_we_n <= '0';
-    wk_status_rd_n <= '1';
-    status_reg_in <= "11000010";
+    stat_dec_oe_n <= '1';
+    status_reg <= "11000010";
 end  procedure;
 
 procedure set_nvzc_from_alu is
 begin
     stat_alu_we_n <= '0';
-    wk_status_rd_n <= '1';
-    status_reg_in <= "11000011";
+    stat_dec_oe_n <= '1';
+    status_reg <= "11000011";
 end  procedure;
 
 --flag on/off instruction
 procedure set_flag (int_flg : in integer; val : in std_logic) is
 begin
-    wk_status_rd_n <= '1';
+    stat_dec_oe_n <= '1';
     stat_set_flg_n <= '0';
     --specify which to set.
-    status_reg_in(7 downto int_flg + 1) 
+    status_reg(7 downto int_flg + 1) 
         <= (others =>'0');
-    status_reg_in(int_flg - 1 downto 0) 
+    status_reg(int_flg - 1 downto 0) 
         <= (others =>'0');
-    status_reg_in(int_flg) <= '1';
+    status_reg(int_flg) <= '1';
     stat_flg <= val;
 end  procedure;
 
 --for sec/clc
 procedure set_flag0 (val : in std_logic) is
 begin
-    wk_status_rd_n <= '1';
+    stat_dec_oe_n <= '1';
     stat_set_flg_n <= '0';
-    status_reg_in <= "00000001";
+    status_reg <= "00000001";
     stat_flg <= val;
 end  procedure;
 
@@ -1035,7 +1014,7 @@ end  procedure;
 
         if (res_n = '0') then
             --prevent status revister from broken.
-            wk_status_rd_n <= '0';
+            stat_dec_oe_n <= '0';
             stat_bus_oe_n <= '1';
             stat_set_flg_n <= '1';
             stat_flg <= '1';
@@ -2265,7 +2244,7 @@ end  procedure;
                     d_print("plp");
                     a52_pull;
                     if exec_cycle = T3 then
-                        wk_status_rd_n <= '1';
+                        stat_dec_oe_n <= '1';
                         stat_bus_all_n <= '0';
                     end if;
 
@@ -2381,7 +2360,7 @@ end  procedure;
                         sp_oe_n <= '0';
 
                         --load status reg
-                        wk_status_rd_n <= '1';
+                        stat_dec_oe_n <= '1';
                         dbuf_int_oe_n <= '0';
                         stat_bus_all_n <= '0';
 
@@ -2646,7 +2625,7 @@ end  procedure;
                 indir_y_n <= '1';
                 arith_en_n <= '1';
 
-                wk_status_rd_n <= '0';
+                stat_dec_oe_n <= '0';
                 stat_bus_oe_n <= '1';
                 stat_set_flg_n <= '1';
                 stat_flg <= '1';
