@@ -77,7 +77,7 @@ begin
 
     p : process (clk)
     begin
-    if(rising_edge(clk)) then
+    if (rising_edge(clk)) then
         if (ce_n = '0') then
             data <= p_rom(conv_integer(addr));
         else

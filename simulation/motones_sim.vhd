@@ -67,7 +67,9 @@ architecture rtl of motones_sim is
 
     component ram
         generic (abus_size : integer := 16; dbus_size : integer := 8);
-        port (  ce_n, oe_n, we_n  : in std_logic;   --select pin active low.
+        port (  
+                clk               : in std_logic;
+                ce_n, oe_n, we_n  : in std_logic;   --select pin active low.
                 addr              : in std_logic_vector (abus_size - 1 downto 0);
                 d_io              : inout std_logic_vector (dbus_size - 1 downto 0)
         );
@@ -85,6 +87,7 @@ architecture rtl of motones_sim is
 
     component ppu
     port (  clk         : in std_logic;
+            mem_clk     : in std_logic;
             ce_n        : in std_logic;
             rst_n       : in std_logic;
             r_nw        : in std_logic;
@@ -122,7 +125,9 @@ architecture rtl of motones_sim is
 
     component chr_rom
         generic (abus_size : integer := 13; dbus_size : integer := 8);
-        port (  ce_n            : in std_logic;     --active low.
+        port (  
+                clk             : in std_logic;
+                ce_n            : in std_logic;     --active low.
                 addr            : in std_logic_vector (abus_size - 1 downto 0);
                 data            : out std_logic_vector (dbus_size - 1 downto 0);
                 nt_v_mirror     : out std_logic
@@ -211,11 +216,11 @@ begin
 
     ram_oe_n <= not R_nW;
     prg_ram_inst : ram generic map (ram_2k, data_size)
-            port map (ram_ce_n, ram_oe_n, R_nW, addr(ram_2k - 1 downto 0), d_io);
+            port map (mem_clk, ram_ce_n, ram_oe_n, R_nW, addr(ram_2k - 1 downto 0), d_io);
 
     --nes ppu instance
     ppu_inst : ppu 
-        port map (ppu_clk, ppu_ce_n, rst_n, r_nw, addr(2 downto 0), d_io, 
+        port map (ppu_clk, mem_clk, ppu_ce_n, rst_n, r_nw, addr(2 downto 0), d_io, 
                 nmi_n, rd_n, wr_n, ale, vram_ad, vram_a,
                 vga_out_clk, h_sync_n, v_sync_n, r, g, b);
 
@@ -231,14 +236,14 @@ begin
                 port map(ale, '0', vram_ad, v_addr(7 downto 0));
 
     vchr_rom : chr_rom generic map (chr_rom_8k, data_size)
-            port map (pt_ce_n, v_addr(chr_rom_8k - 1 downto 0), vram_ad, nt_v_mirror);
+            port map (mem_clk, pt_ce_n, v_addr(chr_rom_8k - 1 downto 0), vram_ad, nt_v_mirror);
 
     --name table/attr table
     vram_nt0 : ram generic map (vram_1k, data_size)
-            port map (nt0_ce_n, rd_n, wr_n, v_addr(vram_1k - 1 downto 0), vram_ad);
+            port map (mem_clk, nt0_ce_n, rd_n, wr_n, v_addr(vram_1k - 1 downto 0), vram_ad);
 
     vram_nt1 : ram generic map (vram_1k, data_size)
-            port map (nt1_ce_n, rd_n, wr_n, v_addr(vram_1k - 1 downto 0), vram_ad);
+            port map (mem_clk, nt1_ce_n, rd_n, wr_n, v_addr(vram_1k - 1 downto 0), vram_ad);
 
     --APU/DMA instance
     apu_inst : apu

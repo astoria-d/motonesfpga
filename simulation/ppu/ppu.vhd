@@ -4,6 +4,7 @@ use work.motonesfpga_common.all;
 
 entity ppu is 
     port (  clk         : in std_logic;
+            mem_clk     : in std_logic;
             ce_n        : in std_logic;
             rst_n       : in std_logic;
             r_nw        : in std_logic;
@@ -28,6 +29,7 @@ architecture rtl of ppu is
 
 component ppu_render
     port (  clk         : in std_logic;
+            mem_clk     : in std_logic;
             rst_n       : in std_logic;
             rd_n        : out std_logic;
             wr_n        : out std_logic;
@@ -168,7 +170,7 @@ signal plt_data_out     : std_logic_vector (dsize - 1 downto 0);
 
 begin
 
-    render_inst : ppu_render port map (clk, rst_n,
+    render_inst : ppu_render port map (clk, mem_clk, rst_n,
             rd_n, wr_n, ale, vram_ad, vram_a,
             pos_x, pos_y, nes_r, nes_g, nes_b,
             ppu_ctrl, ppu_mask, read_status, ppu_status, ppu_scroll_x, ppu_scroll_y,
