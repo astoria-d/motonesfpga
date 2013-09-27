@@ -966,16 +966,6 @@ end  procedure;
 -------------------------------------------------------------
     begin
 
-        if (res_n = '0') then
-            --pc l/h is reset vector.
-            pcl_cmd <= "1110";
-            pch_cmd <= "1110";
-            next_cycle <= R0;
-        elsif (res_n'event and res_n = '1') then
-            pcl_cmd <= "1111";
-            pch_cmd <= "1111";
-        end if;
-
         if (nmi_n'event and nmi_n = '1') then
             --reset nmi handle status
             nmi_handled_n <= '1';
@@ -1012,7 +1002,21 @@ end  procedure;
             end if;
         end if;
 
-        if (set_clk'event and set_clk = '1' and res_n = '1') then
+        if (res_n = '0') then
+            --prevent status revister from broken.
+            stat_dec_oe_n <= '0';
+            stat_bus_oe_n <= '1';
+            stat_set_flg_n <= '1';
+            stat_flg <= '1';
+            stat_bus_all_n <= '1';
+            stat_bus_nz_n <= '1';
+            stat_alu_we_n <= '1';
+
+            --pc l/h is reset vector.
+            pcl_cmd <= "1110";
+            pch_cmd <= "1110";
+            next_cycle <= R0;
+        elsif (rising_edge(set_clk)) then
             d_print(string'("-"));
 
             if rdy = '0' then
@@ -2578,9 +2582,6 @@ end  procedure;
             elsif exec_cycle = R0 then
                 d_print(string'("reset"));
 
-                front_we(pch_cmd, '1');
-                back_we(pcl_cmd, '1');
-
                 --initialize port...
                 inst_we_n <= '1';
                 ad_oe_n <= '1';
@@ -2611,7 +2612,7 @@ end  procedure;
                 indir_y_n <= '1';
                 arith_en_n <= '1';
 
-                stat_dec_oe_n <= '1';
+                stat_dec_oe_n <= '0';
                 stat_bus_oe_n <= '1';
                 stat_set_flg_n <= '1';
                 stat_flg <= '1';
@@ -2750,7 +2751,7 @@ end  procedure;
 
             end if; --if rdy = '0' then
 
-        end if; --if (set_clk'event and set_clk = '1' and res_n = '1') then
+        end if; -- if (res_n = '0') then
 
     end process;
 
