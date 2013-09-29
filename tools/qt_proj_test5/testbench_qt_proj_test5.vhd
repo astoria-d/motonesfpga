@@ -8,15 +8,11 @@ end testbench_qt_proj_test5;
 architecture stimulus of testbench_qt_proj_test5 is 
     component qt_proj_test5
         port (
-
     signal dbg_cpu_clk  : out std_logic;
     signal dbg_ppu_clk  : out std_logic;
     signal dbg_addr : out std_logic_vector( 16 - 1 downto 0);
     signal dbg_d_io : out std_logic_vector( 8 - 1 downto 0);
-    signal dbg_vram_ad  : out std_logic_vector (7 downto 0);
-    signal dbg_vram_a   : out std_logic_vector (13 downto 8);
 
-    
     signal dbg_status       : out std_logic_vector(7 downto 0);
     signal dbg_dec_oe_n    : out std_logic;
     signal dbg_dec_val     : out std_logic_vector (7 downto 0);
@@ -25,32 +21,15 @@ architecture stimulus of testbench_qt_proj_test5 is
     signal dbg_stat_we_n    : out std_logic;
     
 ---monitor inside cpu
-    signal dbg_instruction  : out std_logic_vector(7 downto 0);
-    signal dbg_int_d_bus  : out std_logic_vector(7 downto 0);
-    
-    
-            
-            base_clk 	: in std_logic;
-            rst_n     	: in std_logic;
-            joypad1     : in std_logic_vector(7 downto 0);
-            joypad2     : in std_logic_vector(7 downto 0);
-            vga_clk     : out std_logic;
-            h_sync_n    : out std_logic;
-            v_sync_n    : out std_logic;
-            r           : out std_logic_vector(3 downto 0);
-            g           : out std_logic_vector(3 downto 0);
-            b           : out std_logic_vector(3 downto 0)
-             );
-    end component;
+    signal dbg_d1, dbg_d2, dbg_d_out: out std_logic_vector (7 downto 0);
+    signal dbg_ea_carry, dbg_carry_clr_n    : out std_logic;
+    signal dbg_gate_n    : out std_logic;
 
-    component vga_device
-    port (  vga_clk     : in std_logic;
-            rst_n       : in std_logic;
-            h_sync_n    : in std_logic;
-            v_sync_n    : in std_logic;
-            r           : in std_logic_vector(3 downto 0);
-            g           : in std_logic_vector(3 downto 0);
-            b           : in std_logic_vector(3 downto 0)
+
+        base_clk 	: in std_logic;
+        rst_n     	: in std_logic;
+        vga_clk     : out std_logic
+
             );
     end component;
 
@@ -90,9 +69,10 @@ architecture stimulus of testbench_qt_proj_test5 is
     signal dbg_status_val    : std_logic_vector (7 downto 0);
     signal dbg_stat_we_n    : std_logic;
     
----monitor inside cpu
-    signal dbg_instruction  : std_logic_vector(7 downto 0);
-    signal dbg_int_d_bus  : std_logic_vector(7 downto 0);
+    signal dbg_d1, dbg_d2, dbg_d_out: std_logic_vector (7 downto 0);
+    signal dbg_ea_carry, dbg_carry_clr_n    : std_logic;
+    signal dbg_gate_n    : std_logic;
+
 begin
 
     sim_board : qt_proj_test5 port map (
@@ -100,8 +80,6 @@ begin
     dbg_ppu_clk  , 
     dbg_addr , 
     dbg_d_io , 
-    dbg_vram_ad  , 
-    dbg_vram_a   , 
 
     
     dbg_status       , 
@@ -110,13 +88,14 @@ begin
     dbg_int_dbus    , 
     dbg_status_val    , 
     dbg_stat_we_n    , 
+
+    dbg_d1, dbg_d2, dbg_d_out,
+    dbg_ea_carry    ,dbg_carry_clr_n , 
+    dbg_gate_n    ,
+
     
-    dbg_instruction  , 
-    dbg_int_d_bus  , 
-    
-    
-    base_clk, reset_input, joypad1, joypad2, 
-            vga_clk, h_sync_n, v_sync_n, r, g, b);
+    base_clk, reset_input, 
+            vga_clk);
 
 --    dummy_vga_disp : vga_device 
 --        port map (vga_clk, reset_input, h_sync_n, v_sync_n, r, g, b);

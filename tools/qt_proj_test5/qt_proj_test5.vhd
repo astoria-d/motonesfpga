@@ -14,10 +14,7 @@ entity qt_proj_test5 is
     signal dbg_ppu_clk  : out std_logic;
     signal dbg_addr : out std_logic_vector( 16 - 1 downto 0);
     signal dbg_d_io : out std_logic_vector( 8 - 1 downto 0);
-    signal dbg_vram_ad  : out std_logic_vector (7 downto 0);
-    signal dbg_vram_a   : out std_logic_vector (13 downto 8);
 
-    
     signal dbg_status       : out std_logic_vector(7 downto 0);
     signal dbg_dec_oe_n    : out std_logic;
     signal dbg_dec_val     : out std_logic_vector (7 downto 0);
@@ -26,19 +23,14 @@ entity qt_proj_test5 is
     signal dbg_stat_we_n    : out std_logic;
     
 ---monitor inside cpu
-    signal dbg_instruction  : out std_logic_vector(7 downto 0);
-    signal dbg_int_d_bus  : out std_logic_vector(7 downto 0);
+    signal dbg_d1, dbg_d2, dbg_d_out: out std_logic_vector (7 downto 0);
+    signal dbg_ea_carry, dbg_carry_clr_n    : out std_logic;
+    signal dbg_gate_n    : out std_logic;
+
 
         base_clk 	: in std_logic;
         rst_n     	: in std_logic;
-        joypad1     : in std_logic_vector(7 downto 0);
-        joypad2     : in std_logic_vector(7 downto 0);
-        vga_clk     : out std_logic;
-        h_sync_n    : out std_logic;
-        v_sync_n    : out std_logic;
-        r           : out std_logic_vector(3 downto 0);
-        g           : out std_logic_vector(3 downto 0);
-        b           : out std_logic_vector(3 downto 0)
+        vga_clk     : out std_logic
          );
 end qt_proj_test5;
 
@@ -61,18 +53,8 @@ architecture rtl of qt_proj_test5 is
     signal ppu_clk  : std_logic;
     signal vga_out_clk   : std_logic;
 
-    signal rdy, irq_n, nmi_n, dbe, r_nw : std_logic;
-    signal phi1, phi2 : std_logic;
     signal addr : std_logic_vector( addr_size - 1 downto 0);
     signal d_io : std_logic_vector( data_size - 1 downto 0);
-
-    signal ppu_ce_n : std_logic;
-    signal apu_ce_n : std_logic;
-    signal rd_n     : std_logic;
-    signal wr_n     : std_logic;
-    signal ale      : std_logic;
-    signal vram_ad  : std_logic_vector (7 downto 0);
-    signal vram_a   : std_logic_vector (13 downto 8);
 
 component counter_register
     generic (
@@ -90,26 +72,11 @@ end component;
 
 component prg_rom
     generic (abus_size : integer := 15; dbus_size : integer := 8);
-    port (  ce_n, oe_n, we_n : in std_logic;   --select pin active low.
+    port (  clk             : in std_logic;
+            ce_n           : in std_logic;   --select pin active low.
             addr            : in std_logic_vector (abus_size - 1 downto 0);
             data            : inout std_logic_vector (dbus_size - 1 downto 0)
         );
-end component;
-
-
-component single_port_rom
-    generic 
-    (
-        DATA_WIDTH : natural := 8;
-        ADDR_WIDTH : natural := 8
-    );
-    port 
-    (
-        clk		: in std_logic;
-        ce		: in std_logic;
-        addr            : in std_logic_vector (ADDR_WIDTH - 1 downto 0);
-        q		: out std_logic_vector((DATA_WIDTH -1) downto 0)
-    );
 end component;
 
 component processor_status 
@@ -158,18 +125,33 @@ end component;
     signal stat_c : std_logic;
     signal trig_clk : std_logic;
     
+    
+    
+    component alu_test
+    port (  
+        d1    : in std_logic_vector(7 downto 0);
+        d2    : in std_logic_vector(7 downto 0);
+        d_out    : out std_logic_vector(7 downto 0);
+        carry_clr_n : in std_logic;
+        ea_carry : out std_logic
+        );
+end component;
+
+    signal d1, d2, d_out : std_logic_vector (7 downto 0);
+    signal ea_carry, gate_n    : std_logic;
+        signal carry_clr_n : std_logic;
+
 
 
 begin
 
-    irq_n <= '0';
     vga_clk <= vga_out_clk;
     trig_clk <= not cpu_clk;
 
     pcl_inst : counter_register generic map (16) port map
         (cpu_clk, rst_n, '0', '1', (others => '0'), addr(15 downto 0));
 
-    rom_inst : single_port_rom generic map (8, 12) port map
+    rom_inst : prg_rom generic map (12, 8) port map
         (base_clk, '0', addr(11 downto 0), d_io);
 
     dbg_addr <= addr;
@@ -181,10 +163,64 @@ begin
 
     dbg_cpu_clk <= cpu_clk;
     dbg_ppu_clk <= ppu_clk;
---    dbg_addr <= addr;
---    dbg_d_io <= d_io;
---    dbg_vram_ad  <= vram_ad ;
---    dbg_vram_a   <= vram_a  ;
+
+    dbg_d1 <= d1;
+    dbg_d2 <= d2;
+    dbg_d_out <= d_out;
+    dbg_ea_carry <= ea_carry;
+    dbg_carry_clr_n <= carry_clr_n;
+    dbg_gate_n <= gate_n;
+    
+    dummy_alu : alu_test
+    port map (  
+        d1, d2, d_out, carry_clr_n , ea_carry
+        );
+
+        gate_n <= not ea_carry;
+    dec_test_p : process (rst_n, ea_carry, trig_clk)
+    begin
+        if (rst_n = '0') then
+            d1 <= "00000000";
+            d2 <= "00000000";
+            carry_clr_n <= '0';
+            --gate_n <= '1';
+--        elsif (ea_carry = '1') then
+--            gate_n <= '0';
+--            carry_clr_n <= '0';
+        elsif (rising_edge(trig_clk)) then
+            if (addr(5 downto 0) = "000001") then
+            --addr=01
+                carry_clr_n <= '1';
+                d1 <= "00010011";
+                d2 <= "01000111";
+                --gate_n <= '1';
+            elsif (addr(5 downto 0) = "000010") then
+            --addr=02
+                carry_clr_n <= '1';
+                d1 <= "00110011";
+                d2 <= "11001111";
+                --gate_n <= '1';
+            elsif (addr(5 downto 0) = "000011") then
+            --addr=03
+                carry_clr_n <= '1';
+                d1 <= "00001010";
+                d2 <= "01011001";
+                --gate_n <= '1';
+            elsif (addr(5 downto 0) = "000100") then
+            --addr=04
+                carry_clr_n <= '1';
+                d1 <= "10001010";
+                d2 <= "10011001";
+                --gate_n <= '1';
+            else
+                carry_clr_n <= '1';
+                d1 <= "00000000";
+                d2 <= "00000000";
+                --gate_n <= '1';
+            end if;
+        end if;
+    end process;
+
 
     --status register
     status_register : processor_status generic map (8) 
@@ -268,7 +304,5 @@ begin
         end if;
     end process;
 
-                    
-                    
 end rtl;
 
