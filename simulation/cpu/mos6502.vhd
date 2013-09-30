@@ -446,9 +446,9 @@ begin
 
     --address operand data buffer.
     idl_l : input_data_latch generic map (dsize) 
-            port map(set_clk, dl_al_oe_n, dl_al_we_n, int_d_bus, bal);
+            port map(trigger_clk, dl_al_oe_n, dl_al_we_n, int_d_bus, bal);
     idl_h : input_data_latch generic map (dsize) 
-            port map(set_clk, '0', dl_ah_we_n, int_d_bus, idl_h_out);
+            port map(trigger_clk, '0', dl_ah_we_n, int_d_bus, idl_h_out);
     ---only DLH has b-bus side output.
     idl_h_a_buf : tri_state_buffer generic map (dsize)
             port map (dl_ah_oe_n, idl_h_out, bah);

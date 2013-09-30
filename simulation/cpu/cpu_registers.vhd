@@ -159,12 +159,15 @@ end input_data_latch;
 
 architecture rtl of input_data_latch is
 
-component data_latch
+component d_flip_flop
     generic (
             dsize : integer := 8
             );
     port (  
             clk     : in std_logic;
+            res_n   : in std_logic;
+            set_n   : in std_logic;
+            we_n    : in std_logic;
             d       : in std_logic_vector (dsize - 1 downto 0);
             q       : out std_logic_vector (dsize - 1 downto 0)
         );
@@ -181,13 +184,11 @@ component tri_state_buffer
         );
 end component;
 
-signal latch_clk : std_logic;
 signal latch_buf : std_logic_vector (dsize - 1 downto 0);
 
 begin
-    latch_clk <= (not we_n) and clk;
-    latch_inst : data_latch generic map (dsize) 
-                    port map(latch_clk, int_dbus, latch_buf);
+    latch_inst : d_flip_flop generic map (dsize) 
+                    port map(clk, '1', '1', we_n, int_dbus, latch_buf);
     iput_data_tsb : tri_state_buffer generic map (dsize) 
                     port map(oe_n, latch_buf, alu_bus);
 
