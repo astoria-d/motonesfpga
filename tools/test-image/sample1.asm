@@ -13,6 +13,24 @@
 
 .segment "STARTUP"
 .proc	Reset
+
+;;; de1 env decoder bug test
+LDA   $8182, y
+STA   $2007
+INY   
+DEX   
+;;BPL   #-10
+LDA   $8182, y
+STA   $2007
+INY   
+DEX   
+;;BPL   #-10
+LDA   #$3d
+STA   $0302               ;;;>>>invalid store address!!!! @ 907,921,200 ps
+
+
+
+
 ; interrupt off, initialize sp.
 	sei
 	ldx	#$ff
