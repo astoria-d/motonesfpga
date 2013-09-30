@@ -121,15 +121,17 @@ component counter_register
     );
 end component;
 
+signal cnt_clk      : std_logic;
 signal cnt_rst_n    : std_logic;
 signal clk_cnt      : std_logic_vector(5 downto 0);
 
 begin
 
+    cnt_clk <= not clk;
     cnt_rst_n <= not ce_n;
 
     counter_inst : counter_register generic map (6, 1)
-            port map (clk, cnt_rst_n, '0', '1', (others => '0'), clk_cnt);
+            port map (cnt_clk, cnt_rst_n, '0', '1', (others => '0'), clk_cnt);
 
     sync_ce_n <= '0' when ce_n = '0' and oe_n = '0' and we_n = '1' else
                  '0' when ce_n = '0' and oe_n = '1' and we_n = '0' and clk_cnt = "000001" else

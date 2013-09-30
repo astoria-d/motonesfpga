@@ -94,6 +94,7 @@ use ieee.std_logic_1164.all;
 entity v_address_decoder is
 generic (abus_size : integer := 14; dbus_size : integer := 8);
     port (  clk         : in std_logic; 
+            mem_clk     : in std_logic;
             rd_n        : in std_logic;
             wr_n        : in std_logic;
             ale         : in std_logic;
@@ -119,11 +120,26 @@ end v_address_decoder;
 
 architecture rtl of v_address_decoder is
 
+component ram_ctrl
+    port (  
+            clk              : in std_logic;
+            ce_n, oe_n, we_n : in std_logic;
+            sync_ce_n        : out std_logic
+        );
+end component;
+
+signal nt0_ce_n_in    : std_logic;
+signal nt1_ce_n_in    : std_logic;
 begin
 
     --pattern table
     pt_ce_n <= '0' when (v_addr(13) = '0' and rd_n = '0') else
              '1' ;
+
+    nt0_ram_ctl : ram_ctrl
+            port map (mem_clk, nt0_ce_n_in, rd_n, wr_n, nt0_ce_n);
+    nt1_ram_ctl : ram_ctrl
+            port map (mem_clk, nt1_ce_n_in, rd_n, wr_n, nt1_ce_n);
 
     --ram io timing.
     main_p : process (clk, v_addr, v_data, wr_n)
@@ -136,27 +152,27 @@ begin
                     --bit 10 is the name table selector.
                     if (v_addr(10) = '0') then
                         --name table 0 enable.
-                        nt1_ce_n <= '1';
+                        nt1_ce_n_in <= '1';
                         if (wr_n = '0') then
                             --write
-                            nt0_ce_n <= clk;
+                            nt0_ce_n_in <= clk;
                         elsif (rd_n = '0') then 
                             --read
-                            nt0_ce_n <= '0';
+                            nt0_ce_n_in <= '0';
                         else
-                            nt0_ce_n <= '1';
+                            nt0_ce_n_in <= '1';
                         end if;
                     else
                         --name table 1 enable.
-                        nt0_ce_n <= '1';
+                        nt0_ce_n_in <= '1';
                         if (wr_n = '0') then
                             --write
-                            nt1_ce_n <= clk;
+                            nt1_ce_n_in <= clk;
                         elsif (rd_n = '0') then 
                             --read
-                            nt1_ce_n <= '0';
+                            nt1_ce_n_in <= '0';
                         else
-                            nt1_ce_n <= '1';
+                            nt1_ce_n_in <= '1';
                         end if;
                     end if;
                 else
@@ -164,37 +180,37 @@ begin
                     --bit 11 is the name table selector.
                     if (v_addr(11) = '0') then
                         --name table 0 enable.
-                        nt1_ce_n <= '1';
+                        nt1_ce_n_in <= '1';
                         if (wr_n = '0') then
                             --write
-                            nt0_ce_n <= clk;
+                            nt0_ce_n_in <= clk;
                         elsif (rd_n = '0') then 
                             --read
-                            nt0_ce_n <= '0';
+                            nt0_ce_n_in <= '0';
                         else
-                            nt0_ce_n <= '1';
+                            nt0_ce_n_in <= '1';
                         end if;
                     else
                         --name table 1 enable.
-                        nt0_ce_n <= '1';
+                        nt0_ce_n_in <= '1';
                         if (wr_n = '0') then
                             --write
-                            nt1_ce_n <= clk;
+                            nt1_ce_n_in <= clk;
                         elsif (rd_n = '0') then 
                             --read
-                            nt1_ce_n <= '0';
+                            nt1_ce_n_in <= '0';
                         else
-                            nt1_ce_n <= '1';
+                            nt1_ce_n_in <= '1';
                         end if;
                     end if;
                 end if; --if (nt_v_mirror = '1') then
             else
-                nt0_ce_n <= '1';
-                nt1_ce_n <= '1';
+                nt0_ce_n_in <= '1';
+                nt1_ce_n_in <= '1';
             end if;
         else
-            nt0_ce_n <= '1';
-            nt1_ce_n <= '1';
+            nt0_ce_n_in <= '1';
+            nt1_ce_n_in <= '1';
         end if; --if (v_addr(13) = '1') then
     end process;
 
