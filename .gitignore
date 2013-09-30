@@ -1,0 +1,13 @@
+*.swp
+aaa
+bbb
+ghdl-dir
+tmp/
+bl.sh
+motonesemu
+*.bin
+*.nes
+*.o
+vgadisp
+dummy-driver.sh
+tools/vga-tool/testbench_ppu
