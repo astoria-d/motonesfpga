@@ -111,6 +111,7 @@ architecture rtl of motones_sim is
     component v_address_decoder
     generic (abus_size : integer := 14; dbus_size : integer := 8);
         port (  clk         : in std_logic; 
+                mem_clk     : in std_logic;
                 rd_n        : in std_logic;
                 wr_n        : in std_logic;
                 ale         : in std_logic;
@@ -225,7 +226,7 @@ begin
                 vga_out_clk, h_sync_n, v_sync_n, r, g, b);
 
     ppu_addr_decoder : v_address_decoder generic map (vram_size14, data_size) 
-        port map (ppu_clk, rd_n, wr_n, ale, v_addr, vram_ad, 
+        port map (ppu_clk, mem_clk, rd_n, wr_n, ale, v_addr, vram_ad, 
                 nt_v_mirror, pt_ce_n, nt0_ce_n, nt1_ce_n);
 
     ---VRAM/CHR ROM instances
