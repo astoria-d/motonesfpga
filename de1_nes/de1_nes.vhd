@@ -33,6 +33,13 @@ entity de1_nes is
     signal dbg_stat_we_n    : out std_logic;
     signal dbg_idl_h, dbg_idl_l, dbg_dbb_r, dbg_dbb_w    : out std_logic_vector (7 downto 0);
 
+    signal dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status : out std_logic_vector (7 downto 0);
+    signal dbg_ppu_addr : out std_logic_vector (13 downto 0);
+    signal dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y : out std_logic_vector (7 downto 0);
+
+    
+    
+    
 --NES instance
         base_clk 	: in std_logic;
         rst_n     	: in std_logic;
@@ -66,7 +73,7 @@ architecture rtl of de1_nes is
 --    signal dbg_status_val    : out std_logic_vector (7 downto 0);
     signal dbg_stat_we_n    : out std_logic;
     signal dbg_idl_h, dbg_idl_l, dbg_dbb_r, dbg_dbb_w    : out std_logic_vector (7 downto 0);
-
+    
                 input_clk   : in std_logic; --phi0 input pin.
                 rdy         : in std_logic;
                 rst_n       : in std_logic;
@@ -126,7 +133,12 @@ architecture rtl of de1_nes is
     end component;
 
     component ppu
-    port (  clk         : in std_logic;
+    port (  
+    signal dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status : out std_logic_vector (7 downto 0);
+    signal dbg_ppu_addr : out std_logic_vector (13 downto 0);
+    signal dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y : out std_logic_vector (7 downto 0);
+    
+            clk         : in std_logic;
             mem_clk     : in std_logic;
             ce_n        : in std_logic;
             rst_n       : in std_logic;
@@ -151,6 +163,7 @@ architecture rtl of de1_nes is
     component v_address_decoder
     generic (abus_size : integer := 14; dbus_size : integer := 8);
         port (  clk         : in std_logic; 
+                mem_clk     : in std_logic;
                 rd_n        : in std_logic;
                 wr_n        : in std_logic;
                 ale         : in std_logic;
@@ -279,31 +292,35 @@ begin
 
 --    --nes ppu instance
 --    ppu_inst : ppu 
---        port map (ppu_clk, mem_clk, ppu_ce_n, rst_n, r_nw, addr(2 downto 0), d_io, 
+--        port map (
+--            dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status, dbg_ppu_addr, 
+--            dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y,
+--                
+--                ppu_clk, mem_clk, ppu_ce_n, rst_n, r_nw, addr(2 downto 0), d_io, 
 --                nmi_n, rd_n, wr_n, ale, vram_ad, vram_a,
 --                vga_out_clk, h_sync_n, v_sync_n, r, g, b);
---
---    ppu_addr_decoder : v_address_decoder generic map (vram_size14, data_size) 
---        port map (ppu_clk, rd_n, wr_n, ale, v_addr, vram_ad, 
---                nt_v_mirror, pt_ce_n, nt0_ce_n, nt1_ce_n);
---
---    ---VRAM/CHR ROM instances
---    v_addr (13 downto 8) <= vram_a;
---
---    --transparent d-latch
---    vram_latch : ls373 generic map (data_size)
---                port map(ale, '0', vram_ad, v_addr(7 downto 0));
---
---    vchr_rom : chr_rom generic map (chr_rom_8k, data_size)
---            port map (mem_clk, pt_ce_n, v_addr(chr_rom_8k - 1 downto 0), vram_ad, nt_v_mirror);
---
---    --name table/attr table
---    vram_nt0 : ram generic map (vram_1k, data_size)
---            port map (mem_clk, nt0_ce_n, rd_n, wr_n, v_addr(vram_1k - 1 downto 0), vram_ad);
---
---    vram_nt1 : ram generic map (vram_1k, data_size)
---            port map (mem_clk, nt1_ce_n, rd_n, wr_n, v_addr(vram_1k - 1 downto 0), vram_ad);
---
+
+    ppu_addr_decoder : v_address_decoder generic map (vram_size14, data_size) 
+        port map (ppu_clk, mem_clk, rd_n, wr_n, ale, v_addr, vram_ad, 
+                nt_v_mirror, pt_ce_n, nt0_ce_n, nt1_ce_n);
+
+    ---VRAM/CHR ROM instances
+    v_addr (13 downto 8) <= vram_a;
+
+    --transparent d-latch
+    vram_latch : ls373 generic map (data_size)
+                port map(ale, '0', vram_ad, v_addr(7 downto 0));
+
+    vchr_rom : chr_rom generic map (chr_rom_8k, data_size)
+            port map (mem_clk, pt_ce_n, v_addr(chr_rom_8k - 1 downto 0), vram_ad, nt_v_mirror);
+
+    --name table/attr table
+    vram_nt0 : ram generic map (vram_1k, data_size)
+            port map (mem_clk, nt0_ce_n, rd_n, wr_n, v_addr(vram_1k - 1 downto 0), vram_ad);
+
+    vram_nt1 : ram generic map (vram_1k, data_size)
+            port map (mem_clk, nt1_ce_n, rd_n, wr_n, v_addr(vram_1k - 1 downto 0), vram_ad);
+
 --    --APU/DMA instance
 --    apu_inst : apu
 --        port map (cpu_clk, apu_ce_n, rst_n, r_nw, addr, d_io, rdy);
@@ -314,8 +331,8 @@ begin
     dbg_r_nw <= r_nw;
     dbg_addr <= addr;
     dbg_d_io <= d_io;
---    dbg_vram_ad  <= vram_ad ;
---    dbg_vram_a   <= vram_a  ;
+    dbg_vram_ad  <= vram_ad ;
+    dbg_vram_a   <= vram_a  ;
 
 
 end rtl;

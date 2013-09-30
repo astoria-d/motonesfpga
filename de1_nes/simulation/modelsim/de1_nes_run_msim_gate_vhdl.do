@@ -14,6 +14,9 @@ vsim -t 10ps +transport_int_delays +transport_path_delays -sdftyp /sim_board=de1
 #add wave *
 
 add wave sim:/testbench_motones_sim/sim_board/rst_n
+
+add wave -divider cpu
+
 ##add wave sim:/testbench_motones_sim/sim_board/dbg_ppu_clk
 ##add wave  sim:/testbench_motones_sim/sim_board/dbg_mem_clk
 
@@ -40,6 +43,17 @@ add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_sp
 add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_status
 add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_x
 add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_y
+
+
+add wave -divider ppu
+
+add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_ctrl
+add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_mask
+add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_status
+add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_addr 
+add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_data
+add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x
+add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_y
 
 
 add wave -divider debug

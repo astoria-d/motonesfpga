@@ -62,6 +62,8 @@ set_global_assignment -name VHDL_FILE mem/ram.vhd
 set_global_assignment -name VHDL_FILE cpu/cpu_registers.vhd
 set_global_assignment -name VHDL_FILE ppu/ppu_registers.vhd
 set_global_assignment -name VHDL_FILE clock/clock_divider.vhd
+set_global_assignment -name VHDL_FILE ppu/render.vhd
+set_global_assignment -name VHDL_FILE ppu/ppu.vhd
 set_global_assignment -name VHDL_FILE apu/apu.vhd
 set_global_assignment -name VHDL_FILE cpu/decoder.vhd
 set_global_assignment -name VHDL_FILE cpu/alu.vhd

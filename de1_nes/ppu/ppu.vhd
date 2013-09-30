@@ -3,7 +3,13 @@ use ieee.std_logic_1164.all;
 use work.motonesfpga_common.all;
 
 entity ppu is 
-    port (  clk         : in std_logic;
+    port (  
+    signal dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status : out std_logic_vector (7 downto 0);
+    signal dbg_ppu_addr : out std_logic_vector (13 downto 0);
+    signal dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y : out std_logic_vector (7 downto 0);
+    
+    
+            clk         : in std_logic;
             mem_clk     : in std_logic;
             ce_n        : in std_logic;
             rst_n       : in std_logic;
@@ -169,6 +175,17 @@ signal oam_plt_data     : std_logic_vector (dsize - 1 downto 0);
 signal plt_data_out     : std_logic_vector (dsize - 1 downto 0);
 
 begin
+
+
+    dbg_ppu_ctrl <= ppu_ctrl;
+    dbg_ppu_mask <= ppu_mask;
+    dbg_ppu_status <= ppu_status;
+    dbg_ppu_addr  <= ppu_addr;
+    dbg_ppu_data <= ppu_data;
+    dbg_ppu_scrl_x <= ppu_scroll_x;
+    dbg_ppu_scrl_y <= ppu_scroll_y;
+
+
 
     render_inst : ppu_render port map (clk, mem_clk, rst_n,
             rd_n, wr_n, ale, vram_ad, vram_a,
