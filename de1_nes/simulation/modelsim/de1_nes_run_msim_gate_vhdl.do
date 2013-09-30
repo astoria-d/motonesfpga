@@ -44,6 +44,11 @@ add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_y
 
 add wave -divider debug
 
+#add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_idl_h
+#add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_idl_l
+#add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_dbb_r
+#add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_dbb_w
+
 #add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_dec_oe_n
 #add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_dec_val
 #add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_int_dbus
@@ -62,5 +67,9 @@ run 10 us
 #wave zoom range 3339700 ps 5138320 ps
 wave zoom full
 
+#run 12 us
+
 run 1000 us
+
+##wave addcursor 907923400 ps
 

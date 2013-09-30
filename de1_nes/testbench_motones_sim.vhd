@@ -30,6 +30,7 @@ architecture stimulus of testbench_motones_sim is
     signal dbg_int_dbus    : out std_logic_vector (7 downto 0);
 --    signal dbg_status_val    : out std_logic_vector (7 downto 0);
     signal dbg_stat_we_n    : out std_logic;
+    signal dbg_idl_h, dbg_idl_l, dbg_dbb_r, dbg_dbb_w    : out std_logic_vector (7 downto 0);
     
     
 --NES instance
@@ -97,6 +98,7 @@ architecture stimulus of testbench_motones_sim is
     signal dbg_int_dbus    : std_logic_vector (7 downto 0);
 --    signal dbg_status_val    : std_logic_vector (7 downto 0);
     signal dbg_stat_we_n    : std_logic;
+    signal dbg_idl_h, dbg_idl_l, dbg_dbb_r, dbg_dbb_w    : std_logic_vector (7 downto 0);
 
 begin
 
@@ -120,6 +122,7 @@ dbg_dec_val     ,
 dbg_int_dbus    ,
 --dbg_status_val    ,
 dbg_stat_we_n    ,
+dbg_idl_h, dbg_idl_l, dbg_dbb_r, dbg_dbb_w,
 
 
     

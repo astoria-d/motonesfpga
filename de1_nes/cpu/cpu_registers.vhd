@@ -90,6 +90,9 @@ entity data_bus_buffer is
             dsize : integer := 8
             );
     port (  
+    signal dbg_dbb_r     : out std_logic_vector (7 downto 0);
+    signal dbg_dbb_w     : out std_logic_vector (7 downto 0);
+
             clk         : in std_logic;
             r_nw        : in std_logic;
             int_oe_n    : in std_logic;
@@ -126,6 +129,9 @@ signal wr_clk : std_logic;
 signal read_buf : std_logic_vector (dsize - 1 downto 0);
 signal write_buf : std_logic_vector (dsize - 1 downto 0);
 begin
+    dbg_dbb_r <= read_buf;
+    dbg_dbb_w <= write_buf;
+    
     rd_clk <= r_nw and clk;
     wr_clk <= (not r_nw) and clk;
 
@@ -153,6 +159,8 @@ entity input_data_latch is
             dsize : integer := 8
             );
     port (  
+    signal dbg_idl_val     : out std_logic_vector (7 downto 0);
+    
             clk         : in std_logic;
             oe_n        : in std_logic;
             we_n        : in std_logic;
@@ -163,12 +171,15 @@ end input_data_latch;
 
 architecture rtl of input_data_latch is
 
-component data_latch
+component d_flip_flop
     generic (
             dsize : integer := 8
             );
     port (  
             clk     : in std_logic;
+            res_n   : in std_logic;
+            set_n   : in std_logic;
+            we_n    : in std_logic;
             d       : in std_logic_vector (dsize - 1 downto 0);
             q       : out std_logic_vector (dsize - 1 downto 0)
         );
@@ -185,13 +196,11 @@ component tri_state_buffer
         );
 end component;
 
-signal latch_clk : std_logic;
 signal latch_buf : std_logic_vector (dsize - 1 downto 0);
 
 begin
-    latch_clk <= (not we_n) and clk;
-    latch_inst : data_latch generic map (dsize) 
-                    port map(latch_clk, int_dbus, latch_buf);
+    latch_inst : d_flip_flop generic map (dsize) 
+                    port map(clk, '1', '1', we_n, int_dbus, latch_buf);
     iput_data_tsb : tri_state_buffer generic map (dsize) 
                     port map(oe_n, latch_buf, alu_bus);
 
