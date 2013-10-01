@@ -5,7 +5,7 @@ OBJECTS	=	$(ASMSOURCES:.asm=.o)
 LIBRARIES =
 #-------------------------------------------------------------------------------
 all :	$(OBJECTS) $(LIBRARIES)
-	ld65 -o regression.nes --config sample1.cfg --obj $(OBJECTS)
+	ld65 -o regression.nes --config linker.cfg --obj $(OBJECTS)
 
 .SUFFIXES : .asm .o
 
