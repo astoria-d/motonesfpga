@@ -34,62 +34,27 @@
     lda ad_start_msg+1
     sta $01
     jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
 
-    lda ad_tes_msg2
+
+
+
+@test_success:
+    lda ad_test_done_msg
     sta $00
-    lda ad_tes_msg2+1
+    lda ad_test_done_msg+1
+    sta $01
+    jsr print_ln
+    jmp @test_done
+
+
+@test_failure:
+    lda ad_test_failed_msg
+    sta $00
+    lda ad_test_failed_msg+1
     sta $01
     jsr print_ln
 
-    lda ad_tes_msg3
-    sta $00
-    lda ad_tes_msg3+1
-    sta $01
-    jsr print_ln
-
-    lda ad_tes_msg2
-    sta $00
-    lda ad_tes_msg2+1
-    sta $01
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-
-    lda ad_tes_msg3
-    sta $00
-    lda ad_tes_msg3+1
-    sta $01
-    jsr print_ln
-
-
+@test_done:
     ;;show bg...
 	lda	#$1e
 	sta	$2001
@@ -100,8 +65,8 @@
 
     ;;done...
     ;;infinite loop.
-mainloop:
-	jmp	mainloop
+@mainloop:
+	jmp	@mainloop
 .endproc
 
 
@@ -109,6 +74,8 @@ nmi_test:
     rti
 
 ;;;param $00, $01 = msg addr.
+;;;print_ln display message. 
+;;;start position is the bottom of the screen.
 .proc print_ln
     lda vram_current
     sta $2006
@@ -241,18 +208,17 @@ start_msg:
     .byte   "regression test start..."
     .byte   $00
 
-ad_tes_msg2:
-    .addr   tes_msg2
-tes_msg2:
-    .byte   "msg2"
+ad_test_done_msg:
+    .addr   test_done_msg
+test_done_msg:
+    .byte   "test succeeded..."
     .byte   $00
 
-ad_tes_msg3:
-    .addr   tes_msg3
-tes_msg3:
-    .byte   "msg3"
+ad_test_failed_msg:
+    .addr   test_failed_msg
+test_failed_msg:
+    .byte   "test failed!!!"
     .byte   $00
-
 
 
 ;;;;global variables.
