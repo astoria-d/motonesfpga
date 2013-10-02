@@ -26,8 +26,8 @@
 	ldx	#$ff
 	txs
 
-    jsr init_ppu
     jsr init_global
+    jsr init_ppu
 
     lda ad_start_msg
     sta $00
@@ -35,9 +35,12 @@
     sta $01
     jsr print_ln
 
+    ;;test start...
 
 
 
+
+    ;;test finished...
 @test_success:
     lda ad_test_done_msg
     sta $00
@@ -45,7 +48,6 @@
     sta $01
     jsr print_ln
     jmp @test_done
-
 
 @test_failure:
     lda ad_test_failed_msg
@@ -77,6 +79,7 @@ nmi_test:
 ;;;print_ln display message. 
 ;;;start position is the bottom of the screen.
 .proc print_ln
+    jsr check_ppu
     lda vram_current
     sta $2006
     lda vram_current + 1
@@ -146,7 +149,19 @@ nmi_test:
     rts
 .endproc
 
+;;check_ppu exists caller's function if use_ppu flag is off
+.proc check_ppu
+    lda use_ppu
+    bne @use_ppu
+    ;;pop caller's return addr
+    pla
+    pla
+@use_ppu:
+    rts
+.endproc
+
 .proc init_ppu
+    jsr check_ppu
     ;ppu register initialize.
 	lda	#$00
 	sta	$2000
@@ -184,6 +199,10 @@ nmi_test:
 
 
 .proc init_global
+;;ppu test flag
+    lda use_ppu
+    beq @ppu_skip
+
 ;;vram pos start from the bottom line.
     lda #$23
     sta vram_current
@@ -194,12 +213,17 @@ nmi_test:
     sta scroll_x
     lda #232
     sta scroll_y
+@ppu_skip:
+
     rts
 
 .endproc
 
 
 
+;;;read only global datas
+use_ppu:
+    .byte   $01
 
 ;;;;string datas
 ad_start_msg:
@@ -220,8 +244,7 @@ test_failed_msg:
     .byte   "test failed!!!"
     .byte   $00
 
-
-;;;;global variables.
+;;;;r/w global variables.
 .segment "BSS"
 vram_current:
     .byte   $00
