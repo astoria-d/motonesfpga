@@ -269,6 +269,58 @@ nmi_test:
 :
 
 
+    ;;;lsr test
+    lda #$01
+    clc
+    lsr
+    beq :+
+    jsr test_failure
+:
+    bcs :+
+    jsr test_failure
+:
+    lsr
+    beq :+
+    jsr test_failure
+:
+    bcc :+
+    jsr test_failure
+:
+    lda #$5a
+    lsr
+    cmp #$2d
+    beq :+
+    jsr test_failure
+:
+
+    ;;;ror/rol test
+    lda #$a5
+    sec
+    ror
+    cmp #$d2
+    beq :+
+    jsr test_failure
+:
+    ror
+    bcc :+
+    jsr test_failure
+:
+    cmp #$e9
+    beq :+
+    jsr test_failure
+:
+    clc
+    rol
+    rol
+    cmp #$a5
+    beq :+
+    jsr test_failure
+:
+    bcs :+
+    jsr test_failure
+:
+
+
     ;;;;jsr test_failure
     rts
 .endproc
