@@ -36,27 +36,35 @@
     jsr print_ln
 
     ;;test start...
+    jsr single_inst_test
 
+.endproc
 
 
 
     ;;test finished...
-@test_success:
+test_success:
     lda ad_test_done_msg
     sta $00
     lda ad_test_done_msg+1
     sta $01
     jsr print_ln
-    jmp @test_done
+    jmp test_done
 
-@test_failure:
+test_failure:
+    lda use_ppu
+    bne :+
+    lda #$00
+    ;;;generate invalid opcode error.
+    jsr $00
+:
     lda ad_test_failed_msg
     sta $00
     lda ad_test_failed_msg+1
     sta $01
     jsr print_ln
 
-@test_done:
+test_done:
     ;;show bg...
 	lda	#$1e
 	sta	$2001
@@ -67,13 +75,102 @@
 
     ;;done...
     ;;infinite loop.
-@mainloop:
-	jmp	@mainloop
-.endproc
+mainloop:
+	jmp	mainloop
 
 
 nmi_test:
     rti
+
+;;;single byte instructions.
+.proc single_inst_test
+    lda ad_single_test
+    sta $00
+    lda ad_single_test+1
+    sta $01
+    jsr print_ln
+
+    ;;asl test
+    lda #$80
+    clc
+    asl
+    beq :+
+    jsr test_failure
+:
+    bcs :+
+    jsr test_failure
+:
+    bpl :+
+    jsr test_failure
+:
+    asl
+    beq :+
+    jsr test_failure
+:
+    bcc :+
+    jsr test_failure
+:
+    bpl :+
+    jsr test_failure
+:
+    lda #$40
+    asl
+    bne :+
+    jsr test_failure
+:
+    bcc :+
+    jsr test_failure
+:
+    bmi :+
+    jsr test_failure
+:
+    cmp #$80
+    beq :+
+    jsr test_failure
+:
+    lda #$a5
+    asl
+    cmp #$4a
+    beq :+
+    jsr test_failure
+:
+    asl
+    cmp #$94
+    beq :+
+    jsr test_failure
+:
+
+    ;;clc test
+;;-- SR Flags (bit 7 to bit 0):
+;;--  7   N   ....    Negative
+;;--  6   V   ....    Overflow
+;;--  5   -   ....    ignored
+;;--  4   B   ....    Break
+;;--  3   D   ....    Decimal (use BCD for arithmetics)
+;;--  2   I   ....    Interrupt (IRQ disable)
+;;--  1   Z   ....    Zero
+;;--  0   C   ....    Carry
+
+    lda #$01
+    ;;save status
+    php
+    ;;load carry flag.
+    pha
+    plp
+    bcs :+
+    jsr test_failure
+:
+    clc
+    bcc :+
+    jsr test_failure
+:
+    ;;restore status
+    plp
+
+
+    ;;;;jsr test_failure
+    rts
+.endproc
 
 ;;;param $00, $01 = msg addr.
 ;;;print_ln display message. 
@@ -152,14 +249,15 @@ nmi_test:
 ;;check_ppu exists caller's function if use_ppu flag is off
 .proc check_ppu
     lda use_ppu
-    bne @use_ppu
+    bne @use_ppu_ret
     ;;pop caller's return addr
     pla
     pla
-@use_ppu:
+@use_ppu_ret:
     rts
 .endproc
 
+;;ppu initialize
 .proc init_ppu
     jsr check_ppu
     ;ppu register initialize.
@@ -197,7 +295,7 @@ nmi_test:
 
 .endproc
 
-
+;;initialize bss segment datas
 .proc init_global
 ;;ppu test flag
     lda use_ppu
@@ -244,6 +342,12 @@ test_failed_msg:
     .byte   "test failed!!!"
     .byte   $00
 
+ad_single_test:
+    .addr   single_test
+single_test:
+    .byte   "single byte inst test..."
+    .byte   $00
+
 ;;;;r/w global variables.
 .segment "BSS"
 vram_current:
@@ -253,7 +357,6 @@ scroll_x:
     .byte   $00
 scroll_y:
     .byte   $00
-
 
 ;;;for DE1 internal memory constraints.
 .segment "VECINFO_4k"
