@@ -320,8 +320,95 @@ nmi_test:
     jsr test_failure
 :
 
+    ;;sec/sei/cli test
+    ;;save status
+    php
+    ;;load carry flag.
+    lda #$00
+    pha
+    plp
+    bcc :+
+    jsr test_failure
+:
+    sec
+    bcs :+
+    jsr test_failure
+:
+    sei
+    php
+    pla
+    and #$04
+    bne :+
+    jsr test_failure
+:
+    cli
+    php
+    pla
+    and #$04
+    beq :+
+    jsr test_failure
+:
+    ;;restore status
+    plp
+
+    ;;tax/tay/txa/tya test
+    lda #$01
+    tax
+    bpl :+
+    jsr test_failure
+:
+    bne :+
+    jsr test_failure
+:
+    cpx #$01
+    beq :+
+    jsr test_failure
+:
+    dex
+    txa
+    bpl :+
+    jsr test_failure
+:
+    beq :+
+    jsr test_failure
+:
+    lda #$01
+    tay
+    iny
+    iny
+    tya
+:
+    cpy #$03
+    beq :+
+    jsr test_failure
+:
+
+    ;;;txs/tsx test...
+    tsx
+    stx $00 ;;;save sp
+
+    ldx #$30
+    txs
+    lda #$dd
+    pha         ;;0130 = dd, sp=012f
+    tsx
+    cpx #$2f
+    beq :+
+    jsr test_failure
+:
+    ldx $00
+    txs     ;;restore sp
+    ;;check 0130 value
+    lda #$ee
+    lda $0130
+    cmp #$dd
+    beq :+
+    jsr test_failure
+:
 
     ;;;;jsr test_failure
+
+    ;;;single byte instruction test done.
     rts
 .endproc
 
