@@ -108,6 +108,14 @@ component palette_ram
     );
 end component;
 
+component ram_ctrl
+    port (  
+            clk              : in std_logic;
+            ce_n, oe_n, we_n : in std_logic;
+            sync_ce_n        : out std_logic
+        );
+end component;
+
 constant X_SIZE       : integer := 9;
 constant dsize        : integer := 8;
 constant asize        : integer := 14;
@@ -260,6 +268,7 @@ signal r_n              : std_logic;
 signal vram_addr        : std_logic_vector (asize - 1 downto 0);
 
 --palette
+signal plt_ram_ce_n_in  : std_logic;
 signal plt_ram_ce_n     : std_logic;
 signal plt_r_n          : std_logic;
 signal plt_w_n          : std_logic;
@@ -267,29 +276,32 @@ signal plt_addr         : std_logic_vector (4 downto 0);
 signal plt_data         : std_logic_vector (dsize - 1 downto 0);
 
 --primari / secondary oam
-signal oam_ram_ce_n     : std_logic;
-signal oam_r_n          : std_logic;
-signal oam_w_n          : std_logic;
-signal oam_addr         : std_logic_vector (dsize - 1 downto 0);
-signal oam_data         : std_logic_vector (dsize - 1 downto 0);
+signal p_oam_ram_ce_n_in    : std_logic;
+signal p_oam_ram_ce_n       : std_logic;
+signal p_oam_r_n            : std_logic;
+signal p_oam_w_n            : std_logic;
+signal p_oam_addr           : std_logic_vector (dsize - 1 downto 0);
+signal p_oam_data           : std_logic_vector (dsize - 1 downto 0);
 
-signal s_oam_ram_ce_n   : std_logic;
-signal s_oam_r_n        : std_logic;
-signal s_oam_w_n        : std_logic;
-signal s_oam_addr_cpy_ce_n      : std_logic;
-signal s_oam_addr_cpy_n         : std_logic;
-signal s_oam_addr       : std_logic_vector (4 downto 0);
-signal s_oam_addr_cpy   : std_logic_vector (4 downto 0);
-signal s_oam_data       : std_logic_vector (dsize - 1 downto 0);
+signal s_oam_ram_ce_n_in    : std_logic;
+signal s_oam_ram_ce_n       : std_logic;
+signal s_oam_r_n            : std_logic;
+signal s_oam_w_n            : std_logic;
+signal s_oam_addr_cpy_ce_n  : std_logic;
+signal s_oam_addr_cpy_n     : std_logic;
+signal s_oam_addr           : std_logic_vector (4 downto 0);
+signal s_oam_addr_cpy       : std_logic_vector (4 downto 0);
+signal s_oam_data           : std_logic_vector (dsize - 1 downto 0);
 
 signal p_oam_cnt_res_n  : std_logic;
 signal p_oam_cnt_ce_n   : std_logic;
 signal p_oam_cnt_wrap_n : std_logic;
-signal s_oam_cnt_ce_n   : std_logic;
 signal p_oam_cnt        : std_logic_vector (dsize - 1 downto 0);
-signal s_oam_cnt        : std_logic_vector (4 downto 0);
 signal p_oam_addr_in    : std_logic_vector (dsize - 1 downto 0);
 signal oam_ev_status    : std_logic_vector (2 downto 0);
+
+signal s_oam_cnt_ce_n   : std_logic;
+signal s_oam_cnt        : std_logic_vector (4 downto 0);
 
 --oam evaluation status
 constant EV_STAT_COMP       : std_logic_vector (2 downto 0) := "000";
@@ -434,7 +446,7 @@ begin
     ---palette ram
     r_n <= not r_nw;
 
-    plt_ram_ce_n <= clk when plt_bus_ce_n = '0' and r_nw = '0' else 
+    plt_ram_ce_n_in <= clk when plt_bus_ce_n = '0' and r_nw = '0' else 
                     '0' when plt_bus_ce_n = '0' and r_nw = '1' else
                     '0' when ppu_mask(PPUSBG) = '1' and 
                             (cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) and 
@@ -513,39 +525,44 @@ begin
             port map (r_nw, oam_plt_data, plt_data);
     plt_d_buf_r : tri_state_buffer generic map (dsize)
             port map (r_n, plt_data, oam_plt_data);
+    plt_ram_ctl : ram_ctrl
+            port map (mem_clk, plt_ram_ce_n_in, plt_r_n, plt_w_n, plt_ram_ce_n);
     palette_inst : palette_ram generic map (5, dsize)
             port map (mem_clk, plt_ram_ce_n, plt_r_n, plt_w_n, plt_addr, plt_data);
 
     ---primary oam
-    oam_ram_ce_n <= clk when oam_bus_ce_n = '0' and r_nw = '0' else
+    p_oam_ram_ce_n_in <= clk when oam_bus_ce_n = '0' and r_nw = '0' else
                     '0' when oam_bus_ce_n = '0' and r_nw = '1' else
                     '0' when ppu_mask(PPUSSP) = '1' and
                              cur_x > conv_std_logic_vector(64, X_SIZE) and
                              cur_x <= conv_std_logic_vector(256, X_SIZE) and
                              p_oam_cnt_wrap_n = '1' else
                     '1';
-    oam_addr <= oam_plt_addr when oam_bus_ce_n = '0' else
+    p_oam_addr <= oam_plt_addr when oam_bus_ce_n = '0' else
                 p_oam_addr_in when ppu_mask(PPUSSP) = '1' and 
                         (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                         cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) and
                          cur_x > conv_std_logic_vector(64, X_SIZE) and 
                          cur_x <= conv_std_logic_vector(256, X_SIZE) else
                 (others => 'Z');
-    oam_r_n <= not r_nw when oam_bus_ce_n = '0' else
+    p_oam_r_n <= not r_nw when oam_bus_ce_n = '0' else
                 '0' when ppu_mask(PPUSSP) = '1' and 
                         (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                         cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) and
                          cur_x > conv_std_logic_vector(64, X_SIZE) and 
                          cur_x <= conv_std_logic_vector(256, X_SIZE) else
                 '1';
-    oam_w_n <= r_nw when oam_bus_ce_n = '0' else
+    p_oam_w_n <= r_nw when oam_bus_ce_n = '0' else
                 '1';
     oam_d_buf_w : tri_state_buffer generic map (dsize)
-            port map (r_nw, oam_plt_data, oam_data);
+            port map (r_nw, oam_plt_data, p_oam_data);
     oam_d_buf_r : tri_state_buffer generic map (dsize)
-            port map (r_n, oam_data, oam_plt_data);
+            port map (r_n, p_oam_data, oam_plt_data);
+
+    p_oam_ram_ctl : ram_ctrl
+            port map (mem_clk, p_oam_ram_ce_n_in, p_oam_r_n, p_oam_w_n, p_oam_ram_ce_n);
     primary_oam_inst : ram generic map (dsize, dsize)
-            port map (mem_clk, oam_ram_ce_n, oam_r_n, oam_w_n, oam_addr, oam_data);
+            port map (mem_clk, p_oam_ram_ce_n, p_oam_r_n, p_oam_w_n, p_oam_addr, p_oam_data);
 
     ---secondary oam
     p_oam_cnt_inst : counter_register generic map (dsize, 4)
@@ -556,7 +573,7 @@ begin
             port map (clk_n, p_oam_cnt_res_n, s_oam_addr_cpy_ce_n, 
                     '1', (others => '0'), s_oam_addr_cpy);
 
-    s_oam_ram_ce_n <= clk when ppu_mask(PPUSSP) = '1' and cur_x(0) = '1' and
+    s_oam_ram_ce_n_in <= clk when ppu_mask(PPUSSP) = '1' and cur_x(0) = '1' and
                                 cur_x > "000000001" and
                                 cur_x <= conv_std_logic_vector(64, X_SIZE) else
                       clk when ppu_mask(PPUSSP) = '1' and cur_x(0) = '1' and
@@ -569,6 +586,8 @@ begin
                                 s_oam_addr_cpy_n = '0' else
                       '1';
 
+    s_oam_ram_ctl : ram_ctrl
+            port map (mem_clk, s_oam_ram_ce_n_in, s_oam_r_n, s_oam_w_n, s_oam_ram_ce_n);
     secondary_oam_inst : ram generic map (5, dsize)
             port map (mem_clk, s_oam_ram_ce_n, s_oam_r_n, s_oam_w_n, s_oam_addr, s_oam_data);
 
@@ -842,13 +861,13 @@ end;
                             s_oam_r_n <= '1';
                             s_oam_w_n <= '0';
                             s_oam_addr <= s_oam_cnt;
-                            s_oam_data <= oam_data;
+                            s_oam_data <= p_oam_data;
 
                             if (oam_ev_status = EV_STAT_COMP) then
                                 --check y range.
-                                if (cur_y < "000000110" and oam_data <= cur_y + "000000001") or 
-                                    (cur_y >= "000000110" and oam_data <= cur_y + "000000001" and 
-                                             oam_data >= cur_y - "000000110") then
+                                if (cur_y < "000000110" and p_oam_data <= cur_y + "000000001") or 
+                                    (cur_y >= "000000110" and p_oam_data <= cur_y + "000000001" and 
+                                             p_oam_data >= cur_y - "000000110") then
                                     oam_ev_status <= EV_STAT_CP1;
                                     s_oam_cnt_ce_n <= '0';
                                     --copy remaining oam entry.
