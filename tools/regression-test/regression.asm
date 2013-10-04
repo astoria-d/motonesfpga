@@ -167,6 +167,107 @@ nmi_test:
     ;;restore status
     plp
 
+    ;;clv test
+    lda #$40
+    ;;save status
+    php
+    ;;load v flag.
+    pha
+    plp
+    bvs :+
+    jsr test_failure
+:
+    clv
+    bvc :+
+    jsr test_failure
+:
+    ;;restore status
+    plp
+
+
+    ;;;;;dex test
+    ldx #$03
+    dex
+    bne :+
+    jsr test_failure
+:
+    cpx #$02
+    beq :+
+    jsr test_failure
+:
+    bpl :+
+    jsr test_failure
+:
+    dex
+    bne :+
+    jsr test_failure
+:
+    cpx #$01
+    beq :+
+    jsr test_failure
+:
+    bpl :+
+    jsr test_failure
+:
+    dex
+    beq :+
+    jsr test_failure
+:
+    cpx #$00
+    beq :+
+    jsr test_failure
+:
+    bpl :+
+    jsr test_failure
+:
+    dex
+    bne :+
+    jsr test_failure
+:
+    bmi :+
+    jsr test_failure
+:
+    cpx #$ff
+    beq :+
+    jsr test_failure
+:
+    ldx #$80
+    bmi :+
+    jsr test_failure
+:
+    dex
+    bpl :+
+    jsr test_failure
+:
+    cpx #$7f
+    beq :+
+    jsr test_failure
+:
+
+    ;;;dey test
+    ldy #$50
+    dey
+    cpy #$4f
+    beq :+
+    jsr test_failure
+:
+    dey
+    cpy #$4e
+    beq :+
+    jsr test_failure
+:
+    ;;inx/iny test
+    iny
+    cpy #$4f
+    beq :+
+    jsr test_failure
+:
+    inx
+    cpx #$80
+    beq :+
+    jsr test_failure
+:
+
 
     ;;;;jsr test_failure
     rts
