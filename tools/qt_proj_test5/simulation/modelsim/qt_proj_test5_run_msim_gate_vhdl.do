@@ -25,14 +25,22 @@ add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_d_io
 
 
 
-add wave -divider status_
+add wave -divider vga_out
+add wave  sim:/testbench_qt_proj_test5/sim_board/v_sync_n
+add wave  sim:/testbench_qt_proj_test5/sim_board/h_sync_n
+add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/r
+add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/g
+add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/b
 
-add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_d1
-add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_d2
-add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_d_out
-add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_ea_carry
-add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_carry_clr_n
-add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_gate_n
+
+#add wave -divider status
+
+#add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_d1
+#add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_d2
+#add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_d_out
+#add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_ea_carry
+#add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_carry_clr_n
+#add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_gate_n
 
 
 
@@ -48,6 +56,8 @@ view signals
 
 ###run 10 us
 run 3 us
+
+run 400 us
 
 wave zoom full
 

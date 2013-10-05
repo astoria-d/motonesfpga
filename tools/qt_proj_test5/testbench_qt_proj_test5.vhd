@@ -28,7 +28,11 @@ architecture stimulus of testbench_qt_proj_test5 is
 
         base_clk 	: in std_logic;
         rst_n     	: in std_logic;
-        vga_clk     : out std_logic
+        h_sync_n    : out std_logic;
+        v_sync_n    : out std_logic;
+        r           : out std_logic_vector(3 downto 0);
+        g           : out std_logic_vector(3 downto 0);
+        b           : out std_logic_vector(3 downto 0)
 
             );
     end component;
@@ -95,7 +99,12 @@ begin
 
     
     base_clk, reset_input, 
-            vga_clk);
+        h_sync_n    ,
+        v_sync_n    ,
+        r           ,
+        g           ,
+        b           
+);
 
 --    dummy_vga_disp : vga_device 
 --        port map (vga_clk, reset_input, h_sync_n, v_sync_n, r, g, b);

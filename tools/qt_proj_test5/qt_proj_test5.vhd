@@ -30,7 +30,11 @@ entity qt_proj_test5 is
 
         base_clk 	: in std_logic;
         rst_n     	: in std_logic;
-        vga_clk     : out std_logic
+        h_sync_n    : out std_logic;
+        v_sync_n    : out std_logic;
+        r           : out std_logic_vector(3 downto 0);
+        g           : out std_logic_vector(3 downto 0);
+        b           : out std_logic_vector(3 downto 0)
          );
 end qt_proj_test5;
 
@@ -45,13 +49,48 @@ architecture rtl of qt_proj_test5 is
             );
     end component;
 
+    component dummy_ppu
+        port (  ppu_clk     : in std_logic;
+                rst_n       : in std_logic;
+                pos_x       : out std_logic_vector (8 downto 0);
+                pos_y       : out std_logic_vector (8 downto 0);
+                nes_r       : out std_logic_vector (3 downto 0);
+                nes_g       : out std_logic_vector (3 downto 0);
+                nes_b       : out std_logic_vector (3 downto 0)
+        );
+    end component;
+
+signal pos_x       : std_logic_vector (8 downto 0);
+signal pos_y       : std_logic_vector (8 downto 0);
+signal nes_r       : std_logic_vector (3 downto 0);
+signal nes_g       : std_logic_vector (3 downto 0);
+signal nes_b       : std_logic_vector (3 downto 0);
+
+component vga_ctl
+    port (  ppu_clk     : in std_logic;
+            vga_clk     : in std_logic;
+            rst_n       : in std_logic;
+            pos_x       : in std_logic_vector (8 downto 0);
+            pos_y       : in std_logic_vector (8 downto 0);
+            nes_r       : in std_logic_vector (3 downto 0);
+            nes_g       : in std_logic_vector (3 downto 0);
+            nes_b       : in std_logic_vector (3 downto 0);
+            h_sync_n    : out std_logic;
+            v_sync_n    : out std_logic;
+            r           : out std_logic_vector(3 downto 0);
+            g           : out std_logic_vector(3 downto 0);
+            b           : out std_logic_vector(3 downto 0)
+    );
+end component;
+
+
     constant data_size : integer := 8;
     constant addr_size : integer := 16;
     constant size14    : integer := 14;
 
     signal cpu_clk  : std_logic;
     signal ppu_clk  : std_logic;
-    signal vga_out_clk   : std_logic;
+    signal vga_clk   : std_logic;
 
     signal addr : std_logic_vector( addr_size - 1 downto 0);
     signal d_io : std_logic_vector( data_size - 1 downto 0);
@@ -145,7 +184,32 @@ end component;
 
 begin
 
-    vga_clk <= vga_out_clk;
+    ppu_inst: dummy_ppu 
+        port map (  ppu_clk     ,
+                rst_n       ,
+                pos_x       ,
+                pos_y       ,
+                nes_r       ,
+                nes_g       ,
+                nes_b       
+        );
+    vga_ctl_inst : vga_ctl
+    port map (  ppu_clk     ,
+            vga_clk     ,
+            rst_n       ,
+            pos_x       ,
+            pos_y       ,
+            nes_r       ,
+            nes_g       ,
+            nes_b       ,
+            h_sync_n    ,
+            v_sync_n    ,
+            r           ,
+            g           ,
+            b           
+    );
+
+
     trig_clk <= not cpu_clk;
 
     pcl_inst : counter_register generic map (16) port map
@@ -159,7 +223,7 @@ begin
 
     --ppu/cpu clock generator
     clock_inst : clock_divider port map 
-        (base_clk, rst_n, cpu_clk, ppu_clk, vga_out_clk);
+        (base_clk, rst_n, cpu_clk, ppu_clk, vga_clk);
 
     dbg_cpu_clk <= cpu_clk;
     dbg_ppu_clk <= ppu_clk;
