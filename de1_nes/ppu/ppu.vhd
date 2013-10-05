@@ -8,6 +8,8 @@ entity ppu is
     signal dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status : out std_logic_vector (7 downto 0);
     signal dbg_ppu_addr : out std_logic_vector (13 downto 0);
     signal dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y : out std_logic_vector (7 downto 0);
+    signal dbg_disp_nt, dbg_disp_attr : out std_logic_vector (7 downto 0);
+    signal dbg_disp_ptn_h, dbg_disp_ptn_l : out std_logic_vector (15 downto 0);
     
     
             clk         : in std_logic;
@@ -35,7 +37,12 @@ end ppu;
 architecture rtl of ppu is
 
 component ppu_render
-    port (  clk         : in std_logic;
+    port (  
+    signal dbg_disp_nt, dbg_disp_attr : out std_logic_vector (7 downto 0);
+    signal dbg_disp_ptn_h, dbg_disp_ptn_l : out std_logic_vector (15 downto 0);
+    
+    
+            clk         : in std_logic;
             mem_clk     : in std_logic;
             rst_n       : in std_logic;
             rd_n        : out std_logic;
@@ -189,7 +196,10 @@ begin
 
 
 
-    render_inst : ppu_render port map (clk, mem_clk, rst_n,
+    render_inst : ppu_render port map (
+    dbg_disp_nt, dbg_disp_attr, dbg_disp_ptn_h, dbg_disp_ptn_l,
+    
+            clk, mem_clk, rst_n,
             rd_n, wr_n, ale, vram_ad, vram_a,
             pos_x, pos_y, nes_r, nes_g, nes_b,
             ppu_ctrl, ppu_mask, read_status, ppu_status, ppu_scroll_x, ppu_scroll_y,

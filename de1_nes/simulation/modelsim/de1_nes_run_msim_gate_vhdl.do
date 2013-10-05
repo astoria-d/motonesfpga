@@ -17,7 +17,6 @@ add wave sim:/testbench_motones_sim/sim_board/rst_n
 
 add wave -divider cpu
 
-##add wave sim:/testbench_motones_sim/sim_board/dbg_ppu_clk
 ##add wave  sim:/testbench_motones_sim/sim_board/dbg_mem_clk
 
 add wave sim:/testbench_motones_sim/sim_board/dbg_r_nw
@@ -48,6 +47,7 @@ add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_y
 add wave -divider ppu
 
 add wave sim:/testbench_motones_sim/sim_board/dbg_ppu_ce_n
+add wave sim:/testbench_motones_sim/sim_board/dbg_ppu_clk
 add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_ctrl
 add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_mask
 add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_status
@@ -55,6 +55,13 @@ add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_addr
 add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_data
 add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x
 add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_y
+
+
+add wave -divider render
+#add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_disp_nt
+#add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_disp_attr 
+#add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_disp_ptn_h
+#add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_disp_ptn_l
 
 
 add wave -divider debug

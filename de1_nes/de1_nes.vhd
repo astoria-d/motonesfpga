@@ -38,6 +38,8 @@ entity de1_nes is
     signal dbg_ppu_addr : out std_logic_vector (13 downto 0);
     signal dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y : out std_logic_vector (7 downto 0);
 
+--    signal dbg_disp_nt, dbg_disp_attr : out std_logic_vector (7 downto 0);
+--    signal dbg_disp_ptn_h, dbg_disp_ptn_l : out std_logic_vector (15 downto 0);
     
     
     
@@ -139,6 +141,8 @@ architecture rtl of de1_nes is
     signal dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status : out std_logic_vector (7 downto 0);
     signal dbg_ppu_addr : out std_logic_vector (13 downto 0);
     signal dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y : out std_logic_vector (7 downto 0);
+    signal dbg_disp_nt, dbg_disp_attr : out std_logic_vector (7 downto 0);
+    signal dbg_disp_ptn_h, dbg_disp_ptn_l : out std_logic_vector (15 downto 0);
     
             clk         : in std_logic;
             mem_clk     : in std_logic;
@@ -248,6 +252,8 @@ architecture rtl of de1_nes is
     signal nt0_ce_n : std_logic;
     signal nt1_ce_n : std_logic;
 
+    signal dbg_disp_nt, dbg_disp_attr : std_logic_vector (7 downto 0);
+    signal dbg_disp_ptn_h, dbg_disp_ptn_l : std_logic_vector (15 downto 0);
 
 begin
 
@@ -298,6 +304,7 @@ begin
             dbg_ppu_ce_n    ,
             dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status, dbg_ppu_addr, 
             dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y,
+            dbg_disp_nt, dbg_disp_attr, dbg_disp_ptn_h, dbg_disp_ptn_l ,
                 
                 ppu_clk, mem_clk, ppu_ce_n, rst_n, r_nw, addr(2 downto 0), d_io, 
                 nmi_n, rd_n, wr_n, ale, vram_ad, vram_a,

@@ -5,7 +5,11 @@ use ieee.std_logic_unsigned.all;
 use work.motonesfpga_common.all;
 
 entity ppu_render is 
-    port (  clk         : in std_logic;
+    port (  
+    signal dbg_disp_nt, dbg_disp_attr : out std_logic_vector (7 downto 0);
+    signal dbg_disp_ptn_h, dbg_disp_ptn_l : out std_logic_vector (15 downto 0);
+    
+            clk         : in std_logic;
             mem_clk     : in std_logic;
             rst_n       : in std_logic;
             rd_n        : out std_logic;
@@ -322,6 +326,11 @@ signal spr_ptn_in       : std_logic_vector (dsize - 1 downto 0);
 
 
 begin
+    dbg_disp_nt <= disp_nt;
+    dbg_disp_attr <= disp_attr;
+    dbg_disp_ptn_h <= disp_ptn_h;
+    dbg_disp_ptn_l <= disp_ptn_l;
+
 
     clk_n <= not clk;
 
