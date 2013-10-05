@@ -447,8 +447,7 @@ begin
                     if (r_nw = '0') then
                         oam_plt_data <= cpu_d;
                     else
-                        --error!!!!
-                        --oam_plt_data <= (others => 'Z');
+                        oam_plt_data <= (others => 'Z');
                         cpu_d <= oam_plt_data;
                     end if;
                     rd_n <= '1';
