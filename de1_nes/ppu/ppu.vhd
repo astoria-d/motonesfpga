@@ -4,6 +4,7 @@ use work.motonesfpga_common.all;
 
 entity ppu is 
     port (  
+    signal dbg_ppu_ce_n    : out std_logic;
     signal dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status : out std_logic_vector (7 downto 0);
     signal dbg_ppu_addr : out std_logic_vector (13 downto 0);
     signal dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y : out std_logic_vector (7 downto 0);
@@ -177,6 +178,7 @@ signal plt_data_out     : std_logic_vector (dsize - 1 downto 0);
 begin
 
 
+    dbg_ppu_ce_n <= ce_n;
     dbg_ppu_ctrl <= ppu_ctrl;
     dbg_ppu_mask <= ppu_mask;
     dbg_ppu_status <= ppu_status;
@@ -351,6 +353,14 @@ begin
     begin
         if (rst_n = '0') then
             ppu_latch_rst_n <= '0';
+            ppu_clk_cnt_res_n <= '0';
+            rd_n <= 'Z';
+            wr_n <= 'Z';
+            ale <= 'Z';
+            oam_plt_data <= (others => 'Z');
+            vram_ad <= (others => 'Z');
+            vram_a <= (others => 'Z');
+            cpu_d <= (others => 'Z');
         elsif (rst_n = '1' and ce_n = '0') then
             --set counter=0 on register write.   
 --            if (ce_n'event or r_nw'event or cpu_addr'event or (cpu_d'event and r_nw = '0')) then
@@ -437,7 +447,8 @@ begin
                     if (r_nw = '0') then
                         oam_plt_data <= cpu_d;
                     else
-                        oam_plt_data <= (others => 'Z');
+                        --error!!!!
+                        --oam_plt_data <= (others => 'Z');
                         cpu_d <= oam_plt_data;
                     end if;
                     rd_n <= '1';

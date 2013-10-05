@@ -33,6 +33,7 @@ entity de1_nes is
     signal dbg_stat_we_n    : out std_logic;
     signal dbg_idl_h, dbg_idl_l, dbg_dbb_r, dbg_dbb_w    : out std_logic_vector (7 downto 0);
 
+    signal dbg_ppu_ce_n    : out std_logic;
     signal dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status : out std_logic_vector (7 downto 0);
     signal dbg_ppu_addr : out std_logic_vector (13 downto 0);
     signal dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y : out std_logic_vector (7 downto 0);
@@ -134,6 +135,7 @@ architecture rtl of de1_nes is
 
     component ppu
     port (  
+    signal dbg_ppu_ce_n    : out std_logic;
     signal dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status : out std_logic_vector (7 downto 0);
     signal dbg_ppu_addr : out std_logic_vector (13 downto 0);
     signal dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y : out std_logic_vector (7 downto 0);
@@ -290,15 +292,16 @@ begin
     prg_ram_inst : ram generic map (ram_2k, data_size)
             port map (mem_clk, ram_ce_n, ram_oe_n, R_nW, addr(ram_2k - 1 downto 0), d_io);
 
---    --nes ppu instance
---    ppu_inst : ppu 
---        port map (
---            dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status, dbg_ppu_addr, 
---            dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y,
---                
---                ppu_clk, mem_clk, ppu_ce_n, rst_n, r_nw, addr(2 downto 0), d_io, 
---                nmi_n, rd_n, wr_n, ale, vram_ad, vram_a,
---                vga_out_clk, h_sync_n, v_sync_n, r, g, b);
+    --nes ppu instance
+    ppu_inst : ppu 
+        port map (
+            dbg_ppu_ce_n    ,
+            dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status, dbg_ppu_addr, 
+            dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y,
+                
+                ppu_clk, mem_clk, ppu_ce_n, rst_n, r_nw, addr(2 downto 0), d_io, 
+                nmi_n, rd_n, wr_n, ale, vram_ad, vram_a,
+                vga_out_clk, h_sync_n, v_sync_n, r, g, b);
 
     ppu_addr_decoder : v_address_decoder generic map (vram_size14, data_size) 
         port map (ppu_clk, mem_clk, rd_n, wr_n, ale, v_addr, vram_ad, 

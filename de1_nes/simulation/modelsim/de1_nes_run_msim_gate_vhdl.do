@@ -47,6 +47,7 @@ add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_y
 
 add wave -divider ppu
 
+add wave sim:/testbench_motones_sim/sim_board/dbg_ppu_ce_n
 add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_ctrl
 add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_mask
 add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_status
@@ -83,7 +84,7 @@ wave zoom full
 
 #run 12 us
 
-run 1000 us
+#run 1000 us
 
 ##wave addcursor 907923400 ps
 

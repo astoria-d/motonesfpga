@@ -345,8 +345,6 @@ end component;
 
     signal check_bit     : std_logic_vector(1 to 5);
 
-    --signal dbg_pcl, dbg_pch, dbg_sp, dbg_x, dbg_y, dbg_acc       : std_logic_vector(7 downto 0);
-
 begin
 
     ----for debug monitoring....
