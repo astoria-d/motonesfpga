@@ -29,6 +29,7 @@ entity qt_proj_test5 is
 
 
         base_clk 	: in std_logic;
+        base_clk_27mhz 	: in std_logic;
         rst_n     	: in std_logic;
         h_sync_n    : out std_logic;
         v_sync_n    : out std_logic;
@@ -59,6 +60,14 @@ architecture rtl of qt_proj_test5 is
                 nes_b       : out std_logic_vector (3 downto 0)
         );
     end component;
+
+    component vga_clk_gen
+        PORT
+        (
+            inclk0		: IN STD_LOGIC  := '0';
+            c0		: OUT STD_LOGIC 
+        );
+    END component;
 
 signal pos_x       : std_logic_vector (8 downto 0);
 signal pos_y       : std_logic_vector (8 downto 0);
@@ -91,6 +100,8 @@ end component;
     signal cpu_clk  : std_logic;
     signal ppu_clk  : std_logic;
     signal vga_clk   : std_logic;
+    signal vga_clk_pll : std_logic;
+    
 
     signal addr : std_logic_vector( addr_size - 1 downto 0);
     signal d_io : std_logic_vector( data_size - 1 downto 0);
@@ -193,9 +204,18 @@ begin
                 nes_g       ,
                 nes_b       
         );
+
+        vga_clk_gen_inst : vga_clk_gen
+        PORT map
+        (
+            base_clk_27mhz, vga_clk_pll
+        );
+
+    
     vga_ctl_inst : vga_ctl
     port map (  ppu_clk     ,
-            vga_clk     ,
+            vga_clk_pll, 
+            --vga_clk     ,
             rst_n       ,
             pos_x       ,
             pos_y       ,

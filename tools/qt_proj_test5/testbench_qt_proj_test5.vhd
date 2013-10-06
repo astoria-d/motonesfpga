@@ -27,6 +27,7 @@ architecture stimulus of testbench_qt_proj_test5 is
 
 
         base_clk 	: in std_logic;
+        base_clk_27mhz 	: in std_logic;
         rst_n     	: in std_logic;
         h_sync_n    : out std_logic;
         v_sync_n    : out std_logic;
@@ -38,6 +39,7 @@ architecture stimulus of testbench_qt_proj_test5 is
     end component;
 
     signal base_clk         : std_logic;
+        signal base_clk_27mhz 	: std_logic;
     signal vga_clk         : std_logic;
     signal reset_input      : std_logic;
 
@@ -54,8 +56,11 @@ architecture stimulus of testbench_qt_proj_test5 is
 
     ---clock frequency = 21,477,270 (21 MHz)
     --constant base_clock_time : time := 46 ns;
-    --base clock frequency shares vga clock.
-    constant base_clock_time : time := 40 ns;
+    --base clock frequency = 50 MHz.
+    constant base_clock_time : time := 20 ns;
+    
+    constant base_clock_27mhz_time : time := 37 ns;
+    
 
 
     signal dbg_cpu_clk  : std_logic;
@@ -98,7 +103,7 @@ begin
     dbg_gate_n    ,
 
     
-    base_clk, reset_input, 
+    base_clk, base_clk_27mhz, reset_input, 
         h_sync_n    ,
         v_sync_n    ,
         r           ,
@@ -130,5 +135,12 @@ begin
         wait for base_clock_time / 2;
     end process;
 
+    clock27mhz_p: process
+    begin
+        base_clk_27mhz <= '1';
+        wait for base_clock_27mhz_time / 2;
+        base_clk_27mhz <= '0';
+        wait for base_clock_27mhz_time / 2;
+    end process;
 end stimulus;
 

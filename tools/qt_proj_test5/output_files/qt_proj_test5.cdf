@@ -4,10 +4,10 @@ JedecChain;
 	DefaultMfr(6E);
 
 	P ActionCode(Cfg)
-		Device PartName(EPCS4) Path("D:/daisuke/nes/repo/motonesfpga/tools/qt_proj_test5/output_files/") File("qt_proj_test5.pof") MfrSpec(OpMask(1) Child_OpMask(1 1));
+		Device PartName(EP2C20F484) Path("D:/daisuke/nes/repo/motonesfpga/tools/qt_proj_test5/output_files/") File("qt_proj_test5.sof") MfrSpec(OpMask(1));
 
 ChainEnd;
 
 AlteraBegin;
-	ChainType(asc);
+	ChainType(JTAG);
 AlteraEnd;

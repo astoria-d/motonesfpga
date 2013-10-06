@@ -16,6 +16,7 @@ db/*
 incremental_db/*
 no-need/*
 simulation/*
+greybox_tmp/*
 undo_redo.txt
 *.work
 *.nes

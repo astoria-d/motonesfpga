@@ -48,6 +48,12 @@ add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/r
 add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/g
 add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/b
 
+add wave sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/vga_clk
+add wave -radix decimal -unsigned sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/vga_x
+add wave -radix decimal -unsigned sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/vga_y
+#add wave -position end  sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/x_res_n
+#add wave -position end  sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/y_res_n
+#add wave -position end  sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/y_en_n
 
 
 
@@ -72,7 +78,7 @@ add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/b
 view structure
 view signals
 run 100 us
-run 8000 us
+#run 20000 us
 
 wave zoom full
 

@@ -61,13 +61,6 @@ set_global_assignment -name EDA_DESIGN_INSTANCE_NAME sim_board -section_id testb
 set_global_assignment -name EDA_TEST_BENCH_RUN_SIM_FOR "10 us" -section_id testbench_qt_proj_test5
 set_global_assignment -name EDA_TEST_BENCH_MODULE_NAME testbench_qt_proj_test5 -section_id testbench_qt_proj_test5
 set_global_assignment -name EDA_TEST_BENCH_FILE testbench_qt_proj_test5.vhd -section_id testbench_qt_proj_test5
-set_global_assignment -name VHDL_FILE vga.vhd
-set_global_assignment -name VHDL_FILE alu_test.vhd
-set_global_assignment -name VHDL_FILE motonesfpga_common.vhd
-set_global_assignment -name VHDL_FILE prg_rom.vhd
-set_global_assignment -name VHDL_FILE cpu_registers.vhd
-set_global_assignment -name VHDL_FILE clock_divider.vhd
-set_global_assignment -name VHDL_FILE qt_proj_test5.vhd
 set_global_assignment -name USE_CONFIGURATION_DEVICE ON
 set_global_assignment -name STRATIX_CONFIGURATION_DEVICE EPCS4
 set_global_assignment -name STRATIX_DEVICE_IO_STANDARD "3.3-V LVTTL"
@@ -92,4 +85,13 @@ set_location_assignment PIN_R20 -to dbg_addr[0]
 set_location_assignment PIN_R19 -to dbg_addr[1]
 set_location_assignment PIN_U15 -to dbg_addr[2]
 set_location_assignment PIN_Y19 -to dbg_addr[3]
+set_global_assignment -name VHDL_FILE vga.vhd
+set_global_assignment -name VHDL_FILE alu_test.vhd
+set_global_assignment -name VHDL_FILE motonesfpga_common.vhd
+set_global_assignment -name VHDL_FILE prg_rom.vhd
+set_global_assignment -name VHDL_FILE cpu_registers.vhd
+set_global_assignment -name VHDL_FILE clock_divider.vhd
+set_global_assignment -name VHDL_FILE qt_proj_test5.vhd
+set_global_assignment -name QIP_FILE vga_clk_gen.qip
+set_location_assignment PIN_D12 -to base_clk_27mhz
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

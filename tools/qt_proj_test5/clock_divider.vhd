@@ -52,7 +52,7 @@ begin
 	cpu_clk_old <= not cpu_clk_new;
 	cpu_clk <= cpu_clk_new;
     ppu_clk <= not loop2(0);
-	vga_clk <= base_clk;
+	vga_clk <= not loop2(0);
 
 	cpu_we_n <= '0' when loop6 = "001" else
                 '0' when loop6 = "100" else
