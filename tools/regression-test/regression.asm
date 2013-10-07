@@ -39,6 +39,7 @@
     jsr single_inst_test
     jsr a2_inst_test
     jsr a3_inst_test
+    jsr a4_inst_test
 
 .endproc
 
@@ -86,6 +87,77 @@ mainloop:
 nmi_test:
     rti
 
+
+;;a4 instructions:
+;;asl   lsr
+;;dec   rol
+;;inc   ror
+.proc a4_inst_test
+    lda ad_a4_test
+    sta $00
+    lda ad_a4_test+1
+    sta $01
+    jsr print_ln
+
+    lda #$39
+    sta $6b
+    lda #$a1
+    sta $04cc
+    lda #$9f
+    sta $ff
+
+    ldx #$fd
+
+    ;;zp, abs, absx, zpx
+    asl $6b         ;@6b=39 > 72
+    lda $6b
+    cmp #$72
+    beq :+
+    jsr test_failure
+:
+
+    dec $04cc       ;@4cc=a1 > a0
+    lda $04cc
+    cmp #$a0
+    beq :+
+    jsr test_failure
+:
+
+    lsr $03cf, x    ;@4cc=a0 > 50
+    lda $04cc
+    cmp #$50
+    beq :+
+    jsr test_failure
+:
+
+    inc $02, x      ;@ff=9f > a0
+    lda $ff
+    cmp #$a0
+    beq :+
+    jsr test_failure
+:
+
+    clc
+    rol $02, x      ;@ff=a0 > 40
+    rol $02, x      ;@ff=40 > 81
+    lda $ff
+    cmp #$81
+    beq :+
+    jsr test_failure
+:
+
+    sec
+    ror $02, x      ;@ff=81 > c0
+    ror $02, x      ;@ff=40 > e0
+    lda $ff
+    cmp #$e0
+    beq :+
+    jsr test_failure
+:
+
+    rts
+.endproc
+
 ;;a3 instructions:
 ;;sta   stx     sty
 .proc a3_inst_test
@@ -105,6 +177,7 @@ nmi_test:
     ldy #$8a
 
     ;;zp, abs, absx, zpx, (ind),y
+    ;;(indir, x) is ommited.
     sta $a9         ;@a9=b7
     stx $0a99       ;@a99=e1
     sta $0d80, x    ;@e61=b7
@@ -225,12 +298,12 @@ nmi_test:
     sta $90
     lda #$08
     sta $91
-    lda #d9
+    lda #$d9
     sta $0902       ;@0902=d9
     lda #0a
     ldy #$ca
     clc
-    adc (90),y      ;@0902, 0a+d9=e3
+    adc ($90),y      ;@0902, 0a+d9=e3
     cmp #$e3
     beq :+
     jsr test_failure
@@ -739,6 +812,12 @@ ad_test_failed_msg:
     .addr   test_failed_msg
 test_failed_msg:
     .byte   "test failed!!!"
+    .byte   $00
+
+ad_a4_test:
+    .addr   a4_test
+a4_test:
+    .byte   "a4 inst test..."
     .byte   $00
 
 ad_a3_test:
