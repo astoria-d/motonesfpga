@@ -37,10 +37,14 @@
 
     ;;test start...
     jsr single_inst_test
+    jsr a2_inst_test
+    jsr a3_inst_test
 
 .endproc
 
 
+    ;;fall through from the above func 
+    ;;or jump into from the other failed func.
 
     ;;test finished...
 test_success:
@@ -81,6 +85,161 @@ mainloop:
 
 nmi_test:
     rti
+
+;;a3 instructions:
+;;sta   stx     sty
+.proc a3_inst_test
+    lda ad_a3_test
+    sta $00
+    lda ad_a3_test+1
+    sta $01
+    jsr print_ln
+
+    lda #$78
+    sta $a1
+    lda #$05
+    sta $a2
+
+    lda #$b7
+    ldx #$e1
+    ldy #$8a
+
+    ;;zp, abs, absx, zpx, (ind),y
+    sta $a9         ;@a9=b7
+    stx $0a99       ;@a99=e1
+    sta $0d80, x    ;@e61=b7
+    sty $1f, x      ;@00=8a
+    sta ($a1), y    ;@602=b7
+
+    cmp $a9
+    beq :+
+    jsr test_failure
+:
+    cpx $0a99
+    beq :+
+    jsr test_failure
+:
+    cmp $0e61
+    beq :+
+    jsr test_failure
+:
+    cpy $00
+    beq :+
+    jsr test_failure
+:
+    cmp $0602
+    beq :+
+    jsr test_failure
+:
+
+    rts
+.endproc
+
+;;a2 instructions:
+;;adc   cmp     eor     ldy
+;;and   cpx     lda     ora
+;;bit   cpy     ldx     sbc
+.proc a2_inst_test
+    lda ad_a2_test
+    sta $00
+    lda ad_a2_test+1
+    sta $01
+    jsr print_ln
+
+    ;;a2 addr mode test
+    ;;immediate
+    lda #$0d
+    adc #$fa
+    cmp #$07
+    beq :+
+    jsr test_failure
+:
+    ;;zp addr mode
+    lda #$37
+    sta $5e     ;@5e = 37
+    lda #$c9
+    sta $71     ;@71 = c9
+    lda #$b6
+    and $5e
+    ;;b6 and 37=36
+    bit $71 ;;36 bit c9 = 00.
+    beq :+
+    jsr test_failure
+:
+
+    ;;abs addr mode.
+    lda #$3b
+    sta $0421   ;;@0421 = 3b
+    lda #$d7
+    sta $051b   ;;@051b = d7
+    lda #$eb
+    sta $06cc   ;;@06cc = eb
+    ldx $0421
+    inx
+    txa     ;;a=3c
+    eor $051b   ;;3c eor d7 = eb
+    tay
+    cpy $06cc
+    beq :+
+    jsr test_failure
+:
+
+    ;;a.2.4 indirect,x is not implemented...
+
+    ;;abs,x/y test...
+    ldx #$17
+    ldy #$a1
+    lda #$2f
+    sta $359        ;;@359=2f
+    lda #$90
+    sta $0190, y    ;;@231=90
+    txa
+    ora $0190, y    ;;@231(page cross), 90 | 17 = 97
+    sec
+    sbc $0342, x    ;;@359, 97-2f=68
+    tay
+    cpy #$68
+    beq :+
+    jsr test_failure
+:
+
+    ;;zp,xy test
+    ldx #$cd
+    lda #$f1
+    sta $35     ;;@35=f1
+    lda #$ac
+    sta $bc     ;;@bc=ac
+
+    lda #$8d
+    and $68,x   ;;@35, 8d & f1=81
+    ldy #$9a
+    eor $22,y   ;;@bc, ac^81=2d
+    tax
+    cpx #$2d
+    beq :+
+    jsr test_failure
+:
+
+    ;;(ind),y test...
+    lda #$38
+    sta $90
+    lda #$08
+    sta $91
+    lda #d9
+    sta $0902       ;@0902=d9
+    lda #0a
+    ldy #$ca
+    clc
+    adc (90),y      ;@0902, 0a+d9=e3
+    cmp #$e3
+    beq :+
+    jsr test_failure
+:
+    
+
+    rts
+
+.endproc
 
 ;;;single byte instructions.
 .proc single_inst_test
@@ -377,7 +536,7 @@ nmi_test:
     iny
     iny
     tya
-:
+
     cpy #$03
     beq :+
     jsr test_failure
@@ -580,6 +739,18 @@ ad_test_failed_msg:
     .addr   test_failed_msg
 test_failed_msg:
     .byte   "test failed!!!"
+    .byte   $00
+
+ad_a3_test:
+    .addr   a3_test
+a3_test:
+    .byte   "a3 inst test..."
+    .byte   $00
+
+ad_a2_test:
+    .addr   a2_test
+a2_test:
+    .byte   "a2 inst test..."
     .byte   $00
 
 ad_single_test:
