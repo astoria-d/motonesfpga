@@ -91,6 +91,7 @@ nmi_test:
 
 
 .proc ppu_test
+    jsr check_ppu
     lda ad_ppu_test
     sta $00
     lda ad_ppu_test+1
@@ -442,6 +443,7 @@ nmi_test:
 
     ;;a2 addr mode test
     ;;immediate
+    clc
     lda #$0d
     adc #$fa
     cmp #$07
@@ -1018,20 +1020,20 @@ use_ppu:
 
 ;;;;string datas
 ad_start_msg:
-    .addr   start_msg
-start_msg:
+    .addr   :+
+:
     .byte   "regression test start..."
     .byte   $00
 
 ad_test_done_msg:
-    .addr   test_done_msg
-test_done_msg:
+    .addr   :+
+:
     .byte   "test succeeded..."
     .byte   $00
 
 ad_test_failed_msg:
-    .addr   test_failed_msg
-test_failed_msg:
+    .addr   :+
+:
     .byte   "test failed!!!"
     .byte   $00
 
