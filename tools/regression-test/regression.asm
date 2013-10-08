@@ -40,6 +40,8 @@
     jsr a2_inst_test
     jsr a3_inst_test
     jsr a4_inst_test
+    jsr a5_inst_test
+    jsr ppu_test
 
 .endproc
 
@@ -87,6 +89,194 @@ mainloop:
 nmi_test:
     rti
 
+
+.proc ppu_test
+    lda ad_ppu_test
+    sta $00
+    lda ad_ppu_test+1
+    sta $01
+    jsr print_ln
+
+    rts
+.endproc
+
+
+;;a5 instructions:
+;;bcc   brk     php
+;;bcs   bvc     pla
+;;beq   bvs     plp
+;;bmi   jmp     rti
+;;bne   jsr     rts
+;;bpl   pha
+.proc a5_inst_test
+    lda ad_a5_test
+    sta $00
+    lda ad_a5_test+1
+    sta $01
+    jsr print_ln
+
+    ;;branch test
+    clc
+    bcc :+
+    jsr test_failure
+:
+    sec
+    bcs :+
+    jsr test_failure
+:
+    lda #$00
+    beq :+
+    jsr test_failure
+:
+    clc
+    sbc #$05
+    bmi :+
+    jsr test_failure
+:
+    bne :+
+    jsr test_failure
+:
+    clc
+    adc #$06
+    bpl :+
+    jsr test_failure
+:
+    sec
+    lda #$92    ;;-110
+    sbc #$46    ;;70, -110 - 70 = 4c(76)
+    bvs :+
+    jsr test_failure
+:
+    sec
+    lda #$92    ;;-110
+    sbc #$12    ;;18, -110 - 18 = -128
+    bvc :+
+    jsr test_failure
+:
+
+    lda #$00
+    ldx #00
+    beq @fwd
+    ;;forward page crossing branch
+@bwd:
+    jmp @fwd
+.repeat 120
+    nop
+.endrepeat
+@fwd:
+    inx
+    cpx #$01
+    beq @bwd
+
+    ;;repeat the same test 
+    ;;(in case the above test doesn't go across the page)
+    lda #$00
+    ldx #00
+    beq @fwd2
+    ;;forward page crossing branch
+@bwd2:
+    jmp @fwd2
+.repeat 120
+    nop
+.endrepeat
+@fwd2:
+    inx
+    cpx #$01
+    beq @bwd2
+
+    ;jmp, jsr, rts test...
+    clc
+    lda #100
+    jsr @jsr_test1
+    cmp #200
+    beq @jsr_ok
+    jsr test_failure
+@jsr_test1:
+    jsr @jsr_test2
+    rts
+@jsr_test2:
+    jsr @jsr_test3
+    rts
+@jsr_test3:
+    adc #100
+    rts
+@jsr_ok:
+
+    sec
+    lda #200
+    jmp @jmp_test1
+@jmp_test3:
+    adc #50
+    jmp @jmp_test_done
+@jmp_test2:
+    jmp @jmp_test3
+    adc #50
+@jmp_test1:
+    jmp @jmp_test2
+    adc #50
+@jmp_test_done:
+    cmp #251
+    beq :+
+    jsr test_failure
+:
+
+    ;;pha,php,pla,plp test
+    lda #35
+    pha
+    lda #70
+    pha
+    lda #110
+    pha
+
+    sec
+    php
+    sei
+    php
+    clc
+    php
+    lda #$ff
+    php
+    lda #$00
+    php
+    lda #$ff
+
+    plp
+    beq :+
+    jsr test_failure
+:
+    plp
+    bmi :+
+    jsr test_failure
+:
+    plp
+    bcc :+
+    jsr test_failure
+:
+    plp
+    plp
+    bcs :+
+    jsr test_failure
+:
+    cli
+    pla
+    cmp #110
+    beq :+
+    jsr test_failure
+:
+    pla
+    cmp #70
+    beq :+
+    jsr test_failure
+:
+    pla
+    cmp #35
+    beq :+
+    jsr test_failure
+:
+
+
+    rts
+.endproc
 
 ;;a4 instructions:
 ;;asl   lsr
@@ -814,27 +1004,39 @@ test_failed_msg:
     .byte   "test failed!!!"
     .byte   $00
 
+ad_ppu_test:
+    .addr   :+
+:
+    .byte   "ppu inst test..."
+    .byte   $00
+
+ad_a5_test:
+    .addr   :+
+:
+    .byte   "a5 inst test..."
+    .byte   $00
+
 ad_a4_test:
-    .addr   a4_test
-a4_test:
+    .addr   :+
+:
     .byte   "a4 inst test..."
     .byte   $00
 
 ad_a3_test:
-    .addr   a3_test
-a3_test:
+    .addr   :+
+:
     .byte   "a3 inst test..."
     .byte   $00
 
 ad_a2_test:
-    .addr   a2_test
-a2_test:
+    .addr   :+
+:
     .byte   "a2 inst test..."
     .byte   $00
 
 ad_single_test:
-    .addr   single_test
-single_test:
+    .addr   :+
+:
     .byte   "single byte inst test..."
     .byte   $00
 
