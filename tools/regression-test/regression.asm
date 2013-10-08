@@ -220,6 +220,37 @@ nmi_test:
     jsr test_failure
 :
 
+    sec
+    lda #195
+
+    ;;jmp (ind) test
+    jmp (@ind1)
+
+@ind1:
+.addr @jmp_addr1
+@ind2:
+.addr @jmp_addr2
+@ind3:
+.addr @jmp_addr3
+@ind4:
+.addr @jmp_addr_done
+
+@jmp_addr2:
+    jmp (@ind3)
+    adc #230
+@jmp_addr3:
+    adc #230
+    jmp (@ind4)
+@jmp_addr1:
+    jmp (@ind2)
+    adc #230
+
+@jmp_addr_done:
+    cmp #170
+    beq :+
+    jsr test_failure
+:
+
     ;;pha,php,pla,plp test
     lda #35
     pha
