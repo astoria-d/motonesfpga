@@ -37,10 +37,17 @@
 
     ;;test start...
     jsr single_inst_test
+    jsr a2_inst_test
+    jsr a3_inst_test
+    jsr a4_inst_test
+    jsr a5_inst_test
+    jsr ppu_test
 
 .endproc
 
 
+    ;;fall through from the above func 
+    ;;or jump into from the other failed func.
 
     ;;test finished...
 test_success:
@@ -81,6 +88,454 @@ mainloop:
 
 nmi_test:
     rti
+
+
+.proc ppu_test
+    jsr check_ppu
+    lda ad_ppu_test
+    sta $00
+    lda ad_ppu_test+1
+    sta $01
+    jsr print_ln
+
+    rts
+.endproc
+
+
+;;a5 instructions:
+;;bcc   brk     php
+;;bcs   bvc     pla
+;;beq   bvs     plp
+;;bmi   jmp     rti
+;;bne   jsr     rts
+;;bpl   pha
+.proc a5_inst_test
+    lda ad_a5_test
+    sta $00
+    lda ad_a5_test+1
+    sta $01
+    jsr print_ln
+
+    ;;branch test
+    clc
+    bcc :+
+    jsr test_failure
+:
+    sec
+    bcs :+
+    jsr test_failure
+:
+    lda #$00
+    beq :+
+    jsr test_failure
+:
+    clc
+    sbc #$05
+    bmi :+
+    jsr test_failure
+:
+    bne :+
+    jsr test_failure
+:
+    clc
+    adc #$06
+    bpl :+
+    jsr test_failure
+:
+    sec
+    lda #$92    ;;-110
+    sbc #$46    ;;70, -110 - 70 = 4c(76)
+    bvs :+
+    jsr test_failure
+:
+    sec
+    lda #$92    ;;-110
+    sbc #$12    ;;18, -110 - 18 = -128
+    bvc :+
+    jsr test_failure
+:
+
+    lda #$00
+    ldx #00
+    beq @fwd
+    ;;forward page crossing branch
+@bwd:
+    jmp @fwd
+.repeat 120
+    nop
+.endrepeat
+@fwd:
+    inx
+    cpx #$01
+    beq @bwd
+
+    ;;repeat the same test 
+    ;;(in case the above test doesn't go across the page)
+    lda #$00
+    ldx #00
+    beq @fwd2
+    ;;forward page crossing branch
+@bwd2:
+    jmp @fwd2
+.repeat 120
+    nop
+.endrepeat
+@fwd2:
+    inx
+    cpx #$01
+    beq @bwd2
+
+    ;jmp, jsr, rts test...
+    clc
+    lda #100
+    jsr @jsr_test1
+    cmp #200
+    beq @jsr_ok
+    jsr test_failure
+@jsr_test1:
+    jsr @jsr_test2
+    rts
+@jsr_test2:
+    jsr @jsr_test3
+    rts
+@jsr_test3:
+    adc #100
+    rts
+@jsr_ok:
+
+    sec
+    lda #200
+    jmp @jmp_test1
+@jmp_test3:
+    adc #50
+    jmp @jmp_test_done
+@jmp_test2:
+    jmp @jmp_test3
+    adc #50
+@jmp_test1:
+    jmp @jmp_test2
+    adc #50
+@jmp_test_done:
+    cmp #251
+    beq :+
+    jsr test_failure
+:
+
+    sec
+    lda #195
+
+    ;;jmp (ind) test
+    jmp (@ind1)
+
+@ind1:
+.addr @jmp_addr1
+@ind2:
+.addr @jmp_addr2
+@ind3:
+.addr @jmp_addr3
+@ind4:
+.addr @jmp_addr_done
+
+@jmp_addr2:
+    jmp (@ind3)
+    adc #230
+@jmp_addr3:
+    adc #230
+    jmp (@ind4)
+@jmp_addr1:
+    jmp (@ind2)
+    adc #230
+
+@jmp_addr_done:
+    cmp #170
+    beq :+
+    jsr test_failure
+:
+
+    ;;pha,php,pla,plp test
+    lda #35
+    pha
+    lda #70
+    pha
+    lda #110
+    pha
+
+    sec
+    php
+    sei
+    php
+    clc
+    php
+    lda #$ff
+    php
+    lda #$00
+    php
+    lda #$ff
+
+    plp
+    beq :+
+    jsr test_failure
+:
+    plp
+    bmi :+
+    jsr test_failure
+:
+    plp
+    bcc :+
+    jsr test_failure
+:
+    plp
+    plp
+    bcs :+
+    jsr test_failure
+:
+    cli
+    pla
+    cmp #110
+    beq :+
+    jsr test_failure
+:
+    pla
+    cmp #70
+    beq :+
+    jsr test_failure
+:
+    pla
+    cmp #35
+    beq :+
+    jsr test_failure
+:
+
+
+    rts
+.endproc
+
+;;a4 instructions:
+;;asl   lsr
+;;dec   rol
+;;inc   ror
+.proc a4_inst_test
+    lda ad_a4_test
+    sta $00
+    lda ad_a4_test+1
+    sta $01
+    jsr print_ln
+
+    lda #$39
+    sta $6b
+    lda #$a1
+    sta $04cc
+    lda #$9f
+    sta $ff
+
+    ldx #$fd
+
+    ;;zp, abs, absx, zpx
+    asl $6b         ;@6b=39 > 72
+    lda $6b
+    cmp #$72
+    beq :+
+    jsr test_failure
+:
+
+    dec $04cc       ;@4cc=a1 > a0
+    lda $04cc
+    cmp #$a0
+    beq :+
+    jsr test_failure
+:
+
+    lsr $03cf, x    ;@4cc=a0 > 50
+    lda $04cc
+    cmp #$50
+    beq :+
+    jsr test_failure
+:
+
+    inc $02, x      ;@ff=9f > a0
+    lda $ff
+    cmp #$a0
+    beq :+
+    jsr test_failure
+:
+
+    clc
+    rol $02, x      ;@ff=a0 > 40
+    rol $02, x      ;@ff=40 > 81
+    lda $ff
+    cmp #$81
+    beq :+
+    jsr test_failure
+:
+
+    sec
+    ror $02, x      ;@ff=81 > c0
+    ror $02, x      ;@ff=40 > e0
+    lda $ff
+    cmp #$e0
+    beq :+
+    jsr test_failure
+:
+
+    rts
+.endproc
+
+;;a3 instructions:
+;;sta   stx     sty
+.proc a3_inst_test
+    lda ad_a3_test
+    sta $00
+    lda ad_a3_test+1
+    sta $01
+    jsr print_ln
+
+    lda #$78
+    sta $a1
+    lda #$05
+    sta $a2
+
+    lda #$b7
+    ldx #$e1
+    ldy #$8a
+
+    ;;zp, abs, absx, zpx, (ind),y
+    ;;(indir, x) is ommited.
+    sta $a9         ;@a9=b7
+    stx $0a99       ;@a99=e1
+    sta $0d80, x    ;@e61=b7
+    sty $1f, x      ;@00=8a
+    sta ($a1), y    ;@602=b7
+
+    cmp $a9
+    beq :+
+    jsr test_failure
+:
+    cpx $0a99
+    beq :+
+    jsr test_failure
+:
+    cmp $0e61
+    beq :+
+    jsr test_failure
+:
+    cpy $00
+    beq :+
+    jsr test_failure
+:
+    cmp $0602
+    beq :+
+    jsr test_failure
+:
+
+    rts
+.endproc
+
+;;a2 instructions:
+;;adc   cmp     eor     ldy
+;;and   cpx     lda     ora
+;;bit   cpy     ldx     sbc
+.proc a2_inst_test
+    lda ad_a2_test
+    sta $00
+    lda ad_a2_test+1
+    sta $01
+    jsr print_ln
+
+    ;;a2 addr mode test
+    ;;immediate
+    clc
+    lda #$0d
+    adc #$fa
+    cmp #$07
+    beq :+
+    jsr test_failure
+:
+    ;;zp addr mode
+    lda #$37
+    sta $5e     ;@5e = 37
+    lda #$c9
+    sta $71     ;@71 = c9
+    lda #$b6
+    and $5e
+    ;;b6 and 37=36
+    bit $71 ;;36 bit c9 = 00.
+    beq :+
+    jsr test_failure
+:
+
+    ;;abs addr mode.
+    lda #$3b
+    sta $0421   ;;@0421 = 3b
+    lda #$d7
+    sta $051b   ;;@051b = d7
+    lda #$eb
+    sta $06cc   ;;@06cc = eb
+    ldx $0421
+    inx
+    txa     ;;a=3c
+    eor $051b   ;;3c eor d7 = eb
+    tay
+    cpy $06cc
+    beq :+
+    jsr test_failure
+:
+
+    ;;a.2.4 indirect,x is not implemented...
+
+    ;;abs,x/y test...
+    ldx #$17
+    ldy #$a1
+    lda #$2f
+    sta $359        ;;@359=2f
+    lda #$90
+    sta $0190, y    ;;@231=90
+    txa
+    ora $0190, y    ;;@231(page cross), 90 | 17 = 97
+    sec
+    sbc $0342, x    ;;@359, 97-2f=68
+    tay
+    cpy #$68
+    beq :+
+    jsr test_failure
+:
+
+    ;;zp,xy test
+    ldx #$cd
+    lda #$f1
+    sta $35     ;;@35=f1
+    lda #$ac
+    sta $bc     ;;@bc=ac
+
+    lda #$8d
+    and $68,x   ;;@35, 8d & f1=81
+    ldy #$9a
+    eor $22,y   ;;@bc, ac^81=2d
+    tax
+    cpx #$2d
+    beq :+
+    jsr test_failure
+:
+
+    ;;(ind),y test...
+    lda #$38
+    sta $90
+    lda #$08
+    sta $91
+    lda #$d9
+    sta $0902       ;@0902=d9
+    lda #0a
+    ldy #$ca
+    clc
+    adc ($90),y      ;@0902, 0a+d9=e3
+    cmp #$e3
+    beq :+
+    jsr test_failure
+:
+    
+
+    rts
+
+.endproc
 
 ;;;single byte instructions.
 .proc single_inst_test
@@ -377,7 +832,7 @@ nmi_test:
     iny
     iny
     tya
-:
+
     cpy #$03
     beq :+
     jsr test_failure
@@ -565,26 +1020,56 @@ use_ppu:
 
 ;;;;string datas
 ad_start_msg:
-    .addr   start_msg
-start_msg:
+    .addr   :+
+:
     .byte   "regression test start..."
     .byte   $00
 
 ad_test_done_msg:
-    .addr   test_done_msg
-test_done_msg:
+    .addr   :+
+:
     .byte   "test succeeded..."
     .byte   $00
 
 ad_test_failed_msg:
-    .addr   test_failed_msg
-test_failed_msg:
+    .addr   :+
+:
     .byte   "test failed!!!"
     .byte   $00
 
+ad_ppu_test:
+    .addr   :+
+:
+    .byte   "ppu inst test..."
+    .byte   $00
+
+ad_a5_test:
+    .addr   :+
+:
+    .byte   "a5 inst test..."
+    .byte   $00
+
+ad_a4_test:
+    .addr   :+
+:
+    .byte   "a4 inst test..."
+    .byte   $00
+
+ad_a3_test:
+    .addr   :+
+:
+    .byte   "a3 inst test..."
+    .byte   $00
+
+ad_a2_test:
+    .addr   :+
+:
+    .byte   "a2 inst test..."
+    .byte   $00
+
 ad_single_test:
-    .addr   single_test
-single_test:
+    .addr   :+
+:
     .byte   "single byte inst test..."
     .byte   $00
 

@@ -1185,6 +1185,9 @@ end  procedure;
                 elsif instruction = conv_std_logic_vector(16#ba#, dsize) then
                     d_print("tsx");
                     set_nz_from_bus;
+                    single_inst;
+                    front_oe(sp_cmd, '0');
+                    front_we(x_cmd, '0');
 
                 elsif instruction = conv_std_logic_vector(16#8a#, dsize) then
                     d_print("txa");
