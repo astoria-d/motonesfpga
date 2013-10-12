@@ -29,7 +29,7 @@ entity qt_proj_test5 is
 
 
         base_clk 	: in std_logic;
---        base_clk_27mhz 	: in std_logic;
+        base_clk_27mhz 	: in std_logic;
         rst_n     	: in std_logic;
         h_sync_n    : out std_logic;
         v_sync_n    : out std_logic;
@@ -208,18 +208,18 @@ begin
                 nes_b       
         );
 
---        vga_clk_gen_inst : vga_clk_gen
---        PORT map
---        (
---            base_clk_27mhz, vga_clk_pll
---        );
+        vga_clk_gen_inst : vga_clk_gen
+        PORT map
+        (
+            base_clk_27mhz, vga_clk_pll
+        );
 
     
     vga_ctl_inst : vga_ctl
     port map (  ppu_clk     ,
             --vga_clk_pll, 
-            ppu_clk ,
-            --vga_clk     ,
+            --ppu_clk ,
+            vga_clk     ,
             rst_n       ,
             pos_x       ,
             pos_y       ,

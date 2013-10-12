@@ -15,6 +15,7 @@
 db/*
 incremental_db/*
 no-need/*
+output_files/*
 simulation/*
 greybox_tmp/*
 undo_redo.txt

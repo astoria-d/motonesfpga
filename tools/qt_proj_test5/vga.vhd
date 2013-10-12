@@ -149,7 +149,6 @@ begin
             port map (cnt_clk , x_res_n, '0', '1', (others => '0'), vga_x);
     y_inst : counter_register generic map (10, 1)
             port map (cnt_clk , y_res_n, y_en_n, '1', (others => '0'), vga_y);
-
     
     p_vga : process (rst_n, vga_clk)
     begin
@@ -179,23 +178,23 @@ begin
             end if;
             
             --sync signal assert.
-            if (vga_x >= conv_std_logic_vector((VGA_W + H_FP) * 341/800, 10) and 
-                vga_x < conv_std_logic_vector((VGA_W + H_FP + H_SP) * 341/800, 10)) then
+            if (vga_x >= conv_std_logic_vector((VGA_W + H_FP) , 10) and 
+                vga_x < conv_std_logic_vector((VGA_W + H_FP + H_SP) , 10)) then
                 h_sync_n <= '0';
             else
                 h_sync_n <= '1';
             end if;
 
-            if (vga_y >= conv_std_logic_vector((VGA_H + V_FP) * 262/525, 10) and 
-                vga_y < conv_std_logic_vector((VGA_H + V_FP + V_SP) * 262/525, 10)) then
+            if (vga_y >= conv_std_logic_vector((VGA_H + V_FP) , 10) and 
+                vga_y < conv_std_logic_vector((VGA_H + V_FP + V_SP) , 10)) then
                 v_sync_n <= '0';
             else
                 v_sync_n <= '1';
             end if;
 
 
-            if (vga_y <=conv_std_logic_vector((VGA_H) * 341/800, 10)) then
-                if (vga_x < conv_std_logic_vector((VGA_W) * 262/525, 10)) then
+            if (vga_y <=conv_std_logic_vector((VGA_H) , 10)) then
+                if (vga_x < conv_std_logic_vector((VGA_W) , 10)) then
 --                    r<=nes_r;
 --                    g<=nes_g;
 --                    b<=nes_b;
@@ -212,122 +211,68 @@ begin
                 g<=(others => '0');
                 b<=(others => '0');
             end if;
-    
-    
-            
-            
-        end if;
-    end process;
-end rtl;
-
-
-
-
--------------------------------------------------------
--------------------------------------------------------
------------  dummy vga outpu device. ------------------
--------------------------------------------------------
--------------------------------------------------------
-
-library ieee;
-use ieee.std_logic_1164.all;
-use ieee.std_logic_unsigned.conv_integer;
-use work.motonesfpga_common.all;
-
-entity vga_device is 
-    port (  vga_clk     : in std_logic;
-            rst_n       : in std_logic;
-            h_sync_n    : in std_logic;
-            v_sync_n    : in std_logic;
-            r           : in std_logic_vector(3 downto 0);
-            g           : in std_logic_vector(3 downto 0);
-            b           : in std_logic_vector(3 downto 0)
-            );
-end vga_device;
-
-architecture rtl of vga_device is
-
-constant VGA_W    : integer := 640;
-constant VGA_H    : integer := 480;
-constant VGA_W_MAX    : integer := 800;
-constant VGA_H_MAX    : integer := 525;
-constant H_FP    : integer := 16;
-constant H_SP    : integer := 96;
-constant H_BP    : integer := 48;
-constant V_FP    : integer := 10;
-constant V_SP    : integer := 2;
-constant V_BP    : integer := 33;
-
-function conv_color_hex (
-            r           : in std_logic_vector(3 downto 0);
-            g           : in std_logic_vector(3 downto 0);
-            b           : in std_logic_vector(3 downto 0)
-        ) return string is
-variable tmp1, tmp2, tmp3 : integer;
-variable hex_chr: string (1 to 16) := "0123456789abcdef";
-begin
-    tmp1 := conv_integer(r);
-    tmp2 := conv_integer(g);
-    tmp3 := conv_integer(b);
-    return  hex_chr(tmp3 + 1) & hex_chr(tmp2 + 1) & hex_chr(tmp1 + 1);
-end;
-
-procedure write_vga_pipe(msg : string) is
---use std.textio.all;
---use ieee.std_logic_textio.all;
---variable out_l : line;
---file vga_file: TEXT open write_mode is "vga-port";
-begin
---    write(out_l, msg);
---    writeline(vga_file, out_l);
-    --d_print("pipe: " & msg);
-end  procedure;
-
-
----ival : 0x0000 - 0xffff
-begin
-
-    clk_p : process (rst_n, vga_clk, h_sync_n, v_sync_n)
-    variable x, y : integer;
-
-    begin
-        if (rst_n = '0') then
-            x := 0;
-            y := 0;
-            --d_print("vga_device: ****");
-        else
-            if (vga_clk'event and vga_clk = '1') then
-                if ( x < VGA_W and y < VGA_H) then
-                    --d_print(conv_color_hex(r, g, b));
-                    write_vga_pipe(conv_color_hex(b, g, r));
-                    --write_vga_pipe("0" & conv_hex8(x));
-                    --d_print("vga_device: rgb out x:" & conv_hex16(x));
-                end if;
-
-                if (x = VGA_W_MAX - 1) then
-                    x := 0;
-                    y := y + 1;
-                else
-                    x := x + 1;
-                end if;
-
-                if (y = VGA_H_MAX - 1) then
-                    y := 0;
-                end if;
-            end if;
-
-            if (h_sync_n'event and h_sync_n = '0') then
-                --d_print("vga_device: h_sync");
-                write_vga_pipe("---");
-                x := VGA_W + H_FP + 1;
-            end if;
-            if (v_sync_n'event and v_sync_n = '0') then
-                --d_print("vga_device: v_sync");
-                write_vga_pipe("___");
-                y := VGA_H + V_FP + 1;
-            end if;
         end if;
     end process;
 
+
+
+--
+--constant VGA_W    : integer := 256;
+--constant VGA_H    : integer := 240;
+--constant VGA_W_MAX    : integer := 341;
+--constant VGA_H_MAX    : integer := 262;
+--
+--constant H_SP    : integer := (95 / 2);
+--constant H_FP    : integer := (15 / 2);
+--
+--constant V_SP    : integer := (2 / 2);
+--constant V_FP    : integer := (10 / 2);
+--
+--begin
+--
+--    p_vga : process (rst_n, vga_clk)
+--    begin
+--        if (rst_n = '0') then
+--            h_sync_n <= '0';
+--            v_sync_n <= '0';
+--            r<=(others => '0');
+--            g<=(others => '0');
+--            b<=(others => '0');
+--        elsif (rising_edge(vga_clk)) then
+--            
+--            --sync signal assert.
+--            if (pos_x >= conv_std_logic_vector(VGA_W + H_FP , 9) and 
+--                pos_x < conv_std_logic_vector(VGA_W + H_FP + H_SP, 9)) then
+--                h_sync_n <= '0';
+--            else
+--                h_sync_n <= '1';
+--            end if;
+--
+--            if (pos_y >= conv_std_logic_vector(VGA_H + V_FP, 9) and 
+--                pos_y < conv_std_logic_vector(VGA_H + V_FP + V_SP, 9)) then
+--                v_sync_n <= '0';
+--            else
+--                v_sync_n <= '1';
+--            end if;
+--
+--            if (pos_y <=conv_std_logic_vector(VGA_H, 9)) then
+--                if (pos_x < conv_std_logic_vector(VGA_W, 9)) then
+--                    r<=(others => '1');
+--                    g<=(others => '1');
+--                    b<=(others => '1');
+--                else
+--                    r<=(others => '0');
+--                    g<=(others => '0');
+--                    b<=(others => '0');
+--                end if;
+--            else
+--                r<=(others => '0');
+--                g<=(others => '0');
+--                b<=(others => '0');
+--            end if;
+--        end if;
+--    end process;
 end rtl;
+
+
 

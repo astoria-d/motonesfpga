@@ -42,6 +42,13 @@ add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/ppu_inst/nes_b
 
 
 add wave -divider vga_out
+
+add wave -radix decimal -unsigned sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/pos_x
+add wave -radix decimal -unsigned sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/pos_y
+
+add wave -radix decimal -unsigned sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/vga_x
+add wave -radix decimal -unsigned sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/vga_y
+
 add wave  sim:/testbench_qt_proj_test5/sim_board/v_sync_n
 add wave  sim:/testbench_qt_proj_test5/sim_board/h_sync_n
 add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/r
@@ -49,8 +56,8 @@ add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/g
 add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/b
 
 add wave sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/vga_clk
-add wave -radix decimal -unsigned sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/vga_x
-add wave -radix decimal -unsigned sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/vga_y
+
+
 #add wave -position end  sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/x_res_n
 #add wave -position end  sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/y_res_n
 #add wave -position end  sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/y_en_n
