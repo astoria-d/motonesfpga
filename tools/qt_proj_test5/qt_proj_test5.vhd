@@ -195,15 +195,15 @@ end component;
 
 begin
 
-    ppu_inst: dummy_ppu 
-        port map (  ppu_clk     ,
-                rst_n       ,
-                pos_x       ,
-                pos_y       ,
-                nes_r       ,
-                nes_g       ,
-                nes_b       
-        );
+--    ppu_inst: dummy_ppu 
+--        port map (  ppu_clk     ,
+--                rst_n       ,
+--                pos_x       ,
+--                pos_y       ,
+--                nes_r       ,
+--                nes_g       ,
+--                nes_b       
+--        );
 
         vga_clk_gen_inst : vga_clk_gen
         PORT map
@@ -230,163 +230,163 @@ begin
     );
 
 
-    trig_clk <= not cpu_clk;
-
-    pcl_inst : counter_register generic map (16) port map
-        (cpu_clk, rst_n, '0', '1', (others => '0'), addr(15 downto 0));
-
-    rom_inst : prg_rom generic map (12, 8) port map
-        (base_clk, '0', addr(11 downto 0), d_io);
-
-    dbg_addr <= addr;
-    dbg_d_io <= d_io;
-
-    --ppu/cpu clock generator
-    clock_inst : clock_divider port map 
-        (base_clk, rst_n, cpu_clk, ppu_clk, vga_clk);
-
-    dbg_cpu_clk <= cpu_clk;
-    dbg_ppu_clk <= ppu_clk;
-
-    dbg_d1 <= d1;
-    dbg_d2 <= d2;
-    dbg_d_out <= d_out;
-    dbg_ea_carry <= ea_carry;
-    dbg_carry_clr_n <= carry_clr_n;
-    dbg_gate_n <= gate_n;
-    
-    dummy_alu : alu_test
-    port map (  
-        d1, d2, d_out, carry_clr_n , ea_carry
-        );
-
-        gate_n <= not ea_carry;
-    dec_test_p : process (rst_n, ea_carry, trig_clk)
-    begin
-        if (rst_n = '0') then
-            d1 <= "00000000";
-            d2 <= "00000000";
-            carry_clr_n <= '0';
-            --gate_n <= '1';
---        elsif (ea_carry = '1') then
---            gate_n <= '0';
+--    trig_clk <= not cpu_clk;
+--
+--    pcl_inst : counter_register generic map (16) port map
+--        (cpu_clk, rst_n, '0', '1', (others => '0'), addr(15 downto 0));
+--
+--    rom_inst : prg_rom generic map (12, 8) port map
+--        (base_clk, '0', addr(11 downto 0), d_io);
+--
+--    dbg_addr <= addr;
+--    dbg_d_io <= d_io;
+--
+--    --ppu/cpu clock generator
+--    clock_inst : clock_divider port map 
+--        (base_clk, rst_n, cpu_clk, ppu_clk, vga_clk);
+--
+--    dbg_cpu_clk <= cpu_clk;
+--    dbg_ppu_clk <= ppu_clk;
+--
+--    dbg_d1 <= d1;
+--    dbg_d2 <= d2;
+--    dbg_d_out <= d_out;
+--    dbg_ea_carry <= ea_carry;
+--    dbg_carry_clr_n <= carry_clr_n;
+--    dbg_gate_n <= gate_n;
+--    
+--    dummy_alu : alu_test
+--    port map (  
+--        d1, d2, d_out, carry_clr_n , ea_carry
+--        );
+--
+--        gate_n <= not ea_carry;
+--    dec_test_p : process (rst_n, ea_carry, trig_clk)
+--    begin
+--        if (rst_n = '0') then
+--            d1 <= "00000000";
+--            d2 <= "00000000";
 --            carry_clr_n <= '0';
-        elsif (rising_edge(trig_clk)) then
-            if (addr(5 downto 0) = "000001") then
-            --addr=01
-                carry_clr_n <= '1';
-                d1 <= "00010011";
-                d2 <= "01000111";
-                --gate_n <= '1';
-            elsif (addr(5 downto 0) = "000010") then
-            --addr=02
-                carry_clr_n <= '1';
-                d1 <= "00110011";
-                d2 <= "11001111";
-                --gate_n <= '1';
-            elsif (addr(5 downto 0) = "000011") then
-            --addr=03
-                carry_clr_n <= '1';
-                d1 <= "00001010";
-                d2 <= "01011001";
-                --gate_n <= '1';
-            elsif (addr(5 downto 0) = "000100") then
-            --addr=04
-                carry_clr_n <= '1';
-                d1 <= "10001010";
-                d2 <= "10011001";
-                --gate_n <= '1';
-            else
-                carry_clr_n <= '1';
-                d1 <= "00000000";
-                d2 <= "00000000";
-                --gate_n <= '1';
-            end if;
-        end if;
-    end process;
-
-
-    --status register
-    status_register : processor_status generic map (8) 
-            port map (
-    dbg_dec_oe_n,
-    dbg_dec_val,
-    dbg_int_dbus,
-    dbg_status_val,
-    dbg_stat_we_n    ,
-                    trig_clk , rst_n, 
-                    stat_dec_oe_n, stat_bus_oe_n, 
-                    stat_set_flg_n, stat_flg, stat_bus_all_n, stat_bus_nz_n, 
-                    stat_alu_we_n, alu_n, alu_v, alu_z, alu_c, stat_c,
-                    status_reg, int_d_bus);
-
-    dbg_status <= status_reg;
-    status_test_p : process (addr)
-    begin
-        if (addr(5 downto 0) = "000010") then
-        --addr=02
-        --set status(7) = '1'
-            stat_dec_oe_n <= '1';
-            stat_bus_oe_n <= '1';
-            stat_set_flg_n <= '0';
-            stat_flg <= '1';
-            stat_bus_all_n <= '1';
-            stat_bus_nz_n <= '1'; 
-            stat_alu_we_n <= '1';
-            status_reg <= "01000000";
-            int_d_bus <= "00000000";
-
-        elsif (addr(5 downto 0) = "000100") then
-        --addr=04
-        --set status(2) = '0'
-            stat_dec_oe_n <= '1';
-            stat_bus_oe_n <= '1';
-            stat_set_flg_n <= '0';
-            stat_flg <= '0';
-            stat_bus_all_n <= '1';
-            stat_bus_nz_n <= '1'; 
-            stat_alu_we_n <= '1';
-            status_reg <= "00000100";
-            int_d_bus <= "00000000";
-
-        elsif (addr(5 downto 0) = "000110") then
-        --addr=06
-        --set nz from bus, n=1
-            stat_dec_oe_n <= '1';
-            stat_bus_oe_n <= '1';
-            stat_set_flg_n <= '1';
-            stat_flg <= '0';
-            stat_bus_all_n <= '1';
-            stat_bus_nz_n <= '0'; 
-            stat_alu_we_n <= '1';
-            status_reg <= (others => 'Z');
-            int_d_bus <= "10000000";
-
-        elsif (addr(5 downto 0) = "001000") then
-        --addr=08
-        --set nz from bus, z=1
-            stat_dec_oe_n <= '1';
-            stat_bus_oe_n <= '1';
-            stat_set_flg_n <= '1';
-            stat_flg <= '0';
-            stat_bus_all_n <= '1';
-            stat_bus_nz_n <= '0'; 
-            stat_alu_we_n <= '1';
-            status_reg <= (others => 'Z');
-            int_d_bus <= "00000000";
-
-        else
-            stat_dec_oe_n <= '0';
-            stat_bus_oe_n <= '1';
-            stat_set_flg_n <= '1';
-            stat_flg <= '1';
-            stat_bus_all_n <= '1';
-            stat_bus_nz_n <= '1'; 
-            stat_alu_we_n <= '1';
-            status_reg <= (others => 'Z');
-            int_d_bus <= (others => 'Z');
-        end if;
-    end process;
+--            --gate_n <= '1';
+----        elsif (ea_carry = '1') then
+----            gate_n <= '0';
+----            carry_clr_n <= '0';
+--        elsif (rising_edge(trig_clk)) then
+--            if (addr(5 downto 0) = "000001") then
+--            --addr=01
+--                carry_clr_n <= '1';
+--                d1 <= "00010011";
+--                d2 <= "01000111";
+--                --gate_n <= '1';
+--            elsif (addr(5 downto 0) = "000010") then
+--            --addr=02
+--                carry_clr_n <= '1';
+--                d1 <= "00110011";
+--                d2 <= "11001111";
+--                --gate_n <= '1';
+--            elsif (addr(5 downto 0) = "000011") then
+--            --addr=03
+--                carry_clr_n <= '1';
+--                d1 <= "00001010";
+--                d2 <= "01011001";
+--                --gate_n <= '1';
+--            elsif (addr(5 downto 0) = "000100") then
+--            --addr=04
+--                carry_clr_n <= '1';
+--                d1 <= "10001010";
+--                d2 <= "10011001";
+--                --gate_n <= '1';
+--            else
+--                carry_clr_n <= '1';
+--                d1 <= "00000000";
+--                d2 <= "00000000";
+--                --gate_n <= '1';
+--            end if;
+--        end if;
+--    end process;
+--
+--
+--    --status register
+--    status_register : processor_status generic map (8) 
+--            port map (
+--    dbg_dec_oe_n,
+--    dbg_dec_val,
+--    dbg_int_dbus,
+--    dbg_status_val,
+--    dbg_stat_we_n    ,
+--                    trig_clk , rst_n, 
+--                    stat_dec_oe_n, stat_bus_oe_n, 
+--                    stat_set_flg_n, stat_flg, stat_bus_all_n, stat_bus_nz_n, 
+--                    stat_alu_we_n, alu_n, alu_v, alu_z, alu_c, stat_c,
+--                    status_reg, int_d_bus);
+--
+--    dbg_status <= status_reg;
+--    status_test_p : process (addr)
+--    begin
+--        if (addr(5 downto 0) = "000010") then
+--        --addr=02
+--        --set status(7) = '1'
+--            stat_dec_oe_n <= '1';
+--            stat_bus_oe_n <= '1';
+--            stat_set_flg_n <= '0';
+--            stat_flg <= '1';
+--            stat_bus_all_n <= '1';
+--            stat_bus_nz_n <= '1'; 
+--            stat_alu_we_n <= '1';
+--            status_reg <= "01000000";
+--            int_d_bus <= "00000000";
+--
+--        elsif (addr(5 downto 0) = "000100") then
+--        --addr=04
+--        --set status(2) = '0'
+--            stat_dec_oe_n <= '1';
+--            stat_bus_oe_n <= '1';
+--            stat_set_flg_n <= '0';
+--            stat_flg <= '0';
+--            stat_bus_all_n <= '1';
+--            stat_bus_nz_n <= '1'; 
+--            stat_alu_we_n <= '1';
+--            status_reg <= "00000100";
+--            int_d_bus <= "00000000";
+--
+--        elsif (addr(5 downto 0) = "000110") then
+--        --addr=06
+--        --set nz from bus, n=1
+--            stat_dec_oe_n <= '1';
+--            stat_bus_oe_n <= '1';
+--            stat_set_flg_n <= '1';
+--            stat_flg <= '0';
+--            stat_bus_all_n <= '1';
+--            stat_bus_nz_n <= '0'; 
+--            stat_alu_we_n <= '1';
+--            status_reg <= (others => 'Z');
+--            int_d_bus <= "10000000";
+--
+--        elsif (addr(5 downto 0) = "001000") then
+--        --addr=08
+--        --set nz from bus, z=1
+--            stat_dec_oe_n <= '1';
+--            stat_bus_oe_n <= '1';
+--            stat_set_flg_n <= '1';
+--            stat_flg <= '0';
+--            stat_bus_all_n <= '1';
+--            stat_bus_nz_n <= '0'; 
+--            stat_alu_we_n <= '1';
+--            status_reg <= (others => 'Z');
+--            int_d_bus <= "00000000";
+--
+--        else
+--            stat_dec_oe_n <= '0';
+--            stat_bus_oe_n <= '1';
+--            stat_set_flg_n <= '1';
+--            stat_flg <= '1';
+--            stat_bus_all_n <= '1';
+--            stat_bus_nz_n <= '1'; 
+--            stat_alu_we_n <= '1';
+--            status_reg <= (others => 'Z');
+--            int_d_bus <= (others => 'Z');
+--        end if;
+--    end process;
 
 end rtl;
 

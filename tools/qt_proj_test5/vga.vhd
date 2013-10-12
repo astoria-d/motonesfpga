@@ -186,13 +186,16 @@ begin
             v_sync_n <= '0';
             x_res_n <= '0';
             y_res_n <= '0';
+            r<=(others => '0');
+            g<=(others => '0');
+            b<=(others => '0');
         elsif (rising_edge(vga_clk)) then
             --xmax = 799
             if (vga_x = "1100011111") then
                 x_res_n <= '0';
                 y_en_n <= '0';
-                --ymax=599
-                if (vga_y = "1001010111") then
+                --ymax=524
+                if (vga_y = "1000001100") then
                     y_res_n <= '0';
                 else
                     y_res_n <= '1';

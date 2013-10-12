@@ -11,3 +11,5 @@ motonesemu
 vgadisp
 dummy-driver.sh
 tools/vga-tool/testbench_ppu
+DE1_Default
+
