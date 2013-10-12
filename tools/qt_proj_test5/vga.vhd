@@ -144,34 +144,6 @@ signal cnt_clk : std_logic;
 
 begin
 
---    ppu_clk_p : process (rst_n, ppu_clk)
---    begin
---        if (rst_n = '0') then
---            h_sync_n <= '1';
---            v_sync_n <= '1';
---        elsif (rising_edge(ppu_clk)) then
---
---            --sync signal assert.
---            if (pos_x >= conv_std_logic_vector((VGA_W + H_FP) * 341/800, 9) and 
---                    pos_x < conv_std_logic_vector((VGA_W + H_FP + H_SP) * 341/800, 9)) then
---                h_sync_n <= '0';
---
---                --d_print("vga_ctl: h_sync.");
---            else
---                h_sync_n <= '1';
---            end if;
---
---            if (pos_y >= conv_std_logic_vector((VGA_H + V_FP) * 262/525, 9) and 
---                    pos_y < conv_std_logic_vector((VGA_H + V_FP + V_SP) * 262/525, 9)) then
---                v_sync_n <= '0';
---
---                --d_print("vga_ctl: v_sync.");
---            else
---                v_sync_n <= '1';
---            end if;
---        end if;
---    end process;
-
     cnt_clk <= not vga_clk;
     x_inst : counter_register generic map (10, 1)
             port map (cnt_clk , x_res_n, '0', '1', (others => '0'), vga_x);
@@ -207,23 +179,23 @@ begin
             end if;
             
             --sync signal assert.
-            if (vga_x >= conv_std_logic_vector(VGA_W + H_FP, 10) and 
-                vga_x < conv_std_logic_vector(VGA_W + H_FP + H_SP , 10)) then
+            if (vga_x >= conv_std_logic_vector((VGA_W + H_FP) * 341/800, 10) and 
+                vga_x < conv_std_logic_vector((VGA_W + H_FP + H_SP) * 341/800, 10)) then
                 h_sync_n <= '0';
             else
                 h_sync_n <= '1';
             end if;
 
-            if (vga_y >= conv_std_logic_vector(VGA_H + V_FP, 10) and 
-                vga_y < conv_std_logic_vector(VGA_H + V_FP + V_SP, 10)) then
+            if (vga_y >= conv_std_logic_vector((VGA_H + V_FP) * 262/525, 10) and 
+                vga_y < conv_std_logic_vector((VGA_H + V_FP + V_SP) * 262/525, 10)) then
                 v_sync_n <= '0';
             else
                 v_sync_n <= '1';
             end if;
 
 
-            if (vga_y <=conv_std_logic_vector(VGA_H, 10)) then
-                if (vga_x < conv_std_logic_vector(VGA_W, 10)) then
+            if (vga_y <=conv_std_logic_vector((VGA_H) * 341/800, 10)) then
+                if (vga_x < conv_std_logic_vector((VGA_W) * 262/525, 10)) then
 --                    r<=nes_r;
 --                    g<=nes_g;
 --                    b<=nes_b;
