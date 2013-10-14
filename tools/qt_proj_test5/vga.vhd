@@ -137,6 +137,35 @@ constant V_SP    : integer := 2;
 constant V_BP    : integer := 33;
 constant V_FP    : integer := 10;
 
+--constant scale    : integer := 100;
+--constant VGA_W    : integer := (640 * scale / 100);
+--constant VGA_H    : integer := (480 * scale / 100);
+--constant VGA_W_MAX    : integer := (800 * scale / 100);
+--constant VGA_H_MAX    : integer := (525 * scale / 100);
+--constant H_SP    : integer := (95 * scale / 100);
+--constant H_BP    : integer := (48 * scale / 100);
+--constant H_FP    : integer := (15 * scale / 100);
+--
+--constant V_SP    : integer := (2 * scale / 100 + 1);
+--constant V_BP    : integer := (33 * scale / 100);
+--constant V_FP    : integer := (10 * scale / 100);
+
+--constant scale_x    : integer := 100;
+--constant scale_y    : integer := 100;
+--
+--constant VGA_W    : integer := (640 * scale_x / 100);
+--constant VGA_H    : integer := (480 * scale_y / 100);
+--constant VGA_W_MAX    : integer := (800 * scale_x / 100);
+--constant VGA_H_MAX    : integer := (525 * scale_y / 100);
+--
+--constant H_SP    : integer := (95 * scale_x / 100);
+--constant H_FP    : integer := (15 * scale_y / 100);
+--
+--constant V_SP    : integer := (2 * scale_x / 100 + 1);
+--constant V_FP    : integer := (10 * scale_y / 100);
+
+
+
 signal vga_x       :  std_logic_vector (9 downto 0);
 signal vga_y       :  std_logic_vector (9 downto 0);
 signal x_res_n, y_res_n, y_en_n : std_logic;
@@ -162,11 +191,11 @@ begin
             b<=(others => '0');
         elsif (rising_edge(vga_clk)) then
             --xmax = 799
-            if (vga_x = "1100011111") then
+            if (vga_x = conv_std_logic_vector(VGA_W_MAX, 10)) then
                 x_res_n <= '0';
                 y_en_n <= '0';
                 --ymax=524
-                if (vga_y = "1000001100") then
+                if (vga_y = conv_std_logic_vector(VGA_H_MAX, 10)) then
                     y_res_n <= '0';
                 else
                     y_res_n <= '1';
