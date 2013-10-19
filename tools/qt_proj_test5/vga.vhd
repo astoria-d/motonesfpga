@@ -79,15 +79,15 @@ begin
                 y_res_n <= '1';
             end if;
             
-            if (pos_x <= conv_std_logic_vector(30, 9)) then
+            if (pos_x <= conv_std_logic_vector(64, 9)) then
                 nes_r <= "1111";
                 nes_g <= "0000";
                 nes_b <= "0000";
-            elsif (pos_x <= conv_std_logic_vector(60, 9)) then
+            elsif (pos_x <= conv_std_logic_vector(128, 9)) then
                 nes_r <= "1111";
                 nes_g <= "1111";
                 nes_b <= "0000";
-            elsif (pos_x <= conv_std_logic_vector(90, 9)) then
+            elsif (pos_x <= conv_std_logic_vector(192, 9)) then
                 nes_r <= "1111";
                 nes_g <= "1111";
                 nes_b <= "1111";
@@ -221,12 +221,15 @@ signal vga_y       :  std_logic_vector (9 downto 0);
 signal x_res_n, y_res_n, y_en_n : std_logic;
 signal cnt_clk     : std_logic;
 
-signal mem_cnt       :  std_logic_vector (2 downto 0);
+signal mem_cnt       :  std_logic_vector (3 downto 0);
 
 signal count5_res_n  : std_logic;
 signal count5        : std_logic_vector(2 downto 0);
 signal nes_x_en_n    : std_logic;
 signal nes_x         : std_logic_vector(7 downto 0);
+
+signal dram_col_we_n  : std_logic;
+signal dram_col       : std_logic_vector(15 downto 0);
 
 begin
 
@@ -235,7 +238,7 @@ begin
             port map (cnt_clk , x_res_n, '0', '1', (others => '0'), vga_x);
     y_inst : counter_register generic map (10, 1)
             port map (cnt_clk , y_res_n, y_en_n, '1', (others => '0'), vga_y);
-    mem_cnt_inst : counter_register generic map (3, 1)
+    mem_cnt_inst : counter_register generic map (4, 1)
             port map (mem_clk , x_res_n, '0', '1', (others => '0'), mem_cnt);
 
     count5_inst : counter_register generic map (3, 1)
@@ -244,6 +247,9 @@ begin
     nes_x_inst : counter_register generic map (8, 1)
             port map (vga_clk, x_res_n, nes_x_en_n, '1', (others => '0'), nes_x);
             
+    col_inst : d_flip_flop generic map (16)
+        port map (mem_clk, rst_n, '1', dram_col_we_n, wbs_dat_o, dram_col);
+        
     dram_p : process (rst_n, mem_clk)
     begin
         if (rst_n = '0') then
@@ -257,23 +263,50 @@ begin
 
         elsif (falling_edge(mem_clk)) then
         
-            --write to sdram!!!
-            if (mem_cnt = "010") then
-                --bank=0, 
-                wbs_adr_i <= "0000" & pos_x & pos_y;
-                wbs_dat_i <= (others => '0');
-            elsif (mem_cnt = "011") then
-                wbs_we_i <= '1';
-                wbs_cyc_i <= '1';
-                wbs_stb_i <= '1';
-                wbs_tga_i <= conv_std_logic_vector(0, 8);
+            if (pos_x <=conv_std_logic_vector(256 , 9) 
+                and pos_y <=conv_std_logic_vector(240, 9)) then
+                --write to sdram!!!
+                if (mem_cnt = conv_std_logic_vector(2, 4)) then
+                    wbs_adr_i <= "000000" & pos_x(7 downto 0) & pos_y(7 downto 0);
+                    wbs_dat_i <= (others => '0');
+                elsif (mem_cnt = conv_std_logic_vector(3, 4)) then
+                    wbs_we_i <= '1';
+                    wbs_cyc_i <= '1';
+                    wbs_stb_i <= '1';
+                    wbs_tga_i <= conv_std_logic_vector(0, 8);
 
-            elsif (mem_cnt = "100") then
-                wbs_adr_i <= "0000" & pos_x & pos_y;
-                --wbs_dat_i <= "0000" & nes_r & nes_g & nes_b;
-                wbs_dat_i <= "0000101000001111";            
+                elsif (mem_cnt = conv_std_logic_vector(4, 4)) then
+                    --wbs_adr_i <= "0000" & pos_x & pos_y;
+                    wbs_dat_i <= "0000" & nes_r & nes_g & nes_b;
+                    --wbs_dat_i <= "0000101000001111";
+                end if;
+            end if;
+
+            --read from sdram!!!
+            if (vga_x <=conv_std_logic_vector(VGA_W , 10) 
+                and vga_y <=conv_std_logic_vector(VGA_H, 10)) then
+                if (mem_cnt > conv_std_logic_vector(4, 4) and 
+                        mem_cnt <= conv_std_logic_vector(15, 4)) then
+                    --read wait cycle
+                    wbs_adr_i <= "000000" & nes_x & vga_y(8 downto 1);
+                    wbs_cyc_i <= '0';
+                    wbs_stb_i <= '0';
+
+                elsif (mem_cnt <= conv_std_logic_vector(0, 4)) then
+                    --read
+                    wbs_we_i <= '0';
+                    wbs_cyc_i <= '1';
+                    wbs_stb_i <= '1';
+                    wbs_tga_i <= conv_std_logic_vector(0, 8);
+
+                end if;
             end if;
             
+            if (mem_cnt = conv_std_logic_vector(1, 4)) then
+                dram_col_we_n <= '0';
+            else
+                dram_col_we_n <= '1';
+            end if;
         
         end if;
     end process;
@@ -330,9 +363,9 @@ begin
 --                    r<=nes_r;
 --                    g<=nes_g;
 --                    b<=nes_b;
-                    r<=(others => '1');
-                    g<=(others => '1');
-                    b<=(others => '1');
+                    r<= dram_col(11 downto 8);
+                    g<= dram_col(7 downto 4);
+                    b<= dram_col(3 downto 0);
                     
                 else
                     r<=(others => '0');

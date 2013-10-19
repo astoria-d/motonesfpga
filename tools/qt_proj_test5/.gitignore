@@ -22,6 +22,4 @@ undo_redo.txt
 *.work
 *.nes
 serv_req_info.txt
-sdram_tb.vhd
-sdram_rw.vhd
-SDRAM_doc.docx
+
