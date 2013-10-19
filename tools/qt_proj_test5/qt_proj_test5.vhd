@@ -35,8 +35,22 @@ entity qt_proj_test5 is
         v_sync_n    : out std_logic;
         r           : out std_logic_vector(3 downto 0);
         g           : out std_logic_vector(3 downto 0);
-        b           : out std_logic_vector(3 downto 0)
-         );
+        b           : out std_logic_vector(3 downto 0);
+
+		--SDRAM Signals
+		dram_addr	:	out std_logic_vector (11 downto 0);		--Address (12 bit)
+		dram_bank	:	out std_logic_vector (1 downto 0);		--Bank
+		dram_cas_n	:	out std_logic;							--Column Address is being transmitted
+		dram_cke	:	out std_logic;							--Clock Enable
+		dram_clk	:	out std_logic;							--Clock
+		dram_cs_n	:	out std_logic;							--Chip Select (Here - Mask commands)
+		dram_dq		:	inout std_logic_vector (15 downto 0);	--Data in / Data out
+		dram_ldqm	:	out std_logic;							--Byte masking
+		dram_udqm	:	out std_logic;							--Byte masking
+		dram_ras_n	:	out std_logic;							--Row Address is being transmitted
+		dram_we_n	:	out std_logic 							--Write Enable
+
+        );
 end qt_proj_test5;
 
 architecture rtl of qt_proj_test5 is
@@ -46,6 +60,7 @@ architecture rtl of qt_proj_test5 is
                 reset_n     : in std_logic;
                 cpu_clk     : out std_logic;
                 ppu_clk     : out std_logic;
+                mem_clk     : out std_logic;
                 vga_clk     : out std_logic
             );
     end component;
@@ -62,11 +77,12 @@ architecture rtl of qt_proj_test5 is
     end component;
 
     component vga_clk_gen
-        PORT
-        (
-            inclk0		: IN STD_LOGIC  := '0';
-            c0		: OUT STD_LOGIC 
-        );
+	PORT
+	(
+		inclk0		: IN STD_LOGIC  := '0';
+		c0		: OUT STD_LOGIC ;
+		c1		: OUT STD_LOGIC 
+	);
     END component;
 
 signal pos_x       : std_logic_vector (8 downto 0);
@@ -77,6 +93,7 @@ signal nes_b       : std_logic_vector (3 downto 0);
 
 component vga_ctl
     port (  ppu_clk     : in std_logic;
+            mem_clk     : in std_logic;
             vga_clk     : in std_logic;
             rst_n       : in std_logic;
             pos_x       : in std_logic_vector (8 downto 0);
@@ -88,10 +105,65 @@ component vga_ctl
             v_sync_n    : out std_logic;
             r           : out std_logic_vector(3 downto 0);
             g           : out std_logic_vector(3 downto 0);
-            b           : out std_logic_vector(3 downto 0)
+            b           : out std_logic_vector(3 downto 0);
+            
+            --SDRAM Signals
+            wbs_adr_i	:	out std_logic_vector (21 downto 0);		--Address (Bank, Row, Col)
+            wbs_dat_i	:	out std_logic_vector (15 downto 0);		--Data In (16 bits)
+            wbs_we_i	:	out std_logic;							--Write Enable
+            wbs_tga_i	:	out std_logic_vector (7 downto 0);		--Address Tag : Read/write burst length-1 (0 represents 1 word, FF represents 256 words)
+            wbs_cyc_i	:	out std_logic;							--Cycle Command from interface
+            wbs_stb_i	:	out std_logic;							--Strobe Command from interface
+            wbs_dat_o	:	in std_logic_vector (15 downto 0);		--Data Out (16 bits)
+            wbs_stall_o	:	in std_logic;							--Slave is not ready to receive new data
+            wbs_err_o	:	in std_logic;							--Error flag: OOR Burst. Burst length is greater that 256-column address
+            wbs_ack_o	:	in std_logic 							--When Read Burst: DATA bus must be valid in this cycle
     );
 end component;
 
+component sdram_controller
+  generic
+	   (
+		reset_polarity_g	:	std_logic	:= '0' --When rst = reset_polarity_g, system is in RESET mode
+		);
+  port (
+		--Clocks and Reset 
+		clk_i		:	in std_logic;	--Wishbone input clock
+		rst			:	in std_logic;	--Reset
+		pll_locked	:	in std_logic;	--PLL Locked indication, for CKE (Clock Enable) signal to SDRAM
+		
+		--SDRAM Signals
+		dram_addr	:	out std_logic_vector (11 downto 0);		--Address (12 bit)
+		dram_bank	:	out std_logic_vector (1 downto 0);		--Bank
+		dram_cas_n	:	out std_logic;							--Column Address is being transmitted
+		dram_cke	:	out std_logic;							--Clock Enable
+		dram_cs_n	:	out std_logic;							--Chip Select (Here - Mask commands)
+		dram_dq		:	inout std_logic_vector (15 downto 0);	--Data in / Data out
+		dram_ldqm	:	out std_logic;							--Byte masking
+		dram_udqm	:	out std_logic;							--Byte masking
+		dram_ras_n	:	out std_logic;							--Row Address is being transmitted
+		dram_we_n	:	out std_logic;							--Write Enable
+   
+		-- Wishbone Slave signals to Read/Write interface
+		wbs_adr_i	:	in std_logic_vector (21 downto 0);		--Address (Bank, Row, Col)
+		wbs_dat_i	:	in std_logic_vector (15 downto 0);		--Data In (16 bits)
+		wbs_we_i	:	in std_logic;							--Write Enable
+		wbs_tga_i	:	in std_logic_vector (7 downto 0);		--Address Tag : Read/write burst length-1 (0 represents 1 word, FF represents 256 words)
+		wbs_cyc_i	:	in std_logic;							--Cycle Command from interface
+		wbs_stb_i	:	in std_logic;							--Strobe Command from interface
+		wbs_dat_o	:	out std_logic_vector (15 downto 0);		--Data Out (16 bits)
+		wbs_stall_o	:	out std_logic;							--Slave is not ready to receive new data
+		wbs_err_o	:	out std_logic;							--Error flag: OOR Burst. Burst length is greater that 256-column address
+		wbs_ack_o	:	out std_logic;							--When Read Burst: DATA bus must be valid in this cycle
+																--When Write Burst: Data has been read from SDRAM and is valid
+
+		--Debug signals
+		cmd_ack		:	out std_logic;							--Command has been acknowledged
+		cmd_done	:	out std_logic;							--Command has finished (read/write)
+		init_st_o	:	out std_logic_vector (3 downto 0);		--Current init state
+		main_st_o	:	out std_logic_vector (3 downto 0)		--Current main state
+   ); 
+end component;
 
     constant data_size : integer := 8;
     constant addr_size : integer := 16;
@@ -99,104 +171,33 @@ end component;
 
     signal cpu_clk  : std_logic;
     signal ppu_clk  : std_logic;
+    signal mem_clk   : std_logic;
     signal vga_clk   : std_logic;
-    signal vga_clk_pll : std_logic;
-    
+    signal vga_clk_pll, mem_clk_pll : std_logic;
 
-    signal addr : std_logic_vector( addr_size - 1 downto 0);
-    signal d_io : std_logic_vector( data_size - 1 downto 0);
+    -- Wishbone Slave signals to Read/Write interface
+    signal wbs_adr_i	:	std_logic_vector (21 downto 0);		--Address (Bank, Row, Col)
+    signal wbs_dat_i	:	std_logic_vector (15 downto 0);		--Data In (16 bits)
+    signal wbs_we_i	    :	std_logic;							--Write Enable
+    signal wbs_tga_i	:	std_logic_vector (7 downto 0);		--Address Tag : Read/write burst length-1 (0 represents 1 word, FF represents 256 words)
+    signal wbs_cyc_i	:	std_logic;							--Cycle Command from interface
+    signal wbs_stb_i	:	std_logic;							--Strobe Command from interface
+    signal wbs_dat_o	:	std_logic_vector (15 downto 0);		--Data Out (16 bits)
+    signal wbs_stall_o	:	std_logic;							--Slave is not ready to receive new data
+    signal wbs_err_o	:	std_logic;							--Error flag: OOR Burst. Burst length is greater that 256-column address
+    signal wbs_ack_o	:	std_logic;							--When Read Burst: DATA bus must be valid in this cycle
+                                                                --When Write Burst: Data has been read from SDRAM and is valid
 
-component counter_register
-    generic (
-        dsize       : integer := 8;
-        inc         : integer := 1
-    );
-    port (  clk         : in std_logic;
-            rst_n       : in std_logic;
-            ce_n        : in std_logic;
-            we_n        : in std_logic;
-            d           : in std_logic_vector(dsize - 1 downto 0);
-            q           : out std_logic_vector(dsize - 1 downto 0)
-    );
-end component;
-
-component prg_rom
-    generic (abus_size : integer := 15; dbus_size : integer := 8);
-    port (  clk             : in std_logic;
-            ce_n           : in std_logic;   --select pin active low.
-            addr            : in std_logic_vector (abus_size - 1 downto 0);
-            data            : inout std_logic_vector (dbus_size - 1 downto 0)
-        );
-end component;
-
-component processor_status 
-    generic (
-            dsize : integer := 8
-            );
-    port (  
-    signal dbg_dec_oe_n    : out std_logic;
-    signal dbg_dec_val     : out std_logic_vector (dsize - 1 downto 0);
-    signal dbg_int_dbus    : out std_logic_vector (dsize - 1 downto 0);
-    signal dbg_status_val    : out std_logic_vector (7 downto 0);
-    signal dbg_stat_we_n    : out std_logic;
-    
-            clk         : in std_logic;
-            res_n       : in std_logic;
-            dec_oe_n    : in std_logic;
-            bus_oe_n    : in std_logic;
-            set_flg_n   : in std_logic;
-            flg_val     : in std_logic;
-            load_bus_all_n      : in std_logic;
-            load_bus_nz_n       : in std_logic;
-            set_from_alu_n      : in std_logic;
-            alu_n       : in std_logic;
-            alu_v       : in std_logic;
-            alu_z       : in std_logic;
-            alu_c       : in std_logic;
-            stat_c      : out std_logic;
-            dec_val     : inout std_logic_vector (dsize - 1 downto 0);
-            int_dbus    : inout std_logic_vector (dsize - 1 downto 0)
-        );
-end component;
-
-    ---status register
-    signal status_reg, int_d_bus : std_logic_vector (7 downto 0);
-    signal stat_dec_oe_n : std_logic;
-    signal stat_bus_oe_n : std_logic;
-    signal stat_set_flg_n : std_logic;
-    signal stat_flg : std_logic;
-    signal stat_bus_all_n : std_logic;
-    signal stat_bus_nz_n : std_logic;
-    signal stat_alu_we_n : std_logic;
-    signal alu_n : std_logic;
-    signal alu_z : std_logic;
-    signal alu_c : std_logic;
-    signal alu_v : std_logic;
-    signal stat_c : std_logic;
-    signal trig_clk : std_logic;
-    
-    
-    
-    component alu_test
-    port (  
-        d1    : in std_logic_vector(7 downto 0);
-        d2    : in std_logic_vector(7 downto 0);
-        d_out    : out std_logic_vector(7 downto 0);
-        carry_clr_n : in std_logic;
-        ea_carry : out std_logic
-        );
-end component;
-
-    signal d1, d2, d_out : std_logic_vector (7 downto 0);
-    signal ea_carry, gate_n    : std_logic;
-        signal carry_clr_n : std_logic;
-
-
+    --Debug signals
+    signal cmd_ack		:	std_logic;							--Command has been acknowledged
+    signal cmd_done	    :	std_logic;							--Command has finished (read/write)
+    signal init_st_o	:	std_logic_vector (3 downto 0);		--Current init state
+    signal main_st_o	:	std_logic_vector (3 downto 0);  	--Current main state
 
 begin
     --ppu/cpu clock generator
     clock_inst : clock_divider port map 
-        (base_clk, rst_n, cpu_clk, ppu_clk, vga_clk);
+        (base_clk, rst_n, cpu_clk, ppu_clk, mem_clk, vga_clk);
 
     ppu_inst: dummy_ppu 
         port map (  ppu_clk     ,
@@ -211,12 +212,13 @@ begin
         vga_clk_gen_inst : vga_clk_gen
         PORT map
         (
-            base_clk_27mhz, vga_clk_pll
+            base_clk_27mhz, vga_clk_pll, mem_clk_pll
         );
 
     
     vga_ctl_inst : vga_ctl
     port map (  ppu_clk     ,
+            mem_clk,
             --vga_clk_pll, 
             --ppu_clk ,
             vga_clk     ,
@@ -230,10 +232,152 @@ begin
             v_sync_n    ,
             r           ,
             g           ,
-            b           
+            b           ,
+            
+            --SDRAM Signals
+            wbs_adr_i	,
+            wbs_dat_i	,
+            wbs_we_i	,
+            wbs_tga_i	,
+            wbs_cyc_i	,
+            wbs_stb_i	,
+            wbs_dat_o	,
+            wbs_stall_o	,
+            wbs_err_o	,
+            wbs_ack_o	
     );
 
+    dram_clk <= base_clk;
+sdram_ctl_inst : sdram_controller
+  port map (
+		--Clocks and Reset 
+		base_clk, 
+		rst_n, 
+		'1', --pll_locked	:	in std_logic;	--PLL Locked indication, for CKE (Clock Enable) signal to SDRAM
+		
+		--SDRAM Signals
+		dram_addr	,
+		dram_bank	,
+		dram_cas_n	,
+		dram_cke	,
+		dram_cs_n	,
+		dram_dq		,
+		dram_ldqm	,
+		dram_udqm	,
+		dram_ras_n	,
+		dram_we_n	,
+   
+		-- Wishbone Slave signals to Read/Write interface
+		wbs_adr_i	,
+		wbs_dat_i	,
+		wbs_we_i	,
+		wbs_tga_i	,
+		wbs_cyc_i	,
+		wbs_stb_i	,
+		wbs_dat_o	,
+		wbs_stall_o	,
+		wbs_err_o	,
+		wbs_ack_o	,
 
+		--Debug signals
+		cmd_ack		,
+		cmd_done	,
+		init_st_o	,
+		main_st_o	
+   ); 
+
+    
+    --    signal addr : std_logic_vector( addr_size - 1 downto 0);
+--    signal d_io : std_logic_vector( data_size - 1 downto 0);
+--
+--component counter_register
+--    generic (
+--        dsize       : integer := 8;
+--        inc         : integer := 1
+--    );
+--    port (  clk         : in std_logic;
+--            rst_n       : in std_logic;
+--            ce_n        : in std_logic;
+--            we_n        : in std_logic;
+--            d           : in std_logic_vector(dsize - 1 downto 0);
+--            q           : out std_logic_vector(dsize - 1 downto 0)
+--    );
+--end component;
+--
+--component prg_rom
+--    generic (abus_size : integer := 15; dbus_size : integer := 8);
+--    port (  clk             : in std_logic;
+--            ce_n           : in std_logic;   --select pin active low.
+--            addr            : in std_logic_vector (abus_size - 1 downto 0);
+--            data            : inout std_logic_vector (dbus_size - 1 downto 0)
+--        );
+--end component;
+--
+--component processor_status 
+--    generic (
+--            dsize : integer := 8
+--            );
+--    port (  
+--    signal dbg_dec_oe_n    : out std_logic;
+--    signal dbg_dec_val     : out std_logic_vector (dsize - 1 downto 0);
+--    signal dbg_int_dbus    : out std_logic_vector (dsize - 1 downto 0);
+--    signal dbg_status_val    : out std_logic_vector (7 downto 0);
+--    signal dbg_stat_we_n    : out std_logic;
+--    
+--            clk         : in std_logic;
+--            res_n       : in std_logic;
+--            dec_oe_n    : in std_logic;
+--            bus_oe_n    : in std_logic;
+--            set_flg_n   : in std_logic;
+--            flg_val     : in std_logic;
+--            load_bus_all_n      : in std_logic;
+--            load_bus_nz_n       : in std_logic;
+--            set_from_alu_n      : in std_logic;
+--            alu_n       : in std_logic;
+--            alu_v       : in std_logic;
+--            alu_z       : in std_logic;
+--            alu_c       : in std_logic;
+--            stat_c      : out std_logic;
+--            dec_val     : inout std_logic_vector (dsize - 1 downto 0);
+--            int_dbus    : inout std_logic_vector (dsize - 1 downto 0)
+--        );
+--end component;
+--
+--    ---status register
+--    signal status_reg, int_d_bus : std_logic_vector (7 downto 0);
+--    signal stat_dec_oe_n : std_logic;
+--    signal stat_bus_oe_n : std_logic;
+--    signal stat_set_flg_n : std_logic;
+--    signal stat_flg : std_logic;
+--    signal stat_bus_all_n : std_logic;
+--    signal stat_bus_nz_n : std_logic;
+--    signal stat_alu_we_n : std_logic;
+--    signal alu_n : std_logic;
+--    signal alu_z : std_logic;
+--    signal alu_c : std_logic;
+--    signal alu_v : std_logic;
+--    signal stat_c : std_logic;
+--    signal trig_clk : std_logic;
+--    
+--    
+--    
+--    component alu_test
+--    port (  
+--        d1    : in std_logic_vector(7 downto 0);
+--        d2    : in std_logic_vector(7 downto 0);
+--        d_out    : out std_logic_vector(7 downto 0);
+--        carry_clr_n : in std_logic;
+--        ea_carry : out std_logic
+--        );
+--end component;
+--
+--    signal d1, d2, d_out : std_logic_vector (7 downto 0);
+--    signal ea_carry, gate_n    : std_logic;
+--        signal carry_clr_n : std_logic;
+
+
+    
+    
 --    trig_clk <= not cpu_clk;
 --
 --    pcl_inst : counter_register generic map (16) port map

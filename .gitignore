@@ -12,4 +12,6 @@ vgadisp
 dummy-driver.sh
 tools/vga-tool/testbench_ppu
 DE1_Default
-
+ref-sdr-sdram-vhdl
+ref-sdr-sdram-vhdl.zip
+DE1_control_panel

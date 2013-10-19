@@ -6,6 +6,7 @@ vlib rtl_work
 vmap work rtl_work
 
 vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/tools/qt_proj_test5/motonesfpga_common.vhd}
+vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/tools/qt_proj_test5/sdram_controller.vhd}
 vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/tools/qt_proj_test5/vga.vhd}
 vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/tools/qt_proj_test5/alu_test.vhd}
 vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/tools/qt_proj_test5/prg_rom.vhd}
@@ -23,18 +24,19 @@ vsim -t 1ps -L altera -L lpm -L sgate -L altera_mf -L altera_lnsim -L cycloneii 
 #add wave  sim:/testbench_qt_proj_test5/base_clk
 
 add wave  sim:/testbench_qt_proj_test5/sim_board/rst_n
-add wave  sim:/testbench_qt_proj_test5/sim_board/dbg_cpu_clk
-add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_addr
-add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_d_io
+#add wave  sim:/testbench_qt_proj_test5/sim_board/dbg_cpu_clk
+#add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_addr
+#add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_d_io
 #add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_instruction
 #add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_int_d_bus
 
 
-add wave -divider vga_ctrl
-add wave  sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_clk
+add wave -divider dummy_ppu
 
-add wave  -radix decimal -unsigned sim:/testbench_qt_proj_test5/sim_board/ppu_inst/pos_x
-add wave  -radix decimal -unsigned sim:/testbench_qt_proj_test5/sim_board/ppu_inst/pos_y
+add wave sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/ppu_clk
+
+add wave -radix decimal -unsigned sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/pos_x
+add wave -radix decimal -unsigned sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/pos_y
 
 add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/ppu_inst/nes_r
 add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/ppu_inst/nes_g
@@ -44,9 +46,8 @@ add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/ppu_inst/nes_b
 add wave -divider vga_out
 
 add wave -radix decimal -unsigned sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/pos_x
-add wave -radix decimal -unsigned sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/pos_y
-
 add wave -radix decimal -unsigned sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/vga_x
+add wave -radix decimal -unsigned sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/nes_x
 add wave -radix decimal -unsigned sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/vga_y
 
 add wave  sim:/testbench_qt_proj_test5/sim_board/v_sync_n
@@ -55,8 +56,12 @@ add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/r
 add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/g
 add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/b
 
+add wave sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/mem_clk
+add wave -radix decimal -unsigned sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/mem_cnt
+
 add wave sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/vga_clk
 
+add wave -radix decimal -unsigned sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/count5
 
 #add wave -position end  sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/x_res_n
 #add wave -position end  sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/y_res_n
@@ -86,6 +91,9 @@ view structure
 view signals
 run 100 us
 #run 20000 us
+
+#1 frame is 16.8 ms
+#run 17 ms
 
 wave zoom full
 
