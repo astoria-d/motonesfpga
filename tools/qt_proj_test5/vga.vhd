@@ -61,11 +61,11 @@ begin
             nes_b <= (others => '0');
         elsif (rising_edge(ppu_clk)) then
             --xmax = 340
-            if (pos_x = "101010100") then
+            if (pos_x = conv_std_logic_vector(340, 9)) then
                 x_res_n <= '0';
                 y_en_n <= '0';
                 --ymax=261
-                if (pos_y = "100000101") then
+                if (pos_y = conv_std_logic_vector(261, 9)) then
                     y_res_n <= '0';
                     frame_en_n <= '0';
                 else
@@ -79,16 +79,20 @@ begin
                 y_res_n <= '1';
             end if;
             
+--            nes_b <= pos_y (7 downto 4);
+--            nes_g <= pos_x (5 downto 2);
+--            nes_r <= pos_x(7 downto 4);
+            --nes_r <= pos_x (3) & pos_x (3) & pos_x (3) & pos_x (3);
             if (pos_x <= conv_std_logic_vector(64, 9)) then
                 nes_r <= "1111";
                 nes_g <= "0000";
                 nes_b <= "0000";
             elsif (pos_x <= conv_std_logic_vector(128, 9)) then
-                nes_r <= "1111";
+                nes_r <= "1100";
                 nes_g <= "1111";
                 nes_b <= "0000";
             elsif (pos_x <= conv_std_logic_vector(192, 9)) then
-                nes_r <= "1111";
+                nes_r <= "0011";
                 nes_g <= "1111";
                 nes_b <= "1111";
             else
@@ -265,10 +269,10 @@ begin
         
             if (pos_x <=conv_std_logic_vector(256 , 9) 
                 and pos_y <=conv_std_logic_vector(240, 9)) then
-                --write to sdram!!!
+                --write to sdram
                 if (mem_cnt = conv_std_logic_vector(2, 4)) then
                     wbs_adr_i <= "000000" & pos_x(7 downto 0) & pos_y(7 downto 0);
-                    wbs_dat_i <= (others => '0');
+                    wbs_dat_i <= "0000" & nes_r & nes_g & nes_b;
                 elsif (mem_cnt = conv_std_logic_vector(3, 4)) then
                     wbs_we_i <= '1';
                     wbs_cyc_i <= '1';
@@ -277,12 +281,12 @@ begin
 
                 elsif (mem_cnt = conv_std_logic_vector(4, 4)) then
                     --wbs_adr_i <= "0000" & pos_x & pos_y;
-                    wbs_dat_i <= "0000" & nes_r & nes_g & nes_b;
+                    --wbs_dat_i <= "0000" & nes_r & nes_g & nes_b;
                     --wbs_dat_i <= "0000101000001111";
                 end if;
             end if;
 
-            --read from sdram!!!
+            --read from sdram
             if (vga_x <=conv_std_logic_vector(VGA_W , 10) 
                 and vga_y <=conv_std_logic_vector(VGA_H, 10)) then
                 if (mem_cnt > conv_std_logic_vector(4, 4) and 
@@ -311,6 +315,21 @@ begin
         end if;
     end process;
 
+    dram_latch_p : process (rst_n, vga_clk)
+    begin
+        if (rst_n = '0') then
+            nes_x_en_n <= '1';
+            
+        elsif (falling_edge(vga_clk)) then
+
+            if (count5 = "001" or count5 = "011") then
+                nes_x_en_n <= '0';
+            else
+                nes_x_en_n <= '1';
+            end if;
+
+        end if;
+    end process;
 
     vga_out_p : process (rst_n, vga_clk)
     begin
@@ -387,79 +406,6 @@ begin
         end if;
     end process;
 
-    vga_out_p2 : process (rst_n, vga_clk)
-    begin
-        if (rst_n = '0') then
-            nes_x_en_n <= '1';
-            
-        elsif (falling_edge(vga_clk)) then
-
-            if (count5 = "001" or count5 = "011") then
-                nes_x_en_n <= '0';
-            else
-                nes_x_en_n <= '1';
-            end if;
-
-        end if;
-    end process;
-
-
---
---constant VGA_W    : integer := 256;
---constant VGA_H    : integer := 240;
---constant VGA_W_MAX    : integer := 341;
---constant VGA_H_MAX    : integer := 262;
---
---constant H_SP    : integer := (95 / 2);
---constant H_FP    : integer := (15 / 2);
---
---constant V_SP    : integer := (2 / 2);
---constant V_FP    : integer := (10 / 2);
---
---begin
---
---    p_vga : process (rst_n, vga_clk)
---    begin
---        if (rst_n = '0') then
---            h_sync_n <= '0';
---            v_sync_n <= '0';
---            r<=(others => '0');
---            g<=(others => '0');
---            b<=(others => '0');
---        elsif (rising_edge(vga_clk)) then
---            
---            --sync signal assert.
---            if (pos_x >= conv_std_logic_vector(VGA_W + H_FP , 9) and 
---                pos_x < conv_std_logic_vector(VGA_W + H_FP + H_SP, 9)) then
---                h_sync_n <= '0';
---            else
---                h_sync_n <= '1';
---            end if;
---
---            if (pos_y >= conv_std_logic_vector(VGA_H + V_FP, 9) and 
---                pos_y < conv_std_logic_vector(VGA_H + V_FP + V_SP, 9)) then
---                v_sync_n <= '0';
---            else
---                v_sync_n <= '1';
---            end if;
---
---            if (pos_y <=conv_std_logic_vector(VGA_H, 9)) then
---                if (pos_x < conv_std_logic_vector(VGA_W, 9)) then
---                    r<=(others => '1');
---                    g<=(others => '1');
---                    b<=(others => '1');
---                else
---                    r<=(others => '0');
---                    g<=(others => '0');
---                    b<=(others => '0');
---                end if;
---            else
---                r<=(others => '0');
---                g<=(others => '0');
---                b<=(others => '0');
---            end if;
---        end if;
---    end process;
 end rtl;
 
 
