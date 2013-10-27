@@ -30,5 +30,4 @@ simulation/modelsim/transcript
 simulation/modelsim/motones_modelsim.cr.mti
 undo_redo.txt
 *.work
-*.nes
 serv_req_info.txt
