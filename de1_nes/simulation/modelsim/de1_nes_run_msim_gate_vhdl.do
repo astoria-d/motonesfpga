@@ -48,6 +48,11 @@ add wave -divider ppu
 
 add wave sim:/testbench_motones_sim/sim_board/dbg_ppu_ce_n
 add wave sim:/testbench_motones_sim/sim_board/dbg_ppu_clk
+
+add wave sim:/testbench_motones_sim/dbg_ppu_addr_we_n
+add wave -radix hex sim:/testbench_motones_sim/dbg_ppu_clk_cnt
+
+
 add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_ctrl
 add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_mask
 add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_status
@@ -85,6 +90,7 @@ view structure
 view signals
 #run -all
 run 10 us
+run 50 us
 
 #wave zoom range 3339700 ps 5138320 ps
 wave zoom full

@@ -10,7 +10,9 @@ entity ppu is
     signal dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y : out std_logic_vector (7 downto 0);
     signal dbg_disp_nt, dbg_disp_attr : out std_logic_vector (7 downto 0);
     signal dbg_disp_ptn_h, dbg_disp_ptn_l : out std_logic_vector (15 downto 0);
-    
+    signal dbg_ppu_addr_we_n    : out std_logic;
+    signal dbg_ppu_clk_cnt          : out std_logic_vector(1 downto 0);
+
     
             clk         : in std_logic;
             mem_clk     : in std_logic;
@@ -193,6 +195,8 @@ begin
     dbg_ppu_data <= ppu_data;
     dbg_ppu_scrl_x <= ppu_scroll_x;
     dbg_ppu_scrl_y <= ppu_scroll_y;
+    dbg_ppu_addr_we_n <= ppu_addr_we_n;
+    dbg_ppu_clk_cnt <= ppu_clk_cnt;
 
 
 
@@ -327,14 +331,11 @@ begin
             end if;
 
             if(cpu_addr = PPUADDR) then
-                ppu_addr_we_n <= '0';
                 if (ppu_addr_cnt(0) = '0') then
                     ppu_addr_in <= cpu_d(5 downto 0) & ppu_addr(7 downto 0);
                 else
                     ppu_addr_in <= ppu_addr(13 downto 8) & cpu_d;
                 end if;
-            else
-                ppu_addr_we_n <= '1';
             end if;
 
             if (cpu_addr = PPUDATA and r_nw = '1') then
@@ -350,20 +351,21 @@ begin
             ppu_scroll_x_we_n    <= '1';
             ppu_scroll_y_we_n    <= '1';
             ppu_scroll_cnt_ce_n  <= '1';
-            ppu_addr_we_n        <= '1';
             read_status <= '0';
             read_data_n <= '1';
         end if; --if (rst_n = '1' and ce_n = '0') 
 
     end process;
 
+    ppu_clk_cnt_res_n <= not ce_n;
+    
     --cpu and ppu clock timing adjustment...
     clk_cnt_set_p : process (rst_n, ce_n, r_nw, cpu_addr, cpu_d, clk, 
                                 oam_plt_data, vram_ad, ppu_stat_out)
     begin
         if (rst_n = '0') then
             ppu_latch_rst_n <= '0';
-            ppu_clk_cnt_res_n <= '0';
+            ppu_addr_we_n    <= '1';
             rd_n <= 'Z';
             wr_n <= 'Z';
             ale <= 'Z';
@@ -380,12 +382,6 @@ begin
 
             --start counter.
             if (clk'event and clk = '0') then
-                if (ppu_clk_cnt = "10") then
-                    ppu_clk_cnt_res_n <= '0';
-                elsif (ppu_clk_cnt = "00") then
-                    ppu_clk_cnt_res_n <= '1';
-                end if;
-
                 if (read_status = '1') then
                     --reading status resets ppu_addr/scroll cnt.
                     ppu_latch_rst_n <= '0';
@@ -414,6 +410,12 @@ begin
             end if; --if (cpu_addr = OAMDATA and ppu_clk_cnt = "00") then
 
             --vram address access.
+            if(cpu_addr = PPUADDR and ppu_clk_cnt = "00") then
+                ppu_addr_we_n <= '0';
+            else
+                ppu_addr_we_n <= '1';
+            end if;
+
             if (cpu_addr = PPUADDR and ppu_clk_cnt = "00") then
                 ppu_addr_cnt_ce_n <= '0';
                 if (ppu_addr_cnt(0) = '0') then
@@ -496,9 +498,9 @@ begin
             end if;
 
         else
+            ppu_addr_we_n    <= '1';
             ppu_data_we_n    <= '1';
             plt_bus_ce_n <= '1';
-            ppu_clk_cnt_res_n <= '0';
             oam_bus_ce_n     <= '1';
             oam_addr_ce_n <= '1';
             ppu_addr_cnt_ce_n    <= '1';

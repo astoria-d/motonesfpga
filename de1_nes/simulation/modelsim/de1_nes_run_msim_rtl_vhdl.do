@@ -36,19 +36,34 @@ add wave -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/instruction
 add wave -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/int_d_bus
 add wave -divider regs
 add wave -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/acc/q
-add wave -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/sp/q
 add wave -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/status_register/status_val
+add wave -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/sp/q
 add wave -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/x/q
 add wave -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/y/q
 
 
-add wave -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/status_reg
+##add wave -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/status_reg
 
+add wave -divider ppu
+
+add wave sim:/testbench_motones_sim/sim_board/dbg_ppu_ce_n
+add wave sim:/testbench_motones_sim/sim_board/dbg_ppu_clk
+
+add wave -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/ppu_clk_cnt
+
+add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_ctrl
+add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_mask
+add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_status
+add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_addr 
+add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_data
+add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x
+add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_y
 
 ###add wave sim:/testbench_motones_sim/sim_board/cpu_inst/*
 
 view structure
 view signals
-run 100 us
+#run 100 us
+run 60 us
 wave zoom full
 
