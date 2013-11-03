@@ -212,13 +212,22 @@ begin
         vga_clk_gen_inst : vga_clk_gen
         PORT map
         (
+            --mem_clk_pll = 135 MHz.
             base_clk_27mhz, vga_clk_pll, mem_clk_pll
         );
+--    --- testbench pll clock..
+--    dummy_clock_p: process
+--    begin
+--        mem_clk_pll <= '1';
+--        wait for 7407 ps / 2;
+--        mem_clk_pll <= '0';
+--        wait for 7407 ps / 2;
+--    end process;
 
     
     vga_ctl_inst : vga_ctl
     port map (  ppu_clk     ,
-            mem_clk,
+            mem_clk_pll,
             --vga_clk_pll, 
             --ppu_clk ,
             vga_clk     ,
