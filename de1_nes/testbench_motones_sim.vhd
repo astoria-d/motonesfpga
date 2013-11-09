@@ -21,6 +21,8 @@ architecture stimulus of testbench_motones_sim is
     signal dbg_instruction  : out std_logic_vector(7 downto 0);
     signal dbg_int_d_bus  : out std_logic_vector(7 downto 0);
     signal dbg_exec_cycle   : out std_logic_vector (5 downto 0);
+    signal dbg_ea_carry     : out std_logic;
+    signal dbg_wait_a58_branch_next     : out std_logic;
 --    signal dbg_index_bus    : out std_logic_vector(7 downto 0);
 --    signal dbg_acc_bus      : out std_logic_vector(7 downto 0);
     signal dbg_status       : out std_logic_vector(7 downto 0);
@@ -97,6 +99,8 @@ architecture stimulus of testbench_motones_sim is
     signal dbg_instruction  : std_logic_vector(7 downto 0);
     signal dbg_int_d_bus  : std_logic_vector(7 downto 0);
     signal dbg_exec_cycle   : std_logic_vector (5 downto 0);
+    signal dbg_ea_carry     : std_logic;
+    signal dbg_wait_a58_branch_next     : std_logic;
 --    signal dbg_index_bus    : std_logic_vector(7 downto 0);
 --    signal dbg_acc_bus      : std_logic_vector(7 downto 0);
     signal dbg_status       : std_logic_vector(7 downto 0);
@@ -129,6 +133,8 @@ dbg_vram_a,
 dbg_instruction,
 dbg_int_d_bus,
 dbg_exec_cycle   ,
+dbg_ea_carry     ,
+dbg_wait_a58_branch_next     ,
 --dbg_index_bus    ,
 --dbg_acc_bus      ,
 dbg_status       ,

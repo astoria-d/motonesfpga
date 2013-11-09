@@ -9,6 +9,9 @@ entity mos6502 is
     signal dbg_instruction  : out std_logic_vector(7 downto 0);
     signal dbg_int_d_bus    : out std_logic_vector(7 downto 0);
     signal dbg_exec_cycle   : out std_logic_vector (5 downto 0);
+    signal dbg_ea_carry     : out std_logic;
+    signal dbg_wait_a58_branch_next     : out std_logic;
+
 --    signal dbg_index_bus    : out std_logic_vector(7 downto 0);
 --    signal dbg_acc_bus      : out std_logic_vector(7 downto 0);
     signal dbg_status       : out std_logic_vector(7 downto 0);
@@ -41,7 +44,11 @@ architecture rtl of mos6502 is
     ----------------------------------------------
 component decoder
     generic (dsize : integer := 8);
-    port (  set_clk         : in std_logic;
+    port (  
+    --signal dbg_ea_carry     : out std_logic;
+    signal dbg_wait_a58_branch_next     : out std_logic;
+
+            set_clk         : in std_logic;
             trig_clk        : in std_logic;
             res_n           : in std_logic;
             irq_n           : in std_logic;
@@ -351,6 +358,7 @@ begin
     dbg_instruction <= instruction;
     dbg_int_d_bus <= int_d_bus;
     dbg_exec_cycle <= exec_cycle;
+    dbg_ea_carry <= ea_carry;
 --    dbg_index_bus <= index_bus;
 --    dbg_acc_bus <= acc_out;
     dbg_status <= status_reg;
@@ -380,7 +388,11 @@ begin
     --------------------------------------------------
 
     dec_inst : decoder generic map (dsize) 
-            port map(set_clk, 
+            port map(
+    --dbg_ea_carry     ,
+    dbg_wait_a58_branch_next     ,
+            
+                    set_clk, 
                     trigger_clk, 
                     rst_n, 
                     irq_n, 

@@ -34,6 +34,8 @@ add wave -radix hex sim:/testbench_motones_sim/sim_board/addr
 add wave -radix hex sim:/testbench_motones_sim/sim_board/d_io
 add wave -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/instruction
 add wave -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/int_d_bus
+add wave -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/exec_cycle
+
 add wave -divider regs
 add wave -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/acc/q
 add wave -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/status_register/status_val
@@ -64,6 +66,6 @@ add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_y
 view structure
 view signals
 #run 100 us
-run 60 us
+run 80 us
 wave zoom full
 

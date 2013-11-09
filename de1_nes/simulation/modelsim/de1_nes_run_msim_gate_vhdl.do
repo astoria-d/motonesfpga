@@ -31,6 +31,10 @@ add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_int_d_bus
 
 add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_exec_cycle
 
+add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_ea_carry     
+add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_wait_a58_branch_next     
+
+
 add wave -divider regs
 
 #add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_index_bus;
@@ -90,7 +94,7 @@ view structure
 view signals
 #run -all
 run 10 us
-run 50 us
+run 60 us
 
 #wave zoom range 3339700 ps 5138320 ps
 wave zoom full
