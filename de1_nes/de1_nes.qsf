@@ -37,8 +37,6 @@ set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_COLOR 2147039 -section_id Top
 set_global_assignment -name LL_ROOT_REGION ON -section_id "Root Region"
 set_global_assignment -name LL_MEMBER_STATE LOCKED -section_id "Root Region"
-set_location_assignment PIN_D12 -to base_clk
-set_location_assignment PIN_R22 -to rst_n
 set_global_assignment -name INCREMENTAL_VECTOR_INPUT_SOURCE de1_nes.vwf
 set_global_assignment -name EDA_SIMULATION_TOOL "ModelSim-Altera (VHDL)"
 set_global_assignment -name EDA_OUTPUT_DATA_FORMAT VHDL -section_id eda_simulation
@@ -53,8 +51,73 @@ set_global_assignment -name EDA_TEST_BENCH_MODULE_NAME testbench_clock_divider -
 set_global_assignment -name EDA_TEST_BENCH_RUN_SIM_FOR "100 us" -section_id testbench_motones_sim
 set_global_assignment -name EDA_TEST_BENCH_FILE testbench_motones_sim.vhd -section_id testbench_motones_sim
 set_global_assignment -name EDA_TEST_BENCH_FILE testbench_clock_divider.vhd -section_id testbench_clock_divider
-set_location_assignment LCCOMB_X22_Y13_N8 -to "mos6502:cpu_inst|alu:alu_inst|alu_core:alu_inst|Equal8~65"
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+
+##set_location_assignment LCCOMB_X22_Y13_N8 -to "mos6502:cpu_inst|alu:alu_inst|alu_core:alu_inst|Equal8~65"
+
+##VGA
+set_location_assignment PIN_D9 -to r[0]
+set_location_assignment PIN_C9 -to r[1]
+set_location_assignment PIN_A7 -to r[2]
+set_location_assignment PIN_B7 -to r[3]
+set_location_assignment PIN_B8 -to g[0]
+set_location_assignment PIN_C10 -to g[1]
+set_location_assignment PIN_B9 -to g[2]
+set_location_assignment PIN_A8 -to g[3]
+set_location_assignment PIN_A9 -to b[0]
+set_location_assignment PIN_D11 -to b[1]
+set_location_assignment PIN_A10 -to b[2]
+set_location_assignment PIN_B10 -to b[3]
+set_location_assignment PIN_A11 -to h_sync_n
+set_location_assignment PIN_B11 -to v_sync_n
+
+#other
+set_location_assignment PIN_L1 -to base_clk
+set_location_assignment PIN_R22 -to rst_n
+
+##DRAM
+set_location_assignment PIN_W4 -to dram_addr[0]
+set_location_assignment PIN_W5 -to dram_addr[1]
+set_location_assignment PIN_Y3 -to dram_addr[2]
+set_location_assignment PIN_Y4 -to dram_addr[3]
+set_location_assignment PIN_R6 -to dram_addr[4]
+set_location_assignment PIN_R5 -to dram_addr[5]
+set_location_assignment PIN_P6 -to dram_addr[6]
+set_location_assignment PIN_P5 -to dram_addr[7]
+set_location_assignment PIN_P3 -to dram_addr[8]
+set_location_assignment PIN_N4 -to dram_addr[9]
+set_location_assignment PIN_W3 -to dram_addr[10]
+set_location_assignment PIN_N6 -to dram_addr[11]
+set_location_assignment PIN_U3 -to dram_bank[0]
+set_location_assignment PIN_V4 -to dram_bank[1]
+set_location_assignment PIN_T3 -to dram_cas_n
+set_location_assignment PIN_N3 -to dram_cke
+set_location_assignment PIN_U4 -to dram_clk
+set_location_assignment PIN_T6 -to dram_cs_n
+set_location_assignment PIN_U1 -to dram_dq[0]
+set_location_assignment PIN_U2 -to dram_dq[1]
+set_location_assignment PIN_V1 -to dram_dq[2]
+set_location_assignment PIN_V2 -to dram_dq[3]
+set_location_assignment PIN_W1 -to dram_dq[4]
+set_location_assignment PIN_W2 -to dram_dq[5]
+set_location_assignment PIN_Y1 -to dram_dq[6]
+set_location_assignment PIN_Y2 -to dram_dq[7]
+set_location_assignment PIN_N1 -to dram_dq[8]
+set_location_assignment PIN_N2 -to dram_dq[9]
+set_location_assignment PIN_P1 -to dram_dq[10]
+set_location_assignment PIN_P2 -to dram_dq[11]
+set_location_assignment PIN_R1 -to dram_dq[12]
+set_location_assignment PIN_R2 -to dram_dq[13]
+set_location_assignment PIN_T1 -to dram_dq[14]
+set_location_assignment PIN_T2 -to dram_dq[15]
+set_location_assignment PIN_R7 -to dram_ldqm
+set_location_assignment PIN_T5 -to dram_ras_n
+set_location_assignment PIN_M5 -to dram_udqm
+set_location_assignment PIN_R8 -to dram_we_n
+
+
+set_global_assignment -name VHDL_FILE mem/sdram_controller.vhd
+set_global_assignment -name QIP_FILE pll_clk_gen.qip
 set_global_assignment -name VHDL_FILE motonesfpga_common.vhd
 set_global_assignment -name VHDL_FILE mem/prg_rom.vhd
 set_global_assignment -name VHDL_FILE mem/chr_rom.vhd
@@ -62,6 +125,7 @@ set_global_assignment -name VHDL_FILE mem/ram.vhd
 set_global_assignment -name VHDL_FILE cpu/cpu_registers.vhd
 set_global_assignment -name VHDL_FILE ppu/ppu_registers.vhd
 set_global_assignment -name VHDL_FILE clock/clock_divider.vhd
+set_global_assignment -name VHDL_FILE ppu/vga.vhd
 set_global_assignment -name VHDL_FILE ppu/render.vhd
 set_global_assignment -name VHDL_FILE ppu/ppu.vhd
 set_global_assignment -name VHDL_FILE apu/apu.vhd

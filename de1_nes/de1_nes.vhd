@@ -29,13 +29,14 @@ entity de1_nes is
 --    signal dbg_index_bus    : out std_logic_vector(7 downto 0);
 --    signal dbg_acc_bus      : out std_logic_vector(7 downto 0);
     signal dbg_status       : out std_logic_vector(7 downto 0);
-    signal dbg_pcl, dbg_pch, dbg_sp, dbg_x, dbg_y, dbg_acc       : out std_logic_vector(7 downto 0);
+--    signal dbg_pcl, dbg_pch : out std_logic_vector(7 downto 0);
+    signal dbg_sp, dbg_x, dbg_y, dbg_acc       : out std_logic_vector(7 downto 0);
     signal dbg_dec_oe_n    : out std_logic;
     signal dbg_dec_val     : out std_logic_vector (7 downto 0);
     signal dbg_int_dbus    : out std_logic_vector (7 downto 0);
 --    signal dbg_status_val    : out std_logic_vector (7 downto 0);
-    signal dbg_stat_we_n    : out std_logic;
-    signal dbg_idl_h, dbg_idl_l, dbg_dbb_r, dbg_dbb_w    : out std_logic_vector (7 downto 0);
+--    signal dbg_stat_we_n    : out std_logic;
+--    signal dbg_idl_h, dbg_idl_l, dbg_dbb_r, dbg_dbb_w    : out std_logic_vector (7 downto 0);
 
     signal dbg_ppu_ce_n    : out std_logic;
     signal dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status : out std_logic_vector (7 downto 0);
@@ -59,7 +60,20 @@ entity de1_nes is
         v_sync_n    : out std_logic;
         r           : out std_logic_vector(3 downto 0);
         g           : out std_logic_vector(3 downto 0);
-        b           : out std_logic_vector(3 downto 0)
+        b           : out std_logic_vector(3 downto 0);
+        
+        --SDRAM Signals
+		dram_addr	:	out std_logic_vector (11 downto 0);		--Address (12 bit)
+		dram_bank	:	out std_logic_vector (1 downto 0);		--Bank
+		dram_cas_n	:	out std_logic;							--Column Address is being transmitted
+		dram_cke	:	out std_logic;							--Clock Enable
+		dram_clk	:	out std_logic;							--Clock
+		dram_cs_n	:	out std_logic;							--Chip Select (Here - Mask commands)
+		dram_dq		:	inout std_logic_vector (15 downto 0);	--Data in / Data out
+		dram_ldqm	:	out std_logic;							--Byte masking
+		dram_udqm	:	out std_logic;							--Byte masking
+		dram_ras_n	:	out std_logic;							--Row Address is being transmitted
+		dram_we_n	:	out std_logic 							--Write Enable
          );
 end de1_nes;
 
@@ -156,6 +170,7 @@ architecture rtl of de1_nes is
     
             clk         : in std_logic;
             mem_clk     : in std_logic;
+            sdram_clk   : in std_logic;
             ce_n        : in std_logic;
             rst_n       : in std_logic;
             r_nw        : in std_logic;
@@ -172,7 +187,18 @@ architecture rtl of de1_nes is
             v_sync_n    : out std_logic;
             r           : out std_logic_vector(3 downto 0);
             g           : out std_logic_vector(3 downto 0);
-            b           : out std_logic_vector(3 downto 0)
+            b           : out std_logic_vector(3 downto 0);
+            --SDRAM Signals
+            wbs_adr_i	:	out std_logic_vector (21 downto 0);		--Address (Bank, Row, Col)
+            wbs_dat_i	:	out std_logic_vector (15 downto 0);		--Data In (16 bits)
+            wbs_we_i	:	out std_logic;							--Write Enable
+            wbs_tga_i	:	out std_logic_vector (7 downto 0);		--Address Tag : Read/write burst length-1 (0 represents 1 word, FF represents 256 words)
+            wbs_cyc_i	:	out std_logic;							--Cycle Command from interface
+            wbs_stb_i	:	out std_logic;							--Strobe Command from interface
+            wbs_dat_o	:	in std_logic_vector (15 downto 0);		--Data Out (16 bits)
+            wbs_stall_o	:	in std_logic;							--Slave is not ready to receive new data
+            wbs_err_o	:	in std_logic;							--Error flag: OOR Burst. Burst length is greater that 256-column address
+            wbs_ack_o	:	in std_logic 							--When Read Burst: DATA bus must be valid in this cycle
     );
     end component;
 
@@ -225,6 +251,59 @@ architecture rtl of de1_nes is
         );
     end component;
 
+    component pll_clk_gen
+        PORT
+        (
+            inclk0		: IN STD_LOGIC  := '0';
+            c0		    : OUT STD_LOGIC ;
+            locked		: OUT STD_LOGIC 
+        );
+    end component;
+
+    component sdram_controller
+      generic
+           (
+            reset_polarity_g	:	std_logic	:= '0' --When rst = reset_polarity_g, system is in RESET mode
+            );
+      port (
+            --Clocks and Reset 
+            clk_i		:	in std_logic;	--Wishbone input clock
+            rst			:	in std_logic;	--Reset
+            pll_locked	:	in std_logic;	--PLL Locked indication, for CKE (Clock Enable) signal to SDRAM
+            
+            --SDRAM Signals
+            dram_addr	:	out std_logic_vector (11 downto 0);		--Address (12 bit)
+            dram_bank	:	out std_logic_vector (1 downto 0);		--Bank
+            dram_cas_n	:	out std_logic;							--Column Address is being transmitted
+            dram_cke	:	out std_logic;							--Clock Enable
+            dram_cs_n	:	out std_logic;							--Chip Select (Here - Mask commands)
+            dram_dq		:	inout std_logic_vector (15 downto 0);	--Data in / Data out
+            dram_ldqm	:	out std_logic;							--Byte masking
+            dram_udqm	:	out std_logic;							--Byte masking
+            dram_ras_n	:	out std_logic;							--Row Address is being transmitted
+            dram_we_n	:	out std_logic;							--Write Enable
+       
+            -- Wishbone Slave signals to Read/Write interface
+            wbs_adr_i	:	in std_logic_vector (21 downto 0);		--Address (Bank, Row, Col)
+            wbs_dat_i	:	in std_logic_vector (15 downto 0);		--Data In (16 bits)
+            wbs_we_i	:	in std_logic;							--Write Enable
+            wbs_tga_i	:	in std_logic_vector (7 downto 0);		--Address Tag : Read/write burst length-1 (0 represents 1 word, FF represents 256 words)
+            wbs_cyc_i	:	in std_logic;							--Cycle Command from interface
+            wbs_stb_i	:	in std_logic;							--Strobe Command from interface
+            wbs_dat_o	:	out std_logic_vector (15 downto 0);		--Data Out (16 bits)
+            wbs_stall_o	:	out std_logic;							--Slave is not ready to receive new data
+            wbs_err_o	:	out std_logic;							--Error flag: OOR Burst. Burst length is greater that 256-column address
+            wbs_ack_o	:	out std_logic;							--When Read Burst: DATA bus must be valid in this cycle
+                                                                    --When Write Burst: Data has been read from SDRAM and is valid
+
+            --Debug signals
+            cmd_ack		:	out std_logic;							--Command has been acknowledged
+            cmd_done	:	out std_logic;							--Command has finished (read/write)
+            init_st_o	:	out std_logic_vector (3 downto 0);		--Current init state
+            main_st_o	:	out std_logic_vector (3 downto 0)		--Current main state
+       ); 
+    end component;
+
     constant data_size : integer := 8;
     constant addr_size : integer := 16;
     constant vram_size14    : integer := 14;
@@ -239,6 +318,8 @@ architecture rtl of de1_nes is
     signal ppu_clk  : std_logic;
     signal mem_clk  : std_logic;
     signal vga_out_clk   : std_logic;
+    signal sdram_clk : std_logic;
+    signal sdram_clk_locked : std_logic;
 
     signal rdy, irq_n, nmi_n, dbe, r_nw : std_logic;
     signal phi1, phi2 : std_logic;
@@ -262,8 +343,29 @@ architecture rtl of de1_nes is
     signal nt0_ce_n : std_logic;
     signal nt1_ce_n : std_logic;
 
+    -- SDRAM signals to Read/Write interface
+    signal wbs_adr_i	:	std_logic_vector (21 downto 0);		--Address (Bank, Row, Col)
+    signal wbs_dat_i	:	std_logic_vector (15 downto 0);		--Data In (16 bits)
+    signal wbs_we_i	    :	std_logic;							--Write Enable
+    signal wbs_tga_i	:	std_logic_vector (7 downto 0);		--Address Tag : Read/write burst length-1 (0 represents 1 word, FF represents 256 words)
+    signal wbs_cyc_i	:	std_logic;							--Cycle Command from interface
+    signal wbs_stb_i	:	std_logic;							--Strobe Command from interface
+    signal wbs_dat_o	:	std_logic_vector (15 downto 0);		--Data Out (16 bits)
+    signal wbs_stall_o	:	std_logic;							--Slave is not ready to receive new data
+    signal wbs_err_o	:	std_logic;							--Error flag: OOR Burst. Burst length is greater that 256-column address
+    signal wbs_ack_o	:	std_logic;							--When Read Burst: DATA bus must be valid in this cycle
+                                                                --When Write Burst: Data has been read from SDRAM and is valid
+    --Debug signals
+    signal cmd_ack		:	std_logic;							--Command has been acknowledged
+    signal cmd_done	    :	std_logic;							--Command has finished (read/write)
+    signal init_st_o	:	std_logic_vector (3 downto 0);		--Current init state
+    signal main_st_o	:	std_logic_vector (3 downto 0);  	--Current main state
+
     signal dbg_disp_nt, dbg_disp_attr : std_logic_vector (7 downto 0);
     signal dbg_disp_ptn_h, dbg_disp_ptn_l : std_logic_vector (15 downto 0);
+    signal dbg_pcl, dbg_pch : std_logic_vector(7 downto 0);
+    signal dbg_stat_we_n    : std_logic;
+    signal dbg_idl_h, dbg_idl_l, dbg_dbb_r, dbg_dbb_w    : std_logic_vector (7 downto 0);
 
 begin
 
@@ -320,9 +422,21 @@ begin
             dbg_ppu_addr_we_n    ,
             dbg_ppu_clk_cnt          ,
                 
-                ppu_clk, mem_clk, ppu_ce_n, rst_n, r_nw, addr(2 downto 0), d_io, 
+                ppu_clk, mem_clk, sdram_clk, ppu_ce_n, rst_n, r_nw, addr(2 downto 0), d_io, 
                 nmi_n, rd_n, wr_n, ale, vram_ad, vram_a,
-                vga_out_clk, h_sync_n, v_sync_n, r, g, b);
+                vga_out_clk, h_sync_n, v_sync_n, r, g, b,
+                --SDRAM Signals
+                wbs_adr_i	,
+                wbs_dat_i	,
+                wbs_we_i	,
+                wbs_tga_i	,
+                wbs_cyc_i	,
+                wbs_stb_i	,
+                wbs_dat_o	,
+                wbs_stall_o	,
+                wbs_err_o	,
+                wbs_ack_o	
+                );
 
     ppu_addr_decoder : v_address_decoder generic map (vram_size14, data_size) 
         port map (ppu_clk, mem_clk, rd_n, wr_n, ale, v_addr, vram_ad, 
@@ -348,6 +462,48 @@ begin
 --    --APU/DMA instance
 --    apu_inst : apu
 --        port map (cpu_clk, apu_ce_n, rst_n, r_nw, addr, d_io, rdy);
+
+    pll_inst : pll_clk_gen
+        PORT map (   base_clk, sdram_clk, sdram_clk_locked );
+
+    dram_clk <= sdram_clk;
+    sdram_ctl_inst : sdram_controller
+    port map (
+        --Clocks and Reset 
+		sdram_clk, 
+        rst_n, 
+        sdram_clk_locked,
+        
+        --SDRAM Signals
+        dram_addr	,
+        dram_bank	,
+        dram_cas_n	,
+        dram_cke	,
+        dram_cs_n	,
+        dram_dq		,
+        dram_ldqm	,
+        dram_udqm	,
+        dram_ras_n	,
+        dram_we_n	,
+           
+        -- Wishbone Slave signals to Read/Write interface
+        wbs_adr_i	,
+        wbs_dat_i	,
+        wbs_we_i	,
+        wbs_tga_i	,
+        wbs_cyc_i	,
+        wbs_stb_i	,
+        wbs_dat_o	,
+        wbs_stall_o	,
+        wbs_err_o	,
+        wbs_ack_o	,
+
+        --Debug signals
+        cmd_ack		,
+        cmd_done	,
+        init_st_o	,
+        main_st_o	
+    ); 
 
     dbg_cpu_clk <= cpu_clk;
     dbg_ppu_clk <= ppu_clk;

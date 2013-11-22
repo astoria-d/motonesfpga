@@ -16,6 +16,7 @@ entity ppu is
     
             clk         : in std_logic;
             mem_clk     : in std_logic;
+            sdram_clk   : in std_logic;
             ce_n        : in std_logic;
             rst_n       : in std_logic;
             r_nw        : in std_logic;
@@ -32,7 +33,19 @@ entity ppu is
             v_sync_n    : out std_logic;
             r           : out std_logic_vector(3 downto 0);
             g           : out std_logic_vector(3 downto 0);
-            b           : out std_logic_vector(3 downto 0)
+            b           : out std_logic_vector(3 downto 0);
+
+            --SDRAM Signals
+            wbs_adr_i	:	out std_logic_vector (21 downto 0);		--Address (Bank, Row, Col)
+            wbs_dat_i	:	out std_logic_vector (15 downto 0);		--Data In (16 bits)
+            wbs_we_i	:	out std_logic;							--Write Enable
+            wbs_tga_i	:	out std_logic_vector (7 downto 0);		--Address Tag : Read/write burst length-1 (0 represents 1 word, FF represents 256 words)
+            wbs_cyc_i	:	out std_logic;							--Cycle Command from interface
+            wbs_stb_i	:	out std_logic;							--Strobe Command from interface
+            wbs_dat_o	:	in std_logic_vector (15 downto 0);		--Data Out (16 bits)
+            wbs_stall_o	:	in std_logic;							--Slave is not ready to receive new data
+            wbs_err_o	:	in std_logic;							--Error flag: OOR Burst. Burst length is greater that 256-column address
+            wbs_ack_o	:	in std_logic 							--When Read Burst: DATA bus must be valid in this cycle
     );
 end ppu;
 
@@ -74,6 +87,7 @@ end component;
 
 component vga_ctl
     port (  ppu_clk     : in std_logic;
+            sdram_clk   : in std_logic;
             vga_clk     : in std_logic;
             rst_n       : in std_logic;
             pos_x       : in std_logic_vector (8 downto 0);
@@ -85,7 +99,19 @@ component vga_ctl
             v_sync_n    : out std_logic;
             r           : out std_logic_vector(3 downto 0);
             g           : out std_logic_vector(3 downto 0);
-            b           : out std_logic_vector(3 downto 0)
+            b           : out std_logic_vector(3 downto 0);
+
+            --SDRAM Signals
+            wbs_adr_i	:	out std_logic_vector (21 downto 0);		--Address (Bank, Row, Col)
+            wbs_dat_i	:	out std_logic_vector (15 downto 0);		--Data In (16 bits)
+            wbs_we_i	:	out std_logic;							--Write Enable
+            wbs_tga_i	:	out std_logic_vector (7 downto 0);		--Address Tag : Read/write burst length-1 (0 represents 1 word, FF represents 256 words)
+            wbs_cyc_i	:	out std_logic;							--Cycle Command from interface
+            wbs_stb_i	:	out std_logic;							--Strobe Command from interface
+            wbs_dat_o	:	in std_logic_vector (15 downto 0);		--Data Out (16 bits)
+            wbs_stall_o	:	in std_logic;							--Slave is not ready to receive new data
+            wbs_err_o	:	in std_logic;							--Error flag: OOR Burst. Burst length is greater that 256-column address
+            wbs_ack_o	:	in std_logic 							--When Read Burst: DATA bus must be valid in this cycle
     );
 end component;
 
@@ -210,9 +236,34 @@ begin
             r_nw, oam_bus_ce_n, plt_bus_ce_n, 
             oam_plt_addr, oam_plt_data, v_bus_busy_n);
 
---    vga_inst : vga_ctl port map (clk, vga_clk, rst_n, 
---            pos_x, pos_y, nes_r, nes_g, nes_b,
---            h_sync_n, v_sync_n, r, g, b);
+    vga_ctl_inst : vga_ctl
+    port map (  clk     ,
+            sdram_clk   ,
+            vga_clk     ,
+            rst_n       ,
+            pos_x       ,
+            pos_y       ,
+            nes_r       ,
+            nes_g       ,
+            nes_b       ,
+            h_sync_n    ,
+            v_sync_n    ,
+            r           ,
+            g           ,
+            b           ,
+            
+            --SDRAM Signals
+            wbs_adr_i	,
+            wbs_dat_i	,
+            wbs_we_i	,
+            wbs_tga_i	,
+            wbs_cyc_i	,
+            wbs_stb_i	,
+            wbs_dat_o	,
+            wbs_stall_o	,
+            wbs_err_o	,
+            wbs_ack_o	
+    );
 
     --PPU registers.
     clk_n <= not clk;
