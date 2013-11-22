@@ -77,13 +77,14 @@ architecture rtl of qt_proj_test5 is
     end component;
 
     component vga_clk_gen
-	PORT
-	(
-		inclk0		: IN STD_LOGIC  := '0';
-		c0		: OUT STD_LOGIC ;
-		c1		: OUT STD_LOGIC 
-	);
-    END component;
+        PORT
+        (
+            inclk0		: IN STD_LOGIC  := '0';
+            c0		: OUT STD_LOGIC ;
+            c1		: OUT STD_LOGIC ;
+            locked		: OUT STD_LOGIC 
+        );
+    end component;
 
 signal pos_x       : std_logic_vector (8 downto 0);
 signal pos_y       : std_logic_vector (8 downto 0);
@@ -174,6 +175,7 @@ end component;
     signal mem_clk   : std_logic;
     signal vga_clk   : std_logic;
     signal vga_clk_pll, sdram_clk : std_logic;
+    signal pll_locked   : std_logic;
 
     -- Wishbone Slave signals to Read/Write interface
     signal wbs_adr_i	:	std_logic_vector (21 downto 0);		--Address (Bank, Row, Col)
@@ -213,7 +215,7 @@ begin
         PORT map
         (
             --mem_clk_pll = 160 MHz.
-            base_clk, vga_clk_pll, sdram_clk
+            base_clk, vga_clk_pll, sdram_clk, pll_locked
         );
     --- testbench pll clock..
 --    dummy_clock_p: process
@@ -262,7 +264,7 @@ sdram_ctl_inst : sdram_controller
 		--Clocks and Reset 
 		sdram_clk, 
 		rst_n, 
-		'1', --pll_locked	:	in std_logic;	--PLL Locked indication, for CKE (Clock Enable) signal to SDRAM
+		pll_locked,
 		
 		--SDRAM Signals
 		dram_addr	,

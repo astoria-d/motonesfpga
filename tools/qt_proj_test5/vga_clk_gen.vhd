@@ -44,7 +44,8 @@ ENTITY vga_clk_gen IS
 	(
 		inclk0		: IN STD_LOGIC  := '0';
 		c0		: OUT STD_LOGIC ;
-		c1		: OUT STD_LOGIC 
+		c1		: OUT STD_LOGIC ;
+		locked		: OUT STD_LOGIC 
 	);
 END vga_clk_gen;
 
@@ -55,9 +56,10 @@ ARCHITECTURE SYN OF vga_clk_gen IS
 	SIGNAL sub_wire1	: STD_LOGIC ;
 	SIGNAL sub_wire2	: STD_LOGIC ;
 	SIGNAL sub_wire3	: STD_LOGIC ;
-	SIGNAL sub_wire4	: STD_LOGIC_VECTOR (1 DOWNTO 0);
-	SIGNAL sub_wire5_bv	: BIT_VECTOR (0 DOWNTO 0);
-	SIGNAL sub_wire5	: STD_LOGIC_VECTOR (0 DOWNTO 0);
+	SIGNAL sub_wire4	: STD_LOGIC ;
+	SIGNAL sub_wire5	: STD_LOGIC_VECTOR (1 DOWNTO 0);
+	SIGNAL sub_wire6_bv	: BIT_VECTOR (0 DOWNTO 0);
+	SIGNAL sub_wire6	: STD_LOGIC_VECTOR (0 DOWNTO 0);
 
 
 
@@ -72,8 +74,10 @@ ARCHITECTURE SYN OF vga_clk_gen IS
 		clk1_multiply_by		: NATURAL;
 		clk1_phase_shift		: STRING;
 		compensate_clock		: STRING;
+		gate_lock_signal		: STRING;
 		inclk0_input_frequency		: NATURAL;
 		intended_device_family		: STRING;
+		invalid_lock_multiplier		: NATURAL;
 		lpm_hint		: STRING;
 		lpm_type		: STRING;
 		operation_mode		: STRING;
@@ -117,23 +121,26 @@ ARCHITECTURE SYN OF vga_clk_gen IS
 		port_extclk0		: STRING;
 		port_extclk1		: STRING;
 		port_extclk2		: STRING;
-		port_extclk3		: STRING
+		port_extclk3		: STRING;
+		valid_lock_multiplier		: NATURAL
 	);
 	PORT (
 			clk	: OUT STD_LOGIC_VECTOR (5 DOWNTO 0);
-			inclk	: IN STD_LOGIC_VECTOR (1 DOWNTO 0)
+			inclk	: IN STD_LOGIC_VECTOR (1 DOWNTO 0);
+			locked	: OUT STD_LOGIC 
 	);
 	END COMPONENT;
 
 BEGIN
-	sub_wire5_bv(0 DOWNTO 0) <= "0";
-	sub_wire5    <= To_stdlogicvector(sub_wire5_bv);
-	sub_wire2    <= sub_wire0(1);
-	sub_wire1    <= sub_wire0(0);
-	c0    <= sub_wire1;
-	c1    <= sub_wire2;
-	sub_wire3    <= inclk0;
-	sub_wire4    <= sub_wire5(0 DOWNTO 0) & sub_wire3;
+	sub_wire6_bv(0 DOWNTO 0) <= "0";
+	sub_wire6    <= To_stdlogicvector(sub_wire6_bv);
+	sub_wire3    <= sub_wire0(0);
+	sub_wire1    <= sub_wire0(1);
+	c1    <= sub_wire1;
+	locked    <= sub_wire2;
+	c0    <= sub_wire3;
+	sub_wire4    <= inclk0;
+	sub_wire5    <= sub_wire6(0 DOWNTO 0) & sub_wire4;
 
 	altpll_component : altpll
 	GENERIC MAP (
@@ -141,13 +148,15 @@ BEGIN
 		clk0_duty_cycle => 50,
 		clk0_multiply_by => 1,
 		clk0_phase_shift => "0",
-		clk1_divide_by => 5,
+		clk1_divide_by => 250,
 		clk1_duty_cycle => 50,
-		clk1_multiply_by => 16,
+		clk1_multiply_by => 833,
 		clk1_phase_shift => "0",
 		compensate_clock => "CLK0",
+		gate_lock_signal => "NO",
 		inclk0_input_frequency => 20000,
 		intended_device_family => "Cyclone II",
+		invalid_lock_multiplier => 5,
 		lpm_hint => "CBX_MODULE_PREFIX=vga_clk_gen",
 		lpm_type => "altpll",
 		operation_mode => "NORMAL",
@@ -161,7 +170,7 @@ BEGIN
 		port_fbin => "PORT_UNUSED",
 		port_inclk0 => "PORT_USED",
 		port_inclk1 => "PORT_UNUSED",
-		port_locked => "PORT_UNUSED",
+		port_locked => "PORT_USED",
 		port_pfdena => "PORT_UNUSED",
 		port_phasecounterselect => "PORT_UNUSED",
 		port_phasedone => "PORT_UNUSED",
@@ -191,11 +200,13 @@ BEGIN
 		port_extclk0 => "PORT_UNUSED",
 		port_extclk1 => "PORT_UNUSED",
 		port_extclk2 => "PORT_UNUSED",
-		port_extclk3 => "PORT_UNUSED"
+		port_extclk3 => "PORT_UNUSED",
+		valid_lock_multiplier => 1
 	)
 	PORT MAP (
-		inclk => sub_wire4,
-		clk => sub_wire0
+		inclk => sub_wire5,
+		clk => sub_wire0,
+		locked => sub_wire2
 	);
 
 
@@ -227,7 +238,7 @@ END SYN;
 -- Retrieval info: PRIVATE: DUTY_CYCLE0 STRING "50.00000000"
 -- Retrieval info: PRIVATE: DUTY_CYCLE1 STRING "50.00000000"
 -- Retrieval info: PRIVATE: EFF_OUTPUT_FREQ_VALUE0 STRING "25.000000"
--- Retrieval info: PRIVATE: EFF_OUTPUT_FREQ_VALUE1 STRING "160.000000"
+-- Retrieval info: PRIVATE: EFF_OUTPUT_FREQ_VALUE1 STRING "166.600006"
 -- Retrieval info: PRIVATE: EXPLICIT_SWITCHOVER_COUNTER STRING "0"
 -- Retrieval info: PRIVATE: EXT_FEEDBACK_RADIO STRING "0"
 -- Retrieval info: PRIVATE: GLOCKED_COUNTER_EDIT_CHANGED STRING "1"
@@ -243,7 +254,7 @@ END SYN;
 -- Retrieval info: PRIVATE: INCLK1_FREQ_UNIT_COMBO STRING "MHz"
 -- Retrieval info: PRIVATE: INTENDED_DEVICE_FAMILY STRING "Cyclone II"
 -- Retrieval info: PRIVATE: INT_FEEDBACK__MODE_RADIO STRING "1"
--- Retrieval info: PRIVATE: LOCKED_OUTPUT_CHECK STRING "0"
+-- Retrieval info: PRIVATE: LOCKED_OUTPUT_CHECK STRING "1"
 -- Retrieval info: PRIVATE: LONG_SCAN_RADIO STRING "1"
 -- Retrieval info: PRIVATE: LVDS_MODE_DATA_RATE STRING "Not Available"
 -- Retrieval info: PRIVATE: LVDS_MODE_DATA_RATE_DIRTY NUMERIC "0"
@@ -256,7 +267,7 @@ END SYN;
 -- Retrieval info: PRIVATE: MULT_FACTOR1 NUMERIC "25"
 -- Retrieval info: PRIVATE: NORMAL_MODE_RADIO STRING "1"
 -- Retrieval info: PRIVATE: OUTPUT_FREQ0 STRING "25.00000000"
--- Retrieval info: PRIVATE: OUTPUT_FREQ1 STRING "160.00000000"
+-- Retrieval info: PRIVATE: OUTPUT_FREQ1 STRING "166.60000000"
 -- Retrieval info: PRIVATE: OUTPUT_FREQ_MODE0 STRING "1"
 -- Retrieval info: PRIVATE: OUTPUT_FREQ_MODE1 STRING "1"
 -- Retrieval info: PRIVATE: OUTPUT_FREQ_UNIT0 STRING "MHz"
@@ -306,13 +317,15 @@ END SYN;
 -- Retrieval info: CONSTANT: CLK0_DUTY_CYCLE NUMERIC "50"
 -- Retrieval info: CONSTANT: CLK0_MULTIPLY_BY NUMERIC "1"
 -- Retrieval info: CONSTANT: CLK0_PHASE_SHIFT STRING "0"
--- Retrieval info: CONSTANT: CLK1_DIVIDE_BY NUMERIC "5"
+-- Retrieval info: CONSTANT: CLK1_DIVIDE_BY NUMERIC "250"
 -- Retrieval info: CONSTANT: CLK1_DUTY_CYCLE NUMERIC "50"
--- Retrieval info: CONSTANT: CLK1_MULTIPLY_BY NUMERIC "16"
+-- Retrieval info: CONSTANT: CLK1_MULTIPLY_BY NUMERIC "833"
 -- Retrieval info: CONSTANT: CLK1_PHASE_SHIFT STRING "0"
 -- Retrieval info: CONSTANT: COMPENSATE_CLOCK STRING "CLK0"
+-- Retrieval info: CONSTANT: GATE_LOCK_SIGNAL STRING "NO"
 -- Retrieval info: CONSTANT: INCLK0_INPUT_FREQUENCY NUMERIC "20000"
 -- Retrieval info: CONSTANT: INTENDED_DEVICE_FAMILY STRING "Cyclone II"
+-- Retrieval info: CONSTANT: INVALID_LOCK_MULTIPLIER NUMERIC "5"
 -- Retrieval info: CONSTANT: LPM_TYPE STRING "altpll"
 -- Retrieval info: CONSTANT: OPERATION_MODE STRING "NORMAL"
 -- Retrieval info: CONSTANT: PORT_ACTIVECLOCK STRING "PORT_UNUSED"
@@ -325,7 +338,7 @@ END SYN;
 -- Retrieval info: CONSTANT: PORT_FBIN STRING "PORT_UNUSED"
 -- Retrieval info: CONSTANT: PORT_INCLK0 STRING "PORT_USED"
 -- Retrieval info: CONSTANT: PORT_INCLK1 STRING "PORT_UNUSED"
--- Retrieval info: CONSTANT: PORT_LOCKED STRING "PORT_UNUSED"
+-- Retrieval info: CONSTANT: PORT_LOCKED STRING "PORT_USED"
 -- Retrieval info: CONSTANT: PORT_PFDENA STRING "PORT_UNUSED"
 -- Retrieval info: CONSTANT: PORT_PHASECOUNTERSELECT STRING "PORT_UNUSED"
 -- Retrieval info: CONSTANT: PORT_PHASEDONE STRING "PORT_UNUSED"
@@ -356,16 +369,19 @@ END SYN;
 -- Retrieval info: CONSTANT: PORT_extclk1 STRING "PORT_UNUSED"
 -- Retrieval info: CONSTANT: PORT_extclk2 STRING "PORT_UNUSED"
 -- Retrieval info: CONSTANT: PORT_extclk3 STRING "PORT_UNUSED"
+-- Retrieval info: CONSTANT: VALID_LOCK_MULTIPLIER NUMERIC "1"
 -- Retrieval info: USED_PORT: @clk 0 0 6 0 OUTPUT_CLK_EXT VCC "@clk[5..0]"
 -- Retrieval info: USED_PORT: @extclk 0 0 4 0 OUTPUT_CLK_EXT VCC "@extclk[3..0]"
 -- Retrieval info: USED_PORT: @inclk 0 0 2 0 INPUT_CLK_EXT VCC "@inclk[1..0]"
 -- Retrieval info: USED_PORT: c0 0 0 0 0 OUTPUT_CLK_EXT VCC "c0"
 -- Retrieval info: USED_PORT: c1 0 0 0 0 OUTPUT_CLK_EXT VCC "c1"
 -- Retrieval info: USED_PORT: inclk0 0 0 0 0 INPUT_CLK_EXT GND "inclk0"
+-- Retrieval info: USED_PORT: locked 0 0 0 0 OUTPUT GND "locked"
 -- Retrieval info: CONNECT: @inclk 0 0 1 1 GND 0 0 0 0
 -- Retrieval info: CONNECT: @inclk 0 0 1 0 inclk0 0 0 0 0
 -- Retrieval info: CONNECT: c0 0 0 0 0 @clk 0 0 1 0
 -- Retrieval info: CONNECT: c1 0 0 0 0 @clk 0 0 1 1
+-- Retrieval info: CONNECT: locked 0 0 0 0 @locked 0 0 0 0
 -- Retrieval info: GEN_FILE: TYPE_NORMAL vga_clk_gen.vhd TRUE
 -- Retrieval info: GEN_FILE: TYPE_NORMAL vga_clk_gen.ppf TRUE
 -- Retrieval info: GEN_FILE: TYPE_NORMAL vga_clk_gen.inc FALSE
