@@ -13,7 +13,7 @@ use work.motonesfpga_common.all;
 
 entity vga_ctl is 
     port (  ppu_clk     : in std_logic;
-            mem_clk     : in std_logic;
+            sdram_clk   : in std_logic;
             vga_clk     : in std_logic;
             rst_n       : in std_logic;
             pos_x       : in std_logic_vector (8 downto 0);
@@ -133,15 +133,15 @@ begin
             port map (cnt_clk , x_res_n, '0', '1', (others => '0'), vga_x);
 
     pos_x_old_inst: d_flip_flop generic map (9)
-        port map (mem_clk, rst_n, '1', pos_x_we_n, pos_x, pos_x_old);
+        port map (sdram_clk, rst_n, '1', pos_x_we_n, pos_x, pos_x_old);
 
     nes_x_old_inst: d_flip_flop generic map (8)
-        port map (mem_clk, rst_n, '1', nes_x_we_n, nes_x, nes_x_old);
+        port map (sdram_clk, rst_n, '1', nes_x_we_n, nes_x, nes_x_old);
         
     y_inst : counter_register generic map (10, 1)
             port map (cnt_clk , y_res_n, y_en_n, '1', (others => '0'), vga_y);
     mem_cnt_inst : counter_register generic map (5, 1)
-            port map (mem_clk , x_res_n, '0', '1', (others => '0'), mem_cnt);
+            port map (sdram_clk , x_res_n, '0', '1', (others => '0'), mem_cnt);
 
     count5_inst : counter_register generic map (3, 1)
             port map (cnt_clk, count5_res_n, '0', '1', (others => '0'), count5);
@@ -150,9 +150,9 @@ begin
             port map (vga_clk, x_res_n, nes_x_en_n, '1', (others => '0'), nes_x);
             
     col_inst : d_flip_flop generic map (16)
-        port map (mem_clk, rst_n, '1', dram_col_we_n, wbs_dat_o, dram_col);
+        port map (sdram_clk, rst_n, '1', dram_col_we_n, wbs_dat_o, dram_col);
         
-    dram_p : process (rst_n, mem_clk)
+    dram_p : process (rst_n, sdram_clk)
 variable sr_read_ok : std_logic;
 variable wait_cnt : integer;
     begin
@@ -172,7 +172,7 @@ variable wait_cnt : integer;
             sr_state <= sr_idle;
             wait_cnt := SDRAM_READ_WAIT_CNT;
             
-        elsif (rising_edge(mem_clk)) then
+        elsif (rising_edge(sdram_clk)) then
         
             --write to sdram
             case sw_state is

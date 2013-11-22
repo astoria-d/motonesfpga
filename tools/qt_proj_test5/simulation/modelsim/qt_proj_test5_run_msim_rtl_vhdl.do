@@ -81,7 +81,7 @@ add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/r
 add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/g
 add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/b
 
-add wave sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/mem_clk
+add wave sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/sdram_clk
 #add wave -radix decimal -unsigned sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/mem_cnt
 
 add wave sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/vga_clk

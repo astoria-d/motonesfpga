@@ -93,7 +93,7 @@ signal nes_b       : std_logic_vector (3 downto 0);
 
 component vga_ctl
     port (  ppu_clk     : in std_logic;
-            mem_clk     : in std_logic;
+            sdram_clk   : in std_logic;
             vga_clk     : in std_logic;
             rst_n       : in std_logic;
             pos_x       : in std_logic_vector (8 downto 0);
@@ -173,7 +173,7 @@ end component;
     signal ppu_clk  : std_logic;
     signal mem_clk   : std_logic;
     signal vga_clk   : std_logic;
-    signal vga_clk_pll, mem_clk_pll : std_logic;
+    signal vga_clk_pll, sdram_clk : std_logic;
 
     -- Wishbone Slave signals to Read/Write interface
     signal wbs_adr_i	:	std_logic_vector (21 downto 0);		--Address (Bank, Row, Col)
@@ -213,21 +213,21 @@ begin
         PORT map
         (
             --mem_clk_pll = 160 MHz.
-            base_clk, vga_clk_pll, mem_clk_pll
+            base_clk, vga_clk_pll, sdram_clk
         );
     --- testbench pll clock..
 --    dummy_clock_p: process
 --    begin
---        mem_clk_pll <= '1';
+--        sdram_clk <= '1';
 --        wait for 6250 ps / 2;
---        mem_clk_pll <= '0';
+--        sdram_clk <= '0';
 --        wait for 6250 ps / 2;
 --    end process;
 
     
     vga_ctl_inst : vga_ctl
     port map (  ppu_clk     ,
-            mem_clk_pll,
+            sdram_clk,
             --vga_clk_pll, 
             --ppu_clk ,
             vga_clk     ,
@@ -256,11 +256,11 @@ begin
             wbs_ack_o	
     );
 
-    dram_clk <= base_clk;
+    dram_clk <= sdram_clk;
 sdram_ctl_inst : sdram_controller
   port map (
 		--Clocks and Reset 
-		base_clk, 
+		sdram_clk, 
 		rst_n, 
 		'1', --pll_locked	:	in std_logic;	--PLL Locked indication, for CKE (Clock Enable) signal to SDRAM
 		
