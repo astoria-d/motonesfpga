@@ -348,6 +348,9 @@ variable wait_cnt : integer;
                     r<= dram_col(11 downto 8);
                     g<= dram_col(7 downto 4);
                     b<= dram_col(3 downto 0);
+--                    r<= "1111";
+--                    g<= "0000";
+--                    b<= "0000";
                 else
                     r<=(others => '0');
                     g<=(others => '0');

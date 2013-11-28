@@ -16,6 +16,7 @@ vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/de1_nes/address_decoder.vhd
 vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/de1_nes/de1_nes.vhd}
 vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/de1_nes/mem/prg_rom.vhd}
 vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/de1_nes/mem/chr_rom.vhd}
+vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/de1_nes/ppu/vga.vhd}
 vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/de1_nes/ppu/ppu.vhd}
 vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/de1_nes/ppu/render.vhd}
 vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/de1_nes/cpu/decoder.vhd}
@@ -62,6 +63,18 @@ add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x
 add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_y
 
 ###add wave sim:/testbench_motones_sim/sim_board/cpu_inst/*
+
+add wave -divider render
+
+add wave -radix decimal -unsigned sim:/testbench_motones_sim/sim_board/ppu_inst/pos_x \
+sim:/testbench_motones_sim/sim_board/ppu_inst/pos_y 
+
+add wave -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/nes_r \
+sim:/testbench_motones_sim/sim_board/ppu_inst/nes_g \
+sim:/testbench_motones_sim/sim_board/ppu_inst/nes_b
+
+add wave sim:/testbench_motones_sim/sim_board/ppu_inst/h_sync_n \
+sim:/testbench_motones_sim/sim_board/ppu_inst/v_sync_n
 
 view structure
 view signals

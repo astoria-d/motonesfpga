@@ -13,6 +13,7 @@
 *.pin
 *.old
 *.log
+*.cdf
 db/*
 incremental_db/*
 no-need/*
