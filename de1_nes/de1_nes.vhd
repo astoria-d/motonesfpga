@@ -376,28 +376,28 @@ begin
     clock_inst : clock_divider port map 
         (base_clk, rst_n, cpu_clk, ppu_clk, mem_clk, vga_out_clk);
 
---    --mos 6502 cpu instance
---    cpu_inst : mos6502 generic map (data_size, addr_size) 
---        port map (
---    dbg_instruction,
---    dbg_int_d_bus,
---    dbg_exec_cycle,
---    dbg_ea_carry,
---    dbg_wait_a58_branch_next,
--- --   dbg_index_bus,
--- --   dbg_acc_bus,
---    dbg_status,
---    dbg_pcl, dbg_pch, dbg_sp, dbg_x, dbg_y, dbg_acc,
---    dbg_dec_oe_n,
---    dbg_dec_val,
---    dbg_int_dbus,
-----    dbg_status_val    ,
---    dbg_stat_we_n    ,
---    dbg_idl_h, dbg_idl_l, dbg_dbb_r, dbg_dbb_w,
---
---                cpu_clk, '1', --rdy, -----for testing...
---                rst_n, irq_n, nmi_n, dbe, r_nw, 
---                phi1, phi2, addr, d_io);
+    --mos 6502 cpu instance
+    cpu_inst : mos6502 generic map (data_size, addr_size) 
+        port map (
+    dbg_instruction,
+    dbg_int_d_bus,
+    dbg_exec_cycle,
+    dbg_ea_carry,
+    dbg_wait_a58_branch_next,
+ --   dbg_index_bus,
+ --   dbg_acc_bus,
+    dbg_status,
+    dbg_pcl, dbg_pch, dbg_sp, dbg_x, dbg_y, dbg_acc,
+    dbg_dec_oe_n,
+    dbg_dec_val,
+    dbg_int_dbus,
+--    dbg_status_val    ,
+    dbg_stat_we_n    ,
+    dbg_idl_h, dbg_idl_l, dbg_dbb_r, dbg_dbb_w,
+
+                cpu_clk, '1', --rdy, -----for testing...
+                rst_n, irq_n, nmi_n, dbe, r_nw, 
+                phi1, phi2, addr, d_io);
 
     addr_dec_inst : address_decoder generic map (addr_size, data_size) 
         port map (phi2, mem_clk, r_nw, addr, d_io, rom_ce_n, ram_ce_n, ppu_ce_n, apu_ce_n);

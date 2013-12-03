@@ -531,9 +531,9 @@ begin
     plt_w_n <= r_nw when plt_bus_ce_n = '0' else
                 '1';
     plt_d_buf_w : tri_state_buffer generic map (dsize)
-            port map (r_nw, oam_plt_data, plt_data);
+            port map (plt_w_n, oam_plt_data, plt_data);
     plt_d_buf_r : tri_state_buffer generic map (dsize)
-            port map (r_n, plt_data, oam_plt_data);
+            port map (plt_r_n, plt_data, oam_plt_data);
     plt_ram_ctl : ram_ctrl
             port map (mem_clk, plt_ram_ce_n_in, plt_r_n, plt_w_n, plt_ram_ce_n);
     palette_inst : palette_ram generic map (5, dsize)
@@ -564,9 +564,9 @@ begin
     p_oam_w_n <= r_nw when oam_bus_ce_n = '0' else
                 '1';
     oam_d_buf_w : tri_state_buffer generic map (dsize)
-            port map (r_nw, oam_plt_data, p_oam_data);
+            port map (p_oam_w_n, oam_plt_data, p_oam_data);
     oam_d_buf_r : tri_state_buffer generic map (dsize)
-            port map (r_n, p_oam_data, oam_plt_data);
+            port map (p_oam_r_n, p_oam_data, oam_plt_data);
 
     p_oam_ram_ctl : ram_ctrl
             port map (mem_clk, p_oam_ram_ce_n_in, p_oam_r_n, p_oam_w_n, p_oam_ram_ce_n);
