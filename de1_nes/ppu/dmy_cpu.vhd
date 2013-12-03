@@ -51,6 +51,20 @@ begin
 
     main_p : process (input_clk, rst_n)
     variable plt_step_cnt, nt_step_cnt : integer;
+
+procedure vram_set (ad: in integer; dt : in integer) is
+begin
+    r_nw <= '0';
+    addr <= conv_std_logic_vector(ad, 16);
+    d_io <= conv_std_logic_vector(dt, 8);
+end;
+procedure vram_clr is
+begin
+    addr <= (others => 'Z');
+    d_io <= (others => 'Z');
+    r_nw <= '1';
+end;
+
     begin
         if (rst_n = '0') then
             init_done <= '0';
@@ -81,64 +95,54 @@ begin
                     
                     
                     if (plt_step_cnt = 0) then
-                        addr <= conv_std_logic_vector(16#2006#, 16);
-                        d_io <= conv_std_logic_vector(16#3f#, 8);
-                        r_nw <= '0';
-                        plt_step_cnt := plt_step_cnt + 1;
-                    elsif (plt_step_cnt = 1) then
-                        d_io <= conv_std_logic_vector(16#00#, 8);
-                        plt_step_cnt := plt_step_cnt + 1;
-
+                        --set vram addr 3f00
+                        vram_set(16#2006#, 16#3f#);
                     elsif (plt_step_cnt = 2) then
-                        addr <= conv_std_logic_vector(16#2007#, 16);
-                        d_io <= conv_std_logic_vector(16#0f#, 8);
-                        plt_step_cnt := plt_step_cnt + 1;
-                    elsif (plt_step_cnt = 3) then
-                        d_io <= conv_std_logic_vector(16#00#, 8);
-                        plt_step_cnt := plt_step_cnt + 1;
+                        vram_set(16#2006#, 16#00#);
+
                     elsif (plt_step_cnt = 4) then
-                        d_io <= conv_std_logic_vector(16#10#, 8);
-                        plt_step_cnt := plt_step_cnt + 1;
-                    elsif (plt_step_cnt = 5) then
-                        d_io <= conv_std_logic_vector(16#20#, 8);
-                        plt_step_cnt := plt_step_cnt + 1;
+                        --set palette data
+                        vram_set(16#2007#, 16#0f#);
+                    elsif (plt_step_cnt = 6) then
+                        vram_set(16#2007#, 16#00#);
+                    elsif (plt_step_cnt = 8) then
+                        vram_set(16#2007#, 16#10#);
+                    elsif (plt_step_cnt = 10) then
+                        vram_set(16#2007#, 16#20#);
                     
                     else
-                        addr <= (others => 'Z');
-                        d_io <= (others => 'Z');
-                        r_nw <= '1';
-                        global_step_cnt <= global_step_cnt + 1;
+                        vram_clr;
+                        if (plt_step_cnt > 10) then
+                            global_step_cnt <= global_step_cnt + 1;
+                        end if;
                     end if;
+                    plt_step_cnt := plt_step_cnt + 1;
                     
                 elsif (global_step_cnt = 1) then
                     --step1 = name table set.
                     
                     if (nt_step_cnt = 0) then
-                        addr <= conv_std_logic_vector(16#2006#, 16);
-                        d_io <= conv_std_logic_vector(16#20#, 8);
-                        r_nw <= '0';
-                        nt_step_cnt := nt_step_cnt + 1;
-                    elsif (nt_step_cnt = 1) then
-                        d_io <= conv_std_logic_vector(16#00#, 8);
-                        nt_step_cnt := nt_step_cnt + 1;
-
+                        --set vram addr 2000
+                        vram_set(16#2006#, 16#20#);
                     elsif (nt_step_cnt = 2) then
-                        addr <= conv_std_logic_vector(16#2007#, 16);
-                        d_io <= conv_std_logic_vector(16#41#, 8);
-                        nt_step_cnt := nt_step_cnt + 1;
-                    elsif (nt_step_cnt = 3) then
-                        d_io <= conv_std_logic_vector(16#42#, 8);
-                        nt_step_cnt := nt_step_cnt + 1;
+                        vram_set(16#2006#, 16#00#);
+
                     elsif (nt_step_cnt = 4) then
-                        d_io <= conv_std_logic_vector(16#43#, 8);
-                        nt_step_cnt := nt_step_cnt + 1;
+                        --set name tbl data
+                        vram_set(16#2007#, 16#41#);
+                    elsif (nt_step_cnt = 6) then
+                        vram_set(16#2007#, 16#42#);
+                    elsif (nt_step_cnt = 8) then
+                        vram_set(16#2007#, 16#43#);
 
                     else
-                        addr <= (others => 'Z');
-                        d_io <= (others => 'Z');
-                        r_nw <= '1';
-                        global_step_cnt <= global_step_cnt + 1;
+                        vram_clr;
+                        if (nt_step_cnt > 8) then
+                            global_step_cnt <= global_step_cnt + 1;
+                        end if;
                     end if;
+                    nt_step_cnt := nt_step_cnt + 1;
+                    
                 else
                     init_done <= '1';
                 end if;

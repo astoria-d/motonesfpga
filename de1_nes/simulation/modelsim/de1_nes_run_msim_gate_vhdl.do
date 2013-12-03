@@ -26,26 +26,22 @@ add wave sim:/testbench_motones_sim/sim_board/dbg_cpu_clk
 add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_addr
 add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_d_io
 
-add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_instruction
-add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_int_d_bus
+#add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_instruction
+#add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_int_d_bus
 
-add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_exec_cycle
+#add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_exec_cycle
 
-add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_ea_carry     
-add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_wait_a58_branch_next     
+#add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_ea_carry     
+#add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_wait_a58_branch_next     
 
 
-add wave -divider regs
+#add wave -divider regs
 
-#add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_index_bus;
-#add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_acc_bus;
-##    dbg_pcl, dbg_pch, 
-
-add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_acc
-add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_sp
-add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_status
-add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_x
-add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_y
+#add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_acc
+#add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_sp
+#add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_status
+#add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_x
+#add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_y
 
 
 add wave -divider ppu
