@@ -17,6 +17,7 @@
 db/*
 incremental_db/*
 no-need/*
+bk/*
 simulation/modelsim/gate_work/*
 simulation/modelsim/rtl_work/*
 simulation/modelsim/*.do.bak*
