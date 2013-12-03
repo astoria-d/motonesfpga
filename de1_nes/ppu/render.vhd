@@ -698,7 +698,12 @@ begin
     pl_index := conv_integer(plt_data(5 downto 0));
     b <= nes_color_palette(pl_index) (11 downto 8);
     g <= nes_color_palette(pl_index) (7 downto 4);
-    r <= nes_color_palette(pl_index) (3 downto 0);
+    --r <= nes_color_palette(pl_index) (3 downto 0);
+    if (cur_x <= conv_std_logic_vector(100, X_SIZE)) then
+        r <= nes_color_palette(pl_index) (3 downto 0);
+    else
+        r <= "1111";
+    end if;
 --    d_print("rgb:" &
 --        conv_hex8(nes_color_palette(pl_index) (11 downto 8)) &
 --        conv_hex8(nes_color_palette(pl_index) (7 downto 4)) &
