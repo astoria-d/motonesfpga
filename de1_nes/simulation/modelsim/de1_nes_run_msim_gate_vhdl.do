@@ -76,6 +76,7 @@ view structure
 view signals
 #run -all
 run 10 us
+run 5 us
 #run 60 us
 
 #wave zoom range 3339700 ps 5138320 ps
