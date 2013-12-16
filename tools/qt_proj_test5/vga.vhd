@@ -12,7 +12,14 @@ use ieee.std_logic_arith.conv_std_logic_vector;
 use work.motonesfpga_common.all;
 
 entity vga_ctl is 
-    port (  ppu_clk     : in std_logic;
+    port (  
+            signal dbg_vga_x        : out std_logic_vector (9 downto 0);
+            signal dbg_vga_y        : out std_logic_vector (9 downto 0);
+            signal dbg_nes_x        : out std_logic_vector(7 downto 0);
+            signal dbg_nes_x_old    : out std_logic_vector(7 downto 0);
+            signal dbg_sr_state     : out std_logic_vector(1 downto 0);
+    
+            ppu_clk     : in std_logic;
             sdram_clk   : in std_logic;
             vga_clk     : in std_logic;
             rst_n       : in std_logic;
@@ -111,11 +118,17 @@ signal pos_x_old        : std_logic_vector(8 downto 0);
 signal nes_x_we_n       : std_logic;
 signal nes_x_old        : std_logic_vector(7 downto 0);
 
-type sdram_write_status is (sw_idle, sw_write, sw_write_ack);
-type sdram_read_status is (sr_idle, sr_read_wait, sr_read, sr_read_ack);
+--type sdram_write_status is (sw_idle, sw_write, sw_write_ack);
+--signal sw_state : sdram_write_status;
 
-signal sw_state : sdram_write_status;
-signal sr_state : sdram_read_status;
+
+constant sr_idle        : std_logic_vector(1 downto 0) := "00";
+constant sr_read_wait   : std_logic_vector(1 downto 0) := "01";
+constant sr_read        : std_logic_vector(1 downto 0) := "10";
+constant sr_read_ack    : std_logic_vector(1 downto 0) := "11";
+
+signal sr_state : std_logic_vector(1 downto 0);
+
 constant SDRAM_READ_WAIT_CNT : integer := 10;
 
 
@@ -127,6 +140,13 @@ constant SDRAM_READ_WAIT_CNT : integer := 10;
 --sdram clock = 135 MHz
 
 begin
+    dbg_vga_x        <= vga_x        ;
+    dbg_vga_y        <= vga_y        ;
+    dbg_nes_x        <= nes_x        ;
+    dbg_nes_x_old    <= nes_x_old;
+    dbg_sr_state     <= sr_state     ;
+
+
 
     cnt_clk <= not vga_clk;
     x_inst : counter_register generic map (10, 1)
@@ -135,9 +155,6 @@ begin
     pos_x_old_inst: d_flip_flop generic map (9)
         port map (sdram_clk, rst_n, '1', pos_x_we_n, pos_x, pos_x_old);
 
-    nes_x_old_inst: d_flip_flop generic map (8)
-        port map (sdram_clk, rst_n, '1', nes_x_we_n, nes_x, nes_x_old);
-        
     y_inst : counter_register generic map (10, 1)
             port map (cnt_clk , y_res_n, y_en_n, '1', (others => '0'), vga_y);
     mem_cnt_inst : counter_register generic map (5, 1)
@@ -149,11 +166,13 @@ begin
     nes_x_inst : counter_register generic map (8, 1)
             port map (vga_clk, x_res_n, nes_x_en_n, '1', (others => '0'), nes_x);
             
+    nes_x_old_inst: d_flip_flop generic map (8)
+        port map (sdram_clk, rst_n, '1', nes_x_we_n, nes_x, nes_x_old);
+        
     col_inst : d_flip_flop generic map (16)
         port map (sdram_clk, rst_n, '1', dram_col_we_n, wbs_dat_o, dram_col);
         
     dram_p : process (rst_n, sdram_clk)
-variable sr_read_ok : std_logic;
 variable wait_cnt : integer;
     begin
         if (rst_n = '0') then
@@ -165,79 +184,69 @@ variable wait_cnt : integer;
             wbs_cyc_i	<= '0';
             wbs_stb_i	<= '0';
 
-            sr_read_ok := '0';
-            pos_x_we_n <= '1';
             nes_x_we_n <= '1';
-            sw_state <= sw_idle;
+            pos_x_we_n <= '1';
+            --sw_state <= sw_idle;
             sr_state <= sr_idle;
             wait_cnt := SDRAM_READ_WAIT_CNT;
             
         elsif (rising_edge(sdram_clk)) then
+
+            if (nes_x /= nes_x_old) then
+                nes_x_we_n <= '0';
+            else
+                nes_x_we_n <= '1';
+            end if;
+
         
-            --write to sdram
-            case sw_state is
-            when sw_idle =>
-                if (pos_x < conv_std_logic_vector(NES_W, 9) and 
-                    pos_y < conv_std_logic_vector(NES_H, 9) and 
-                    pos_x /= pos_x_old and sr_state = sr_idle) then
-                --if (mem_cnt = conv_std_logic_vector(1, 5)) then
-                    sw_state <= sw_write;
-                    sr_read_ok := '0';
-                    pos_x_we_n <= '0';
-
-                    wbs_adr_i <= "000000" & pos_x(7 downto 0) & pos_y(7 downto 0);
-                    wbs_dat_i <= "0000" & nes_r & nes_g & nes_b;
-                    --wbs_dat_i <= (others => '1');
-                end if;
-
-            when sw_write =>
-                pos_x_we_n <= '1';
-                sw_state <= sw_write_ack;
-
-                wbs_we_i <= '1';
-                wbs_cyc_i <= '1';
-                wbs_stb_i <= '1';
-                wbs_tga_i <= conv_std_logic_vector(0, 8);
-            when sw_write_ack =>
-                sw_state <= sw_idle;
-                sr_read_ok := '1';
-                wait_cnt := SDRAM_READ_WAIT_CNT;
-            end case;
-                
---                --write to sdram
---                if (mem_cnt = conv_std_logic_vector(2, 4)) then
---                    wbs_adr_i <= "000000" & pos_x(7 downto 0) & pos_y(7 downto 0);
---                    wbs_dat_i <= "0000" & nes_r & nes_g & nes_b;
---                elsif (mem_cnt = conv_std_logic_vector(3, 4)) then
---                    wbs_we_i <= '1';
---                    wbs_cyc_i <= '1';
---                    wbs_stb_i <= '1';
---                    wbs_tga_i <= conv_std_logic_vector(0, 8);
+--            --write to sdram
+--            case sw_state is
+--            when sw_idle =>
+--                if (pos_x < conv_std_logic_vector(NES_W, 9) and 
+--                    pos_y < conv_std_logic_vector(NES_H, 9) and 
+--                    pos_x /= pos_x_old and sr_state = sr_idle) then
+--                --if (mem_cnt = conv_std_logic_vector(1, 5)) then
+--                    sw_state <= sw_write;
+--                    sr_read_ok := '0';
+--                    pos_x_we_n <= '0';
 --
---                elsif (mem_cnt = conv_std_logic_vector(4, 4)) then
---                    --wbs_adr_i <= "0000" & pos_x & pos_y;
---                    --wbs_dat_i <= "0000" & nes_r & nes_g & nes_b;
---                    --wbs_dat_i <= "0000101000001111";
+--                    wbs_adr_i <= "000000" & pos_y(7 downto 0) & pos_x(7 downto 0);
+--                    wbs_dat_i <= "0000" & nes_r & nes_g & nes_b;
+--                    --wbs_dat_i <= (others => '1');
 --                end if;
+--
+--            when sw_write =>
+--                pos_x_we_n <= '1';
+--                sw_state <= sw_write_ack;
+--
+--                wbs_we_i <= '1';
+--                wbs_cyc_i <= '1';
+--                wbs_stb_i <= '1';
+--                wbs_tga_i <= conv_std_logic_vector(0, 8);
+--            when sw_write_ack =>
+--                sw_state <= sw_idle;
+--                sr_read_ok := '1';
+--                wait_cnt := SDRAM_READ_WAIT_CNT;
+--            end case;
+                
 
             --read from sdram
-            if (vga_x <=conv_std_logic_vector(VGA_W , 10) 
-                and vga_y <=conv_std_logic_vector(VGA_H, 10)) then
+            if (vga_x < conv_std_logic_vector(VGA_W , 10) 
+                and vga_y < conv_std_logic_vector(VGA_H, 10)) then
 
                 --read from sdram
                 case sr_state is
                 when sr_idle =>
-                    if (nes_x /= nes_x_old and sr_read_ok = '1') then
-                    --if (mem_cnt = conv_std_logic_vector(5, 5)) then
-                        if (wait_cnt = 0) then
-                            sr_state <= sr_read;
-                        else
-                            sr_state <= sr_read_wait;
-                        end if;
-                        wbs_adr_i <= "000000" & nes_x & vga_y(8 downto 1);
+                    if (nes_x /= nes_x_old) then
+--                        if (wait_cnt = 0) then
+--                            sr_state <= sr_read;
+--                        else
+--                            sr_state <= sr_read_wait;
+--                        end if;
+                        sr_state <= sr_read;
+                        wbs_adr_i <= "000000" & vga_y(8 downto 1) & nes_x;
                         wbs_cyc_i <= '0';
                         wbs_stb_i <= '0';
-                        nes_x_we_n <= '0';
                     end if;
                     dram_col_we_n <= '1';
                 when sr_read_wait =>
@@ -250,36 +259,16 @@ variable wait_cnt : integer;
                     wbs_cyc_i <= '1';
                     wbs_stb_i <= '1';
                     wbs_tga_i <= conv_std_logic_vector(0, 8);
-                    nes_x_we_n <= '1';
                     sr_state <= sr_read_ack;
                 when sr_read_ack =>
                     dram_col_we_n <= '0';
                     sr_state <= sr_idle;
                 end case;
                 
---                if (mem_cnt > conv_std_logic_vector(4, 4) and 
---                        mem_cnt <= conv_std_logic_vector(15, 4)) then
---                    --read wait cycle
---                    wbs_adr_i <= "000000" & nes_x & vga_y(8 downto 1);
---                    wbs_cyc_i <= '0';
---                    wbs_stb_i <= '0';
---                elsif (mem_cnt <= conv_std_logic_vector(0, 4)) then
---                    --read
---                    wbs_we_i <= '0';
---                    wbs_cyc_i <= '1';
---                    wbs_stb_i <= '1';
---                    wbs_tga_i <= conv_std_logic_vector(0, 8);
---                end if;
             else
                 sr_state <= sr_idle;
             end if;
 
---            if (mem_cnt = conv_std_logic_vector(1, 4)) then
---                dram_col_we_n <= '0';
---            else
---                dram_col_we_n <= '1';
---            end if;
-        
         end if;
     end process;
 
@@ -467,21 +456,21 @@ begin
 --            nes_r <= pos_x(7 downto 4);
             --nes_r <= pos_x (3) & pos_x (3) & pos_x (3) & pos_x (3);
             if (pos_x <= conv_std_logic_vector(64, 9)) then
+                nes_r <= pos_x(3 downto 0);
+                nes_g <= "1111";
+                nes_b <= "1111";
+            elsif (pos_x <= conv_std_logic_vector(128, 9)) then
                 nes_r <= "1111";
                 nes_g <= "0000";
                 nes_b <= "0000";
-            elsif (pos_x <= conv_std_logic_vector(128, 9)) then
-                nes_r <= "1100";
-                nes_g <= "1111";
-                nes_b <= "0000";
             elsif (pos_x <= conv_std_logic_vector(192, 9)) then
-                nes_r <= "0011";
-                nes_g <= "1111";
-                nes_b <= "1111";
-            else
                 nes_r <= "1010";
-                nes_g <= "0011";
-                nes_b <= "1100";
+                nes_g <= "1010";
+                nes_b <= "1010";
+            else
+                nes_r <= "0101";
+                nes_g <= "0101";
+                nes_b <= "0101";
             end if;
         
         end if;

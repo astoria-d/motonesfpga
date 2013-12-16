@@ -12,22 +12,41 @@ entity qt_proj_test5 is
 
     signal dbg_cpu_clk  : out std_logic;
     signal dbg_ppu_clk  : out std_logic;
+    signal dbg_sdram_clk  : out std_logic;
     signal dbg_addr : out std_logic_vector( 16 - 1 downto 0);
     signal dbg_d_io : out std_logic_vector( 8 - 1 downto 0);
 
-    signal dbg_status       : out std_logic_vector(7 downto 0);
-    signal dbg_dec_oe_n    : out std_logic;
-    signal dbg_dec_val     : out std_logic_vector (7 downto 0);
-    signal dbg_int_dbus    : out std_logic_vector (7 downto 0);
-    signal dbg_status_val    : out std_logic_vector (7 downto 0);
-    signal dbg_stat_we_n    : out std_logic;
+--    signal dbg_status       : out std_logic_vector(7 downto 0);
+--    signal dbg_dec_oe_n    : out std_logic;
+--    signal dbg_dec_val     : out std_logic_vector (7 downto 0);
+--    signal dbg_int_dbus    : out std_logic_vector (7 downto 0);
+--    signal dbg_status_val    : out std_logic_vector (7 downto 0);
+--    signal dbg_stat_we_n    : out std_logic;
     
 ---monitor inside cpu
-    signal dbg_d1, dbg_d2, dbg_d_out: out std_logic_vector (7 downto 0);
-    signal dbg_ea_carry, dbg_carry_clr_n    : out std_logic;
-    signal dbg_gate_n    : out std_logic;
+--    signal dbg_d1, dbg_d2, dbg_d_out: out std_logic_vector (7 downto 0);
+--    signal dbg_ea_carry, dbg_carry_clr_n    : out std_logic;
+--    signal dbg_gate_n    : out std_logic;
 
+        signal dbg_pos_x       : out std_logic_vector (8 downto 0);
+        signal dbg_pos_y       : out std_logic_vector (8 downto 0);
+        signal dbg_nes_r       : out std_logic_vector (3 downto 0);
+        signal dbg_nes_g       : out std_logic_vector (3 downto 0);
+        signal dbg_nes_b       : out std_logic_vector (3 downto 0);
 
+        signal dbg_wbs_adr_i	:	out std_logic_vector (21 downto 0);		--Address (Bank, Row, Col)
+        signal dbg_wbs_dat_i	:	out std_logic_vector (15 downto 0);		--Data In (16 bits)
+        signal dbg_wbs_we_i	    :	out std_logic;							--Write Enable
+        signal dbg_wbs_tga_i	:	out std_logic_vector (7 downto 0);		--Address Tag : Read/write burst length-1 (0 represents 1 word, FF represents 256 words)
+        signal dbg_wbs_cyc_i	:	out std_logic;							--Cycle Command from interface
+        signal dbg_wbs_stb_i	:	out std_logic;							--Strobe Command from interface
+
+        signal dbg_vga_x        : out std_logic_vector (9 downto 0);
+        signal dbg_vga_y        : out std_logic_vector (9 downto 0);
+        signal dbg_nes_x        : out std_logic_vector(7 downto 0);
+        signal dbg_nes_x_old        : out std_logic_vector(7 downto 0);
+        signal dbg_sr_state     : out std_logic_vector(1 downto 0);
+        
         base_clk 	: in std_logic;
         base_clk_27mhz 	: in std_logic;
         rst_n     	: in std_logic;
@@ -93,7 +112,14 @@ signal nes_g       : std_logic_vector (3 downto 0);
 signal nes_b       : std_logic_vector (3 downto 0);
 
 component vga_ctl
-    port (  ppu_clk     : in std_logic;
+    port (  
+        signal dbg_vga_x        : out std_logic_vector (9 downto 0);
+        signal dbg_vga_y        : out std_logic_vector (9 downto 0);
+        signal dbg_nes_x        : out std_logic_vector(7 downto 0);
+        signal dbg_nes_x_old        : out std_logic_vector(7 downto 0);
+        signal dbg_sr_state     : out std_logic_vector(1 downto 0);
+
+            ppu_clk     : in std_logic;
             sdram_clk   : in std_logic;
             vga_clk     : in std_logic;
             rst_n       : in std_logic;
@@ -197,6 +223,27 @@ end component;
     signal main_st_o	:	std_logic_vector (3 downto 0);  	--Current main state
 
 begin
+
+
+    dbg_cpu_clk <= cpu_clk;
+    dbg_ppu_clk <= ppu_clk;
+    dbg_sdram_clk  <= sdram_clk  ;
+
+    dbg_pos_x       <= pos_x       ;
+    dbg_pos_y       <= pos_y       ;
+    dbg_nes_r       <= nes_r       ;
+    dbg_nes_g       <= nes_g       ;
+    dbg_nes_b       <= nes_b       ;
+
+    dbg_wbs_adr_i	<= wbs_adr_i	;
+    dbg_wbs_dat_i	<= wbs_dat_i	;
+    dbg_wbs_we_i	<= wbs_we_i	    ;
+    dbg_wbs_tga_i	<= wbs_tga_i	;
+    dbg_wbs_cyc_i	<= wbs_cyc_i	;
+    dbg_wbs_stb_i	<= wbs_stb_i	;
+
+
+
     --ppu/cpu clock generator
     clock_inst : clock_divider port map 
         (base_clk, rst_n, cpu_clk, ppu_clk, mem_clk, vga_clk);
@@ -228,7 +275,14 @@ begin
 
     
     vga_ctl_inst : vga_ctl
-    port map (  ppu_clk     ,
+    port map (  
+        dbg_vga_x        ,
+        dbg_vga_y        ,
+        dbg_nes_x        ,
+        dbg_nes_x_old    ,
+        dbg_sr_state     ,
+        
+            ppu_clk     ,
             sdram_clk,
             --vga_clk_pll, 
             --ppu_clk ,
@@ -296,8 +350,7 @@ sdram_ctl_inst : sdram_controller
 		init_st_o	,
 		main_st_o	
    ); 
-
-    
+        
     --    signal addr : std_logic_vector( addr_size - 1 downto 0);
 --    signal d_io : std_logic_vector( data_size - 1 downto 0);
 --
@@ -399,9 +452,6 @@ sdram_ctl_inst : sdram_controller
 --
 --    dbg_addr <= addr;
 --    dbg_d_io <= d_io;
---
---    dbg_cpu_clk <= cpu_clk;
---    dbg_ppu_clk <= ppu_clk;
 --
 --    dbg_d1 <= d1;
 --    dbg_d2 <= d2;

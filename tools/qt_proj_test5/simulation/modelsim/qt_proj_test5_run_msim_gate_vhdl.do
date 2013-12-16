@@ -13,16 +13,43 @@ vsim -t 1ps +transport_int_delays +transport_path_delays -sdftyp /sim_board=qt_p
 
 ###add wave *
 
+add wave  sim:/testbench_qt_proj_test5/sim_board/rst_n
 add wave  sim:/testbench_qt_proj_test5/base_clk
 add wave  sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_clk
+add wave  sim:/testbench_qt_proj_test5/sim_board/dbg_sdram_clk
 
-add wave  sim:/testbench_qt_proj_test5/sim_board/rst_n
 add wave  sim:/testbench_qt_proj_test5/sim_board/dbg_cpu_clk
-add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_addr
-add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_d_io
+#add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_addr
+#add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_d_io
 #add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_instruction
 #add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_int_d_bus
 
+
+add wave -divider vga_internal
+add wave -radix decimal -unsigned sim:/testbench_qt_proj_test5/sim_board/dbg_pos_x
+add wave -radix decimal -unsigned sim:/testbench_qt_proj_test5/sim_board/dbg_pos_y
+
+add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_nes_r
+add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_nes_g
+add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_nes_b
+
+add wave -radix decimal -unsigned \
+sim:/testbench_qt_proj_test5/sim_board/dbg_vga_x        \
+sim:/testbench_qt_proj_test5/sim_board/dbg_nes_x        \
+sim:/testbench_qt_proj_test5/sim_board/dbg_vga_y        
+
+#sim:/testbench_qt_proj_test5/sim_board/dbg_nes_x_old        \
+#add wave sim:/testbench_qt_proj_test5/sim_board/dbg_sr_state     
+
+
+add wave -divider sdram_ctl
+add wave -radix hex \
+sim:/testbench_qt_proj_test5/sim_board/dbg_wbs_adr_i \
+sim:/testbench_qt_proj_test5/sim_board/dbg_wbs_dat_i \
+sim:/testbench_qt_proj_test5/sim_board/dbg_wbs_we_i \
+sim:/testbench_qt_proj_test5/sim_board/dbg_wbs_tga_i \
+sim:/testbench_qt_proj_test5/sim_board/dbg_wbs_cyc_i \
+sim:/testbench_qt_proj_test5/sim_board/dbg_wbs_stb_i
 
 
 add wave -divider vga_out
@@ -54,10 +81,10 @@ add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/b
 view structure
 view signals
 
-###run 10 us
 run 3 us
+#run 40 us
 
-run 400 us
+##run 400 us
 
 wave zoom full
 

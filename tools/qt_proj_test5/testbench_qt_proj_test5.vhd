@@ -10,21 +10,41 @@ architecture stimulus of testbench_qt_proj_test5 is
         port (
     signal dbg_cpu_clk  : out std_logic;
     signal dbg_ppu_clk  : out std_logic;
+    signal dbg_sdram_clk  : out std_logic;
+
     signal dbg_addr : out std_logic_vector( 16 - 1 downto 0);
     signal dbg_d_io : out std_logic_vector( 8 - 1 downto 0);
 
-    signal dbg_status       : out std_logic_vector(7 downto 0);
-    signal dbg_dec_oe_n    : out std_logic;
-    signal dbg_dec_val     : out std_logic_vector (7 downto 0);
-    signal dbg_int_dbus    : out std_logic_vector (7 downto 0);
-    signal dbg_status_val    : out std_logic_vector (7 downto 0);
-    signal dbg_stat_we_n    : out std_logic;
+--    signal dbg_status       : out std_logic_vector(7 downto 0);
+--    signal dbg_dec_oe_n    : out std_logic;
+--    signal dbg_dec_val     : out std_logic_vector (7 downto 0);
+--    signal dbg_int_dbus    : out std_logic_vector (7 downto 0);
+--    signal dbg_status_val    : out std_logic_vector (7 downto 0);
+--    signal dbg_stat_we_n    : out std_logic;
     
 ---monitor inside cpu
-    signal dbg_d1, dbg_d2, dbg_d_out: out std_logic_vector (7 downto 0);
-    signal dbg_ea_carry, dbg_carry_clr_n    : out std_logic;
-    signal dbg_gate_n    : out std_logic;
+--    signal dbg_d1, dbg_d2, dbg_d_out: out std_logic_vector (7 downto 0);
+--    signal dbg_ea_carry, dbg_carry_clr_n    : out std_logic;
+--    signal dbg_gate_n    : out std_logic;
 
+        signal dbg_pos_x       : out std_logic_vector (8 downto 0);
+        signal dbg_pos_y       : out std_logic_vector (8 downto 0);
+        signal dbg_nes_r       : out std_logic_vector (3 downto 0);
+        signal dbg_nes_g       : out std_logic_vector (3 downto 0);
+        signal dbg_nes_b       : out std_logic_vector (3 downto 0);
+
+        signal dbg_wbs_adr_i	:	out std_logic_vector (21 downto 0);		--Address (Bank, Row, Col)
+        signal dbg_wbs_dat_i	:	out std_logic_vector (15 downto 0);		--Data In (16 bits)
+        signal dbg_wbs_we_i	    :	out std_logic;							--Write Enable
+        signal dbg_wbs_tga_i	:	out std_logic_vector (7 downto 0);		--Address Tag : Read/write burst length-1 (0 represents 1 word, FF represents 256 words)
+        signal dbg_wbs_cyc_i	:	out std_logic;							--Cycle Command from interface
+        signal dbg_wbs_stb_i	:	out std_logic;							--Strobe Command from interface
+
+        signal dbg_vga_x        : out std_logic_vector (9 downto 0);
+        signal dbg_vga_y        : out std_logic_vector (9 downto 0);
+        signal dbg_nes_x        : out std_logic_vector(7 downto 0);
+        signal dbg_nes_x_old        : out std_logic_vector(7 downto 0);
+        signal dbg_sr_state     : out std_logic_vector(1 downto 0);
 
         base_clk 	: in std_logic;
         base_clk_27mhz 	: in std_logic;
@@ -89,6 +109,7 @@ architecture stimulus of testbench_qt_proj_test5 is
 
     signal dbg_cpu_clk  : std_logic;
     signal dbg_ppu_clk  : std_logic;
+    signal dbg_sdram_clk  : std_logic;
     signal dbg_addr : std_logic_vector( 16 - 1 downto 0);
     signal dbg_d_io : std_logic_vector( 8 - 1 downto 0);
     signal dbg_vram_ad  : std_logic_vector (7 downto 0);
@@ -106,26 +127,65 @@ architecture stimulus of testbench_qt_proj_test5 is
     signal dbg_ea_carry, dbg_carry_clr_n    : std_logic;
     signal dbg_gate_n    : std_logic;
 
+    signal dbg_pos_x       : std_logic_vector (8 downto 0);
+    signal dbg_pos_y       : std_logic_vector (8 downto 0);
+    signal dbg_nes_r       : std_logic_vector (3 downto 0);
+    signal dbg_nes_g       : std_logic_vector (3 downto 0);
+    signal dbg_nes_b       : std_logic_vector (3 downto 0);
+
+    signal dbg_wbs_adr_i	:	std_logic_vector (21 downto 0);		--Address (Bank, Row, Col)
+    signal dbg_wbs_dat_i	:	std_logic_vector (15 downto 0);		--Data In (16 bits)
+    signal dbg_wbs_we_i	    :	std_logic;							--Write Enable
+    signal dbg_wbs_tga_i	:	std_logic_vector (7 downto 0);		--Address Tag : Read/write burst length-1 (0 represents 1 word, FF represents 256 words)
+    signal dbg_wbs_cyc_i	:	std_logic;							--Cycle Command from interface
+    signal dbg_wbs_stb_i	:	std_logic;							--Strobe Command from interface
+
+    signal dbg_vga_x        : std_logic_vector (9 downto 0);
+    signal dbg_vga_y        : std_logic_vector (9 downto 0);
+    signal dbg_nes_x        : std_logic_vector(7 downto 0);
+    signal dbg_nes_x_old        : std_logic_vector(7 downto 0);
+    signal dbg_sr_state     : std_logic_vector(1 downto 0);
+
 begin
 
     sim_board : qt_proj_test5 port map (
     dbg_cpu_clk  , 
     dbg_ppu_clk  , 
+    dbg_sdram_clk  ,
     dbg_addr , 
     dbg_d_io , 
 
     
-    dbg_status       , 
-    dbg_dec_oe_n    , 
-    dbg_dec_val     , 
-    dbg_int_dbus    , 
-    dbg_status_val    , 
-    dbg_stat_we_n    , 
+--    dbg_status       , 
+--    dbg_dec_oe_n    , 
+--    dbg_dec_val     , 
+--    dbg_int_dbus    , 
+--    dbg_status_val    , 
+--    dbg_stat_we_n    , 
 
-    dbg_d1, dbg_d2, dbg_d_out,
-    dbg_ea_carry    ,dbg_carry_clr_n , 
-    dbg_gate_n    ,
+--    dbg_d1, dbg_d2, dbg_d_out,
+--    dbg_ea_carry    ,dbg_carry_clr_n , 
+--    dbg_gate_n    ,
 
+    dbg_pos_x       ,
+    dbg_pos_y       ,
+    dbg_nes_r       ,
+    dbg_nes_g       ,
+    dbg_nes_b       ,
+
+    dbg_wbs_adr_i	,
+    dbg_wbs_dat_i	,
+    dbg_wbs_we_i	,
+    dbg_wbs_tga_i	,
+    dbg_wbs_cyc_i	,
+    dbg_wbs_stb_i	,
+
+    dbg_vga_x        ,
+    dbg_vga_y        ,
+    dbg_nes_x        ,
+	dbg_nes_x_old    ,
+    dbg_sr_state     ,
+        
     
     base_clk, base_clk_27mhz, reset_input, 
         h_sync_n    ,

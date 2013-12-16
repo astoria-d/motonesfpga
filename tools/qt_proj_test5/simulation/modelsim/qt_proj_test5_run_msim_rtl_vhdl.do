@@ -47,7 +47,7 @@ add wave -divider vga_out
 
 add wave -radix decimal -unsigned sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/pos_x
 
-add wave sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/sw_state
+#add wave sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/sw_state
 
 add wave -radix decimal -unsigned sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/vga_x
 add wave -radix decimal -unsigned sim:/testbench_qt_proj_test5/sim_board/vga_ctl_inst/nes_x
