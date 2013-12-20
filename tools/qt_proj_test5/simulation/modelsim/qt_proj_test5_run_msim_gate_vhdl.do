@@ -41,6 +41,15 @@ sim:/testbench_qt_proj_test5/sim_board/dbg_vga_y
 #sim:/testbench_qt_proj_test5/sim_board/dbg_nes_x_old        \
 #add wave sim:/testbench_qt_proj_test5/sim_board/dbg_sr_state     
 
+add wave -divider fifo
+add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_f_in             
+add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_f_out            
+add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_f_cnt           
+add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_f_rd
+add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_f_wr
+add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_f_emp
+add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_f_ful 
+
 
 add wave -divider sdram_ctl
 add wave -radix hex \
@@ -82,7 +91,7 @@ view structure
 view signals
 
 run 3 us
-#run 40 us
+run 60 us
 
 ##run 400 us
 

@@ -46,6 +46,12 @@ entity qt_proj_test5 is
         signal dbg_nes_x        : out std_logic_vector(7 downto 0);
         signal dbg_nes_x_old        : out std_logic_vector(7 downto 0);
         signal dbg_sr_state     : out std_logic_vector(1 downto 0);
+
+        signal dbg_f_in             : out std_logic_vector(11 downto 0);
+        signal dbg_f_out            : out std_logic_vector(11 downto 0);
+        signal dbg_f_cnt            : out std_logic_vector(7 downto 0);
+        signal dbg_f_rd, dbg_f_wr, dbg_f_emp, dbg_f_ful 
+                                    : out std_logic;
         
         base_clk 	: in std_logic;
         base_clk_27mhz 	: in std_logic;
@@ -118,10 +124,17 @@ component vga_ctl
         signal dbg_nes_x        : out std_logic_vector(7 downto 0);
         signal dbg_nes_x_old        : out std_logic_vector(7 downto 0);
         signal dbg_sr_state     : out std_logic_vector(1 downto 0);
+        
+        signal dbg_f_in             : out std_logic_vector(11 downto 0);
+        signal dbg_f_out            : out std_logic_vector(11 downto 0);
+        signal dbg_f_cnt            : out std_logic_vector(7 downto 0);
+        signal dbg_f_rd, dbg_f_wr, dbg_f_emp, dbg_f_ful 
+                                    : out std_logic;
 
             ppu_clk     : in std_logic;
             sdram_clk   : in std_logic;
             vga_clk     : in std_logic;
+            mem_clk     : in std_logic;
             rst_n       : in std_logic;
             pos_x       : in std_logic_vector (8 downto 0);
             pos_y       : in std_logic_vector (8 downto 0);
@@ -261,7 +274,7 @@ begin
         vga_clk_gen_inst : vga_clk_gen
         PORT map
         (
-            --mem_clk_pll = 160 MHz.
+            --mem_clk_pll = 133.333 MHz.
             base_clk, vga_clk_pll, sdram_clk, pll_locked
         );
     --- testbench pll clock..
@@ -282,11 +295,17 @@ begin
         dbg_nes_x_old    ,
         dbg_sr_state     ,
         
+        dbg_f_in             ,
+        dbg_f_out            ,
+        dbg_f_cnt            ,
+        dbg_f_rd, dbg_f_wr, dbg_f_emp, dbg_f_ful ,
+
             ppu_clk     ,
             sdram_clk,
             --vga_clk_pll, 
             --ppu_clk ,
             vga_clk     ,
+            mem_clk     ,
             rst_n       ,
             pos_x       ,
             pos_y       ,

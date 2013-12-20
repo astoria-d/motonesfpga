@@ -46,6 +46,12 @@ architecture stimulus of testbench_qt_proj_test5 is
         signal dbg_nes_x_old        : out std_logic_vector(7 downto 0);
         signal dbg_sr_state     : out std_logic_vector(1 downto 0);
 
+        signal dbg_f_in             : out std_logic_vector(11 downto 0);
+        signal dbg_f_out            : out std_logic_vector(11 downto 0);
+        signal dbg_f_cnt            : out std_logic_vector(7 downto 0);
+        signal dbg_f_rd, dbg_f_wr, dbg_f_emp, dbg_f_ful 
+                                    : out std_logic;
+
         base_clk 	: in std_logic;
         base_clk_27mhz 	: in std_logic;
         rst_n     	: in std_logic;
@@ -146,6 +152,12 @@ architecture stimulus of testbench_qt_proj_test5 is
     signal dbg_nes_x_old        : std_logic_vector(7 downto 0);
     signal dbg_sr_state     : std_logic_vector(1 downto 0);
 
+    signal dbg_f_in             : std_logic_vector(11 downto 0);
+    signal dbg_f_out            : std_logic_vector(11 downto 0);
+    signal dbg_f_cnt            : std_logic_vector(7 downto 0);
+    signal dbg_f_rd, dbg_f_wr, dbg_f_emp, dbg_f_ful 
+                                    : std_logic;
+
 begin
 
     sim_board : qt_proj_test5 port map (
@@ -186,6 +198,10 @@ begin
 	dbg_nes_x_old    ,
     dbg_sr_state     ,
         
+    dbg_f_in             ,
+    dbg_f_out            ,
+    dbg_f_cnt            ,
+    dbg_f_rd, dbg_f_wr, dbg_f_emp, dbg_f_ful ,
     
     base_clk, base_clk_27mhz, reset_input, 
         h_sync_n    ,
