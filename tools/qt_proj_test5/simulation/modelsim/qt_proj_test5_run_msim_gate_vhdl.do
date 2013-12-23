@@ -91,7 +91,7 @@ view structure
 view signals
 
 run 3 us
-run 60 us
+#run 60 us
 
 ##run 400 us
 
