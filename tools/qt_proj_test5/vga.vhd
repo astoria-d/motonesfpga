@@ -283,7 +283,6 @@ begin
         end if;
     end process;
 
-    --sw_write is mealy machine. (the state is decided by both the input and current state)
     sw_state_p : process (rst_n, sdram_clk)
     begin
         if (rst_n = '0') then
@@ -345,6 +344,7 @@ begin
 --            wbs_cyc_i	<= '0';
 --            wbs_stb_i	<= '0';
 --
+--               <= sw_idle;
 --            sr_state <= sr_idle;
 --            wait_cnt := SDRAM_READ_WAIT_CNT;
 --            
@@ -399,7 +399,7 @@ begin
 --            else
 --
 --                --write to sdram
---                case sw_state is
+--                case   is
 --                when sw_idle =>
 --                    --pop data from fifo first.
 ----                    sdram_addr_inc_n <= '1';
@@ -408,13 +408,20 @@ begin
 --                    
 --                    if (f_cnt = "00000000") then
 --                        --if fifo is empty, do nothing.
+--                        f_rd <= '0';
 --                        f_val_we_n <= '1';
 --                    else
+--                        f_rd <= '1';
+--                           <= sw_pop_fifo;
 --                        f_val_we_n <= '0';
 --                    end if;
 --                
 --                when sw_pop_fifo =>
+--                    f_rd <= '0';
 --                    f_val_we_n <= '1';
+--                       <= sw_write;
+--                    --     <= sw_idle;
+--                    
 --                
 ----                    --set fifo data to sdram.
 ----                    wbs_adr_i <= sdram_write_addr;
@@ -422,32 +429,38 @@ begin
 ----                    wbs_dat_i <= "0000" & f_val;
 --
 --                when sw_write =>
+--                    f_rd <= '0';
+--                       <= sw_write_ack;
 --
 ----                    wbs_cyc_i <= '1';
 ----                    wbs_stb_i <= '1';
 ----                    wbs_tga_i <= f_cnt;
 --                    
 --                when sw_write_ack =>
+--                    f_rd <= '0';
 --                    sdram_addr_inc_n <= '0';
 --                    if (f_emp = '0') then
---                        sw_state <= sw_write_burst;
+--                           <= sw_write_burst;
 --                    else
 --                        ---write finished.
---                        sw_state <= sw_idle;
+--                           <= sw_idle;
 --                    end if;
 --
 --                when sw_write_burst =>
+--                    f_rd <= '0';
 --                    wbs_adr_i <= sdram_write_addr;
 --                    --wbs_adr_i <= (others => '1');
 --                    wbs_dat_i <= "0000" & f_val;
 --                    if (f_emp = '0') then
---                        sw_state <= sw_write_burst;
+--                           <= sw_write_burst;
 --                    else
 --                        ---write finished.
---                        sw_state <= sw_idle;
+--                           <= sw_idle;
 --                    end if;
 --                
 --                when others =>
+--                    f_rd <= '0';
+--                       <= sw_idle;
 --                end case;
 --
 --                --for sdram read...
