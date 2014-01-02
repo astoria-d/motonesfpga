@@ -126,6 +126,8 @@ signal y_en_n       : std_logic;
 signal cnt_clk      : std_logic;
 signal sdram_clk_n  : std_logic;
 
+--signal mem_cnt      : std_logic_vector (4 downto 0);
+
 signal count5_res_n  : std_logic;
 signal count5        : std_logic_vector(2 downto 0);
 signal nes_x_en_n    : std_logic;
@@ -220,6 +222,9 @@ begin
 
     pos_x_old_inst: d_flip_flop generic map (9)
         port map (sdram_clk_n, rst_n, '1', pos_x_we_n, pos_x, pos_x_old);
+
+--    mem_cnt_inst : counter_register generic map (5, 1)
+--            port map (sdram_clk , x_res_n, '0', '1', (others => '0'), mem_cnt);
 
     dram_rd_inst : d_flip_flop generic map (16)
         port map (sdram_clk, rst_n, '1', dram_col_we_n, wbs_dat_o, dram_col);
