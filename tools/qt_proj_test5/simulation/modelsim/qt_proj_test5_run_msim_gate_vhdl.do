@@ -75,7 +75,7 @@ view signals
 run 3 us
 wave zoom full
 
-run 60 us
+run 40 us
 
 ##run 400 us
 

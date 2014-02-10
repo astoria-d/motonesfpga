@@ -229,7 +229,7 @@ begin
 --        port map (sdram_clk, rst_n, '1', f_val_we_n, f_out, f_val);
         
     sdram_wr_addr_inst : counter_register generic map (22, 1)
-            port map (sdram_clk, sdram_addr_res_n, sdram_addr_inc_n, '1', (others => '0'), sdram_write_addr);
+            port map (sdram_clk_n, sdram_addr_res_n, sdram_addr_inc_n, '1', (others => '0'), sdram_write_addr);
 
     pos_x_p : process (rst_n, sdram_clk)
     begin
@@ -325,7 +325,25 @@ begin
             f_rd <= '0';
         end case;
     end process;
-    
+
+    sdram_addr_res_n <= rst_n;
+    sdram_addr_inc_n <= '1' when rst_n = '0' else
+                        '0' when sw_state = sw_write_burst else
+                        '1';
+    --wbs_adr_i <= sdram_write_addr;
+    --wbs_dat_i <= "0000" & f_out;
+
+--    wbs_tga_i <= f_cnt;
+--    wbs_cyc_i <= '0' when rst_n = '0' else
+--                 '1' when sw_state >= sw_write else
+--                 '0';
+--    wbs_stb_i <= '0' when rst_n = '0' else
+--                 '1' when sw_state >= sw_write else
+--                 '0';
+--    wbs_we_i  <= '0' when rst_n = '0' else
+--                 '1' when sw_state = sw_write else
+--                 '0';
+
     ----------- vga position conversion 640 to 256
     dram_latch_p : process (rst_n, vga_clk)
     begin
