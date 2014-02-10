@@ -257,7 +257,6 @@ set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_TRIGGER_IN_ENABLE
 set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_ADVANCED_TRIGGER_ENTITY=basic,1," -section_id auto_signaltap_0
 set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_TRIGGER_LEVEL_PIPELINE=1" -section_id auto_signaltap_0
 set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_ENABLE_ADVANCED_TRIGGER=0" -section_id auto_signaltap_0
-set_global_assignment -name QIP_FILE vga_clk_gen.qip
 set_global_assignment -name VHDL_FILE sdram_controller.vhd
 set_global_assignment -name VHDL_FILE motonesfpga_common.vhd
 set_global_assignment -name VHDL_FILE cpu_registers.vhd
@@ -266,6 +265,7 @@ set_global_assignment -name VHDL_FILE clock_divider.vhd
 set_global_assignment -name VHDL_FILE vga.vhd
 set_global_assignment -name VHDL_FILE alu_test.vhd
 set_global_assignment -name VHDL_FILE qt_proj_test5.vhd
+set_global_assignment -name QIP_FILE vga_clk_gen.qip
 set_global_assignment -name QIP_FILE sdram_write_fifo.qip
 set_global_assignment -name SLD_FILE "D:/daisuke/nes/repo/motonesfpga/tools/qt_proj_test5/stp3_auto_stripped.stp"
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
