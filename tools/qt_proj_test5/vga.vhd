@@ -17,7 +17,7 @@ entity vga_ctl is
             signal dbg_vga_y        : out std_logic_vector (9 downto 0);
             signal dbg_nes_x        : out std_logic_vector(7 downto 0);
             signal dbg_nes_x_old    : out std_logic_vector(7 downto 0);
-            signal dbg_sr_state     : out std_logic_vector(1 downto 0);
+            signal dbg_sw_state     : out std_logic_vector(2 downto 0);
 
             signal dbg_f_in             : out std_logic_vector(11 downto 0);
             signal dbg_f_out            : out std_logic_vector(11 downto 0);
@@ -145,9 +145,9 @@ signal nes_x_old        : std_logic_vector(7 downto 0);
 signal rst              : std_logic;
 signal f_in             : std_logic_vector(11 downto 0);
 signal f_out            : std_logic_vector(11 downto 0);
-signal f_val            : std_logic_vector(11 downto 0);
+--signal f_val            : std_logic_vector(11 downto 0);
 signal f_cnt            : std_logic_vector(7 downto 0);
-signal f_val_we_n       : std_logic;
+--signal f_val_we_n       : std_logic;
 
 
 signal sdram_write_addr         :   std_logic_vector (21 downto 0);
@@ -161,17 +161,9 @@ constant sw_idle        : std_logic_vector(2 downto 0) := "000";
 constant sw_pop_fifo    : std_logic_vector(2 downto 0) := "001";
 constant sw_write       : std_logic_vector(2 downto 0) := "010";
 constant sw_write_ack   : std_logic_vector(2 downto 0) := "011";
-constant sw_write_burst : std_logic_vector(2 downto 0) := "101";
+constant sw_write_burst : std_logic_vector(2 downto 0) := "100";
 
 signal sw_state         : std_logic_vector(2 downto 0);
-
-
-constant sr_idle        : std_logic_vector(1 downto 0) := "00";
-constant sr_read_wait   : std_logic_vector(1 downto 0) := "01";
-constant sr_read        : std_logic_vector(1 downto 0) := "10";
-constant sr_read_ack    : std_logic_vector(1 downto 0) := "11";
-
-signal sr_state         : std_logic_vector(1 downto 0);
 
 constant SDRAM_READ_WAIT_CNT : integer := 10;
 
@@ -189,7 +181,7 @@ begin
     dbg_vga_y        <= vga_y        ;
     dbg_nes_x        <= nes_x        ;
     dbg_nes_x_old    <= nes_x_old;
-    dbg_sr_state     <= sr_state     ;
+    dbg_sw_state     <= sw_state     ;
 
     dbg_f_in             <= f_in             ;
     --dbg_f_out            <= f_val            ;
@@ -233,8 +225,8 @@ begin
     fifo_inst : sdram_write_fifo port map
         (rst, sdram_clk_n, f_in, f_rd, f_wr, f_emp, f_ful, f_out, f_cnt);
         
-    fifo_data_inst: d_flip_flop generic map (12)
-        port map (sdram_clk, rst_n, '1', f_val_we_n, f_out, f_val);
+--    fifo_data_inst: d_flip_flop generic map (12)
+--        port map (sdram_clk, rst_n, '1', f_val_we_n, f_out, f_val);
         
     sdram_wr_addr_inst : counter_register generic map (22, 1)
             port map (sdram_clk, sdram_addr_res_n, sdram_addr_inc_n, '1', (others => '0'), sdram_write_addr);
@@ -293,7 +285,7 @@ begin
         elsif (rising_edge(sdram_clk)) then
             if (vga_x >= conv_std_logic_vector(VGA_W , 10) 
                 or vga_y >= conv_std_logic_vector(VGA_H, 10)) then
-                --write to sdram
+                --write to sdram status
                 case sw_state is
                 when sw_idle =>
                     if (f_cnt = "00000000") then
@@ -333,147 +325,8 @@ begin
             f_rd <= '0';
         end case;
     end process;
-
     
---    dram_p : process (rst_n, sdram_clk)
---variable wait_cnt : integer;
---    begin
---        if (rst_n = '0') then
---            
---            wbs_adr_i	<= (others => '0');
---            wbs_dat_i	<= (others => '0');
---            wbs_we_i	<= '0';
---            wbs_tga_i	<= (others => '0');
---            wbs_cyc_i	<= '0';
---            wbs_stb_i	<= '0';
---
---               <= sw_idle;
---            sr_state <= sr_idle;
---            wait_cnt := SDRAM_READ_WAIT_CNT;
---            
---            f_val_we_n <= '1';
---            
---            sdram_addr_res_n <= '0';
---            sdram_addr_inc_n <= '1';
---    
---        elsif (rising_edge(sdram_clk)) then
---
-----            if (sdram_write_addr = conv_std_logic_vector(NES_W * NES_H - 1, 22)) then
-----                sdram_addr_res_n <= '0';
-----            else
-----                sdram_addr_res_n <= '1';
-----            end if;
---
---            if (vga_x < conv_std_logic_vector(VGA_W , 10) 
---                and vga_y < conv_std_logic_vector(VGA_H, 10)) then
---
-----                --read from sdram
-----                case sr_state is
-----                when sr_idle =>
-----                    if (nes_x /= nes_x_old) then
-----                        sr_state <= sr_read;
-----                        wbs_adr_i <= "000000" & vga_y(8 downto 1) & nes_x;
-----                        wbs_cyc_i <= '0';
-----                        wbs_stb_i <= '0';
-----                    end if;
-----                    dram_col_we_n <= '1';
-----                when sr_read_wait =>
-----                    wait_cnt := wait_cnt - 1;
-----                    if (wait_cnt = 0) then
-----                        sr_state <= sr_read;
-----                    end if;
-----                when sr_read =>
-----                    wbs_we_i <= '0';
-----                    wbs_cyc_i <= '1';
-----                    wbs_stb_i <= '1';
-----                    wbs_tga_i <= conv_std_logic_vector(0, 8);
-----                    sr_state <= sr_read_ack;
-----                when sr_read_ack =>
-----                    dram_col_we_n <= '0';
-----                    sr_state <= sr_idle;
-----                end case;
---                
---                --for sdram write...
---                sdram_addr_inc_n <= '1';
---                   <= sw_idle;
---                f_rd <= '0';
---                f_val_we_n <= '1';
---    
---            else
---
---                --write to sdram
---                case   is
---                when sw_idle =>
---                    --pop data from fifo first.
-----                    sdram_addr_inc_n <= '1';
-----                    wbs_cyc_i <= '0';
-----                    wbs_stb_i <= '0';
---                    
---                    if (f_cnt = "00000000") then
---                        --if fifo is empty, do nothing.
---                        f_rd <= '0';
---                        f_val_we_n <= '1';
---                    else
---                        f_rd <= '1';
---                           <= sw_pop_fifo;
---                        f_val_we_n <= '0';
---                    end if;
---                
---                when sw_pop_fifo =>
---                    f_rd <= '0';
---                    f_val_we_n <= '1';
---                       <= sw_write;
---                    --     <= sw_idle;
---                    
---                
-----                    --set fifo data to sdram.
-----                    wbs_adr_i <= sdram_write_addr;
-----                    --wbs_adr_i <= (others => '1');
-----                    wbs_dat_i <= "0000" & f_val;
---
---                when sw_write =>
---                    f_rd <= '0';
---                       <= sw_write_ack;
---
-----                    wbs_cyc_i <= '1';
-----                    wbs_stb_i <= '1';
-----                    wbs_tga_i <= f_cnt;
---                    
---                when sw_write_ack =>
---                    f_rd <= '0';
---                    sdram_addr_inc_n <= '0';
---                    if (f_emp = '0') then
---                           <= sw_write_burst;
---                    else
---                        ---write finished.
---                           <= sw_idle;
---                    end if;
---
---                when sw_write_burst =>
---                    f_rd <= '0';
---                    wbs_adr_i <= sdram_write_addr;
---                    --wbs_adr_i <= (others => '1');
---                    wbs_dat_i <= "0000" & f_val;
---                    if (f_emp = '0') then
---                           <= sw_write_burst;
---                    else
---                        ---write finished.
---                           <= sw_idle;
---                    end if;
---                
---                when others =>
---                    f_rd <= '0';
---                       <= sw_idle;
---                end case;
---
---                --for sdram read...
---                sr_state <= sr_idle;
---
---            end if; --if (vga_x < conv_std_logic_vector(VGA_W , 10) and vga_y < conv_std_logic_vector(VGA_H, 10))
---
---        end if; --if (rst_n = '0') then
---    end process;
-
+    ----------- vga position conversion 640 to 256
     dram_latch_p : process (rst_n, vga_clk)
     begin
         if (rst_n = '0') then

@@ -39,7 +39,6 @@ sim:/testbench_qt_proj_test5/sim_board/dbg_nes_x        \
 sim:/testbench_qt_proj_test5/sim_board/dbg_vga_y        
 
 #sim:/testbench_qt_proj_test5/sim_board/dbg_nes_x_old        \
-#add wave sim:/testbench_qt_proj_test5/sim_board/dbg_sr_state     
 
 add wave -divider fifo
 add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_f_in             
@@ -50,6 +49,7 @@ add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_f_wr
 add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_f_emp
 add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_f_ful 
 
+add wave -radix decimal -unsigned sim:/testbench_qt_proj_test5/sim_board/dbg_sw_state     
 
 add wave -divider sdram_ctl
 add wave -radix hex \
@@ -61,39 +61,22 @@ sim:/testbench_qt_proj_test5/sim_board/dbg_wbs_cyc_i \
 sim:/testbench_qt_proj_test5/sim_board/dbg_wbs_stb_i
 
 
-add wave -divider vga_out
-add wave  sim:/testbench_qt_proj_test5/sim_board/v_sync_n
-add wave  sim:/testbench_qt_proj_test5/sim_board/h_sync_n
-add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/r
-add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/g
-add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/b
+#add wave -divider vga_out
+#add wave  sim:/testbench_qt_proj_test5/sim_board/v_sync_n
+#add wave  sim:/testbench_qt_proj_test5/sim_board/h_sync_n
+#add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/r
+#add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/g
+#add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/b
 
-
-#add wave -divider status
-
-#add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_d1
-#add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_d2
-#add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_d_out
-#add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_ea_carry
-#add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_carry_clr_n
-#add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_gate_n
-
-
-
-#add wave -divider status_debug
-
-#add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_status
-#add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_dec_oe_n
-#add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_status_val
-#add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_stat_we_n
 
 view structure
 view signals
 
 run 3 us
-#run 60 us
+wave zoom full
+
+run 60 us
 
 ##run 400 us
 
-wave zoom full
 

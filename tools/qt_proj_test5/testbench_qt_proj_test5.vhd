@@ -44,7 +44,7 @@ architecture stimulus of testbench_qt_proj_test5 is
         signal dbg_vga_y        : out std_logic_vector (9 downto 0);
         signal dbg_nes_x        : out std_logic_vector(7 downto 0);
         signal dbg_nes_x_old        : out std_logic_vector(7 downto 0);
-        signal dbg_sr_state     : out std_logic_vector(1 downto 0);
+        signal dbg_sw_state     : out std_logic_vector(2 downto 0);
 
         signal dbg_f_in             : out std_logic_vector(11 downto 0);
         signal dbg_f_out            : out std_logic_vector(11 downto 0);
@@ -150,7 +150,7 @@ architecture stimulus of testbench_qt_proj_test5 is
     signal dbg_vga_y        : std_logic_vector (9 downto 0);
     signal dbg_nes_x        : std_logic_vector(7 downto 0);
     signal dbg_nes_x_old        : std_logic_vector(7 downto 0);
-    signal dbg_sr_state     : std_logic_vector(1 downto 0);
+    signal dbg_sw_state     : std_logic_vector(2 downto 0);
 
     signal dbg_f_in             : std_logic_vector(11 downto 0);
     signal dbg_f_out            : std_logic_vector(11 downto 0);
@@ -196,7 +196,7 @@ begin
     dbg_vga_y        ,
     dbg_nes_x        ,
 	dbg_nes_x_old    ,
-    dbg_sr_state     ,
+    dbg_sw_state     ,
         
     dbg_f_in             ,
     dbg_f_out            ,

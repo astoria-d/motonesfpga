@@ -45,7 +45,7 @@ entity qt_proj_test5 is
         signal dbg_vga_y        : out std_logic_vector (9 downto 0);
         signal dbg_nes_x        : out std_logic_vector(7 downto 0);
         signal dbg_nes_x_old        : out std_logic_vector(7 downto 0);
-        signal dbg_sr_state     : out std_logic_vector(1 downto 0);
+        signal dbg_sw_state     : out std_logic_vector(2 downto 0);
 
         signal dbg_f_in             : out std_logic_vector(11 downto 0);
         signal dbg_f_out            : out std_logic_vector(11 downto 0);
@@ -123,7 +123,7 @@ component vga_ctl
         signal dbg_vga_y        : out std_logic_vector (9 downto 0);
         signal dbg_nes_x        : out std_logic_vector(7 downto 0);
         signal dbg_nes_x_old        : out std_logic_vector(7 downto 0);
-        signal dbg_sr_state     : out std_logic_vector(1 downto 0);
+        signal dbg_sw_state     : out std_logic_vector(2 downto 0);
         
         signal dbg_f_in             : out std_logic_vector(11 downto 0);
         signal dbg_f_out            : out std_logic_vector(11 downto 0);
@@ -293,7 +293,7 @@ begin
         dbg_vga_y        ,
         dbg_nes_x        ,
         dbg_nes_x_old    ,
-        dbg_sr_state     ,
+        dbg_sw_state     ,
         
         dbg_f_in             ,
         dbg_f_out            ,
@@ -332,43 +332,43 @@ begin
     );
 
     dram_clk <= sdram_clk;
-sdram_ctl_inst : sdram_controller
-  port map (
-		--Clocks and Reset 
-		sdram_clk, 
-		rst_n, 
-		pll_locked,
-		
-		--SDRAM Signals
-		dram_addr	,
-		dram_bank	,
-		dram_cas_n	,
-		dram_cke	,
-		dram_cs_n	,
-		dram_dq		,
-		dram_ldqm	,
-		dram_udqm	,
-		dram_ras_n	,
-		dram_we_n	,
-   
-		-- Wishbone Slave signals to Read/Write interface
-		wbs_adr_i	,
-		wbs_dat_i	,
-		wbs_we_i	,
-		wbs_tga_i	,
-		wbs_cyc_i	,
-		wbs_stb_i	,
-		wbs_dat_o	,
-		wbs_stall_o	,
-		wbs_err_o	,
-		wbs_ack_o	,
-
-		--Debug signals
-		cmd_ack		,
-		cmd_done	,
-		init_st_o	,
-		main_st_o	
-   ); 
+--sdram_ctl_inst : sdram_controller
+--  port map (
+--		--Clocks and Reset 
+--		sdram_clk, 
+--		rst_n, 
+--		pll_locked,
+--		
+--		--SDRAM Signals
+--		dram_addr	,
+--		dram_bank	,
+--		dram_cas_n	,
+--		dram_cke	,
+--		dram_cs_n	,
+--		dram_dq		,
+--		dram_ldqm	,
+--		dram_udqm	,
+--		dram_ras_n	,
+--		dram_we_n	,
+--   
+--		-- Wishbone Slave signals to Read/Write interface
+--		wbs_adr_i	,
+--		wbs_dat_i	,
+--		wbs_we_i	,
+--		wbs_tga_i	,
+--		wbs_cyc_i	,
+--		wbs_stb_i	,
+--		wbs_dat_o	,
+--		wbs_stall_o	,
+--		wbs_err_o	,
+--		wbs_ack_o	,
+--
+--		--Debug signals
+--		cmd_ack		,
+--		cmd_done	,
+--		init_st_o	,
+--		main_st_o	
+--   ); 
         
     --    signal addr : std_logic_vector( addr_size - 1 downto 0);
 --    signal d_io : std_logic_vector( data_size - 1 downto 0);
