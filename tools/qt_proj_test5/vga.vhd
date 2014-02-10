@@ -192,7 +192,8 @@ begin
     dbg_sr_state     <= sr_state     ;
 
     dbg_f_in             <= f_in             ;
-    dbg_f_out            <= f_val            ;
+    --dbg_f_out            <= f_val            ;
+    dbg_f_out            <= f_out            ;
     dbg_f_cnt            <= f_cnt            ;
     dbg_f_rd             <= f_rd             ;
     dbg_f_wr             <= f_wr             ;
@@ -264,11 +265,11 @@ begin
         end if;
     end process;
 
+    f_in <= nes_r & nes_g & nes_b;
     fifo_w_p : process (rst_n, sdram_clk)
     begin
         if (rst_n = '0') then
             f_wr <= '0';
-            f_in <= (others => '0');
         elsif (rising_edge(sdram_clk)) then
             --fifo data push
             if (pos_x < conv_std_logic_vector(NES_W, 9) and
@@ -276,15 +277,12 @@ begin
                 if (pos_x /= pos_x_old) then
                     --add data to fifo when pos_x is changed.
                     f_wr <= '1';
-                    f_in <= nes_r & nes_g & nes_b;
                 else
                     f_wr <= '0';
                 end if;
             else
                 f_wr <= '0';
-                f_in <= (others => '0');
             end if; --pos_x < conv_std_logic_vector(NES_W, 9) and pos_y < conv_std_logic_vector(NES_H, 9)
-        
         end if;
     end process;
 
