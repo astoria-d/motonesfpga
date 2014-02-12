@@ -51,6 +51,7 @@ architecture stimulus of testbench_qt_proj_test5 is
         signal dbg_f_cnt            : out std_logic_vector(7 downto 0);
         signal dbg_f_rd, dbg_f_wr, dbg_f_emp, dbg_f_ful 
                                     : out std_logic;
+        signal dbg_bst_cnt          : out std_logic_vector(7 downto 0);
 
         base_clk 	: in std_logic;
         base_clk_27mhz 	: in std_logic;
@@ -157,6 +158,7 @@ architecture stimulus of testbench_qt_proj_test5 is
     signal dbg_f_cnt            : std_logic_vector(7 downto 0);
     signal dbg_f_rd, dbg_f_wr, dbg_f_emp, dbg_f_ful 
                                     : std_logic;
+    signal dbg_bst_cnt          : std_logic_vector(7 downto 0);
 
 begin
 
@@ -202,6 +204,7 @@ begin
     dbg_f_out            ,
     dbg_f_cnt            ,
     dbg_f_rd, dbg_f_wr, dbg_f_emp, dbg_f_ful ,
+	dbg_bst_cnt          ,
     
     base_clk, base_clk_27mhz, reset_input, 
         h_sync_n    ,

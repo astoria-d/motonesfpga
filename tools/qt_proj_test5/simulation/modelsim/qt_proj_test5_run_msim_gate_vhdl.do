@@ -41,14 +41,14 @@ sim:/testbench_qt_proj_test5/sim_board/dbg_vga_y
 #sim:/testbench_qt_proj_test5/sim_board/dbg_nes_x_old        \
 
 add wave -divider fifo
+add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_f_wr
 add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_f_in             
+add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_f_rd
 add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_f_out            
 add wave -radix decimal -unsigned sim:/testbench_qt_proj_test5/sim_board/dbg_f_cnt           
-add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_f_rd
-add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_f_wr
+add wave -radix decimal -unsigned sim:/testbench_qt_proj_test5/sim_board/dbg_bst_cnt          
 add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_f_emp
 add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_f_ful 
-
 add wave -radix decimal -unsigned sim:/testbench_qt_proj_test5/sim_board/dbg_sw_state     
 
 add wave -divider sdram_ctl

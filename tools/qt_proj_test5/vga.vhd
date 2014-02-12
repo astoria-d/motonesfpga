@@ -24,6 +24,7 @@ entity vga_ctl is
             signal dbg_f_cnt            : out std_logic_vector(7 downto 0);
             signal dbg_f_rd, dbg_f_wr, dbg_f_emp, dbg_f_ful 
                                         : out std_logic;
+            signal dbg_bst_cnt          : out std_logic_vector(7 downto 0);
     
             ppu_clk     : in std_logic;
             sdram_clk   : in std_logic;
@@ -153,6 +154,8 @@ signal f_cnt            : std_logic_vector(7 downto 0);
 signal sdram_write_addr         :   std_logic_vector (21 downto 0);
 signal sdram_addr_inc_n         :   std_logic;
 signal sdram_addr_res_n         :   std_logic;
+signal bst_wr_cnt               :   std_logic_vector (7 downto 0);
+signal bst_wr_cnt_we_n          :   std_logic;
 
 signal f_rd, f_wr, f_emp, f_ful 
                         : std_logic;
@@ -161,7 +164,8 @@ constant sw_idle        : std_logic_vector(2 downto 0) := "000";
 constant sw_pop_fifo    : std_logic_vector(2 downto 0) := "001";
 constant sw_write       : std_logic_vector(2 downto 0) := "010";
 constant sw_write_ack   : std_logic_vector(2 downto 0) := "011";
-constant sw_write_burst : std_logic_vector(2 downto 0) := "100";
+constant sw_write_burst1 : std_logic_vector(2 downto 0) := "100";
+constant sw_write_burst2 : std_logic_vector(2 downto 0) := "101";
 
 signal sw_state         : std_logic_vector(2 downto 0);
 
@@ -184,9 +188,9 @@ begin
     dbg_sw_state     <= sw_state     ;
 
     dbg_f_in             <= f_in             ;
-    --dbg_f_out            <= f_val            ;
     dbg_f_out            <= f_out            ;
     dbg_f_cnt            <= f_cnt            ;
+    dbg_bst_cnt          <= bst_wr_cnt            ;
     dbg_f_rd             <= f_rd             ;
     dbg_f_wr             <= f_wr             ;
     dbg_f_emp            <= f_emp            ;
@@ -216,20 +220,17 @@ begin
     pos_x_old_inst: d_flip_flop generic map (9)
         port map (sdram_clk_n, rst_n, '1', pos_x_we_n, pos_x, pos_x_old);
 
---    mem_cnt_inst : counter_register generic map (5, 1)
---            port map (sdram_clk , x_res_n, '0', '1', (others => '0'), mem_cnt);
-
     dram_rd_inst : d_flip_flop generic map (16)
         port map (sdram_clk, rst_n, '1', dram_col_we_n, wbs_dat_o, dram_col);
 
     fifo_inst : sdram_write_fifo port map
         (rst, sdram_clk_n, f_in, f_rd, f_wr, f_emp, f_ful, f_out, f_cnt);
         
---    fifo_data_inst: d_flip_flop generic map (12)
---        port map (sdram_clk, rst_n, '1', f_val_we_n, f_out, f_val);
-        
     sdram_wr_addr_inst : counter_register generic map (22, 1)
             port map (sdram_clk, sdram_addr_res_n, sdram_addr_inc_n, '1', (others => '0'), sdram_write_addr);
+
+    fifo_bst_wr_cnt : counter_register generic map (8, 255)
+            port map (sdram_clk, sdram_addr_res_n, sdram_addr_inc_n, bst_wr_cnt_we_n, f_cnt, bst_wr_cnt);
 
     pos_x_p : process (rst_n, sdram_clk)
     begin
@@ -287,24 +288,35 @@ begin
                 or vga_y >= conv_std_logic_vector(VGA_H, 10)) then
                 --write to sdram status
                 case sw_state is
-                when sw_idle =>
-                    if (f_cnt = "00000000") then
+                when sw_idle =>         --0: idle...
+                    if (f_emp = '1') then
                         sw_state <= sw_idle;
                     else
                         sw_state <= sw_pop_fifo;
                     end if;
                 
-                when sw_pop_fifo =>
+                when sw_pop_fifo =>     --1: initialize writing...
                     sw_state <= sw_write;
 
-                when sw_write =>
+                when sw_write =>        --2: start writing
                     sw_state <= sw_write_ack;
                     
-                when sw_write_ack =>
-                    sw_state <= sw_write_burst;
+                when sw_write_ack =>    --3: push first data
+                    sw_state <= sw_write_burst1;
 
-                when sw_write_burst =>
-                    sw_state <= sw_idle;
+                when sw_write_burst1 =>  --4-1: repeat...
+                    if (bst_wr_cnt(7 downto 1) = "0000000") then -- case 0 or 1
+                        sw_state <= sw_idle;
+                    else
+                        sw_state <= sw_write_burst2;
+                    end if;
+
+                when sw_write_burst2 =>  --4-2: repeat...
+                    if (bst_wr_cnt(7 downto 1) = "0000000") then -- case 0 or 1
+                        sw_state <= sw_idle;
+                    else
+                        sw_state <= sw_write_burst2;
+                    end if;
                 
                 when others =>
                     sw_state <= sw_idle;
@@ -316,24 +328,20 @@ begin
         end if;
     end process;
 
-    fifo_r_p : process (sw_state)
-    begin
-        case sw_state is
-        when sw_pop_fifo =>
-            f_rd <= '1';
-        when others =>
-            f_rd <= '0';
-        end case;
-    end process;
+    f_rd <= '0' when rst_n = '0' else
+            '1' when (sw_state = sw_pop_fifo or sw_state = sw_write_burst2) else
+            '0';
 
     sdram_addr_res_n <= rst_n;
     sdram_addr_inc_n <= '1' when rst_n = '0' else
-                        '0' when sw_state = sw_write_burst else
+                        '0' when (sw_state(2) = '1') else --case sw_write_burst1 or sw_write_burst2
                         '1';
+    bst_wr_cnt_we_n <= '1' when rst_n = '0' else
+                       '0' when sw_state = sw_pop_fifo else
+                       '1';
     wbs_adr_i <= sdram_write_addr;
     wbs_dat_i <= "0000" & f_out;
-
-    wbs_tga_i <= "11111111";
+    wbs_tga_i <= bst_wr_cnt;
     wbs_cyc_i <= '0' when rst_n = '0' else
                  '1' when sw_state >= sw_write else
                  '0';
@@ -341,7 +349,7 @@ begin
                  '1' when sw_state >= sw_write else
                  '0';
     wbs_we_i  <= '0' when rst_n = '0' else
-                 '1' when sw_state = sw_write else
+                 '1' when sw_state >= sw_write else
                  '0';
 
     ----------- vga position conversion 640 to 256

@@ -52,6 +52,7 @@ entity qt_proj_test5 is
         signal dbg_f_cnt            : out std_logic_vector(7 downto 0);
         signal dbg_f_rd, dbg_f_wr, dbg_f_emp, dbg_f_ful 
                                     : out std_logic;
+        signal dbg_bst_cnt          : out std_logic_vector(7 downto 0);
         
         base_clk 	: in std_logic;
         base_clk_27mhz 	: in std_logic;
@@ -130,6 +131,7 @@ component vga_ctl
         signal dbg_f_cnt            : out std_logic_vector(7 downto 0);
         signal dbg_f_rd, dbg_f_wr, dbg_f_emp, dbg_f_ful 
                                     : out std_logic;
+        signal dbg_bst_cnt          : out std_logic_vector(7 downto 0);
 
             ppu_clk     : in std_logic;
             sdram_clk   : in std_logic;
@@ -299,6 +301,7 @@ begin
         dbg_f_out            ,
         dbg_f_cnt            ,
         dbg_f_rd, dbg_f_wr, dbg_f_emp, dbg_f_ful ,
+        dbg_bst_cnt          ,
 
             ppu_clk     ,
             sdram_clk,
