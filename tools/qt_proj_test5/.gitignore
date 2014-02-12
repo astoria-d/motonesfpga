@@ -18,6 +18,7 @@ no-need/*
 output_files/*
 simulation/*
 greybox_tmp/*
+old/*
 undo_redo.txt
 *.work
 *.nes
