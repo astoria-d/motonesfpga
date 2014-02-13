@@ -332,13 +332,14 @@ begin
             wbs_ack_o	
     );
 
-    dram_clk <= mem_clk;
+    dram_clk <= not mem_clk;
+    sdram_clk <= not mem_clk;
 sdram_ctl_inst : sdram_controller
   port map (
 		--Clocks and Reset 
-		mem_clk, 
+		sdram_clk, 
 		rst_n, 
-		pll_locked,
+		'0',
 		
 		--SDRAM Signals
 		dram_addr	,
