@@ -54,9 +54,11 @@ add wave -divider sdram_ctl
 add wave -radix hex \
 sim:/testbench_qt_proj_test5/sim_board/dbg_wbs_adr_i \
 sim:/testbench_qt_proj_test5/sim_board/dbg_wbs_dat_i \
-sim:/testbench_qt_proj_test5/sim_board/dbg_wbs_we_i \
-sim:/testbench_qt_proj_test5/sim_board/dbg_wbs_tga_i \
-sim:/testbench_qt_proj_test5/sim_board/dbg_wbs_cyc_i \
+sim:/testbench_qt_proj_test5/sim_board/dbg_wbs_we_i
+
+add wave -radix decimal -unsigned sim:/testbench_qt_proj_test5/sim_board/dbg_wbs_tga_i
+
+add wave sim:/testbench_qt_proj_test5/sim_board/dbg_wbs_cyc_i \
 sim:/testbench_qt_proj_test5/sim_board/dbg_wbs_stb_i
 
 
@@ -74,7 +76,7 @@ view signals
 run 3 us
 wave zoom full
 
-run 40 us
+run 30 us
 
 ##run 400 us
 

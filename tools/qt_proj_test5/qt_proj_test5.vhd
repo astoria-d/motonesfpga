@@ -272,12 +272,12 @@ begin
                 nes_b       
         );
 
-        vga_clk_gen_inst : vga_clk_gen
-        PORT map
-        (
-            --mem_clk_pll = 133.333 MHz.
-            base_clk, vga_clk_pll, sdram_clk, pll_locked
-        );
+--        vga_clk_gen_inst : vga_clk_gen
+--        PORT map
+--        (
+--            --mem_clk_pll = 133.333 MHz.
+--            base_clk, vga_clk_pll, sdram_clk, pll_locked
+--        );
     --- testbench pll clock..
 --    dummy_clock_p: process
 --    begin

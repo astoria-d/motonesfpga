@@ -10,6 +10,7 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.conv_integer;
 use ieee.std_logic_arith.conv_std_logic_vector;
 use work.motonesfpga_common.all;
+use ieee.std_logic_unsigned.all;
 
 entity vga_ctl is 
     port (  
@@ -163,8 +164,8 @@ constant sw_idle        : std_logic_vector(2 downto 0) := "000";
 constant sw_pop_fifo    : std_logic_vector(2 downto 0) := "001";
 constant sw_write       : std_logic_vector(2 downto 0) := "010";
 constant sw_write_ack   : std_logic_vector(2 downto 0) := "011";
-constant sw_write_burst1 : std_logic_vector(2 downto 0) := "100";
-constant sw_write_burst2 : std_logic_vector(2 downto 0) := "101";
+constant sw_write_burst : std_logic_vector(2 downto 0) := "100";
+constant sw_write_burst_last : std_logic_vector(2 downto 0) := "101";
 
 signal sw_state         : std_logic_vector(2 downto 0);
 
@@ -291,7 +292,7 @@ begin
                 --write to sdram status
                 case sw_state is
                 when sw_idle =>         --0: idle...
-                    if (f_emp = '1') then
+                    if (f_cnt < "00001000") then        --wait until fifo > 8
                         sw_state <= sw_idle;
                     else
                         sw_state <= sw_pop_fifo;
@@ -304,23 +305,16 @@ begin
                     sw_state <= sw_write_ack;
                     
                 when sw_write_ack =>    --3: push first data
-                    sw_state <= sw_write_burst1;
+                    sw_state <= sw_write_burst;
 
-                when sw_write_burst1 =>  --4-1: repeat...
-                    if (bst_wr_cnt(7 downto 1) = "0000000") then -- case 0 or 1
-                        sw_state <= sw_idle;
+                when sw_write_burst =>  --4: repeat...
+                    if (bst_wr_cnt > "00000001") then -- busrt write
+                        sw_state <= sw_write_burst;
                     else
-                        sw_state <= sw_write_burst2;
+                        sw_state <= sw_write_burst_last;
                     end if;
 
-                when sw_write_burst2 =>  --4-2: repeat...
-                    if (bst_wr_cnt(7 downto 1) = "0000000") then -- case 0 or 1
-                        sw_state <= sw_idle;
-                    else
-                        sw_state <= sw_write_burst2;
-                    end if;
-                
-                when others =>
+                when others =>      --other and burst last...
                     sw_state <= sw_idle;
                 end case;
     
@@ -331,33 +325,19 @@ begin
     end process;
 
     f_rd <= '0' when rst_n = '0' else
-            '1' when (sw_state = sw_pop_fifo or sw_state = sw_write_burst2) else
+            '1' when (sw_state = sw_pop_fifo) else
+            '1' when (sw_state = sw_write_burst) else
             '0';
-
     f_val_we_n <= not f_rd;
---    f_val_p : process (rst_n, mem_clk)
---    begin
---        if (rst_n = '0') then
---            f_val_we_n <= '1';
---        elsif (rising_edge(mem_clk)) then
---            if (f_rd = '1') then
---                f_val_we_n <= '0';
---            else
---                f_val_we_n <= '1';
---            end if;
---        end if;
---    end process;
+    sdram_addr_inc_n <= not f_rd;
 
     sdram_addr_res_n <= rst_n;
-    sdram_addr_inc_n <= '1' when rst_n = '0' else
-                        '0' when (sw_state(2) = '1') else --case sw_write_burst1 or sw_write_burst2
-                        '1';
     bst_wr_cnt_we_n <= '1' when rst_n = '0' else
                        '0' when sw_state = sw_idle else
                        '1';
-    wbs_adr_i <= sdram_write_addr;
+    wbs_adr_i <= sdram_write_addr - 1;
     wbs_dat_i <= "0000" & f_val;
-    wbs_tga_i <= bst_wr_cnt;
+    wbs_tga_i <= bst_wr_cnt + 1;
     wbs_cyc_i <= '0' when rst_n = '0' else
                  '1' when sw_state >= sw_write else
                  '0';
