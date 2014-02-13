@@ -27,7 +27,6 @@ entity vga_ctl is
             signal dbg_bst_cnt          : out std_logic_vector(7 downto 0);
     
             ppu_clk     : in std_logic;
-            sdram_clk   : in std_logic;
             vga_clk     : in std_logic;
             mem_clk     : in std_logic;
             rst_n       : in std_logic;
@@ -125,7 +124,7 @@ signal y_res_n      : std_logic;
 signal y_en_n       : std_logic;
 
 signal cnt_clk      : std_logic;
-signal sdram_clk_n  : std_logic;
+signal mem_clk_n    : std_logic;
 
 --signal mem_cnt      : std_logic_vector (4 downto 0);
 
@@ -146,9 +145,9 @@ signal nes_x_old        : std_logic_vector(7 downto 0);
 signal rst              : std_logic;
 signal f_in             : std_logic_vector(11 downto 0);
 signal f_out            : std_logic_vector(11 downto 0);
---signal f_val            : std_logic_vector(11 downto 0);
+signal f_val            : std_logic_vector(11 downto 0);
 signal f_cnt            : std_logic_vector(7 downto 0);
---signal f_val_we_n       : std_logic;
+signal f_val_we_n       : std_logic;
 
 
 signal sdram_write_addr         :   std_logic_vector (21 downto 0);
@@ -199,7 +198,7 @@ begin
 
 
     cnt_clk <= not vga_clk;
-    sdram_clk_n <= not sdram_clk;
+    mem_clk_n <= not mem_clk;
     rst <= not rst_n;
     
     x_inst : counter_register generic map (10, 1)
@@ -212,31 +211,34 @@ begin
             port map (vga_clk, x_res_n, nes_x_en_n, '1', (others => '0'), nes_x);
             
     nes_x_old_inst: d_flip_flop generic map (8)
-        port map (sdram_clk_n, rst_n, '1', nes_x_we_n, nes_x, nes_x_old);
+        port map (mem_clk_n, rst_n, '1', nes_x_we_n, nes_x, nes_x_old);
         
     count5_inst : counter_register generic map (3, 1)
             port map (cnt_clk, count5_res_n, '0', '1', (others => '0'), count5);
 
     pos_x_old_inst: d_flip_flop generic map (9)
-        port map (sdram_clk_n, rst_n, '1', pos_x_we_n, pos_x, pos_x_old);
-
-    dram_rd_inst : d_flip_flop generic map (16)
-        port map (sdram_clk, rst_n, '1', dram_col_we_n, wbs_dat_o, dram_col);
+        port map (mem_clk_n, rst_n, '1', pos_x_we_n, pos_x, pos_x_old);
 
     fifo_inst : sdram_write_fifo port map
-        (rst, sdram_clk_n, f_in, f_rd, f_wr, f_emp, f_ful, f_out, f_cnt);
+        (rst, mem_clk_n, f_in, f_rd, f_wr, f_emp, f_ful, f_out, f_cnt);
         
     sdram_wr_addr_inst : counter_register generic map (22, 1)
-            port map (sdram_clk, sdram_addr_res_n, sdram_addr_inc_n, '1', (others => '0'), sdram_write_addr);
+            port map (mem_clk, sdram_addr_res_n, sdram_addr_inc_n, '1', (others => '0'), sdram_write_addr);
 
     fifo_bst_wr_cnt : counter_register generic map (8, 255)
-            port map (sdram_clk, sdram_addr_res_n, sdram_addr_inc_n, bst_wr_cnt_we_n, f_cnt, bst_wr_cnt);
+            port map (mem_clk, sdram_addr_res_n, sdram_addr_inc_n, bst_wr_cnt_we_n, f_cnt, bst_wr_cnt);
 
-    pos_x_p : process (rst_n, sdram_clk)
+    fifo_data_inst: d_flip_flop generic map (12)
+        port map (mem_clk, rst_n, '1', f_val_we_n, f_out, f_val);
+
+--    dram_rd_inst : d_flip_flop generic map (16)
+--        port map (mem_clk, rst_n, '1', dram_col_we_n, wbs_dat_o, dram_col);
+
+    pos_x_p : process (rst_n, mem_clk)
     begin
         if (rst_n = '0') then
             pos_x_we_n <= '1';
-        elsif (rising_edge(sdram_clk)) then
+        elsif (rising_edge(mem_clk)) then
             if (pos_x /= pos_x_old) then
                 pos_x_we_n <= '0';
             else
@@ -245,11 +247,11 @@ begin
         end if;
     end process;
             
-    nes_x_p : process (rst_n, sdram_clk)
+    nes_x_p : process (rst_n, mem_clk)
     begin
         if (rst_n = '0') then
             nes_x_we_n <= '1';
-        elsif (rising_edge(sdram_clk)) then
+        elsif (rising_edge(mem_clk)) then
             if (nes_x /= nes_x_old) then
                 nes_x_we_n <= '0';
             else
@@ -259,11 +261,11 @@ begin
     end process;
 
     f_in <= nes_r & nes_g & nes_b;
-    fifo_w_p : process (rst_n, sdram_clk)
+    fifo_w_p : process (rst_n, mem_clk)
     begin
         if (rst_n = '0') then
             f_wr <= '0';
-        elsif (rising_edge(sdram_clk)) then
+        elsif (rising_edge(mem_clk)) then
             --fifo data push
             if (pos_x < conv_std_logic_vector(NES_W, 9) and
                 pos_y < conv_std_logic_vector(NES_H, 9)) then
@@ -279,11 +281,11 @@ begin
         end if;
     end process;
 
-    sw_state_p : process (rst_n, sdram_clk)
+    sw_state_p : process (rst_n, mem_clk)
     begin
         if (rst_n = '0') then
             sw_state <= sw_idle;
-        elsif (rising_edge(sdram_clk)) then
+        elsif (rising_edge(mem_clk)) then
             if (vga_x >= conv_std_logic_vector(VGA_W , 10) 
                 or vga_y >= conv_std_logic_vector(VGA_H, 10)) then
                 --write to sdram status
@@ -332,15 +334,29 @@ begin
             '1' when (sw_state = sw_pop_fifo or sw_state = sw_write_burst2) else
             '0';
 
+    f_val_we_n <= not f_rd;
+--    f_val_p : process (rst_n, mem_clk)
+--    begin
+--        if (rst_n = '0') then
+--            f_val_we_n <= '1';
+--        elsif (rising_edge(mem_clk)) then
+--            if (f_rd = '1') then
+--                f_val_we_n <= '0';
+--            else
+--                f_val_we_n <= '1';
+--            end if;
+--        end if;
+--    end process;
+
     sdram_addr_res_n <= rst_n;
     sdram_addr_inc_n <= '1' when rst_n = '0' else
                         '0' when (sw_state(2) = '1') else --case sw_write_burst1 or sw_write_burst2
                         '1';
     bst_wr_cnt_we_n <= '1' when rst_n = '0' else
-                       '0' when sw_state = sw_pop_fifo else
+                       '0' when sw_state = sw_idle else
                        '1';
     wbs_adr_i <= sdram_write_addr;
-    wbs_dat_i <= "0000" & f_out;
+    wbs_dat_i <= "0000" & f_val;
     wbs_tga_i <= bst_wr_cnt;
     wbs_cyc_i <= '0' when rst_n = '0' else
                  '1' when sw_state >= sw_write else
@@ -532,26 +548,16 @@ begin
                 y_res_n <= '1';
             end if;
             
---            nes_b <= pos_y (7 downto 4);
---            nes_g <= pos_x (5 downto 2);
---            nes_r <= pos_x(7 downto 4);
-            --nes_r <= pos_x (3) & pos_x (3) & pos_x (3) & pos_x (3);
+            nes_b <= pos_x(3 downto 0);
+            nes_g <= pos_x(7 downto 4);
             if (pos_x <= conv_std_logic_vector(64, 9)) then
-                nes_r <= pos_x(3 downto 0);
-                nes_g <= "1111";
-                nes_b <= "1111";
-            elsif (pos_x <= conv_std_logic_vector(128, 9)) then
                 nes_r <= "1111";
-                nes_g <= "0000";
-                nes_b <= "0000";
+            elsif (pos_x <= conv_std_logic_vector(128, 9)) then
+                nes_r <= "0000";
             elsif (pos_x <= conv_std_logic_vector(192, 9)) then
-                nes_r <= "1010";
-                nes_g <= "1010";
-                nes_b <= "1010";
+                nes_r  <= "1010";
             else
-                nes_r <= "0101";
-                nes_g <= "0101";
-                nes_b <= "0101";
+                nes_r  <= "0101";
             end if;
         
         end if;

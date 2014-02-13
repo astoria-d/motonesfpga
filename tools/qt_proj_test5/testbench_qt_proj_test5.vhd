@@ -10,7 +10,7 @@ architecture stimulus of testbench_qt_proj_test5 is
         port (
     signal dbg_cpu_clk  : out std_logic;
     signal dbg_ppu_clk  : out std_logic;
-    signal dbg_sdram_clk  : out std_logic;
+    signal dbg_mem_clk    : out std_logic;
 
     signal dbg_addr : out std_logic_vector( 16 - 1 downto 0);
     signal dbg_d_io : out std_logic_vector( 8 - 1 downto 0);
@@ -116,7 +116,7 @@ architecture stimulus of testbench_qt_proj_test5 is
 
     signal dbg_cpu_clk  : std_logic;
     signal dbg_ppu_clk  : std_logic;
-    signal dbg_sdram_clk  : std_logic;
+    signal dbg_mem_clk    : std_logic;
     signal dbg_addr : std_logic_vector( 16 - 1 downto 0);
     signal dbg_d_io : std_logic_vector( 8 - 1 downto 0);
     signal dbg_vram_ad  : std_logic_vector (7 downto 0);
@@ -165,7 +165,7 @@ begin
     sim_board : qt_proj_test5 port map (
     dbg_cpu_clk  , 
     dbg_ppu_clk  , 
-    dbg_sdram_clk  ,
+    dbg_mem_clk    ,
     dbg_addr , 
     dbg_d_io , 
 
