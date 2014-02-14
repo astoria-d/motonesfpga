@@ -420,7 +420,7 @@ begin
 			end if;
 			blen_cnt 	<= blen_cnt - 1;
 			--REMOVE ME: (For SDRAM_MODEL Simulation only. This line does has no influence on the SDRAM itself)
-			address_r	<= address_r + '1';
+			--address_r	<= address_r + '1';
 
 		  when WRITE1_ST =>					--Write state: Burst
 			
@@ -431,7 +431,7 @@ begin
 			end if;
 			blen_cnt 	<= blen_cnt - 1;
 			--REMOVE ME: (For SDRAM_MODEL Simulation only. This line does has no influence on the SDRAM itself)
-			address_r	<= address_r + '1';
+			--address_r	<= address_r + '1';
 		  
 		  when WRITE_BST_STOP_ST =>  		--Precharge (Also stops burst)
 			wbs_err_o	<= oor_r;			--WISHBONE ERR_O flag will rise in case of OOR burst
@@ -443,7 +443,7 @@ begin
 		  when READ1_ST =>					--Nothing happens (1 of 3)     
   			next_state <= READ2_ST;
 			--REMOVE ME: (For SDRAM_MODEL Simulation only. This line does has no influence on the SDRAM itself)
-			address_r	<= address_r + '1';
+			--address_r	<= address_r + '1';
 		  
 		  when READ2_ST =>					--Nothing happens (2 of 3)
 			if blen_cnt <=1 then			--Only one data chunk are being read
@@ -452,7 +452,7 @@ begin
 				next_state <= READ3_ST;
 			end if;
 			--REMOVE ME: (For SDRAM_MODEL Simulation only. This line does has no influence on the SDRAM itself)
-			address_r	<= address_r + '1';
+			--address_r	<= address_r + '1';
 
 		  when READ3_ST =>					--Nothing happens (3 of 3)
 			if blen_cnt <=2 then			--Only two data chunks are being read
@@ -461,7 +461,7 @@ begin
 				next_state <= READ4_ST;
 			end if;
 			--REMOVE ME: (For SDRAM_MODEL Simulation only. This line does has no influence on the SDRAM itself)
-			address_r	<= address_r + '1';
+			--address_r	<= address_r + '1';
 
   		  when READ4_ST =>					--Data delay, since 'dram_dq' data comes right after clock's rising edge
 			if blen_cnt <=3 then			--Only three data chunks are being read
@@ -470,7 +470,7 @@ begin
 				next_state <= READ5_ST;
 			end if;
 			--REMOVE ME: (For SDRAM_MODEL Simulation only. This line does has no influence on the SDRAM itself)
-			address_r	<= address_r + '1';
+			--address_r	<= address_r + '1';
 
 		  when READ5_ST =>					--Read data (burst)
 			if blen_cnt <= 4 then 			--Precharge Command (for Burst Stop and Precharge) is required
@@ -480,13 +480,13 @@ begin
 			end if;
 			blen_cnt 	<= blen_cnt - 1;
 			--REMOVE ME: (For SDRAM_MODEL Simulation only. This line does has no influence on the SDRAM itself)
-			address_r	<= address_r + '1';
+			--address_r	<= address_r + '1';
 
 		  when READ_BST_STOP_ST =>			--Precharge (Also stops burst)
 			if blen_cnt > 0 then
 				blen_cnt 	<= blen_cnt - 1;
 				--REMOVE ME: (For SDRAM_MODEL Simulation only. This line does has no influence on the SDRAM itself)
-				address_r	<= address_r + '1';
+				--address_r	<= address_r + '1';
 			end if;
 			
 			next_state <= WAIT_PRE_ST;
@@ -594,12 +594,12 @@ begin
 		  dram_bank_r <= address_r(21 downto 20);
 		else
 		  --FOR SDRAM_MODEL Simulation only: 
-		  dram_addr_r <= "0000" & address_r(7 downto 0); --Write /read without auto-precharge
-		  dram_bank_r <= address_r(21 downto 20);
+		  --dram_addr_r <= "0000" & address_r(7 downto 0); --Write /read without auto-precharge
+		  --dram_bank_r <= address_r(21 downto 20);
 		  
 		  --TODO: After removing SDRAM_MODEL Simulation lines, uncommand these two lines
-		  --dram_addr_r <= (others => '0');
-		  --dram_bank_r <= "00";
+		  dram_addr_r <= (others => '0');
+		  dram_bank_r <= "00";
 		end if;
 	end if;
   end process addr_proc;

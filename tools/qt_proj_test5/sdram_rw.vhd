@@ -66,17 +66,17 @@ end entity sdram_rw;
 architecture arc_sdram_rw of sdram_rw is
 
   --------------------------------  	Types 	--------------------------------------
-  type states is ( START_WRITE_ST,		-- Initilize Writing
-				   WRITE_ST,			-- Command SDRAM controller to write value (32bit)
-				   WAIT_WRITE_ACK_ST,	-- Wait for SDRAM controller to acknowledge
-				   WRITE_BURST,			-- Burst write
-				   WRITE_WAIT_ST,		-- Increment written data value, and repeat write process 
-				   START_READ_ST,		-- Wait for Write to Read delay
-				   READ_ST,				-- Command SDRAM controller to read data
-				   WAIT_READ_ACK_ST,	-- Wait for SDRAM controller to acknowledge
-				   READ_BURST,			-- Burst Read, Compare between read and expected data
-				   READ_WAIT_ST,		-- End burst, Compare between read and expected data, repeat reading
-				   DONE_ST				-- Test done
+  type states is ( START_WRITE_ST,		-- 0: Initilize Writing
+				   WRITE_ST,			-- 1: Command SDRAM controller to write value (32bit)
+				   WAIT_WRITE_ACK_ST,	-- 2: Wait for SDRAM controller to acknowledge
+				   WRITE_BURST,			-- 3: Burst write
+				   WRITE_WAIT_ST,		-- 4: Increment written data value, and repeat write process 
+				   START_READ_ST,		-- 5: Wait for Write to Read delay
+				   READ_ST,				-- 6: Command SDRAM controller to read data
+				   WAIT_READ_ACK_ST,	-- 7: Wait for SDRAM controller to acknowledge
+				   READ_BURST,			-- 8: Burst Read, Compare between read and expected data
+				   READ_WAIT_ST,		-- 9: End burst, Compare between read and expected data, repeat reading
+				   DONE_ST				-- A: Test done
 				   );
 
   --------------------------------  Constants -----------------------------------------
@@ -212,21 +212,28 @@ architecture arc_sdram_rw of sdram_rw is
 		when READ_BURST => --Wait until end of valid data after burst	
 			if (wbm_stall_i = '1') then
 				null;
-			elsif (wbm_ack_i ='1') and (blen > 0) then --Data is  being read from SDRAM
-				if (wbm_dat_i /= mem_value) then --Compare between read value and expected value
-					red_led_r <= '1';
-					--state <= DONE_ST; --Test fail - abort Test
-				end if;
-				mem_value	<= mem_value + '1'; --Increment expected value
-				blen		<= blen - 1;
-			elsif (conv_integer(addr_r) < MAX_ADDR) then
-  			  addr_r <= addr_r + conv_std_logic_vector(ADDR_INC, 22); -- add 256
-			  state  <= READ_ST;
-			else  
-			  state <= DONE_ST;
-			  cmd_r <= '0';
+			elsif (wbm_ack_i ='1') then --Data is  abailable
+				if (addr_r >= conv_std_logic_vector(MAX_ADDR, 22)) then
+                  state <= DONE_ST;
+                  cmd_r <= '0';
+                else
+                    if (wbm_dat_i /= mem_value) then --Compare between read value and expected value
+                        red_led_r <= '1';
+                        state <= DONE_ST; --Test fail - abort Test
+                    else
+                        mem_value	<= mem_value + '1'; --Increment expected value
+                    end if;
+                    if (blen = 2) then
+                        addr_r <= addr_r + conv_std_logic_vector(ADDR_INC, 22); -- add 256
+                    end if;
+                    if (blen = 1) then
+                        blen	<= BURST_LENGTH;
+                    else
+                        blen		<= blen - 1;
+                    end if;
+                end if;
 			end if;
-
+            
 		when DONE_ST =>	--Test done
 			state <= DONE_ST;
 			if (red_led_r = '0') then
