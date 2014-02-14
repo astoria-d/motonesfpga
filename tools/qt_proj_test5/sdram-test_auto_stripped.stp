@@ -1,15 +1,29 @@
 <session jtag_chain="USB-Blaster [USB-0]" jtag_device="@1: EP2C(15|20) (0x020B30DD)" sof_file="">
   <display_tree gui_logging_enabled="0">
-    <display_branch instance="auto_signaltap_0" log="USE_GLOBAL_TEMP" signal_set="USE_GLOBAL_TEMP" trigger="USE_GLOBAL_TEMP"/>
+    <display_branch instance="auto_signaltap_0" signal_set="USE_GLOBAL_TEMP" trigger="USE_GLOBAL_TEMP"/>
   </display_tree>
   <instance entity_name="sld_signaltap" is_auto_node="yes" is_expanded="true" name="auto_signaltap_0" source_file="sld_signaltap.vhd">
     <node_ip_info instance_id="0" mfg_id="110" node_id="0" version="6"/>
-    <signal_set global_temp="1" is_expanded="true" name="signal_set: 2014/02/14 13:17:12  #0">
-      <clock name="base_clk_24mhz" polarity="posedge" tap_mode="classic"/>
-      <config ram_type="M4K" reserved_data_nodes="0" reserved_storage_qualifier_nodes="0" reserved_trigger_nodes="0" sample_depth="2048" trigger_in_enable="no" trigger_out_enable="no"/>
+    <signal_set global_temp="1" is_expanded="true" name="signal_set: 2014/02/14 15:24:11  #0">
+      <clock name="dbg_mem_clk" polarity="posedge" tap_mode="classic"/>
+      <config ram_type="M4K" reserved_data_nodes="0" reserved_storage_qualifier_nodes="0" reserved_trigger_nodes="0" sample_depth="1024" trigger_in_enable="no" trigger_out_enable="no"/>
       <top_entity/>
       <signal_vec>
         <trigger_input_vec>
+          <wire name="dram_addr[0]" tap_mode="classic"/>
+          <wire name="dram_addr[10]" tap_mode="classic"/>
+          <wire name="dram_addr[11]" tap_mode="classic"/>
+          <wire name="dram_addr[1]" tap_mode="classic"/>
+          <wire name="dram_addr[2]" tap_mode="classic"/>
+          <wire name="dram_addr[3]" tap_mode="classic"/>
+          <wire name="dram_addr[4]" tap_mode="classic"/>
+          <wire name="dram_addr[5]" tap_mode="classic"/>
+          <wire name="dram_addr[6]" tap_mode="classic"/>
+          <wire name="dram_addr[7]" tap_mode="classic"/>
+          <wire name="dram_addr[8]" tap_mode="classic"/>
+          <wire name="dram_addr[9]" tap_mode="classic"/>
+          <wire name="dram_bank[0]" tap_mode="classic"/>
+          <wire name="dram_bank[1]" tap_mode="classic"/>
           <wire name="rst_n" tap_mode="classic"/>
           <wire name="sdram_rw:sdr_rw|cmd_ack" tap_mode="classic"/>
           <wire name="sdram_rw:sdr_rw|cmd_done" tap_mode="classic"/>
@@ -25,6 +39,44 @@
           <wire name="sdram_rw:sdr_rw|writing" tap_mode="classic"/>
         </trigger_input_vec>
         <data_input_vec>
+          <wire name="dram_addr[0]" tap_mode="classic"/>
+          <wire name="dram_addr[10]" tap_mode="classic"/>
+          <wire name="dram_addr[11]" tap_mode="classic"/>
+          <wire name="dram_addr[1]" tap_mode="classic"/>
+          <wire name="dram_addr[2]" tap_mode="classic"/>
+          <wire name="dram_addr[3]" tap_mode="classic"/>
+          <wire name="dram_addr[4]" tap_mode="classic"/>
+          <wire name="dram_addr[5]" tap_mode="classic"/>
+          <wire name="dram_addr[6]" tap_mode="classic"/>
+          <wire name="dram_addr[7]" tap_mode="classic"/>
+          <wire name="dram_addr[8]" tap_mode="classic"/>
+          <wire name="dram_addr[9]" tap_mode="classic"/>
+          <wire name="dram_bank[0]" tap_mode="classic"/>
+          <wire name="dram_bank[1]" tap_mode="classic"/>
+          <wire name="dram_cas_n" tap_mode="classic"/>
+          <wire name="dram_cke" tap_mode="classic"/>
+          <wire name="dram_clk" tap_mode="classic"/>
+          <wire name="dram_cs_n" tap_mode="classic"/>
+          <wire name="dram_dq[0]" tap_mode="classic"/>
+          <wire name="dram_dq[10]" tap_mode="classic"/>
+          <wire name="dram_dq[11]" tap_mode="classic"/>
+          <wire name="dram_dq[12]" tap_mode="classic"/>
+          <wire name="dram_dq[13]" tap_mode="classic"/>
+          <wire name="dram_dq[14]" tap_mode="classic"/>
+          <wire name="dram_dq[15]" tap_mode="classic"/>
+          <wire name="dram_dq[1]" tap_mode="classic"/>
+          <wire name="dram_dq[2]" tap_mode="classic"/>
+          <wire name="dram_dq[3]" tap_mode="classic"/>
+          <wire name="dram_dq[4]" tap_mode="classic"/>
+          <wire name="dram_dq[5]" tap_mode="classic"/>
+          <wire name="dram_dq[6]" tap_mode="classic"/>
+          <wire name="dram_dq[7]" tap_mode="classic"/>
+          <wire name="dram_dq[8]" tap_mode="classic"/>
+          <wire name="dram_dq[9]" tap_mode="classic"/>
+          <wire name="dram_ldqm" tap_mode="classic"/>
+          <wire name="dram_ras_n" tap_mode="classic"/>
+          <wire name="dram_udqm" tap_mode="classic"/>
+          <wire name="dram_we_n" tap_mode="classic"/>
           <wire name="green_led" tap_mode="classic"/>
           <wire name="red_led" tap_mode="classic"/>
           <wire name="rst_n" tap_mode="classic"/>
@@ -137,6 +189,44 @@
           <wire name="sdram_rw:sdr_rw|writing" tap_mode="classic"/>
         </data_input_vec>
         <storage_qualifier_input_vec>
+          <wire name="dram_addr[0]" tap_mode="classic"/>
+          <wire name="dram_addr[10]" tap_mode="classic"/>
+          <wire name="dram_addr[11]" tap_mode="classic"/>
+          <wire name="dram_addr[1]" tap_mode="classic"/>
+          <wire name="dram_addr[2]" tap_mode="classic"/>
+          <wire name="dram_addr[3]" tap_mode="classic"/>
+          <wire name="dram_addr[4]" tap_mode="classic"/>
+          <wire name="dram_addr[5]" tap_mode="classic"/>
+          <wire name="dram_addr[6]" tap_mode="classic"/>
+          <wire name="dram_addr[7]" tap_mode="classic"/>
+          <wire name="dram_addr[8]" tap_mode="classic"/>
+          <wire name="dram_addr[9]" tap_mode="classic"/>
+          <wire name="dram_bank[0]" tap_mode="classic"/>
+          <wire name="dram_bank[1]" tap_mode="classic"/>
+          <wire name="dram_cas_n" tap_mode="classic"/>
+          <wire name="dram_cke" tap_mode="classic"/>
+          <wire name="dram_clk" tap_mode="classic"/>
+          <wire name="dram_cs_n" tap_mode="classic"/>
+          <wire name="dram_dq[0]" tap_mode="classic"/>
+          <wire name="dram_dq[10]" tap_mode="classic"/>
+          <wire name="dram_dq[11]" tap_mode="classic"/>
+          <wire name="dram_dq[12]" tap_mode="classic"/>
+          <wire name="dram_dq[13]" tap_mode="classic"/>
+          <wire name="dram_dq[14]" tap_mode="classic"/>
+          <wire name="dram_dq[15]" tap_mode="classic"/>
+          <wire name="dram_dq[1]" tap_mode="classic"/>
+          <wire name="dram_dq[2]" tap_mode="classic"/>
+          <wire name="dram_dq[3]" tap_mode="classic"/>
+          <wire name="dram_dq[4]" tap_mode="classic"/>
+          <wire name="dram_dq[5]" tap_mode="classic"/>
+          <wire name="dram_dq[6]" tap_mode="classic"/>
+          <wire name="dram_dq[7]" tap_mode="classic"/>
+          <wire name="dram_dq[8]" tap_mode="classic"/>
+          <wire name="dram_dq[9]" tap_mode="classic"/>
+          <wire name="dram_ldqm" tap_mode="classic"/>
+          <wire name="dram_ras_n" tap_mode="classic"/>
+          <wire name="dram_udqm" tap_mode="classic"/>
+          <wire name="dram_we_n" tap_mode="classic"/>
           <wire name="green_led" tap_mode="classic"/>
           <wire name="red_led" tap_mode="classic"/>
           <wire name="rst_n" tap_mode="classic"/>
@@ -251,397 +341,529 @@
       </signal_vec>
       <presentation>
         <unified_setup_data_view>
-          <node data_index="0" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="green_led" storage_index="0" tap_mode="classic" type="output pin"/>
-          <node data_index="1" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="red_led" storage_index="1" tap_mode="classic" type="output pin"/>
-          <node data_index="2" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" level-0="dont_care" name="rst_n" storage_index="2" tap_mode="classic" trigger_index="0" type="input pin"/>
-          <node data_index="3" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|clk_i" storage_index="3" tap_mode="classic" type="combinatorial"/>
+          <node data_index="38" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="green_led" storage_index="38" tap_mode="classic" type="output pin"/>
+          <node data_index="39" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="red_led" storage_index="39" tap_mode="classic" type="output pin"/>
+          <node data_index="40" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" level-0="dont_care" name="rst_n" storage_index="40" tap_mode="classic" trigger_index="14" type="input pin"/>
+          <node data_index="41" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|clk_i" storage_index="41" tap_mode="classic" type="combinatorial"/>
           <node name="sdram_rw:sdr_rw|wbm_adr_o" order="msb_to_lsb" type="combinatorial">
-            <node data_index="56" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[21]" storage_index="56" tap_mode="classic" type="combinatorial"/>
-            <node data_index="55" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[20]" storage_index="55" tap_mode="classic" type="combinatorial"/>
-            <node data_index="53" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[19]" storage_index="53" tap_mode="classic" type="combinatorial"/>
-            <node data_index="52" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[18]" storage_index="52" tap_mode="classic" type="combinatorial"/>
-            <node data_index="51" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[17]" storage_index="51" tap_mode="classic" type="combinatorial"/>
-            <node data_index="50" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[16]" storage_index="50" tap_mode="classic" type="combinatorial"/>
-            <node data_index="49" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[15]" storage_index="49" tap_mode="classic" type="combinatorial"/>
-            <node data_index="48" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[14]" storage_index="48" tap_mode="classic" type="combinatorial"/>
-            <node data_index="47" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[13]" storage_index="47" tap_mode="classic" type="combinatorial"/>
-            <node data_index="46" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[12]" storage_index="46" tap_mode="classic" type="combinatorial"/>
-            <node data_index="45" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[11]" storage_index="45" tap_mode="classic" type="combinatorial"/>
-            <node data_index="44" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[10]" storage_index="44" tap_mode="classic" type="combinatorial"/>
-            <node data_index="64" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[9]" storage_index="64" tap_mode="classic" type="combinatorial"/>
-            <node data_index="63" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[8]" storage_index="63" tap_mode="classic" type="combinatorial"/>
-            <node data_index="62" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[7]" storage_index="62" tap_mode="classic" type="combinatorial"/>
-            <node data_index="61" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[6]" storage_index="61" tap_mode="classic" type="combinatorial"/>
-            <node data_index="60" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[5]" storage_index="60" tap_mode="classic" type="combinatorial"/>
-            <node data_index="59" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[4]" storage_index="59" tap_mode="classic" type="combinatorial"/>
-            <node data_index="58" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[3]" storage_index="58" tap_mode="classic" type="combinatorial"/>
-            <node data_index="57" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[2]" storage_index="57" tap_mode="classic" type="combinatorial"/>
-            <node data_index="54" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[1]" storage_index="54" tap_mode="classic" type="combinatorial"/>
-            <node data_index="43" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[0]" storage_index="43" tap_mode="classic" type="combinatorial"/>
+            <node data_index="94" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[21]" storage_index="94" tap_mode="classic" type="combinatorial"/>
+            <node data_index="93" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[20]" storage_index="93" tap_mode="classic" type="combinatorial"/>
+            <node data_index="91" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[19]" storage_index="91" tap_mode="classic" type="combinatorial"/>
+            <node data_index="90" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[18]" storage_index="90" tap_mode="classic" type="combinatorial"/>
+            <node data_index="89" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[17]" storage_index="89" tap_mode="classic" type="combinatorial"/>
+            <node data_index="88" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[16]" storage_index="88" tap_mode="classic" type="combinatorial"/>
+            <node data_index="87" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[15]" storage_index="87" tap_mode="classic" type="combinatorial"/>
+            <node data_index="86" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[14]" storage_index="86" tap_mode="classic" type="combinatorial"/>
+            <node data_index="85" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[13]" storage_index="85" tap_mode="classic" type="combinatorial"/>
+            <node data_index="84" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[12]" storage_index="84" tap_mode="classic" type="combinatorial"/>
+            <node data_index="83" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[11]" storage_index="83" tap_mode="classic" type="combinatorial"/>
+            <node data_index="82" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[10]" storage_index="82" tap_mode="classic" type="combinatorial"/>
+            <node data_index="102" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[9]" storage_index="102" tap_mode="classic" type="combinatorial"/>
+            <node data_index="101" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[8]" storage_index="101" tap_mode="classic" type="combinatorial"/>
+            <node data_index="100" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[7]" storage_index="100" tap_mode="classic" type="combinatorial"/>
+            <node data_index="99" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[6]" storage_index="99" tap_mode="classic" type="combinatorial"/>
+            <node data_index="98" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[5]" storage_index="98" tap_mode="classic" type="combinatorial"/>
+            <node data_index="97" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[4]" storage_index="97" tap_mode="classic" type="combinatorial"/>
+            <node data_index="96" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[3]" storage_index="96" tap_mode="classic" type="combinatorial"/>
+            <node data_index="95" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[2]" storage_index="95" tap_mode="classic" type="combinatorial"/>
+            <node data_index="92" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[1]" storage_index="92" tap_mode="classic" type="combinatorial"/>
+            <node data_index="81" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[0]" storage_index="81" tap_mode="classic" type="combinatorial"/>
           </node>
           <node name="sdram_rw:sdr_rw|wbm_dat_o" order="msb_to_lsb" type="combinatorial">
-            <node data_index="88" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[15]" storage_index="88" tap_mode="classic" type="combinatorial"/>
-            <node data_index="87" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[14]" storage_index="87" tap_mode="classic" type="combinatorial"/>
-            <node data_index="86" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[13]" storage_index="86" tap_mode="classic" type="combinatorial"/>
-            <node data_index="85" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[12]" storage_index="85" tap_mode="classic" type="combinatorial"/>
-            <node data_index="84" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[11]" storage_index="84" tap_mode="classic" type="combinatorial"/>
-            <node data_index="83" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[10]" storage_index="83" tap_mode="classic" type="combinatorial"/>
-            <node data_index="97" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[9]" storage_index="97" tap_mode="classic" type="combinatorial"/>
-            <node data_index="96" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[8]" storage_index="96" tap_mode="classic" type="combinatorial"/>
-            <node data_index="95" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[7]" storage_index="95" tap_mode="classic" type="combinatorial"/>
-            <node data_index="94" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[6]" storage_index="94" tap_mode="classic" type="combinatorial"/>
-            <node data_index="93" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[5]" storage_index="93" tap_mode="classic" type="combinatorial"/>
-            <node data_index="92" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[4]" storage_index="92" tap_mode="classic" type="combinatorial"/>
-            <node data_index="91" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[3]" storage_index="91" tap_mode="classic" type="combinatorial"/>
-            <node data_index="90" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[2]" storage_index="90" tap_mode="classic" type="combinatorial"/>
-            <node data_index="89" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[1]" storage_index="89" tap_mode="classic" type="combinatorial"/>
-            <node data_index="82" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[0]" storage_index="82" tap_mode="classic" type="combinatorial"/>
+            <node data_index="126" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[15]" storage_index="126" tap_mode="classic" type="combinatorial"/>
+            <node data_index="125" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[14]" storage_index="125" tap_mode="classic" type="combinatorial"/>
+            <node data_index="124" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[13]" storage_index="124" tap_mode="classic" type="combinatorial"/>
+            <node data_index="123" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[12]" storage_index="123" tap_mode="classic" type="combinatorial"/>
+            <node data_index="122" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[11]" storage_index="122" tap_mode="classic" type="combinatorial"/>
+            <node data_index="121" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[10]" storage_index="121" tap_mode="classic" type="combinatorial"/>
+            <node data_index="135" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[9]" storage_index="135" tap_mode="classic" type="combinatorial"/>
+            <node data_index="134" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[8]" storage_index="134" tap_mode="classic" type="combinatorial"/>
+            <node data_index="133" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[7]" storage_index="133" tap_mode="classic" type="combinatorial"/>
+            <node data_index="132" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[6]" storage_index="132" tap_mode="classic" type="combinatorial"/>
+            <node data_index="131" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[5]" storage_index="131" tap_mode="classic" type="combinatorial"/>
+            <node data_index="130" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[4]" storage_index="130" tap_mode="classic" type="combinatorial"/>
+            <node data_index="129" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[3]" storage_index="129" tap_mode="classic" type="combinatorial"/>
+            <node data_index="128" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[2]" storage_index="128" tap_mode="classic" type="combinatorial"/>
+            <node data_index="127" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[1]" storage_index="127" tap_mode="classic" type="combinatorial"/>
+            <node data_index="120" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[0]" storage_index="120" tap_mode="classic" type="combinatorial"/>
           </node>
-          <node name="sdram_rw:sdr_rw|wbm_dat_i" order="msb_to_lsb" type="combinatorial">
-            <node data_index="72" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[15]" storage_index="72" tap_mode="classic" type="combinatorial"/>
-            <node data_index="71" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[14]" storage_index="71" tap_mode="classic" type="combinatorial"/>
-            <node data_index="70" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[13]" storage_index="70" tap_mode="classic" type="combinatorial"/>
-            <node data_index="69" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[12]" storage_index="69" tap_mode="classic" type="combinatorial"/>
-            <node data_index="68" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[11]" storage_index="68" tap_mode="classic" type="combinatorial"/>
-            <node data_index="67" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[10]" storage_index="67" tap_mode="classic" type="combinatorial"/>
-            <node data_index="81" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[9]" storage_index="81" tap_mode="classic" type="combinatorial"/>
-            <node data_index="80" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[8]" storage_index="80" tap_mode="classic" type="combinatorial"/>
-            <node data_index="79" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[7]" storage_index="79" tap_mode="classic" type="combinatorial"/>
-            <node data_index="78" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[6]" storage_index="78" tap_mode="classic" type="combinatorial"/>
-            <node data_index="77" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[5]" storage_index="77" tap_mode="classic" type="combinatorial"/>
-            <node data_index="76" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[4]" storage_index="76" tap_mode="classic" type="combinatorial"/>
-            <node data_index="75" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[3]" storage_index="75" tap_mode="classic" type="combinatorial"/>
-            <node data_index="74" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[2]" storage_index="74" tap_mode="classic" type="combinatorial"/>
-            <node data_index="73" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[1]" storage_index="73" tap_mode="classic" type="combinatorial"/>
-            <node data_index="66" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[0]" storage_index="66" tap_mode="classic" type="combinatorial"/>
+          <node name="sdram_rw:sdr_rw|wbm_dat_i" order="msb_to_lsb" state="collapse" type="combinatorial">
+            <node data_index="110" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[15]" storage_index="110" tap_mode="classic" type="combinatorial"/>
+            <node data_index="109" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[14]" storage_index="109" tap_mode="classic" type="combinatorial"/>
+            <node data_index="108" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[13]" storage_index="108" tap_mode="classic" type="combinatorial"/>
+            <node data_index="107" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[12]" storage_index="107" tap_mode="classic" type="combinatorial"/>
+            <node data_index="106" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[11]" storage_index="106" tap_mode="classic" type="combinatorial"/>
+            <node data_index="105" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[10]" storage_index="105" tap_mode="classic" type="combinatorial"/>
+            <node data_index="119" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[9]" storage_index="119" tap_mode="classic" type="combinatorial"/>
+            <node data_index="118" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[8]" storage_index="118" tap_mode="classic" type="combinatorial"/>
+            <node data_index="117" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[7]" storage_index="117" tap_mode="classic" type="combinatorial"/>
+            <node data_index="116" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[6]" storage_index="116" tap_mode="classic" type="combinatorial"/>
+            <node data_index="115" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[5]" storage_index="115" tap_mode="classic" type="combinatorial"/>
+            <node data_index="114" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[4]" storage_index="114" tap_mode="classic" type="combinatorial"/>
+            <node data_index="113" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[3]" storage_index="113" tap_mode="classic" type="combinatorial"/>
+            <node data_index="112" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[2]" storage_index="112" tap_mode="classic" type="combinatorial"/>
+            <node data_index="111" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[1]" storage_index="111" tap_mode="classic" type="combinatorial"/>
+            <node data_index="104" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[0]" storage_index="104" tap_mode="classic" type="combinatorial"/>
           </node>
-          <node data_index="108" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" level-0="rising edge" name="sdram_rw:sdr_rw|wbm_we_i" storage_index="108" tap_mode="classic" trigger_index="11" type="combinatorial"/>
+          <node data_index="146" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" level-0="falling edge" name="sdram_rw:sdr_rw|wbm_we_i" storage_index="146" tap_mode="classic" trigger_index="25" type="combinatorial"/>
           <node name="sdram_rw:sdr_rw|wbm_tga_o" order="msb_to_lsb" type="combinatorial">
-            <node data_index="107" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[7]" storage_index="107" tap_mode="classic" type="combinatorial"/>
-            <node data_index="106" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[6]" storage_index="106" tap_mode="classic" type="combinatorial"/>
-            <node data_index="105" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[5]" storage_index="105" tap_mode="classic" type="combinatorial"/>
-            <node data_index="104" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[4]" storage_index="104" tap_mode="classic" type="combinatorial"/>
-            <node data_index="103" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[3]" storage_index="103" tap_mode="classic" type="combinatorial"/>
-            <node data_index="102" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[2]" storage_index="102" tap_mode="classic" type="combinatorial"/>
-            <node data_index="101" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[1]" storage_index="101" tap_mode="classic" type="combinatorial"/>
-            <node data_index="100" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[0]" storage_index="100" tap_mode="classic" type="combinatorial"/>
+            <node data_index="145" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[7]" storage_index="145" tap_mode="classic" type="combinatorial"/>
+            <node data_index="144" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[6]" storage_index="144" tap_mode="classic" type="combinatorial"/>
+            <node data_index="143" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[5]" storage_index="143" tap_mode="classic" type="combinatorial"/>
+            <node data_index="142" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[4]" storage_index="142" tap_mode="classic" type="combinatorial"/>
+            <node data_index="141" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[3]" storage_index="141" tap_mode="classic" type="combinatorial"/>
+            <node data_index="140" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[2]" storage_index="140" tap_mode="classic" type="combinatorial"/>
+            <node data_index="139" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[1]" storage_index="139" tap_mode="classic" type="combinatorial"/>
+            <node data_index="138" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[0]" storage_index="138" tap_mode="classic" type="combinatorial"/>
           </node>
-          <node data_index="65" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|wbm_cyc_o" storage_index="65" tap_mode="classic" trigger_index="8" type="combinatorial"/>
-          <node data_index="99" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|wbm_stb_o" storage_index="99" tap_mode="classic" trigger_index="10" type="combinatorial"/>
-          <node data_index="98" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|wbm_stall_i" storage_index="98" tap_mode="classic" trigger_index="9" type="combinatorial"/>
-          <node data_index="42" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|wbm_ack_i" storage_index="42" tap_mode="classic" trigger_index="7" type="combinatorial"/>
-          <node data_index="4" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|cmd_ack" storage_index="4" tap_mode="classic" trigger_index="1" type="combinatorial"/>
-          <node data_index="5" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|cmd_done" storage_index="5" tap_mode="classic" trigger_index="2" type="combinatorial"/>
-          <node data_index="109" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|writing" storage_index="109" tap_mode="classic" trigger_index="12" type="combinatorial"/>
+          <node data_index="103" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|wbm_cyc_o" storage_index="103" tap_mode="classic" trigger_index="22" type="combinatorial"/>
+          <node data_index="137" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|wbm_stb_o" storage_index="137" tap_mode="classic" trigger_index="24" type="combinatorial"/>
+          <node data_index="136" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|wbm_stall_i" storage_index="136" tap_mode="classic" trigger_index="23" type="combinatorial"/>
+          <node data_index="80" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" level-0="dont_care" name="sdram_rw:sdr_rw|wbm_ack_i" storage_index="80" tap_mode="classic" trigger_index="21" type="combinatorial"/>
+          <node data_index="42" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|cmd_ack" storage_index="42" tap_mode="classic" trigger_index="15" type="combinatorial"/>
+          <node data_index="43" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|cmd_done" storage_index="43" tap_mode="classic" trigger_index="16" type="combinatorial"/>
+          <node data_index="147" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|writing" storage_index="147" tap_mode="classic" trigger_index="26" type="combinatorial"/>
           <node name="sdram_rw:sdr_rw|mem_val_o" order="msb_to_lsb" type="combinatorial">
-            <node data_index="16" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[15]" storage_index="16" tap_mode="classic" type="combinatorial"/>
-            <node data_index="15" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[14]" storage_index="15" tap_mode="classic" type="combinatorial"/>
-            <node data_index="14" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[13]" storage_index="14" tap_mode="classic" type="combinatorial"/>
-            <node data_index="13" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[12]" storage_index="13" tap_mode="classic" type="combinatorial"/>
-            <node data_index="12" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[11]" storage_index="12" tap_mode="classic" type="combinatorial"/>
-            <node data_index="11" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[10]" storage_index="11" tap_mode="classic" type="combinatorial"/>
-            <node data_index="25" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[9]" storage_index="25" tap_mode="classic" type="combinatorial"/>
-            <node data_index="24" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[8]" storage_index="24" tap_mode="classic" type="combinatorial"/>
-            <node data_index="23" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[7]" storage_index="23" tap_mode="classic" type="combinatorial"/>
-            <node data_index="22" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[6]" storage_index="22" tap_mode="classic" type="combinatorial"/>
-            <node data_index="21" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[5]" storage_index="21" tap_mode="classic" type="combinatorial"/>
-            <node data_index="20" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[4]" storage_index="20" tap_mode="classic" type="combinatorial"/>
-            <node data_index="19" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[3]" storage_index="19" tap_mode="classic" type="combinatorial"/>
-            <node data_index="18" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[2]" storage_index="18" tap_mode="classic" type="combinatorial"/>
-            <node data_index="17" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[1]" storage_index="17" tap_mode="classic" type="combinatorial"/>
-            <node data_index="10" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[0]" storage_index="10" tap_mode="classic" type="combinatorial"/>
+            <node data_index="54" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[15]" storage_index="54" tap_mode="classic" type="combinatorial"/>
+            <node data_index="53" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[14]" storage_index="53" tap_mode="classic" type="combinatorial"/>
+            <node data_index="52" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[13]" storage_index="52" tap_mode="classic" type="combinatorial"/>
+            <node data_index="51" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[12]" storage_index="51" tap_mode="classic" type="combinatorial"/>
+            <node data_index="50" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[11]" storage_index="50" tap_mode="classic" type="combinatorial"/>
+            <node data_index="49" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[10]" storage_index="49" tap_mode="classic" type="combinatorial"/>
+            <node data_index="63" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[9]" storage_index="63" tap_mode="classic" type="combinatorial"/>
+            <node data_index="62" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[8]" storage_index="62" tap_mode="classic" type="combinatorial"/>
+            <node data_index="61" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[7]" storage_index="61" tap_mode="classic" type="combinatorial"/>
+            <node data_index="60" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[6]" storage_index="60" tap_mode="classic" type="combinatorial"/>
+            <node data_index="59" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[5]" storage_index="59" tap_mode="classic" type="combinatorial"/>
+            <node data_index="58" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[4]" storage_index="58" tap_mode="classic" type="combinatorial"/>
+            <node data_index="57" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[3]" storage_index="57" tap_mode="classic" type="combinatorial"/>
+            <node data_index="56" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[2]" storage_index="56" tap_mode="classic" type="combinatorial"/>
+            <node data_index="55" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[1]" storage_index="55" tap_mode="classic" type="combinatorial"/>
+            <node data_index="48" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[0]" storage_index="48" tap_mode="classic" type="combinatorial"/>
           </node>
           <node name="sdram_rw:sdr_rw|sdram_val_o" order="msb_to_lsb" type="combinatorial">
-            <node data_index="32" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[15]" storage_index="32" tap_mode="classic" type="combinatorial"/>
-            <node data_index="31" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[14]" storage_index="31" tap_mode="classic" type="combinatorial"/>
-            <node data_index="30" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[13]" storage_index="30" tap_mode="classic" type="combinatorial"/>
-            <node data_index="29" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[12]" storage_index="29" tap_mode="classic" type="combinatorial"/>
-            <node data_index="28" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[11]" storage_index="28" tap_mode="classic" type="combinatorial"/>
-            <node data_index="27" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[10]" storage_index="27" tap_mode="classic" type="combinatorial"/>
-            <node data_index="41" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[9]" storage_index="41" tap_mode="classic" type="combinatorial"/>
-            <node data_index="40" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[8]" storage_index="40" tap_mode="classic" type="combinatorial"/>
-            <node data_index="39" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[7]" storage_index="39" tap_mode="classic" type="combinatorial"/>
-            <node data_index="38" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[6]" storage_index="38" tap_mode="classic" type="combinatorial"/>
-            <node data_index="37" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[5]" storage_index="37" tap_mode="classic" type="combinatorial"/>
-            <node data_index="36" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[4]" storage_index="36" tap_mode="classic" type="combinatorial"/>
-            <node data_index="35" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[3]" storage_index="35" tap_mode="classic" type="combinatorial"/>
-            <node data_index="34" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[2]" storage_index="34" tap_mode="classic" type="combinatorial"/>
-            <node data_index="33" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[1]" storage_index="33" tap_mode="classic" type="combinatorial"/>
-            <node data_index="26" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[0]" storage_index="26" tap_mode="classic" type="combinatorial"/>
+            <node data_index="70" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[15]" storage_index="70" tap_mode="classic" type="combinatorial"/>
+            <node data_index="69" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[14]" storage_index="69" tap_mode="classic" type="combinatorial"/>
+            <node data_index="68" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[13]" storage_index="68" tap_mode="classic" type="combinatorial"/>
+            <node data_index="67" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[12]" storage_index="67" tap_mode="classic" type="combinatorial"/>
+            <node data_index="66" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[11]" storage_index="66" tap_mode="classic" type="combinatorial"/>
+            <node data_index="65" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[10]" storage_index="65" tap_mode="classic" type="combinatorial"/>
+            <node data_index="79" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[9]" storage_index="79" tap_mode="classic" type="combinatorial"/>
+            <node data_index="78" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[8]" storage_index="78" tap_mode="classic" type="combinatorial"/>
+            <node data_index="77" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[7]" storage_index="77" tap_mode="classic" type="combinatorial"/>
+            <node data_index="76" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[6]" storage_index="76" tap_mode="classic" type="combinatorial"/>
+            <node data_index="75" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[5]" storage_index="75" tap_mode="classic" type="combinatorial"/>
+            <node data_index="74" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[4]" storage_index="74" tap_mode="classic" type="combinatorial"/>
+            <node data_index="73" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[3]" storage_index="73" tap_mode="classic" type="combinatorial"/>
+            <node data_index="72" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[2]" storage_index="72" tap_mode="classic" type="combinatorial"/>
+            <node data_index="71" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[1]" storage_index="71" tap_mode="classic" type="combinatorial"/>
+            <node data_index="64" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[0]" storage_index="64" tap_mode="classic" type="combinatorial"/>
           </node>
           <node name="sdram_rw:sdr_rw|cur_st_o" order="msb_to_lsb" type="combinatorial">
-            <node data_index="9" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|cur_st_o[3]" storage_index="9" tap_mode="classic" trigger_index="6" type="combinatorial"/>
-            <node data_index="8" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|cur_st_o[2]" storage_index="8" tap_mode="classic" trigger_index="5" type="combinatorial"/>
-            <node data_index="7" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|cur_st_o[1]" storage_index="7" tap_mode="classic" trigger_index="4" type="combinatorial"/>
-            <node data_index="6" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|cur_st_o[0]" storage_index="6" tap_mode="classic" trigger_index="3" type="combinatorial"/>
+            <node data_index="47" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|cur_st_o[3]" storage_index="47" tap_mode="classic" trigger_index="20" type="combinatorial"/>
+            <node data_index="46" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|cur_st_o[2]" storage_index="46" tap_mode="classic" trigger_index="19" type="combinatorial"/>
+            <node data_index="45" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|cur_st_o[1]" storage_index="45" tap_mode="classic" trigger_index="18" type="combinatorial"/>
+            <node data_index="44" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|cur_st_o[0]" storage_index="44" tap_mode="classic" trigger_index="17" type="combinatorial"/>
           </node>
+          <node name="dram_addr" order="msb_to_lsb" type="output pin">
+            <node data_index="2" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_addr[11]" storage_index="2" tap_mode="classic" trigger_index="2" type="output pin"/>
+            <node data_index="1" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_addr[10]" storage_index="1" tap_mode="classic" trigger_index="1" type="output pin"/>
+            <node data_index="11" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_addr[9]" storage_index="11" tap_mode="classic" trigger_index="11" type="output pin"/>
+            <node data_index="10" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_addr[8]" storage_index="10" tap_mode="classic" trigger_index="10" type="output pin"/>
+            <node data_index="9" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_addr[7]" storage_index="9" tap_mode="classic" trigger_index="9" type="output pin"/>
+            <node data_index="8" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_addr[6]" storage_index="8" tap_mode="classic" trigger_index="8" type="output pin"/>
+            <node data_index="7" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_addr[5]" storage_index="7" tap_mode="classic" trigger_index="7" type="output pin"/>
+            <node data_index="6" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_addr[4]" storage_index="6" tap_mode="classic" trigger_index="6" type="output pin"/>
+            <node data_index="5" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_addr[3]" storage_index="5" tap_mode="classic" trigger_index="5" type="output pin"/>
+            <node data_index="4" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_addr[2]" storage_index="4" tap_mode="classic" trigger_index="4" type="output pin"/>
+            <node data_index="3" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_addr[1]" storage_index="3" tap_mode="classic" trigger_index="3" type="output pin"/>
+            <node data_index="0" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_addr[0]" storage_index="0" tap_mode="classic" trigger_index="0" type="output pin"/>
+          </node>
+          <node name="dram_bank" order="msb_to_lsb" type="output pin">
+            <node data_index="13" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_bank[1]" storage_index="13" tap_mode="classic" trigger_index="13" type="output pin"/>
+            <node data_index="12" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_bank[0]" storage_index="12" tap_mode="classic" trigger_index="12" type="output pin"/>
+          </node>
+          <node data_index="14" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_cas_n" storage_index="14" tap_mode="classic" trigger_index="14" type="output pin"/>
+          <node data_index="15" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_cke" storage_index="15" tap_mode="classic" trigger_index="15" type="output pin"/>
+          <node data_index="16" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_clk" storage_index="16" tap_mode="classic" trigger_index="16" type="output pin"/>
+          <node data_index="17" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_cs_n" storage_index="17" tap_mode="classic" trigger_index="17" type="output pin"/>
+          <node name="dram_dq" order="msb_to_lsb" type="bidir pin">
+            <node data_index="24" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[15]" storage_index="24" tap_mode="classic" trigger_index="24" type="bidir pin"/>
+            <node data_index="23" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[14]" storage_index="23" tap_mode="classic" trigger_index="23" type="bidir pin"/>
+            <node data_index="22" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[13]" storage_index="22" tap_mode="classic" trigger_index="22" type="bidir pin"/>
+            <node data_index="21" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[12]" storage_index="21" tap_mode="classic" trigger_index="21" type="bidir pin"/>
+            <node data_index="20" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[11]" storage_index="20" tap_mode="classic" trigger_index="20" type="bidir pin"/>
+            <node data_index="19" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[10]" storage_index="19" tap_mode="classic" trigger_index="19" type="bidir pin"/>
+            <node data_index="33" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[9]" storage_index="33" tap_mode="classic" trigger_index="33" type="bidir pin"/>
+            <node data_index="32" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[8]" storage_index="32" tap_mode="classic" trigger_index="32" type="bidir pin"/>
+            <node data_index="31" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[7]" storage_index="31" tap_mode="classic" trigger_index="31" type="bidir pin"/>
+            <node data_index="30" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[6]" storage_index="30" tap_mode="classic" trigger_index="30" type="bidir pin"/>
+            <node data_index="29" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[5]" storage_index="29" tap_mode="classic" trigger_index="29" type="bidir pin"/>
+            <node data_index="28" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[4]" storage_index="28" tap_mode="classic" trigger_index="28" type="bidir pin"/>
+            <node data_index="27" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[3]" storage_index="27" tap_mode="classic" trigger_index="27" type="bidir pin"/>
+            <node data_index="26" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[2]" storage_index="26" tap_mode="classic" trigger_index="26" type="bidir pin"/>
+            <node data_index="25" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[1]" storage_index="25" tap_mode="classic" trigger_index="25" type="bidir pin"/>
+            <node data_index="18" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[0]" storage_index="18" tap_mode="classic" trigger_index="18" type="bidir pin"/>
+          </node>
+          <node data_index="34" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_ldqm" storage_index="34" tap_mode="classic" trigger_index="34" type="output pin"/>
+          <node data_index="35" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_ras_n" storage_index="35" tap_mode="classic" trigger_index="35" type="output pin"/>
+          <node data_index="36" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_udqm" storage_index="36" tap_mode="classic" trigger_index="36" type="output pin"/>
+          <node data_index="37" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_we_n" storage_index="37" tap_mode="classic" trigger_index="37" type="output pin"/>
         </unified_setup_data_view>
         <data_view>
-          <net data_index="0" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="green_led" storage_index="0" tap_mode="classic" type="output pin"/>
-          <net data_index="1" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="red_led" storage_index="1" tap_mode="classic" type="output pin"/>
-          <net data_index="2" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" level-0="dont_care" name="rst_n" storage_index="2" tap_mode="classic" trigger_index="0" type="input pin"/>
-          <net data_index="3" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|clk_i" storage_index="3" tap_mode="classic" type="combinatorial"/>
+          <net data_index="38" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="green_led" storage_index="38" tap_mode="classic" type="output pin"/>
+          <net data_index="39" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="red_led" storage_index="39" tap_mode="classic" type="output pin"/>
+          <net data_index="40" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" level-0="dont_care" name="rst_n" storage_index="40" tap_mode="classic" trigger_index="14" type="input pin"/>
+          <net data_index="41" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|clk_i" storage_index="41" tap_mode="classic" type="combinatorial"/>
           <bus name="sdram_rw:sdr_rw|wbm_adr_o" order="msb_to_lsb" type="combinatorial">
-            <net data_index="56" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[21]" storage_index="56" tap_mode="classic" type="combinatorial"/>
-            <net data_index="55" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[20]" storage_index="55" tap_mode="classic" type="combinatorial"/>
-            <net data_index="53" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[19]" storage_index="53" tap_mode="classic" type="combinatorial"/>
-            <net data_index="52" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[18]" storage_index="52" tap_mode="classic" type="combinatorial"/>
-            <net data_index="51" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[17]" storage_index="51" tap_mode="classic" type="combinatorial"/>
-            <net data_index="50" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[16]" storage_index="50" tap_mode="classic" type="combinatorial"/>
-            <net data_index="49" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[15]" storage_index="49" tap_mode="classic" type="combinatorial"/>
-            <net data_index="48" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[14]" storage_index="48" tap_mode="classic" type="combinatorial"/>
-            <net data_index="47" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[13]" storage_index="47" tap_mode="classic" type="combinatorial"/>
-            <net data_index="46" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[12]" storage_index="46" tap_mode="classic" type="combinatorial"/>
-            <net data_index="45" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[11]" storage_index="45" tap_mode="classic" type="combinatorial"/>
-            <net data_index="44" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[10]" storage_index="44" tap_mode="classic" type="combinatorial"/>
-            <net data_index="64" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[9]" storage_index="64" tap_mode="classic" type="combinatorial"/>
-            <net data_index="63" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[8]" storage_index="63" tap_mode="classic" type="combinatorial"/>
-            <net data_index="62" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[7]" storage_index="62" tap_mode="classic" type="combinatorial"/>
-            <net data_index="61" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[6]" storage_index="61" tap_mode="classic" type="combinatorial"/>
-            <net data_index="60" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[5]" storage_index="60" tap_mode="classic" type="combinatorial"/>
-            <net data_index="59" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[4]" storage_index="59" tap_mode="classic" type="combinatorial"/>
-            <net data_index="58" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[3]" storage_index="58" tap_mode="classic" type="combinatorial"/>
-            <net data_index="57" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[2]" storage_index="57" tap_mode="classic" type="combinatorial"/>
-            <net data_index="54" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[1]" storage_index="54" tap_mode="classic" type="combinatorial"/>
-            <net data_index="43" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[0]" storage_index="43" tap_mode="classic" type="combinatorial"/>
+            <net data_index="94" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[21]" storage_index="94" tap_mode="classic" type="combinatorial"/>
+            <net data_index="93" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[20]" storage_index="93" tap_mode="classic" type="combinatorial"/>
+            <net data_index="91" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[19]" storage_index="91" tap_mode="classic" type="combinatorial"/>
+            <net data_index="90" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[18]" storage_index="90" tap_mode="classic" type="combinatorial"/>
+            <net data_index="89" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[17]" storage_index="89" tap_mode="classic" type="combinatorial"/>
+            <net data_index="88" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[16]" storage_index="88" tap_mode="classic" type="combinatorial"/>
+            <net data_index="87" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[15]" storage_index="87" tap_mode="classic" type="combinatorial"/>
+            <net data_index="86" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[14]" storage_index="86" tap_mode="classic" type="combinatorial"/>
+            <net data_index="85" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[13]" storage_index="85" tap_mode="classic" type="combinatorial"/>
+            <net data_index="84" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[12]" storage_index="84" tap_mode="classic" type="combinatorial"/>
+            <net data_index="83" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[11]" storage_index="83" tap_mode="classic" type="combinatorial"/>
+            <net data_index="82" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[10]" storage_index="82" tap_mode="classic" type="combinatorial"/>
+            <net data_index="102" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[9]" storage_index="102" tap_mode="classic" type="combinatorial"/>
+            <net data_index="101" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[8]" storage_index="101" tap_mode="classic" type="combinatorial"/>
+            <net data_index="100" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[7]" storage_index="100" tap_mode="classic" type="combinatorial"/>
+            <net data_index="99" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[6]" storage_index="99" tap_mode="classic" type="combinatorial"/>
+            <net data_index="98" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[5]" storage_index="98" tap_mode="classic" type="combinatorial"/>
+            <net data_index="97" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[4]" storage_index="97" tap_mode="classic" type="combinatorial"/>
+            <net data_index="96" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[3]" storage_index="96" tap_mode="classic" type="combinatorial"/>
+            <net data_index="95" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[2]" storage_index="95" tap_mode="classic" type="combinatorial"/>
+            <net data_index="92" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[1]" storage_index="92" tap_mode="classic" type="combinatorial"/>
+            <net data_index="81" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[0]" storage_index="81" tap_mode="classic" type="combinatorial"/>
           </bus>
           <bus name="sdram_rw:sdr_rw|wbm_dat_o" order="msb_to_lsb" type="combinatorial">
-            <net data_index="88" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[15]" storage_index="88" tap_mode="classic" type="combinatorial"/>
-            <net data_index="87" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[14]" storage_index="87" tap_mode="classic" type="combinatorial"/>
-            <net data_index="86" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[13]" storage_index="86" tap_mode="classic" type="combinatorial"/>
-            <net data_index="85" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[12]" storage_index="85" tap_mode="classic" type="combinatorial"/>
-            <net data_index="84" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[11]" storage_index="84" tap_mode="classic" type="combinatorial"/>
-            <net data_index="83" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[10]" storage_index="83" tap_mode="classic" type="combinatorial"/>
-            <net data_index="97" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[9]" storage_index="97" tap_mode="classic" type="combinatorial"/>
-            <net data_index="96" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[8]" storage_index="96" tap_mode="classic" type="combinatorial"/>
-            <net data_index="95" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[7]" storage_index="95" tap_mode="classic" type="combinatorial"/>
-            <net data_index="94" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[6]" storage_index="94" tap_mode="classic" type="combinatorial"/>
-            <net data_index="93" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[5]" storage_index="93" tap_mode="classic" type="combinatorial"/>
-            <net data_index="92" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[4]" storage_index="92" tap_mode="classic" type="combinatorial"/>
-            <net data_index="91" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[3]" storage_index="91" tap_mode="classic" type="combinatorial"/>
-            <net data_index="90" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[2]" storage_index="90" tap_mode="classic" type="combinatorial"/>
-            <net data_index="89" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[1]" storage_index="89" tap_mode="classic" type="combinatorial"/>
-            <net data_index="82" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[0]" storage_index="82" tap_mode="classic" type="combinatorial"/>
+            <net data_index="126" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[15]" storage_index="126" tap_mode="classic" type="combinatorial"/>
+            <net data_index="125" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[14]" storage_index="125" tap_mode="classic" type="combinatorial"/>
+            <net data_index="124" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[13]" storage_index="124" tap_mode="classic" type="combinatorial"/>
+            <net data_index="123" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[12]" storage_index="123" tap_mode="classic" type="combinatorial"/>
+            <net data_index="122" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[11]" storage_index="122" tap_mode="classic" type="combinatorial"/>
+            <net data_index="121" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[10]" storage_index="121" tap_mode="classic" type="combinatorial"/>
+            <net data_index="135" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[9]" storage_index="135" tap_mode="classic" type="combinatorial"/>
+            <net data_index="134" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[8]" storage_index="134" tap_mode="classic" type="combinatorial"/>
+            <net data_index="133" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[7]" storage_index="133" tap_mode="classic" type="combinatorial"/>
+            <net data_index="132" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[6]" storage_index="132" tap_mode="classic" type="combinatorial"/>
+            <net data_index="131" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[5]" storage_index="131" tap_mode="classic" type="combinatorial"/>
+            <net data_index="130" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[4]" storage_index="130" tap_mode="classic" type="combinatorial"/>
+            <net data_index="129" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[3]" storage_index="129" tap_mode="classic" type="combinatorial"/>
+            <net data_index="128" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[2]" storage_index="128" tap_mode="classic" type="combinatorial"/>
+            <net data_index="127" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[1]" storage_index="127" tap_mode="classic" type="combinatorial"/>
+            <net data_index="120" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[0]" storage_index="120" tap_mode="classic" type="combinatorial"/>
           </bus>
-          <bus name="sdram_rw:sdr_rw|wbm_dat_i" order="msb_to_lsb" type="combinatorial">
-            <net data_index="72" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[15]" storage_index="72" tap_mode="classic" type="combinatorial"/>
-            <net data_index="71" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[14]" storage_index="71" tap_mode="classic" type="combinatorial"/>
-            <net data_index="70" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[13]" storage_index="70" tap_mode="classic" type="combinatorial"/>
-            <net data_index="69" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[12]" storage_index="69" tap_mode="classic" type="combinatorial"/>
-            <net data_index="68" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[11]" storage_index="68" tap_mode="classic" type="combinatorial"/>
-            <net data_index="67" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[10]" storage_index="67" tap_mode="classic" type="combinatorial"/>
-            <net data_index="81" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[9]" storage_index="81" tap_mode="classic" type="combinatorial"/>
-            <net data_index="80" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[8]" storage_index="80" tap_mode="classic" type="combinatorial"/>
-            <net data_index="79" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[7]" storage_index="79" tap_mode="classic" type="combinatorial"/>
-            <net data_index="78" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[6]" storage_index="78" tap_mode="classic" type="combinatorial"/>
-            <net data_index="77" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[5]" storage_index="77" tap_mode="classic" type="combinatorial"/>
-            <net data_index="76" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[4]" storage_index="76" tap_mode="classic" type="combinatorial"/>
-            <net data_index="75" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[3]" storage_index="75" tap_mode="classic" type="combinatorial"/>
-            <net data_index="74" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[2]" storage_index="74" tap_mode="classic" type="combinatorial"/>
-            <net data_index="73" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[1]" storage_index="73" tap_mode="classic" type="combinatorial"/>
-            <net data_index="66" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[0]" storage_index="66" tap_mode="classic" type="combinatorial"/>
+          <bus name="sdram_rw:sdr_rw|wbm_dat_i" order="msb_to_lsb" state="collapse" type="combinatorial">
+            <net data_index="110" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[15]" storage_index="110" tap_mode="classic" type="combinatorial"/>
+            <net data_index="109" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[14]" storage_index="109" tap_mode="classic" type="combinatorial"/>
+            <net data_index="108" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[13]" storage_index="108" tap_mode="classic" type="combinatorial"/>
+            <net data_index="107" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[12]" storage_index="107" tap_mode="classic" type="combinatorial"/>
+            <net data_index="106" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[11]" storage_index="106" tap_mode="classic" type="combinatorial"/>
+            <net data_index="105" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[10]" storage_index="105" tap_mode="classic" type="combinatorial"/>
+            <net data_index="119" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[9]" storage_index="119" tap_mode="classic" type="combinatorial"/>
+            <net data_index="118" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[8]" storage_index="118" tap_mode="classic" type="combinatorial"/>
+            <net data_index="117" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[7]" storage_index="117" tap_mode="classic" type="combinatorial"/>
+            <net data_index="116" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[6]" storage_index="116" tap_mode="classic" type="combinatorial"/>
+            <net data_index="115" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[5]" storage_index="115" tap_mode="classic" type="combinatorial"/>
+            <net data_index="114" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[4]" storage_index="114" tap_mode="classic" type="combinatorial"/>
+            <net data_index="113" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[3]" storage_index="113" tap_mode="classic" type="combinatorial"/>
+            <net data_index="112" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[2]" storage_index="112" tap_mode="classic" type="combinatorial"/>
+            <net data_index="111" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[1]" storage_index="111" tap_mode="classic" type="combinatorial"/>
+            <net data_index="104" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[0]" storage_index="104" tap_mode="classic" type="combinatorial"/>
           </bus>
-          <net data_index="108" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" level-0="rising edge" name="sdram_rw:sdr_rw|wbm_we_i" storage_index="108" tap_mode="classic" trigger_index="11" type="combinatorial"/>
+          <net data_index="146" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" level-0="falling edge" name="sdram_rw:sdr_rw|wbm_we_i" storage_index="146" tap_mode="classic" trigger_index="25" type="combinatorial"/>
           <bus name="sdram_rw:sdr_rw|wbm_tga_o" order="msb_to_lsb" type="combinatorial">
-            <net data_index="107" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[7]" storage_index="107" tap_mode="classic" type="combinatorial"/>
-            <net data_index="106" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[6]" storage_index="106" tap_mode="classic" type="combinatorial"/>
-            <net data_index="105" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[5]" storage_index="105" tap_mode="classic" type="combinatorial"/>
-            <net data_index="104" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[4]" storage_index="104" tap_mode="classic" type="combinatorial"/>
-            <net data_index="103" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[3]" storage_index="103" tap_mode="classic" type="combinatorial"/>
-            <net data_index="102" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[2]" storage_index="102" tap_mode="classic" type="combinatorial"/>
-            <net data_index="101" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[1]" storage_index="101" tap_mode="classic" type="combinatorial"/>
-            <net data_index="100" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[0]" storage_index="100" tap_mode="classic" type="combinatorial"/>
+            <net data_index="145" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[7]" storage_index="145" tap_mode="classic" type="combinatorial"/>
+            <net data_index="144" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[6]" storage_index="144" tap_mode="classic" type="combinatorial"/>
+            <net data_index="143" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[5]" storage_index="143" tap_mode="classic" type="combinatorial"/>
+            <net data_index="142" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[4]" storage_index="142" tap_mode="classic" type="combinatorial"/>
+            <net data_index="141" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[3]" storage_index="141" tap_mode="classic" type="combinatorial"/>
+            <net data_index="140" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[2]" storage_index="140" tap_mode="classic" type="combinatorial"/>
+            <net data_index="139" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[1]" storage_index="139" tap_mode="classic" type="combinatorial"/>
+            <net data_index="138" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[0]" storage_index="138" tap_mode="classic" type="combinatorial"/>
           </bus>
-          <net data_index="65" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|wbm_cyc_o" storage_index="65" tap_mode="classic" trigger_index="8" type="combinatorial"/>
-          <net data_index="99" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|wbm_stb_o" storage_index="99" tap_mode="classic" trigger_index="10" type="combinatorial"/>
-          <net data_index="98" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|wbm_stall_i" storage_index="98" tap_mode="classic" trigger_index="9" type="combinatorial"/>
-          <net data_index="42" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|wbm_ack_i" storage_index="42" tap_mode="classic" trigger_index="7" type="combinatorial"/>
-          <net data_index="4" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|cmd_ack" storage_index="4" tap_mode="classic" trigger_index="1" type="combinatorial"/>
-          <net data_index="5" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|cmd_done" storage_index="5" tap_mode="classic" trigger_index="2" type="combinatorial"/>
-          <net data_index="109" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|writing" storage_index="109" tap_mode="classic" trigger_index="12" type="combinatorial"/>
+          <net data_index="103" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|wbm_cyc_o" storage_index="103" tap_mode="classic" trigger_index="22" type="combinatorial"/>
+          <net data_index="137" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|wbm_stb_o" storage_index="137" tap_mode="classic" trigger_index="24" type="combinatorial"/>
+          <net data_index="136" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|wbm_stall_i" storage_index="136" tap_mode="classic" trigger_index="23" type="combinatorial"/>
+          <net data_index="80" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" level-0="dont_care" name="sdram_rw:sdr_rw|wbm_ack_i" storage_index="80" tap_mode="classic" trigger_index="21" type="combinatorial"/>
+          <net data_index="42" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|cmd_ack" storage_index="42" tap_mode="classic" trigger_index="15" type="combinatorial"/>
+          <net data_index="43" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|cmd_done" storage_index="43" tap_mode="classic" trigger_index="16" type="combinatorial"/>
+          <net data_index="147" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|writing" storage_index="147" tap_mode="classic" trigger_index="26" type="combinatorial"/>
           <bus name="sdram_rw:sdr_rw|mem_val_o" order="msb_to_lsb" type="combinatorial">
-            <net data_index="16" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[15]" storage_index="16" tap_mode="classic" type="combinatorial"/>
-            <net data_index="15" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[14]" storage_index="15" tap_mode="classic" type="combinatorial"/>
-            <net data_index="14" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[13]" storage_index="14" tap_mode="classic" type="combinatorial"/>
-            <net data_index="13" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[12]" storage_index="13" tap_mode="classic" type="combinatorial"/>
-            <net data_index="12" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[11]" storage_index="12" tap_mode="classic" type="combinatorial"/>
-            <net data_index="11" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[10]" storage_index="11" tap_mode="classic" type="combinatorial"/>
-            <net data_index="25" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[9]" storage_index="25" tap_mode="classic" type="combinatorial"/>
-            <net data_index="24" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[8]" storage_index="24" tap_mode="classic" type="combinatorial"/>
-            <net data_index="23" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[7]" storage_index="23" tap_mode="classic" type="combinatorial"/>
-            <net data_index="22" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[6]" storage_index="22" tap_mode="classic" type="combinatorial"/>
-            <net data_index="21" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[5]" storage_index="21" tap_mode="classic" type="combinatorial"/>
-            <net data_index="20" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[4]" storage_index="20" tap_mode="classic" type="combinatorial"/>
-            <net data_index="19" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[3]" storage_index="19" tap_mode="classic" type="combinatorial"/>
-            <net data_index="18" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[2]" storage_index="18" tap_mode="classic" type="combinatorial"/>
-            <net data_index="17" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[1]" storage_index="17" tap_mode="classic" type="combinatorial"/>
-            <net data_index="10" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[0]" storage_index="10" tap_mode="classic" type="combinatorial"/>
+            <net data_index="54" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[15]" storage_index="54" tap_mode="classic" type="combinatorial"/>
+            <net data_index="53" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[14]" storage_index="53" tap_mode="classic" type="combinatorial"/>
+            <net data_index="52" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[13]" storage_index="52" tap_mode="classic" type="combinatorial"/>
+            <net data_index="51" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[12]" storage_index="51" tap_mode="classic" type="combinatorial"/>
+            <net data_index="50" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[11]" storage_index="50" tap_mode="classic" type="combinatorial"/>
+            <net data_index="49" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[10]" storage_index="49" tap_mode="classic" type="combinatorial"/>
+            <net data_index="63" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[9]" storage_index="63" tap_mode="classic" type="combinatorial"/>
+            <net data_index="62" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[8]" storage_index="62" tap_mode="classic" type="combinatorial"/>
+            <net data_index="61" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[7]" storage_index="61" tap_mode="classic" type="combinatorial"/>
+            <net data_index="60" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[6]" storage_index="60" tap_mode="classic" type="combinatorial"/>
+            <net data_index="59" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[5]" storage_index="59" tap_mode="classic" type="combinatorial"/>
+            <net data_index="58" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[4]" storage_index="58" tap_mode="classic" type="combinatorial"/>
+            <net data_index="57" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[3]" storage_index="57" tap_mode="classic" type="combinatorial"/>
+            <net data_index="56" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[2]" storage_index="56" tap_mode="classic" type="combinatorial"/>
+            <net data_index="55" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[1]" storage_index="55" tap_mode="classic" type="combinatorial"/>
+            <net data_index="48" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[0]" storage_index="48" tap_mode="classic" type="combinatorial"/>
           </bus>
           <bus name="sdram_rw:sdr_rw|sdram_val_o" order="msb_to_lsb" type="combinatorial">
-            <net data_index="32" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[15]" storage_index="32" tap_mode="classic" type="combinatorial"/>
-            <net data_index="31" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[14]" storage_index="31" tap_mode="classic" type="combinatorial"/>
-            <net data_index="30" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[13]" storage_index="30" tap_mode="classic" type="combinatorial"/>
-            <net data_index="29" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[12]" storage_index="29" tap_mode="classic" type="combinatorial"/>
-            <net data_index="28" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[11]" storage_index="28" tap_mode="classic" type="combinatorial"/>
-            <net data_index="27" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[10]" storage_index="27" tap_mode="classic" type="combinatorial"/>
-            <net data_index="41" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[9]" storage_index="41" tap_mode="classic" type="combinatorial"/>
-            <net data_index="40" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[8]" storage_index="40" tap_mode="classic" type="combinatorial"/>
-            <net data_index="39" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[7]" storage_index="39" tap_mode="classic" type="combinatorial"/>
-            <net data_index="38" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[6]" storage_index="38" tap_mode="classic" type="combinatorial"/>
-            <net data_index="37" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[5]" storage_index="37" tap_mode="classic" type="combinatorial"/>
-            <net data_index="36" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[4]" storage_index="36" tap_mode="classic" type="combinatorial"/>
-            <net data_index="35" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[3]" storage_index="35" tap_mode="classic" type="combinatorial"/>
-            <net data_index="34" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[2]" storage_index="34" tap_mode="classic" type="combinatorial"/>
-            <net data_index="33" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[1]" storage_index="33" tap_mode="classic" type="combinatorial"/>
-            <net data_index="26" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[0]" storage_index="26" tap_mode="classic" type="combinatorial"/>
+            <net data_index="70" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[15]" storage_index="70" tap_mode="classic" type="combinatorial"/>
+            <net data_index="69" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[14]" storage_index="69" tap_mode="classic" type="combinatorial"/>
+            <net data_index="68" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[13]" storage_index="68" tap_mode="classic" type="combinatorial"/>
+            <net data_index="67" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[12]" storage_index="67" tap_mode="classic" type="combinatorial"/>
+            <net data_index="66" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[11]" storage_index="66" tap_mode="classic" type="combinatorial"/>
+            <net data_index="65" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[10]" storage_index="65" tap_mode="classic" type="combinatorial"/>
+            <net data_index="79" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[9]" storage_index="79" tap_mode="classic" type="combinatorial"/>
+            <net data_index="78" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[8]" storage_index="78" tap_mode="classic" type="combinatorial"/>
+            <net data_index="77" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[7]" storage_index="77" tap_mode="classic" type="combinatorial"/>
+            <net data_index="76" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[6]" storage_index="76" tap_mode="classic" type="combinatorial"/>
+            <net data_index="75" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[5]" storage_index="75" tap_mode="classic" type="combinatorial"/>
+            <net data_index="74" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[4]" storage_index="74" tap_mode="classic" type="combinatorial"/>
+            <net data_index="73" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[3]" storage_index="73" tap_mode="classic" type="combinatorial"/>
+            <net data_index="72" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[2]" storage_index="72" tap_mode="classic" type="combinatorial"/>
+            <net data_index="71" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[1]" storage_index="71" tap_mode="classic" type="combinatorial"/>
+            <net data_index="64" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[0]" storage_index="64" tap_mode="classic" type="combinatorial"/>
           </bus>
           <bus name="sdram_rw:sdr_rw|cur_st_o" order="msb_to_lsb" type="combinatorial">
-            <net data_index="9" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|cur_st_o[3]" storage_index="9" tap_mode="classic" trigger_index="6" type="combinatorial"/>
-            <net data_index="8" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|cur_st_o[2]" storage_index="8" tap_mode="classic" trigger_index="5" type="combinatorial"/>
-            <net data_index="7" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|cur_st_o[1]" storage_index="7" tap_mode="classic" trigger_index="4" type="combinatorial"/>
-            <net data_index="6" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|cur_st_o[0]" storage_index="6" tap_mode="classic" trigger_index="3" type="combinatorial"/>
+            <net data_index="47" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|cur_st_o[3]" storage_index="47" tap_mode="classic" trigger_index="20" type="combinatorial"/>
+            <net data_index="46" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|cur_st_o[2]" storage_index="46" tap_mode="classic" trigger_index="19" type="combinatorial"/>
+            <net data_index="45" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|cur_st_o[1]" storage_index="45" tap_mode="classic" trigger_index="18" type="combinatorial"/>
+            <net data_index="44" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|cur_st_o[0]" storage_index="44" tap_mode="classic" trigger_index="17" type="combinatorial"/>
           </bus>
+          <bus name="dram_addr" order="msb_to_lsb" type="output pin">
+            <net data_index="2" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_addr[11]" storage_index="2" tap_mode="classic" trigger_index="2" type="output pin"/>
+            <net data_index="1" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_addr[10]" storage_index="1" tap_mode="classic" trigger_index="1" type="output pin"/>
+            <net data_index="11" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_addr[9]" storage_index="11" tap_mode="classic" trigger_index="11" type="output pin"/>
+            <net data_index="10" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_addr[8]" storage_index="10" tap_mode="classic" trigger_index="10" type="output pin"/>
+            <net data_index="9" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_addr[7]" storage_index="9" tap_mode="classic" trigger_index="9" type="output pin"/>
+            <net data_index="8" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_addr[6]" storage_index="8" tap_mode="classic" trigger_index="8" type="output pin"/>
+            <net data_index="7" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_addr[5]" storage_index="7" tap_mode="classic" trigger_index="7" type="output pin"/>
+            <net data_index="6" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_addr[4]" storage_index="6" tap_mode="classic" trigger_index="6" type="output pin"/>
+            <net data_index="5" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_addr[3]" storage_index="5" tap_mode="classic" trigger_index="5" type="output pin"/>
+            <net data_index="4" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_addr[2]" storage_index="4" tap_mode="classic" trigger_index="4" type="output pin"/>
+            <net data_index="3" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_addr[1]" storage_index="3" tap_mode="classic" trigger_index="3" type="output pin"/>
+            <net data_index="0" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_addr[0]" storage_index="0" tap_mode="classic" trigger_index="0" type="output pin"/>
+          </bus>
+          <bus name="dram_bank" order="msb_to_lsb" type="output pin">
+            <net data_index="13" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_bank[1]" storage_index="13" tap_mode="classic" trigger_index="13" type="output pin"/>
+            <net data_index="12" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_bank[0]" storage_index="12" tap_mode="classic" trigger_index="12" type="output pin"/>
+          </bus>
+          <net data_index="14" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_cas_n" storage_index="14" tap_mode="classic" trigger_index="14" type="output pin"/>
+          <net data_index="15" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_cke" storage_index="15" tap_mode="classic" trigger_index="15" type="output pin"/>
+          <net data_index="16" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_clk" storage_index="16" tap_mode="classic" trigger_index="16" type="output pin"/>
+          <net data_index="17" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_cs_n" storage_index="17" tap_mode="classic" trigger_index="17" type="output pin"/>
+          <bus name="dram_dq" order="msb_to_lsb" type="bidir pin">
+            <net data_index="24" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[15]" storage_index="24" tap_mode="classic" trigger_index="24" type="bidir pin"/>
+            <net data_index="23" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[14]" storage_index="23" tap_mode="classic" trigger_index="23" type="bidir pin"/>
+            <net data_index="22" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[13]" storage_index="22" tap_mode="classic" trigger_index="22" type="bidir pin"/>
+            <net data_index="21" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[12]" storage_index="21" tap_mode="classic" trigger_index="21" type="bidir pin"/>
+            <net data_index="20" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[11]" storage_index="20" tap_mode="classic" trigger_index="20" type="bidir pin"/>
+            <net data_index="19" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[10]" storage_index="19" tap_mode="classic" trigger_index="19" type="bidir pin"/>
+            <net data_index="33" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[9]" storage_index="33" tap_mode="classic" trigger_index="33" type="bidir pin"/>
+            <net data_index="32" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[8]" storage_index="32" tap_mode="classic" trigger_index="32" type="bidir pin"/>
+            <net data_index="31" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[7]" storage_index="31" tap_mode="classic" trigger_index="31" type="bidir pin"/>
+            <net data_index="30" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[6]" storage_index="30" tap_mode="classic" trigger_index="30" type="bidir pin"/>
+            <net data_index="29" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[5]" storage_index="29" tap_mode="classic" trigger_index="29" type="bidir pin"/>
+            <net data_index="28" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[4]" storage_index="28" tap_mode="classic" trigger_index="28" type="bidir pin"/>
+            <net data_index="27" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[3]" storage_index="27" tap_mode="classic" trigger_index="27" type="bidir pin"/>
+            <net data_index="26" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[2]" storage_index="26" tap_mode="classic" trigger_index="26" type="bidir pin"/>
+            <net data_index="25" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[1]" storage_index="25" tap_mode="classic" trigger_index="25" type="bidir pin"/>
+            <net data_index="18" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[0]" storage_index="18" tap_mode="classic" trigger_index="18" type="bidir pin"/>
+          </bus>
+          <net data_index="34" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_ldqm" storage_index="34" tap_mode="classic" trigger_index="34" type="output pin"/>
+          <net data_index="35" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_ras_n" storage_index="35" tap_mode="classic" trigger_index="35" type="output pin"/>
+          <net data_index="36" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_udqm" storage_index="36" tap_mode="classic" trigger_index="36" type="output pin"/>
+          <net data_index="37" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_we_n" storage_index="37" tap_mode="classic" trigger_index="37" type="output pin"/>
         </data_view>
         <setup_view>
-          <net data_index="0" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="green_led" storage_index="0" tap_mode="classic" type="output pin"/>
-          <net data_index="1" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="red_led" storage_index="1" tap_mode="classic" type="output pin"/>
-          <net data_index="2" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" level-0="dont_care" name="rst_n" storage_index="2" tap_mode="classic" trigger_index="0" type="input pin"/>
-          <net data_index="3" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|clk_i" storage_index="3" tap_mode="classic" type="combinatorial"/>
+          <net data_index="38" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="green_led" storage_index="38" tap_mode="classic" type="output pin"/>
+          <net data_index="39" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="red_led" storage_index="39" tap_mode="classic" type="output pin"/>
+          <net data_index="40" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" level-0="dont_care" name="rst_n" storage_index="40" tap_mode="classic" trigger_index="14" type="input pin"/>
+          <net data_index="41" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|clk_i" storage_index="41" tap_mode="classic" type="combinatorial"/>
           <bus name="sdram_rw:sdr_rw|wbm_adr_o" order="msb_to_lsb" type="combinatorial">
-            <net data_index="56" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[21]" storage_index="56" tap_mode="classic" type="combinatorial"/>
-            <net data_index="55" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[20]" storage_index="55" tap_mode="classic" type="combinatorial"/>
-            <net data_index="53" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[19]" storage_index="53" tap_mode="classic" type="combinatorial"/>
-            <net data_index="52" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[18]" storage_index="52" tap_mode="classic" type="combinatorial"/>
-            <net data_index="51" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[17]" storage_index="51" tap_mode="classic" type="combinatorial"/>
-            <net data_index="50" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[16]" storage_index="50" tap_mode="classic" type="combinatorial"/>
-            <net data_index="49" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[15]" storage_index="49" tap_mode="classic" type="combinatorial"/>
-            <net data_index="48" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[14]" storage_index="48" tap_mode="classic" type="combinatorial"/>
-            <net data_index="47" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[13]" storage_index="47" tap_mode="classic" type="combinatorial"/>
-            <net data_index="46" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[12]" storage_index="46" tap_mode="classic" type="combinatorial"/>
-            <net data_index="45" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[11]" storage_index="45" tap_mode="classic" type="combinatorial"/>
-            <net data_index="44" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[10]" storage_index="44" tap_mode="classic" type="combinatorial"/>
-            <net data_index="64" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[9]" storage_index="64" tap_mode="classic" type="combinatorial"/>
-            <net data_index="63" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[8]" storage_index="63" tap_mode="classic" type="combinatorial"/>
-            <net data_index="62" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[7]" storage_index="62" tap_mode="classic" type="combinatorial"/>
-            <net data_index="61" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[6]" storage_index="61" tap_mode="classic" type="combinatorial"/>
-            <net data_index="60" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[5]" storage_index="60" tap_mode="classic" type="combinatorial"/>
-            <net data_index="59" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[4]" storage_index="59" tap_mode="classic" type="combinatorial"/>
-            <net data_index="58" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[3]" storage_index="58" tap_mode="classic" type="combinatorial"/>
-            <net data_index="57" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[2]" storage_index="57" tap_mode="classic" type="combinatorial"/>
-            <net data_index="54" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[1]" storage_index="54" tap_mode="classic" type="combinatorial"/>
-            <net data_index="43" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[0]" storage_index="43" tap_mode="classic" type="combinatorial"/>
+            <net data_index="94" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[21]" storage_index="94" tap_mode="classic" type="combinatorial"/>
+            <net data_index="93" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[20]" storage_index="93" tap_mode="classic" type="combinatorial"/>
+            <net data_index="91" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[19]" storage_index="91" tap_mode="classic" type="combinatorial"/>
+            <net data_index="90" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[18]" storage_index="90" tap_mode="classic" type="combinatorial"/>
+            <net data_index="89" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[17]" storage_index="89" tap_mode="classic" type="combinatorial"/>
+            <net data_index="88" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[16]" storage_index="88" tap_mode="classic" type="combinatorial"/>
+            <net data_index="87" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[15]" storage_index="87" tap_mode="classic" type="combinatorial"/>
+            <net data_index="86" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[14]" storage_index="86" tap_mode="classic" type="combinatorial"/>
+            <net data_index="85" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[13]" storage_index="85" tap_mode="classic" type="combinatorial"/>
+            <net data_index="84" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[12]" storage_index="84" tap_mode="classic" type="combinatorial"/>
+            <net data_index="83" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[11]" storage_index="83" tap_mode="classic" type="combinatorial"/>
+            <net data_index="82" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[10]" storage_index="82" tap_mode="classic" type="combinatorial"/>
+            <net data_index="102" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[9]" storage_index="102" tap_mode="classic" type="combinatorial"/>
+            <net data_index="101" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[8]" storage_index="101" tap_mode="classic" type="combinatorial"/>
+            <net data_index="100" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[7]" storage_index="100" tap_mode="classic" type="combinatorial"/>
+            <net data_index="99" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[6]" storage_index="99" tap_mode="classic" type="combinatorial"/>
+            <net data_index="98" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[5]" storage_index="98" tap_mode="classic" type="combinatorial"/>
+            <net data_index="97" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[4]" storage_index="97" tap_mode="classic" type="combinatorial"/>
+            <net data_index="96" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[3]" storage_index="96" tap_mode="classic" type="combinatorial"/>
+            <net data_index="95" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[2]" storage_index="95" tap_mode="classic" type="combinatorial"/>
+            <net data_index="92" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[1]" storage_index="92" tap_mode="classic" type="combinatorial"/>
+            <net data_index="81" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_adr_o[0]" storage_index="81" tap_mode="classic" type="combinatorial"/>
           </bus>
           <bus name="sdram_rw:sdr_rw|wbm_dat_o" order="msb_to_lsb" type="combinatorial">
-            <net data_index="88" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[15]" storage_index="88" tap_mode="classic" type="combinatorial"/>
-            <net data_index="87" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[14]" storage_index="87" tap_mode="classic" type="combinatorial"/>
-            <net data_index="86" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[13]" storage_index="86" tap_mode="classic" type="combinatorial"/>
-            <net data_index="85" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[12]" storage_index="85" tap_mode="classic" type="combinatorial"/>
-            <net data_index="84" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[11]" storage_index="84" tap_mode="classic" type="combinatorial"/>
-            <net data_index="83" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[10]" storage_index="83" tap_mode="classic" type="combinatorial"/>
-            <net data_index="97" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[9]" storage_index="97" tap_mode="classic" type="combinatorial"/>
-            <net data_index="96" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[8]" storage_index="96" tap_mode="classic" type="combinatorial"/>
-            <net data_index="95" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[7]" storage_index="95" tap_mode="classic" type="combinatorial"/>
-            <net data_index="94" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[6]" storage_index="94" tap_mode="classic" type="combinatorial"/>
-            <net data_index="93" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[5]" storage_index="93" tap_mode="classic" type="combinatorial"/>
-            <net data_index="92" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[4]" storage_index="92" tap_mode="classic" type="combinatorial"/>
-            <net data_index="91" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[3]" storage_index="91" tap_mode="classic" type="combinatorial"/>
-            <net data_index="90" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[2]" storage_index="90" tap_mode="classic" type="combinatorial"/>
-            <net data_index="89" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[1]" storage_index="89" tap_mode="classic" type="combinatorial"/>
-            <net data_index="82" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[0]" storage_index="82" tap_mode="classic" type="combinatorial"/>
+            <net data_index="126" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[15]" storage_index="126" tap_mode="classic" type="combinatorial"/>
+            <net data_index="125" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[14]" storage_index="125" tap_mode="classic" type="combinatorial"/>
+            <net data_index="124" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[13]" storage_index="124" tap_mode="classic" type="combinatorial"/>
+            <net data_index="123" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[12]" storage_index="123" tap_mode="classic" type="combinatorial"/>
+            <net data_index="122" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[11]" storage_index="122" tap_mode="classic" type="combinatorial"/>
+            <net data_index="121" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[10]" storage_index="121" tap_mode="classic" type="combinatorial"/>
+            <net data_index="135" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[9]" storage_index="135" tap_mode="classic" type="combinatorial"/>
+            <net data_index="134" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[8]" storage_index="134" tap_mode="classic" type="combinatorial"/>
+            <net data_index="133" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[7]" storage_index="133" tap_mode="classic" type="combinatorial"/>
+            <net data_index="132" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[6]" storage_index="132" tap_mode="classic" type="combinatorial"/>
+            <net data_index="131" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[5]" storage_index="131" tap_mode="classic" type="combinatorial"/>
+            <net data_index="130" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[4]" storage_index="130" tap_mode="classic" type="combinatorial"/>
+            <net data_index="129" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[3]" storage_index="129" tap_mode="classic" type="combinatorial"/>
+            <net data_index="128" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[2]" storage_index="128" tap_mode="classic" type="combinatorial"/>
+            <net data_index="127" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[1]" storage_index="127" tap_mode="classic" type="combinatorial"/>
+            <net data_index="120" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_o[0]" storage_index="120" tap_mode="classic" type="combinatorial"/>
           </bus>
-          <bus name="sdram_rw:sdr_rw|wbm_dat_i" order="msb_to_lsb" type="combinatorial">
-            <net data_index="72" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[15]" storage_index="72" tap_mode="classic" type="combinatorial"/>
-            <net data_index="71" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[14]" storage_index="71" tap_mode="classic" type="combinatorial"/>
-            <net data_index="70" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[13]" storage_index="70" tap_mode="classic" type="combinatorial"/>
-            <net data_index="69" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[12]" storage_index="69" tap_mode="classic" type="combinatorial"/>
-            <net data_index="68" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[11]" storage_index="68" tap_mode="classic" type="combinatorial"/>
-            <net data_index="67" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[10]" storage_index="67" tap_mode="classic" type="combinatorial"/>
-            <net data_index="81" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[9]" storage_index="81" tap_mode="classic" type="combinatorial"/>
-            <net data_index="80" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[8]" storage_index="80" tap_mode="classic" type="combinatorial"/>
-            <net data_index="79" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[7]" storage_index="79" tap_mode="classic" type="combinatorial"/>
-            <net data_index="78" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[6]" storage_index="78" tap_mode="classic" type="combinatorial"/>
-            <net data_index="77" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[5]" storage_index="77" tap_mode="classic" type="combinatorial"/>
-            <net data_index="76" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[4]" storage_index="76" tap_mode="classic" type="combinatorial"/>
-            <net data_index="75" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[3]" storage_index="75" tap_mode="classic" type="combinatorial"/>
-            <net data_index="74" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[2]" storage_index="74" tap_mode="classic" type="combinatorial"/>
-            <net data_index="73" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[1]" storage_index="73" tap_mode="classic" type="combinatorial"/>
-            <net data_index="66" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[0]" storage_index="66" tap_mode="classic" type="combinatorial"/>
+          <bus name="sdram_rw:sdr_rw|wbm_dat_i" order="msb_to_lsb" state="collapse" type="combinatorial">
+            <net data_index="110" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[15]" storage_index="110" tap_mode="classic" type="combinatorial"/>
+            <net data_index="109" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[14]" storage_index="109" tap_mode="classic" type="combinatorial"/>
+            <net data_index="108" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[13]" storage_index="108" tap_mode="classic" type="combinatorial"/>
+            <net data_index="107" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[12]" storage_index="107" tap_mode="classic" type="combinatorial"/>
+            <net data_index="106" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[11]" storage_index="106" tap_mode="classic" type="combinatorial"/>
+            <net data_index="105" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[10]" storage_index="105" tap_mode="classic" type="combinatorial"/>
+            <net data_index="119" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[9]" storage_index="119" tap_mode="classic" type="combinatorial"/>
+            <net data_index="118" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[8]" storage_index="118" tap_mode="classic" type="combinatorial"/>
+            <net data_index="117" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[7]" storage_index="117" tap_mode="classic" type="combinatorial"/>
+            <net data_index="116" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[6]" storage_index="116" tap_mode="classic" type="combinatorial"/>
+            <net data_index="115" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[5]" storage_index="115" tap_mode="classic" type="combinatorial"/>
+            <net data_index="114" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[4]" storage_index="114" tap_mode="classic" type="combinatorial"/>
+            <net data_index="113" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[3]" storage_index="113" tap_mode="classic" type="combinatorial"/>
+            <net data_index="112" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[2]" storage_index="112" tap_mode="classic" type="combinatorial"/>
+            <net data_index="111" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[1]" storage_index="111" tap_mode="classic" type="combinatorial"/>
+            <net data_index="104" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_dat_i[0]" storage_index="104" tap_mode="classic" type="combinatorial"/>
           </bus>
-          <net data_index="108" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" level-0="rising edge" name="sdram_rw:sdr_rw|wbm_we_i" storage_index="108" tap_mode="classic" trigger_index="11" type="combinatorial"/>
+          <net data_index="146" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" level-0="falling edge" name="sdram_rw:sdr_rw|wbm_we_i" storage_index="146" tap_mode="classic" trigger_index="25" type="combinatorial"/>
           <bus name="sdram_rw:sdr_rw|wbm_tga_o" order="msb_to_lsb" type="combinatorial">
-            <net data_index="107" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[7]" storage_index="107" tap_mode="classic" type="combinatorial"/>
-            <net data_index="106" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[6]" storage_index="106" tap_mode="classic" type="combinatorial"/>
-            <net data_index="105" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[5]" storage_index="105" tap_mode="classic" type="combinatorial"/>
-            <net data_index="104" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[4]" storage_index="104" tap_mode="classic" type="combinatorial"/>
-            <net data_index="103" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[3]" storage_index="103" tap_mode="classic" type="combinatorial"/>
-            <net data_index="102" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[2]" storage_index="102" tap_mode="classic" type="combinatorial"/>
-            <net data_index="101" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[1]" storage_index="101" tap_mode="classic" type="combinatorial"/>
-            <net data_index="100" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[0]" storage_index="100" tap_mode="classic" type="combinatorial"/>
+            <net data_index="145" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[7]" storage_index="145" tap_mode="classic" type="combinatorial"/>
+            <net data_index="144" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[6]" storage_index="144" tap_mode="classic" type="combinatorial"/>
+            <net data_index="143" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[5]" storage_index="143" tap_mode="classic" type="combinatorial"/>
+            <net data_index="142" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[4]" storage_index="142" tap_mode="classic" type="combinatorial"/>
+            <net data_index="141" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[3]" storage_index="141" tap_mode="classic" type="combinatorial"/>
+            <net data_index="140" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[2]" storage_index="140" tap_mode="classic" type="combinatorial"/>
+            <net data_index="139" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[1]" storage_index="139" tap_mode="classic" type="combinatorial"/>
+            <net data_index="138" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|wbm_tga_o[0]" storage_index="138" tap_mode="classic" type="combinatorial"/>
           </bus>
-          <net data_index="65" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|wbm_cyc_o" storage_index="65" tap_mode="classic" trigger_index="8" type="combinatorial"/>
-          <net data_index="99" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|wbm_stb_o" storage_index="99" tap_mode="classic" trigger_index="10" type="combinatorial"/>
-          <net data_index="98" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|wbm_stall_i" storage_index="98" tap_mode="classic" trigger_index="9" type="combinatorial"/>
-          <net data_index="42" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|wbm_ack_i" storage_index="42" tap_mode="classic" trigger_index="7" type="combinatorial"/>
-          <net data_index="4" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|cmd_ack" storage_index="4" tap_mode="classic" trigger_index="1" type="combinatorial"/>
-          <net data_index="5" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|cmd_done" storage_index="5" tap_mode="classic" trigger_index="2" type="combinatorial"/>
-          <net data_index="109" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|writing" storage_index="109" tap_mode="classic" trigger_index="12" type="combinatorial"/>
+          <net data_index="103" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|wbm_cyc_o" storage_index="103" tap_mode="classic" trigger_index="22" type="combinatorial"/>
+          <net data_index="137" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|wbm_stb_o" storage_index="137" tap_mode="classic" trigger_index="24" type="combinatorial"/>
+          <net data_index="136" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|wbm_stall_i" storage_index="136" tap_mode="classic" trigger_index="23" type="combinatorial"/>
+          <net data_index="80" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" level-0="dont_care" name="sdram_rw:sdr_rw|wbm_ack_i" storage_index="80" tap_mode="classic" trigger_index="21" type="combinatorial"/>
+          <net data_index="42" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|cmd_ack" storage_index="42" tap_mode="classic" trigger_index="15" type="combinatorial"/>
+          <net data_index="43" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|cmd_done" storage_index="43" tap_mode="classic" trigger_index="16" type="combinatorial"/>
+          <net data_index="147" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|writing" storage_index="147" tap_mode="classic" trigger_index="26" type="combinatorial"/>
           <bus name="sdram_rw:sdr_rw|mem_val_o" order="msb_to_lsb" type="combinatorial">
-            <net data_index="16" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[15]" storage_index="16" tap_mode="classic" type="combinatorial"/>
-            <net data_index="15" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[14]" storage_index="15" tap_mode="classic" type="combinatorial"/>
-            <net data_index="14" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[13]" storage_index="14" tap_mode="classic" type="combinatorial"/>
-            <net data_index="13" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[12]" storage_index="13" tap_mode="classic" type="combinatorial"/>
-            <net data_index="12" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[11]" storage_index="12" tap_mode="classic" type="combinatorial"/>
-            <net data_index="11" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[10]" storage_index="11" tap_mode="classic" type="combinatorial"/>
-            <net data_index="25" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[9]" storage_index="25" tap_mode="classic" type="combinatorial"/>
-            <net data_index="24" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[8]" storage_index="24" tap_mode="classic" type="combinatorial"/>
-            <net data_index="23" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[7]" storage_index="23" tap_mode="classic" type="combinatorial"/>
-            <net data_index="22" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[6]" storage_index="22" tap_mode="classic" type="combinatorial"/>
-            <net data_index="21" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[5]" storage_index="21" tap_mode="classic" type="combinatorial"/>
-            <net data_index="20" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[4]" storage_index="20" tap_mode="classic" type="combinatorial"/>
-            <net data_index="19" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[3]" storage_index="19" tap_mode="classic" type="combinatorial"/>
-            <net data_index="18" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[2]" storage_index="18" tap_mode="classic" type="combinatorial"/>
-            <net data_index="17" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[1]" storage_index="17" tap_mode="classic" type="combinatorial"/>
-            <net data_index="10" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[0]" storage_index="10" tap_mode="classic" type="combinatorial"/>
+            <net data_index="54" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[15]" storage_index="54" tap_mode="classic" type="combinatorial"/>
+            <net data_index="53" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[14]" storage_index="53" tap_mode="classic" type="combinatorial"/>
+            <net data_index="52" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[13]" storage_index="52" tap_mode="classic" type="combinatorial"/>
+            <net data_index="51" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[12]" storage_index="51" tap_mode="classic" type="combinatorial"/>
+            <net data_index="50" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[11]" storage_index="50" tap_mode="classic" type="combinatorial"/>
+            <net data_index="49" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[10]" storage_index="49" tap_mode="classic" type="combinatorial"/>
+            <net data_index="63" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[9]" storage_index="63" tap_mode="classic" type="combinatorial"/>
+            <net data_index="62" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[8]" storage_index="62" tap_mode="classic" type="combinatorial"/>
+            <net data_index="61" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[7]" storage_index="61" tap_mode="classic" type="combinatorial"/>
+            <net data_index="60" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[6]" storage_index="60" tap_mode="classic" type="combinatorial"/>
+            <net data_index="59" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[5]" storage_index="59" tap_mode="classic" type="combinatorial"/>
+            <net data_index="58" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[4]" storage_index="58" tap_mode="classic" type="combinatorial"/>
+            <net data_index="57" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[3]" storage_index="57" tap_mode="classic" type="combinatorial"/>
+            <net data_index="56" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[2]" storage_index="56" tap_mode="classic" type="combinatorial"/>
+            <net data_index="55" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[1]" storage_index="55" tap_mode="classic" type="combinatorial"/>
+            <net data_index="48" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|mem_val_o[0]" storage_index="48" tap_mode="classic" type="combinatorial"/>
           </bus>
           <bus name="sdram_rw:sdr_rw|sdram_val_o" order="msb_to_lsb" type="combinatorial">
-            <net data_index="32" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[15]" storage_index="32" tap_mode="classic" type="combinatorial"/>
-            <net data_index="31" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[14]" storage_index="31" tap_mode="classic" type="combinatorial"/>
-            <net data_index="30" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[13]" storage_index="30" tap_mode="classic" type="combinatorial"/>
-            <net data_index="29" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[12]" storage_index="29" tap_mode="classic" type="combinatorial"/>
-            <net data_index="28" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[11]" storage_index="28" tap_mode="classic" type="combinatorial"/>
-            <net data_index="27" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[10]" storage_index="27" tap_mode="classic" type="combinatorial"/>
-            <net data_index="41" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[9]" storage_index="41" tap_mode="classic" type="combinatorial"/>
-            <net data_index="40" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[8]" storage_index="40" tap_mode="classic" type="combinatorial"/>
-            <net data_index="39" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[7]" storage_index="39" tap_mode="classic" type="combinatorial"/>
-            <net data_index="38" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[6]" storage_index="38" tap_mode="classic" type="combinatorial"/>
-            <net data_index="37" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[5]" storage_index="37" tap_mode="classic" type="combinatorial"/>
-            <net data_index="36" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[4]" storage_index="36" tap_mode="classic" type="combinatorial"/>
-            <net data_index="35" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[3]" storage_index="35" tap_mode="classic" type="combinatorial"/>
-            <net data_index="34" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[2]" storage_index="34" tap_mode="classic" type="combinatorial"/>
-            <net data_index="33" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[1]" storage_index="33" tap_mode="classic" type="combinatorial"/>
-            <net data_index="26" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[0]" storage_index="26" tap_mode="classic" type="combinatorial"/>
+            <net data_index="70" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[15]" storage_index="70" tap_mode="classic" type="combinatorial"/>
+            <net data_index="69" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[14]" storage_index="69" tap_mode="classic" type="combinatorial"/>
+            <net data_index="68" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[13]" storage_index="68" tap_mode="classic" type="combinatorial"/>
+            <net data_index="67" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[12]" storage_index="67" tap_mode="classic" type="combinatorial"/>
+            <net data_index="66" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[11]" storage_index="66" tap_mode="classic" type="combinatorial"/>
+            <net data_index="65" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[10]" storage_index="65" tap_mode="classic" type="combinatorial"/>
+            <net data_index="79" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[9]" storage_index="79" tap_mode="classic" type="combinatorial"/>
+            <net data_index="78" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[8]" storage_index="78" tap_mode="classic" type="combinatorial"/>
+            <net data_index="77" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[7]" storage_index="77" tap_mode="classic" type="combinatorial"/>
+            <net data_index="76" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[6]" storage_index="76" tap_mode="classic" type="combinatorial"/>
+            <net data_index="75" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[5]" storage_index="75" tap_mode="classic" type="combinatorial"/>
+            <net data_index="74" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[4]" storage_index="74" tap_mode="classic" type="combinatorial"/>
+            <net data_index="73" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[3]" storage_index="73" tap_mode="classic" type="combinatorial"/>
+            <net data_index="72" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[2]" storage_index="72" tap_mode="classic" type="combinatorial"/>
+            <net data_index="71" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[1]" storage_index="71" tap_mode="classic" type="combinatorial"/>
+            <net data_index="64" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="sdram_rw:sdr_rw|sdram_val_o[0]" storage_index="64" tap_mode="classic" type="combinatorial"/>
           </bus>
           <bus name="sdram_rw:sdr_rw|cur_st_o" order="msb_to_lsb" type="combinatorial">
-            <net data_index="9" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|cur_st_o[3]" storage_index="9" tap_mode="classic" trigger_index="6" type="combinatorial"/>
-            <net data_index="8" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|cur_st_o[2]" storage_index="8" tap_mode="classic" trigger_index="5" type="combinatorial"/>
-            <net data_index="7" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|cur_st_o[1]" storage_index="7" tap_mode="classic" trigger_index="4" type="combinatorial"/>
-            <net data_index="6" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|cur_st_o[0]" storage_index="6" tap_mode="classic" trigger_index="3" type="combinatorial"/>
+            <net data_index="47" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|cur_st_o[3]" storage_index="47" tap_mode="classic" trigger_index="20" type="combinatorial"/>
+            <net data_index="46" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|cur_st_o[2]" storage_index="46" tap_mode="classic" trigger_index="19" type="combinatorial"/>
+            <net data_index="45" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|cur_st_o[1]" storage_index="45" tap_mode="classic" trigger_index="18" type="combinatorial"/>
+            <net data_index="44" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="sdram_rw:sdr_rw|cur_st_o[0]" storage_index="44" tap_mode="classic" trigger_index="17" type="combinatorial"/>
           </bus>
+          <bus name="dram_addr" order="msb_to_lsb" type="output pin">
+            <net data_index="2" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_addr[11]" storage_index="2" tap_mode="classic" trigger_index="2" type="output pin"/>
+            <net data_index="1" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_addr[10]" storage_index="1" tap_mode="classic" trigger_index="1" type="output pin"/>
+            <net data_index="11" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_addr[9]" storage_index="11" tap_mode="classic" trigger_index="11" type="output pin"/>
+            <net data_index="10" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_addr[8]" storage_index="10" tap_mode="classic" trigger_index="10" type="output pin"/>
+            <net data_index="9" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_addr[7]" storage_index="9" tap_mode="classic" trigger_index="9" type="output pin"/>
+            <net data_index="8" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_addr[6]" storage_index="8" tap_mode="classic" trigger_index="8" type="output pin"/>
+            <net data_index="7" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_addr[5]" storage_index="7" tap_mode="classic" trigger_index="7" type="output pin"/>
+            <net data_index="6" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_addr[4]" storage_index="6" tap_mode="classic" trigger_index="6" type="output pin"/>
+            <net data_index="5" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_addr[3]" storage_index="5" tap_mode="classic" trigger_index="5" type="output pin"/>
+            <net data_index="4" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_addr[2]" storage_index="4" tap_mode="classic" trigger_index="4" type="output pin"/>
+            <net data_index="3" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_addr[1]" storage_index="3" tap_mode="classic" trigger_index="3" type="output pin"/>
+            <net data_index="0" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_addr[0]" storage_index="0" tap_mode="classic" trigger_index="0" type="output pin"/>
+          </bus>
+          <bus name="dram_bank" order="msb_to_lsb" type="output pin">
+            <net data_index="13" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_bank[1]" storage_index="13" tap_mode="classic" trigger_index="13" type="output pin"/>
+            <net data_index="12" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="true" name="dram_bank[0]" storage_index="12" tap_mode="classic" trigger_index="12" type="output pin"/>
+          </bus>
+          <net data_index="14" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_cas_n" storage_index="14" tap_mode="classic" trigger_index="14" type="output pin"/>
+          <net data_index="15" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_cke" storage_index="15" tap_mode="classic" trigger_index="15" type="output pin"/>
+          <net data_index="16" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_clk" storage_index="16" tap_mode="classic" trigger_index="16" type="output pin"/>
+          <net data_index="17" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_cs_n" storage_index="17" tap_mode="classic" trigger_index="17" type="output pin"/>
+          <bus name="dram_dq" order="msb_to_lsb" type="bidir pin">
+            <net data_index="24" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[15]" storage_index="24" tap_mode="classic" trigger_index="24" type="bidir pin"/>
+            <net data_index="23" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[14]" storage_index="23" tap_mode="classic" trigger_index="23" type="bidir pin"/>
+            <net data_index="22" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[13]" storage_index="22" tap_mode="classic" trigger_index="22" type="bidir pin"/>
+            <net data_index="21" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[12]" storage_index="21" tap_mode="classic" trigger_index="21" type="bidir pin"/>
+            <net data_index="20" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[11]" storage_index="20" tap_mode="classic" trigger_index="20" type="bidir pin"/>
+            <net data_index="19" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[10]" storage_index="19" tap_mode="classic" trigger_index="19" type="bidir pin"/>
+            <net data_index="33" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[9]" storage_index="33" tap_mode="classic" trigger_index="33" type="bidir pin"/>
+            <net data_index="32" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[8]" storage_index="32" tap_mode="classic" trigger_index="32" type="bidir pin"/>
+            <net data_index="31" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[7]" storage_index="31" tap_mode="classic" trigger_index="31" type="bidir pin"/>
+            <net data_index="30" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[6]" storage_index="30" tap_mode="classic" trigger_index="30" type="bidir pin"/>
+            <net data_index="29" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[5]" storage_index="29" tap_mode="classic" trigger_index="29" type="bidir pin"/>
+            <net data_index="28" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[4]" storage_index="28" tap_mode="classic" trigger_index="28" type="bidir pin"/>
+            <net data_index="27" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[3]" storage_index="27" tap_mode="classic" trigger_index="27" type="bidir pin"/>
+            <net data_index="26" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[2]" storage_index="26" tap_mode="classic" trigger_index="26" type="bidir pin"/>
+            <net data_index="25" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[1]" storage_index="25" tap_mode="classic" trigger_index="25" type="bidir pin"/>
+            <net data_index="18" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_dq[0]" storage_index="18" tap_mode="classic" trigger_index="18" type="bidir pin"/>
+          </bus>
+          <net data_index="34" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_ldqm" storage_index="34" tap_mode="classic" trigger_index="34" type="output pin"/>
+          <net data_index="35" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_ras_n" storage_index="35" tap_mode="classic" trigger_index="35" type="output pin"/>
+          <net data_index="36" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_udqm" storage_index="36" tap_mode="classic" trigger_index="36" type="output pin"/>
+          <net data_index="37" is_data_input="true" is_node_valid="true" is_storage_input="true" is_trigger_input="false" name="dram_we_n" storage_index="37" tap_mode="classic" trigger_index="37" type="output pin"/>
         </setup_view>
         <trigger_in_editor/>
         <trigger_out_editor/>
       </presentation>
-      <trigger CRC="8901520F" attribute_mem_mode="false" gap_record="true" global_temp="1" is_expanded="true" name="trigger: 2014/02/14 13:17:12  #1" position="pre" power_up_trigger_mode="false" record_data_gap="true" segment_size="64" storage_mode="off" storage_qualifier_disabled="no" storage_qualifier_port_is_pin="false" storage_qualifier_port_name="auto_stp_external_storage_qualifier" storage_qualifier_port_tap_mode="classic" trigger_type="circular">
+      <trigger CRC="2AC89867" attribute_mem_mode="false" gap_record="true" global_temp="1" is_expanded="true" name="trigger: 2014/02/14 15:24:11  #1" position="pre" power_up_trigger_mode="false" record_data_gap="true" segment_size="1024" storage_mode="off" storage_qualifier_disabled="no" storage_qualifier_port_is_pin="false" storage_qualifier_port_name="auto_stp_external_storage_qualifier" storage_qualifier_port_tap_mode="classic" trigger_type="circular">
         <power_up_trigger position="pre" storage_qualifier_disabled="no"/>
         <events use_custom_flow_control="no">
-          <level enabled="yes" name="condition1" type="basic">'sdram_rw:sdr_rw|wbm_we_i' == rising edge
+          <level enabled="yes" name="condition1" type="basic">'sdram_rw:sdr_rw|wbm_we_i' == falling edge
             <power_up enabled="yes">
             </power_up><op_node/>
           </level>
         </events>
         <storage_qualifier_events>
-          <transitional>00101111110000000000000000000000000000000010000000000000000000000100000000000000000000000000000000110000000011
-            <pwr_up_transitional>00101111110000000000000000000000000000000010000000000000000000000100000000000000000000000000000000110000000011</pwr_up_transitional>
+          <transitional>1111111111111100000000000000000000000000101111110000000000000000000000000000000010000000000000000000000100000000000000000000000000000000110000000011
+            <pwr_up_transitional>1111111111111100000000000000000000000000101111110000000000000000000000000000000010000000000000000000000100000000000000000000000000000000110000000011</pwr_up_transitional>
           </transitional>
           <storage_qualifier_level type="basic">
             <power_up>
@@ -659,20 +881,16 @@
             <op_node/>
           </storage_qualifier_level>
         </storage_qualifier_events>
-        <log>
-          <data global_temp="1" name="log: 2014/02/14 13:17:12  #2"/>
-          <extradata/>
-        </log>
       </trigger>
     </signal_set>
     <position_info>
       <single attribute="active tab" value="1"/>
-      <single attribute="data horizontal scroll position" value="0"/>
-      <single attribute="data vertical scroll position" value="0"/>
+      <single attribute="data horizontal scroll position" value="118"/>
+      <single attribute="data vertical scroll position" value="9"/>
       <single attribute="zoom level denominator" value="1"/>
-      <single attribute="zoom level numerator" value="1"/>
+      <single attribute="zoom level numerator" value="64"/>
       <single attribute="zoom offset denominator" value="1"/>
-      <single attribute="zoom offset numerator" value="129024"/>
+      <single attribute="zoom offset numerator" value="2016"/>
     </position_info>
   </instance>
   <mnemonics/>

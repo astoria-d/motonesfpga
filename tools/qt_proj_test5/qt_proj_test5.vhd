@@ -244,6 +244,8 @@ begin
     );
 	clk_proc:
 	clk_133 <= sdram_clk;
+    dram_clk <= sdram_clk;
+    dbg_mem_clk <= sdram_clk;
 	
 	rst_proc:
 	rst 	<= rst_n;
