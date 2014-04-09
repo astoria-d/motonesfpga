@@ -81,11 +81,11 @@ architecture arc_sdram_rw of sdram_rw is
 
   --------------------------------  Constants -----------------------------------------
   
-  constant MAX_ADDR 			: natural := 512; --2097150; 	-- 2,097,152 (-2 = 2,097,150, since we begin from 0) is the full 8 Mbytes of memory (2097152*32Bit*4Banks=67,108,864Bits)
-  constant W_TO_R_WAIT_TIME   	: natural := 10; --9999999;	-- number of clock cycles between WRITE to READ
-  constant BURST_LENGTH			: natural range 1 to 256 := 128; --Maximum is 256
-  constant ADDR_INC				: natural := 128;	--Increment address by this value in each burst
-  constant INITIAL_MEM_VALUE  	: std_logic_vector (15 downto 0) := conv_std_logic_vector(0, 16);--Initial memory value
+  constant MAX_ADDR 			: natural := 1 * 1024 * 1024;   -- 1Mbit is the full 8 Mbytes of memory (1M*16Bit*4Banks=6MBits = 8MB)
+  constant W_TO_R_WAIT_TIME   	: natural := 10;                -- number of clock cycles between WRITE to READ
+  constant BURST_LENGTH			: natural range 1 to 256 := 256; --Maximum is 256
+  constant ADDR_INC				: natural := 256;	            --Increment address by this value in each burst
+  constant INITIAL_MEM_VALUE  	: std_logic_vector (15 downto 0) := "1010010111110000"; --Initial memory value
   --------------------------------  Signals -----------------------------------------
 
   --Commands, Data and Address to SDRAM Controller
@@ -122,8 +122,8 @@ architecture arc_sdram_rw of sdram_rw is
   begin
 	if (rst = reset_polarity) then
 	  state <= START_WRITE_ST;
-	  red_led_r 	<= '1';
-	  green_led_r 	<= '1';
+	  red_led_r 	<= '0';
+	  green_led_r 	<= '0';
 	elsif rising_edge(clk_i) then
 	  case state is
 		when START_WRITE_ST =>	--Initilize writing
@@ -133,7 +133,6 @@ architecture arc_sdram_rw of sdram_rw is
 			writing <= '1';
 			dat_o_r <= mem_value;
             red_led_r 	<= '0';
-            green_led_r <= '0';
 		
 		when WRITE_ST =>	--Write value (16 bits) to SDRAM controller
 			cmd_r		<= '1';
@@ -189,26 +188,6 @@ architecture arc_sdram_rw of sdram_rw is
 			blen <= BURST_LENGTH;
 			wbm_tga_o <= conv_std_logic_vector(BURST_LENGTH-1, 8);
 		
-		-- when WAIT_READ_ACK_ST =>	--Wait until controller has acknowledge - and read SDRAM value
-		  -- if (cmd_ack = '1') then
-			-- state <= READ_BURST;
-		  -- end if;
-
-		-- when READ_BURST => --Burst read
-		  -- if (blen = 0) then
-			-- state <= READ_WAIT_ST;
-			-- addr_r <= addr_r + conv_std_logic_vector(ADDR_INC, 22); -- add 256
-			-- mem_value <= mem_value + '1'; --Increment expected value
-			-- blen <= 2; --CAS Delay is 3. Two more data are available
-		  -- elsif (wbm_ack_i ='1') and (blen > 0) then --Keep burst read
-			-- if (wbm_dat_i /= mem_value) then --Compare between read value and expected value
-				-- red_led_r <= '1';
-				-- --state <= DONE_ST; --Test fail - abort Test
-			-- end if;
-			-- mem_value <= mem_value + '1'; --Increment expected value
-			-- blen <= blen - 1;
-		  -- end if;
-		
 		when READ_BURST => --Wait until end of valid data after burst	
 			if (wbm_stall_i = '1') then
 				null;
@@ -235,10 +214,13 @@ architecture arc_sdram_rw of sdram_rw is
 			end if;
             
 		when DONE_ST =>	--Test done
-			state <= DONE_ST;
 			if (red_led_r = '0') then
-			  green_led_r <= '1';
-			end if;
+                green_led_r <= '1';
+                --repeat testing....
+                state <= START_WRITE_ST;
+			else
+                state <= DONE_ST;
+            end if;
 		
 		when others =>
 		
