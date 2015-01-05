@@ -33,20 +33,7 @@ architecture stimulus of testbench_qt_proj_test5 is
         v_sync_n    : out std_logic;
         r           : out std_logic_vector(3 downto 0);
         g           : out std_logic_vector(3 downto 0);
-        b           : out std_logic_vector(3 downto 0);
-
-		--SDRAM Signals
-		dram_addr	:	out std_logic_vector (11 downto 0);		--Address (12 bit)
-		dram_bank	:	out std_logic_vector (1 downto 0);		--Bank
-		dram_cas_n	:	out std_logic;							--Column Address is being transmitted
-		dram_cke	:	out std_logic;							--Clock Enable
-		dram_clk	:	out std_logic;							--Clock
-		dram_cs_n	:	out std_logic;							--Chip Select (Here - Mask commands)
-		dram_dq		:	inout std_logic_vector (15 downto 0);	--Data in / Data out
-		dram_ldqm	:	out std_logic;							--Byte masking
-		dram_udqm	:	out std_logic;							--Byte masking
-		dram_ras_n	:	out std_logic;							--Row Address is being transmitted
-		dram_we_n	:	out std_logic 							--Write Enable
+        b           : out std_logic_vector(3 downto 0)
             );
     end component;
 
@@ -62,18 +49,6 @@ architecture stimulus of testbench_qt_proj_test5 is
     signal b           : std_logic_vector(3 downto 0);
     signal joypad1     : std_logic_vector(7 downto 0);
     signal joypad2     : std_logic_vector(7 downto 0);
-
-	signal dram_addr	:	std_logic_vector (11 downto 0);		--Address (12 bit)
-	signal dram_bank	:	std_logic_vector (1 downto 0);		--Bank
-	signal dram_cas_n	:	std_logic;							--Column Address is being transmitted
-	signal dram_cke	:	std_logic;							--Clock Enable
-	signal dram_clk	:	std_logic;							--Clock
-	signal dram_cs_n	:	std_logic;							--Chip Select (Here - Mask commands)
-	signal dram_dq		:	std_logic_vector (15 downto 0);	--Data in / Data out
-	signal dram_ldqm	:	std_logic;							--Byte masking
-	signal dram_udqm	:	std_logic;							--Byte masking
-	signal dram_ras_n	:	std_logic;							--Row Address is being transmitted
-	signal dram_we_n	:	std_logic; 							--Write Enable
 
     constant powerup_time   : time := 50 ns;
     constant reset_time     : time := 200 ns;
@@ -132,19 +107,7 @@ begin
         v_sync_n    ,
         r           ,
         g           ,
-        b           ,
-
-	dram_addr	,
-	dram_bank	,
-	dram_cas_n	,
-	dram_cke	,
-	dram_clk	,
-	dram_cs_n	,
-	dram_dq		,
-	dram_ldqm	,
-	dram_udqm	,
-	dram_ras_n	,
-	dram_we_n	
+        b           
 );
 
 --    dummy_vga_disp : vga_device 

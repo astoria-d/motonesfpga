@@ -133,7 +133,6 @@ set_location_assignment PIN_T5 -to dram_ras_n
 set_location_assignment PIN_M5 -to dram_udqm
 set_location_assignment PIN_R8 -to dram_we_n
 
-set_global_assignment -name VHDL_FILE sdram_controller.vhd
 set_global_assignment -name VHDL_FILE vga.vhd
 set_global_assignment -name VHDL_FILE alu_test.vhd
 set_global_assignment -name VHDL_FILE motonesfpga_common.vhd
