@@ -7,7 +7,7 @@ vmap work gate_work
 
 vcom -93 -work work {qt_proj_test5.vho}
 
-vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/tools/qt_proj_test5/testbench_qt_proj_test5.vhd}
+vcom -93 -work work {../../testbench_qt_proj_test5.vhd}
 
 vsim -t 1ps +transport_int_delays +transport_path_delays -sdftyp /sim_board=qt_proj_test5_vhd.sdo -L cycloneii -L gate_work -L work -voptargs="+acc"  testbench_qt_proj_test5
 
