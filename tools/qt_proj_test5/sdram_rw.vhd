@@ -81,7 +81,7 @@ architecture arc_sdram_rw of sdram_rw is
 
   --------------------------------  Constants -----------------------------------------
   
-  constant MAX_ADDR 			: natural := 1 * 1024 * 1024;   -- 1Mbit is the full 8 Mbytes of memory (1M*16Bit*4Banks=6MBits = 8MB)
+  constant MAX_ADDR 			: natural := 1 * 1024 * 1024;   -- 1Mbit is the full 8 Mbytes of memory (1M*16Bit*4Banks=64MBits = 8MB)
   constant W_TO_R_WAIT_TIME   	: natural := 10;                -- number of clock cycles between WRITE to READ
   constant BURST_LENGTH			: natural range 1 to 256 := 256; --Maximum is 256
   constant ADDR_INC				: natural := 256;	            --Increment address by this value in each burst
