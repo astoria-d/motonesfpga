@@ -56,11 +56,13 @@ component ppu_render
             ale         : out std_logic;
             vram_ad     : inout std_logic_vector (7 downto 0);
             vram_a      : out std_logic_vector (13 downto 8);
-            pos_x       : out std_logic_vector (8 downto 0);
-            pos_y       : out std_logic_vector (8 downto 0);
+
+            h_sync_n    : out std_logic;
+            v_sync_n    : out std_logic;
             r           : out std_logic_vector (3 downto 0);
             g           : out std_logic_vector (3 downto 0);
             b           : out std_logic_vector (3 downto 0);
+
             ppu_ctrl        : in std_logic_vector (7 downto 0);
             ppu_mask        : in std_logic_vector (7 downto 0);
             read_status     : in std_logic;
@@ -103,12 +105,6 @@ component counter_register
             q           : out std_logic_vector(dsize - 1 downto 0)
     );
 end component;
-
-signal pos_x       : std_logic_vector (8 downto 0);
-signal pos_y       : std_logic_vector (8 downto 0);
-signal nes_r       : std_logic_vector (3 downto 0);
-signal nes_g       : std_logic_vector (3 downto 0);
-signal nes_b       : std_logic_vector (3 downto 0);
 
 constant dsize     : integer := 8;
 
@@ -192,7 +188,7 @@ begin
     
             clk, vga_clk, mem_clk, rst_n,
             rd_n, wr_n, ale, vram_ad, vram_a,
-            pos_x, pos_y, nes_r, nes_g, nes_b,
+            h_sync_n, v_sync_n, r, g, b, 
             ppu_ctrl, ppu_mask, read_status, ppu_status, ppu_scroll_x, ppu_scroll_y,
             r_nw, oam_bus_ce_n, plt_bus_ce_n, 
             oam_plt_addr, oam_plt_data, v_bus_busy_n);

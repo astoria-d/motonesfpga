@@ -137,6 +137,7 @@ set_global_assignment -name VHDL_FILE ../../de1_nes/mem/ram.vhd
 set_global_assignment -name VHDL_FILE ../../de1_nes/motonesfpga_common.vhd
 set_global_assignment -name VHDL_FILE ../../de1_nes/ppu/ppu_registers.vhd
 set_global_assignment -name VHDL_FILE ../../de1_nes/clock/clock_divider.vhd
+set_global_assignment -name VHDL_FILE vga.vhd
 set_global_assignment -name VHDL_FILE render.vhd
 set_global_assignment -name VHDL_FILE ppu.vhd
 set_global_assignment -name VHDL_FILE qt_proj_test5.vhd

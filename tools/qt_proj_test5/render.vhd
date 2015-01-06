@@ -22,8 +22,8 @@ entity ppu_render is
             vram_a      : out std_logic_vector (13 downto 8);
 
             --vga output
-            pos_x       : out std_logic_vector (8 downto 0);
-            pos_y       : out std_logic_vector (8 downto 0);
+            h_sync_n    : out std_logic;
+            v_sync_n    : out std_logic;
             r           : out std_logic_vector (3 downto 0);
             g           : out std_logic_vector (3 downto 0);
             b           : out std_logic_vector (3 downto 0);
@@ -126,6 +126,32 @@ component ram_ctrl
             sync_ce_n        : out std_logic
         );
 end component;
+
+component vga_ctl
+    port (  
+    signal dbg_disp_nt, dbg_disp_attr : out std_logic_vector (7 downto 0);
+    signal dbg_disp_ptn_h, dbg_disp_ptn_l : out std_logic_vector (15 downto 0);
+
+            vga_clk     : in std_logic;
+            mem_clk     : in std_logic;
+            rst_n       : in std_logic;
+
+            --vram i/f
+            rd_n        : out std_logic;
+            wr_n        : out std_logic;
+            ale         : out std_logic;
+            vram_ad     : in  std_logic_vector (7 downto 0);
+            vram_a      : out std_logic_vector (13 downto 8);
+
+            --vga output
+            h_sync_n    : out std_logic;
+            v_sync_n    : out std_logic;
+            r           : out std_logic_vector (3 downto 0);
+            g           : out std_logic_vector (3 downto 0);
+            b           : out std_logic_vector (3 downto 0)
+    );
+end component;
+
 
 constant X_SIZE       : integer := 9;
 constant dsize        : integer := 8;
@@ -345,13 +371,34 @@ signal spr_ptn_in       : std_logic_vector (dsize - 1 downto 0);
 
 
 begin
-    dbg_disp_nt <= disp_nt;
-    dbg_disp_attr <= disp_attr;
-    dbg_disp_ptn_h <= disp_ptn_h;
-    dbg_disp_ptn_l <= disp_ptn_l;
+--    dbg_disp_nt <= disp_nt;
+--    dbg_disp_attr <= disp_attr;
+--    dbg_disp_ptn_h <= disp_ptn_h;
+--    dbg_disp_ptn_l <= disp_ptn_l;
 
 
     clk_n <= not clk;
+
+    vga_render_inst : vga_ctl
+            port map (
+            dbg_disp_nt, dbg_disp_attr     ,
+            dbg_disp_ptn_h, dbg_disp_ptn_l ,
+            vga_clk     ,
+            mem_clk     ,
+            rst_n       ,
+
+            rd_n        ,
+            wr_n        ,
+            ale         ,
+            vram_ad     ,
+            vram_a      ,
+
+            h_sync_n    ,
+            v_sync_n    ,
+            r           ,
+            g           ,
+            b           
+        );
 
     ale <= bg_io_cnt(0) when ppu_mask(PPUSBG) = '1' and
                 (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
@@ -455,9 +502,6 @@ begin
 
     vram_a_buf : tri_state_buffer generic map (6)
             port map (ah_oe_n, vram_addr(asize - 1 downto dsize), vram_a);
-
-    pos_x <= cur_x;
-    pos_y <= cur_y;
 
     ---palette ram
     r_n <= not r_nw;
@@ -702,19 +746,10 @@ begin
 
     --if or if not bg/sprite is shown, output color anyway 
     --sinse universal bg color is included..
-    pl_index := conv_integer(plt_data(5 downto 0));
-    b <= nes_color_palette(pl_index) (11 downto 8);
-    g <= nes_color_palette(pl_index) (7 downto 4);
-    --r <= nes_color_palette(pl_index) (3 downto 0);
-    if (cur_x <= conv_std_logic_vector(100, X_SIZE)) then
-        r <= nes_color_palette(pl_index) (3 downto 0);
-    else
-        r <= "1111";
-    end if;
---    d_print("rgb:" &
---        conv_hex8(nes_color_palette(pl_index) (11 downto 8)) &
---        conv_hex8(nes_color_palette(pl_index) (7 downto 4)) &
---        conv_hex8(nes_color_palette(pl_index) (3 downto 0)));
+--    pl_index := conv_integer(plt_data(5 downto 0));
+--    b <= nes_color_palette(pl_index) (11 downto 8);
+--    g <= nes_color_palette(pl_index) (7 downto 4);
+--    r <= nes_color_palette(pl_index) (3 downto 0);
 end;
 
     begin
@@ -723,9 +758,9 @@ end;
 
             ppu_status <= (others => '0');
 
-            b <= (others => '0');
-            g <= (others => '0');
-            r <= (others => '0');
+--            b <= (others => '0');
+--            g <= (others => '0');
+--            r <= (others => '0');
         else
 
             if (clk'event and clk = '1') then
