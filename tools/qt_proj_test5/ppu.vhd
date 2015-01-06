@@ -66,15 +66,16 @@ component ppu_render
             ppu_ctrl        : in std_logic_vector (7 downto 0);
             ppu_mask        : in std_logic_vector (7 downto 0);
             read_status     : in std_logic;
-            ppu_status      : out std_logic_vector (7 downto 0);
             ppu_scroll_x    : in std_logic_vector (7 downto 0);
             ppu_scroll_y    : in std_logic_vector (7 downto 0);
+            ppu_status      : out std_logic_vector (7 downto 0);
+            v_bus_busy_n    : out std_logic;
+
             r_nw            : in std_logic;
             oam_bus_ce_n    : in std_logic;
             plt_bus_ce_n    : in std_logic;
             oam_plt_addr    : in std_logic_vector (7 downto 0);
-            oam_plt_data    : inout std_logic_vector (7 downto 0);
-            v_bus_busy_n    : out std_logic
+            oam_plt_data    : inout std_logic_vector (7 downto 0)
     );
 end component;
 
@@ -189,9 +190,10 @@ begin
             clk, vga_clk, mem_clk, rst_n,
             rd_n, wr_n, ale, vram_ad, vram_a,
             h_sync_n, v_sync_n, r, g, b, 
-            ppu_ctrl, ppu_mask, read_status, ppu_status, ppu_scroll_x, ppu_scroll_y,
+            ppu_ctrl, ppu_mask, read_status, ppu_scroll_x, ppu_scroll_y,
+            ppu_status, v_bus_busy_n, 
             r_nw, oam_bus_ce_n, plt_bus_ce_n, 
-            oam_plt_addr, oam_plt_data, v_bus_busy_n);
+            oam_plt_addr, oam_plt_data);
 
     --PPU registers.
     clk_n <= not clk;
