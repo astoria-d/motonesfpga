@@ -48,6 +48,7 @@ component ppu_render
     
     
             clk         : in std_logic;
+            vga_clk     : in std_logic;
             mem_clk     : in std_logic;
             rst_n       : in std_logic;
             rd_n        : out std_logic;
@@ -72,23 +73,6 @@ component ppu_render
             oam_plt_addr    : in std_logic_vector (7 downto 0);
             oam_plt_data    : inout std_logic_vector (7 downto 0);
             v_bus_busy_n    : out std_logic
-    );
-end component;
-
-component vga_ctl
-    port (  ppu_clk     : in std_logic;
-            vga_clk     : in std_logic;
-            rst_n       : in std_logic;
-            pos_x       : in std_logic_vector (8 downto 0);
-            pos_y       : in std_logic_vector (8 downto 0);
-            nes_r       : in std_logic_vector (3 downto 0);
-            nes_g       : in std_logic_vector (3 downto 0);
-            nes_b       : in std_logic_vector (3 downto 0);
-            h_sync_n    : out std_logic;
-            v_sync_n    : out std_logic;
-            r           : out std_logic_vector(3 downto 0);
-            g           : out std_logic_vector(3 downto 0);
-            b           : out std_logic_vector(3 downto 0)
     );
 end component;
 
@@ -203,43 +187,15 @@ begin
 
 
 
---    render_inst : ppu_render port map (
---    dbg_disp_nt, dbg_disp_attr, dbg_disp_ptn_h, dbg_disp_ptn_l,
---    
---            clk, mem_clk, rst_n,
---            rd_n, wr_n, ale, vram_ad, vram_a,
---            pos_x, pos_y, nes_r, nes_g, nes_b,
---            ppu_ctrl, ppu_mask, read_status, ppu_status, ppu_scroll_x, ppu_scroll_y,
---            r_nw, oam_bus_ce_n, plt_bus_ce_n, 
---            oam_plt_addr, oam_plt_data, v_bus_busy_n);
---
---    vga_ctl_inst : vga_ctl
---    port map (  clk     ,
---            vga_clk     ,
---            rst_n       ,
---            pos_x       ,
---            pos_y       ,
---            nes_r       ,
---            nes_g       ,
---            nes_b       ,
---            h_sync_n    ,
---            v_sync_n    ,
---            r           ,
---            g           ,
---            b           ,
---            
---            --SDRAM Signals
---            wbs_adr_i	,
---            wbs_dat_i	,
---            wbs_we_i	,
---            wbs_tga_i	,
---            wbs_cyc_i	,
---            wbs_stb_i	,
---            wbs_dat_o	,
---            wbs_stall_o	,
---            wbs_err_o	,
---            wbs_ack_o	
---    );
+    render_inst : ppu_render port map (
+    dbg_disp_nt, dbg_disp_attr, dbg_disp_ptn_h, dbg_disp_ptn_l,
+    
+            clk, vga_clk, mem_clk, rst_n,
+            rd_n, wr_n, ale, vram_ad, vram_a,
+            pos_x, pos_y, nes_r, nes_g, nes_b,
+            ppu_ctrl, ppu_mask, read_status, ppu_status, ppu_scroll_x, ppu_scroll_y,
+            r_nw, oam_bus_ce_n, plt_bus_ce_n, 
+            oam_plt_addr, oam_plt_data, v_bus_busy_n);
 
     --PPU registers.
     clk_n <= not clk;

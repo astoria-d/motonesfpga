@@ -10,18 +10,25 @@ entity ppu_render is
     signal dbg_disp_ptn_h, dbg_disp_ptn_l : out std_logic_vector (15 downto 0);
     
             clk         : in std_logic;
+            vga_clk     : in std_logic;
             mem_clk     : in std_logic;
             rst_n       : in std_logic;
+
+            --vram i/f
             rd_n        : out std_logic;
             wr_n        : out std_logic;
             ale         : out std_logic;
             vram_ad     : inout std_logic_vector (7 downto 0);
             vram_a      : out std_logic_vector (13 downto 8);
+
+            --vga output
             pos_x       : out std_logic_vector (8 downto 0);
             pos_y       : out std_logic_vector (8 downto 0);
             r           : out std_logic_vector (3 downto 0);
             g           : out std_logic_vector (3 downto 0);
             b           : out std_logic_vector (3 downto 0);
+
+            --upper ppu i/f
             ppu_ctrl        : in std_logic_vector (7 downto 0);
             ppu_mask        : in std_logic_vector (7 downto 0);
             read_status     : in std_logic;
