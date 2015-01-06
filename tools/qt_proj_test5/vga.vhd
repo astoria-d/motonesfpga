@@ -99,12 +99,12 @@ begin
 
 
     cnt_clk <= not vga_clk;
+    
+    --vga position counter
     x_inst : counter_register generic map (10, 1)
             port map (cnt_clk , x_res_n, '0', '1', (others => '0'), vga_x);
-
     y_inst : counter_register generic map (10, 1)
             port map (cnt_clk , y_res_n, y_en_n, '1', (others => '0'), vga_y);
-
     vga_out_p : process (rst_n, vga_clk)
     begin
         if (rst_n = '0') then
@@ -168,11 +168,11 @@ begin
         end if;
     end process;
 
+    --emulate ppu clock that is synchronized with vga clock
     count5_inst : counter_register generic map (3, 1)
             port map (cnt_clk, count5_res_n, '0', '1', (others => '0'), count5);
     nes_x_inst : counter_register generic map (9, 1)
             port map (emu_ppu_clk , x_res_n, '0', '1', (others => '0'), nes_x);
-
     emu_clk_p : process (rst_n, vga_clk)
     begin
         if (rst_n = '0') then
