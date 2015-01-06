@@ -17,9 +17,9 @@ add wave  sim:/testbench_qt_proj_test5/base_clk
 add wave  sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_clk
 
 add wave  sim:/testbench_qt_proj_test5/sim_board/rst_n
-add wave  sim:/testbench_qt_proj_test5/sim_board/dbg_cpu_clk
-add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_addr
-add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_d_io
+#add wave  sim:/testbench_qt_proj_test5/sim_board/dbg_cpu_clk
+#add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_addr
+#add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_d_io
 #add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_instruction
 #add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_int_d_bus
 
@@ -31,6 +31,11 @@ add wave  sim:/testbench_qt_proj_test5/sim_board/h_sync_n
 add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/r
 add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/g
 add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/b
+
+add wave -divider vga_pos
+add wave -radix decimal -unsigned  -label vga_x sim:/testbench_qt_proj_test5/sim_board/dbg_disp_ptn_h
+add wave -radix decimal -unsigned  -label nes_x sim:/testbench_qt_proj_test5/sim_board/dbg_disp_ptn_l
+
 
 
 #add wave -divider status
@@ -57,7 +62,7 @@ view signals
 ###run 10 us
 run 3 us
 
-run 400 us
+run 50 us
 
 wave zoom full
 

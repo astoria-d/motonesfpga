@@ -298,6 +298,7 @@ ConcurrentFileLimit = 40
 ; Default is on, uncomment to turn off.
 ; NoAutoSDFCompile = 1
 
+WLFDeleteOnQuit = 1
 [lmc]
 
 [msg_system]
