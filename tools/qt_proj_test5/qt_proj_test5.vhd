@@ -63,15 +63,14 @@ architecture rtl of qt_proj_test5 is
         );
     end component;
 
-    component vga_clk_gen
-        PORT
-        (
-            inclk0		: IN STD_LOGIC  := '0';
-            c0		: OUT STD_LOGIC ;
-            c1		: OUT STD_LOGIC ;
-            locked		: OUT STD_LOGIC 
-        );
-    end component;
+--    component vga_clk_gen
+--        PORT
+--        (
+--            inclk0		: IN STD_LOGIC  := '0';
+--            c0		: OUT STD_LOGIC ;
+--            locked		: OUT STD_LOGIC 
+--        );
+--    end component;
 
 signal pos_x       : std_logic_vector (8 downto 0);
 signal pos_y       : std_logic_vector (8 downto 0);
@@ -104,30 +103,30 @@ end component;
     signal ppu_clk  : std_logic;
     signal mem_clk   : std_logic;
     signal vga_clk   : std_logic;
-    signal vga_clk_pll, sdram_clk : std_logic;
-    signal pll_locked   : std_logic;
+--    signal vga_clk_pll : std_logic;
+--    signal pll_locked   : std_logic;
 
 begin
     --ppu/cpu clock generator
     clock_inst : clock_divider port map 
         (base_clk, rst_n, cpu_clk, ppu_clk, mem_clk, vga_clk);
 
-    ppu_inst: dummy_ppu 
-        port map (  ppu_clk     ,
-                rst_n       ,
-                pos_x       ,
-                pos_y       ,
-                nes_r       ,
-                nes_g       ,
-                nes_b       
-        );
+--    ppu_inst: dummy_ppu 
+--        port map (  ppu_clk     ,
+--                rst_n       ,
+--                pos_x       ,
+--                pos_y       ,
+--                nes_r       ,
+--                nes_g       ,
+--                nes_b       
+--        );
 
-        vga_clk_gen_inst : vga_clk_gen
-        PORT map
-        (
-            --mem_clk_pll = 160 MHz.
-            base_clk, vga_clk_pll, sdram_clk, pll_locked
-        );
+--        vga_clk_gen_inst : vga_clk_gen
+--        PORT map
+--        (
+--            --mem_clk_pll = 160 MHz.
+--            base_clk, vga_clk_pll, pll_locked
+--        );
     --- testbench pll clock..
 --    dummy_clock_p: process
 --    begin
@@ -138,23 +137,23 @@ begin
 --    end process;
 
     
-    vga_ctl_inst : vga_ctl
-    port map (  ppu_clk     ,
-            --vga_clk_pll, 
-            --ppu_clk ,
-            vga_clk     ,
-            rst_n       ,
-            pos_x       ,
-            pos_y       ,
-            nes_r       ,
-            nes_g       ,
-            nes_b       ,
-            h_sync_n    ,
-            v_sync_n    ,
-            r           ,
-            g           ,
-            b           
-    );
+--    vga_ctl_inst : vga_ctl
+--    port map (  ppu_clk     ,
+--            --vga_clk_pll, 
+--            --ppu_clk ,
+--            vga_clk     ,
+--            rst_n       ,
+--            pos_x       ,
+--            pos_y       ,
+--            nes_r       ,
+--            nes_g       ,
+--            nes_b       ,
+--            h_sync_n    ,
+--            v_sync_n    ,
+--            r           ,
+--            g           ,
+--            b           
+--    );
 
    
 --    signal addr : std_logic_vector( addr_size - 1 downto 0);

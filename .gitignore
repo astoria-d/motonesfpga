@@ -3,6 +3,7 @@ aaa
 bbb
 ghdl-dir
 tmp/
+old/
 bl.sh
 motonesemu
 *.bin
