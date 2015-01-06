@@ -15,17 +15,15 @@ entity qt_proj_test5 is
     signal dbg_addr : out std_logic_vector( 16 - 1 downto 0);
     signal dbg_d_io : out std_logic_vector( 8 - 1 downto 0);
 
-    signal dbg_status       : out std_logic_vector(7 downto 0);
-    signal dbg_dec_oe_n    : out std_logic;
-    signal dbg_dec_val     : out std_logic_vector (7 downto 0);
-    signal dbg_int_dbus    : out std_logic_vector (7 downto 0);
-    signal dbg_status_val    : out std_logic_vector (7 downto 0);
-    signal dbg_stat_we_n    : out std_logic;
-    
----monitor inside cpu
-    signal dbg_d1, dbg_d2, dbg_d_out: out std_logic_vector (7 downto 0);
-    signal dbg_ea_carry, dbg_carry_clr_n    : out std_logic;
-    signal dbg_gate_n    : out std_logic;
+    signal dbg_ppu_ce_n    : out std_logic;
+    signal dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status : out std_logic_vector (7 downto 0);
+    signal dbg_ppu_addr : out std_logic_vector (13 downto 0);
+    signal dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y : out std_logic_vector (7 downto 0);
+    signal dbg_disp_nt, dbg_disp_attr : out std_logic_vector (7 downto 0);
+    signal dbg_disp_ptn_h, dbg_disp_ptn_l : out std_logic_vector (15 downto 0);
+    signal dbg_ppu_addr_we_n    : out std_logic;
+    signal dbg_ppu_clk_cnt          : out std_logic_vector(1 downto 0);
+
 
 
         base_clk 	: in std_logic;
@@ -52,48 +50,46 @@ architecture rtl of qt_proj_test5 is
             );
     end component;
 
-    component dummy_ppu
-        port (  ppu_clk     : in std_logic;
+    component ppu port (
+        signal dbg_ppu_ce_n    : out std_logic;
+        signal dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status : out std_logic_vector (7 downto 0);
+        signal dbg_ppu_addr : out std_logic_vector (13 downto 0);
+        signal dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y : out std_logic_vector (7 downto 0);
+        signal dbg_disp_nt, dbg_disp_attr : out std_logic_vector (7 downto 0);
+        signal dbg_disp_ptn_h, dbg_disp_ptn_l : out std_logic_vector (15 downto 0);
+        signal dbg_ppu_addr_we_n    : out std_logic;
+        signal dbg_ppu_clk_cnt          : out std_logic_vector(1 downto 0);
+
+                clk         : in std_logic;
+                mem_clk     : in std_logic;
+                ce_n        : in std_logic;
                 rst_n       : in std_logic;
-                pos_x       : out std_logic_vector (8 downto 0);
-                pos_y       : out std_logic_vector (8 downto 0);
-                nes_r       : out std_logic_vector (3 downto 0);
-                nes_g       : out std_logic_vector (3 downto 0);
-                nes_b       : out std_logic_vector (3 downto 0)
-        );
+                r_nw        : in std_logic;
+                cpu_addr    : in std_logic_vector (2 downto 0);
+                cpu_d       : inout std_logic_vector (7 downto 0);
+
+                vblank_n    : out std_logic;
+                rd_n        : out std_logic;
+                wr_n        : out std_logic;
+                ale         : out std_logic;
+                vram_ad     : inout std_logic_vector (7 downto 0);
+                vram_a      : out std_logic_vector (13 downto 8);
+
+                vga_clk     : in std_logic;
+                h_sync_n    : out std_logic;
+                v_sync_n    : out std_logic;
+                r           : out std_logic_vector(3 downto 0);
+                g           : out std_logic_vector(3 downto 0);
+                b           : out std_logic_vector(3 downto 0)
+    );
     end component;
-
---    component vga_clk_gen
---        PORT
---        (
---            inclk0		: IN STD_LOGIC  := '0';
---            c0		: OUT STD_LOGIC ;
---            locked		: OUT STD_LOGIC 
---        );
---    end component;
-
+    
+    
 signal pos_x       : std_logic_vector (8 downto 0);
 signal pos_y       : std_logic_vector (8 downto 0);
 signal nes_r       : std_logic_vector (3 downto 0);
 signal nes_g       : std_logic_vector (3 downto 0);
 signal nes_b       : std_logic_vector (3 downto 0);
-
-component vga_ctl
-    port (  ppu_clk     : in std_logic;
-            vga_clk     : in std_logic;
-            rst_n       : in std_logic;
-            pos_x       : in std_logic_vector (8 downto 0);
-            pos_y       : in std_logic_vector (8 downto 0);
-            nes_r       : in std_logic_vector (3 downto 0);
-            nes_g       : in std_logic_vector (3 downto 0);
-            nes_b       : in std_logic_vector (3 downto 0);
-            h_sync_n    : out std_logic;
-            v_sync_n    : out std_logic;
-            r           : out std_logic_vector(3 downto 0);
-            g           : out std_logic_vector(3 downto 0);
-            b           : out std_logic_vector(3 downto 0)
-    );
-end component;
 
     constant data_size : integer := 8;
     constant addr_size : integer := 16;
@@ -103,13 +99,57 @@ end component;
     signal ppu_clk  : std_logic;
     signal mem_clk   : std_logic;
     signal vga_clk   : std_logic;
---    signal vga_clk_pll : std_logic;
---    signal pll_locked   : std_logic;
+
+    signal ppu_ce_n    : std_logic;
+    signal r_nw        : std_logic;
+    signal cpu_addr    : std_logic_vector (2 downto 0);
+    signal cpu_d       : std_logic_vector (7 downto 0);
+    signal vblank_n    : std_logic;
+    signal rd_n        : std_logic;
+    signal wr_n        : std_logic;
+    signal ale         : std_logic;
+    signal vram_ad     : std_logic_vector (7 downto 0);
+    signal vram_a      : std_logic_vector (13 downto 8);
+        
 
 begin
     --ppu/cpu clock generator
     clock_inst : clock_divider port map 
         (base_clk, rst_n, cpu_clk, ppu_clk, mem_clk, vga_clk);
+
+    ppu_inst: ppu port map (  
+        dbg_ppu_ce_n                                        ,
+        dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status          ,
+        dbg_ppu_addr                                        ,
+        dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y        ,
+        dbg_disp_nt, dbg_disp_attr                          ,
+        dbg_disp_ptn_h, dbg_disp_ptn_l                      ,
+        dbg_ppu_addr_we_n                                   ,
+        dbg_ppu_clk_cnt                                     ,
+
+                ppu_clk         ,
+                mem_clk     ,
+                ppu_ce_n        ,
+                rst_n       ,
+                r_nw        ,
+                cpu_addr    ,
+                cpu_d       ,
+
+                vblank_n    ,
+                rd_n        ,
+                wr_n        ,
+                ale         ,
+                vram_ad     ,
+                vram_a      ,
+
+                vga_clk     ,
+                h_sync_n    ,
+                v_sync_n    ,
+                r           ,
+                g           ,
+                b           
+
+        );
 
 --    ppu_inst: dummy_ppu 
 --        port map (  ppu_clk     ,

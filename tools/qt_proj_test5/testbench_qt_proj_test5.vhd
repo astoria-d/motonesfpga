@@ -13,17 +13,14 @@ architecture stimulus of testbench_qt_proj_test5 is
     signal dbg_addr : out std_logic_vector( 16 - 1 downto 0);
     signal dbg_d_io : out std_logic_vector( 8 - 1 downto 0);
 
-    signal dbg_status       : out std_logic_vector(7 downto 0);
-    signal dbg_dec_oe_n    : out std_logic;
-    signal dbg_dec_val     : out std_logic_vector (7 downto 0);
-    signal dbg_int_dbus    : out std_logic_vector (7 downto 0);
-    signal dbg_status_val    : out std_logic_vector (7 downto 0);
-    signal dbg_stat_we_n    : out std_logic;
-    
----monitor inside cpu
-    signal dbg_d1, dbg_d2, dbg_d_out: out std_logic_vector (7 downto 0);
-    signal dbg_ea_carry, dbg_carry_clr_n    : out std_logic;
-    signal dbg_gate_n    : out std_logic;
+    signal dbg_ppu_ce_n    : out std_logic;
+    signal dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status : out std_logic_vector (7 downto 0);
+    signal dbg_ppu_addr : out std_logic_vector (13 downto 0);
+    signal dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y : out std_logic_vector (7 downto 0);
+    signal dbg_disp_nt, dbg_disp_attr : out std_logic_vector (7 downto 0);
+    signal dbg_disp_ptn_h, dbg_disp_ptn_l : out std_logic_vector (15 downto 0);
+    signal dbg_ppu_addr_we_n    : out std_logic;
+    signal dbg_ppu_clk_cnt          : out std_logic_vector(1 downto 0);
 
 
         base_clk 	: in std_logic;
@@ -81,25 +78,32 @@ architecture stimulus of testbench_qt_proj_test5 is
     signal dbg_ea_carry, dbg_carry_clr_n    : std_logic;
     signal dbg_gate_n    : std_logic;
 
+
+    signal dbg_ppu_ce_n                                 : std_logic;
+    signal dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status   : std_logic_vector (7 downto 0);
+    signal dbg_ppu_addr                                 : std_logic_vector (13 downto 0);
+    signal dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y : std_logic_vector (7 downto 0);
+    signal dbg_disp_nt, dbg_disp_attr                   : std_logic_vector (7 downto 0);
+    signal dbg_disp_ptn_h, dbg_disp_ptn_l               : std_logic_vector (15 downto 0);
+    signal dbg_ppu_addr_we_n                            : std_logic;
+    signal dbg_ppu_clk_cnt                              : std_logic_vector(1 downto 0);
+
 begin
 
     sim_board : qt_proj_test5 port map (
-    dbg_cpu_clk  , 
-    dbg_ppu_clk  , 
-    dbg_addr , 
-    dbg_d_io , 
+    dbg_cpu_clk  ,
+    dbg_ppu_clk  ,
+    dbg_addr     ,
+    dbg_d_io     ,
 
-    
-    dbg_status       , 
-    dbg_dec_oe_n    , 
-    dbg_dec_val     , 
-    dbg_int_dbus    , 
-    dbg_status_val    , 
-    dbg_stat_we_n    , 
-
-    dbg_d1, dbg_d2, dbg_d_out,
-    dbg_ea_carry    ,dbg_carry_clr_n , 
-    dbg_gate_n    ,
+    dbg_ppu_ce_n                                  ,
+    dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status    ,
+    dbg_ppu_addr                                  ,
+    dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y  ,
+    dbg_disp_nt, dbg_disp_attr                    ,
+    dbg_disp_ptn_h, dbg_disp_ptn_l                ,
+    dbg_ppu_addr_we_n                             ,
+    dbg_ppu_clk_cnt                               ,
 
     
     base_clk, base_clk_27mhz, reset_input, 
