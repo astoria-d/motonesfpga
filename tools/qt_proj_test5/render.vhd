@@ -5,6 +5,8 @@ use work.motonesfpga_common.all;
 
 entity ppu_render is 
     port (  
+    signal dbg_ppu_clk                      : out std_logic;
+    signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
     signal dbg_disp_nt, dbg_disp_attr : out std_logic_vector (7 downto 0);
     signal dbg_disp_ptn_h, dbg_disp_ptn_l : out std_logic_vector (15 downto 0);
     
@@ -62,6 +64,8 @@ end component;
 
 component vga_ctl
     port (  
+    signal dbg_ppu_clk                      : out std_logic;
+    signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
     signal dbg_disp_nt, dbg_disp_attr : out std_logic_vector (7 downto 0);
     signal dbg_disp_ptn_h, dbg_disp_ptn_l : out std_logic_vector (15 downto 0);
 
@@ -138,6 +142,8 @@ begin
     --vga rendering module instance...
     vga_render_inst : vga_ctl
             port map (
+            dbg_ppu_clk                      ,
+            dbg_nes_x                        ,
             dbg_disp_nt, dbg_disp_attr     ,
             dbg_disp_ptn_h, dbg_disp_ptn_l ,
             vga_clk     ,

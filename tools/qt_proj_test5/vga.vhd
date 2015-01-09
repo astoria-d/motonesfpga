@@ -13,6 +13,8 @@ use work.motonesfpga_common.all;
 
 entity vga_ctl is 
     port (  
+    signal dbg_ppu_clk                      : out std_logic;
+    signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
     signal dbg_disp_nt, dbg_disp_attr : out std_logic_vector (7 downto 0);
     signal dbg_disp_ptn_h, dbg_disp_ptn_l : out std_logic_vector (15 downto 0);
 
@@ -61,8 +63,10 @@ end component;
 
 component ppu_vga_render
     port (  
-    signal dbg_disp_nt, dbg_disp_attr : out std_logic_vector (7 downto 0);
-    signal dbg_disp_ptn_h, dbg_disp_ptn_l : out std_logic_vector (15 downto 0);
+    signal dbg_ppu_clk                      : out std_logic;
+    signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
+    signal dbg_disp_nt, dbg_disp_attr       : out std_logic_vector (7 downto 0);
+    signal dbg_disp_ptn_h, dbg_disp_ptn_l   : out std_logic_vector (15 downto 0);
     
             clk         : in std_logic;
             mem_clk     : in std_logic;
@@ -72,8 +76,8 @@ component ppu_vga_render
             ale         : out std_logic;
             vram_ad     : inout std_logic_vector (7 downto 0);
             vram_a      : out std_logic_vector (13 downto 8);
-            pos_x       : out std_logic_vector (8 downto 0);
-            pos_y       : out std_logic_vector (8 downto 0);
+            cur_x       : in std_logic_vector (8 downto 0);
+            cur_y       : in std_logic_vector (8 downto 0);
             r           : out std_logic_vector (3 downto 0);
             g           : out std_logic_vector (3 downto 0);
             b           : out std_logic_vector (3 downto 0);
@@ -117,13 +121,11 @@ signal emu_ppu_clk_n    : std_logic;
 signal count5_res_n     : std_logic;
 signal count5           : std_logic_vector(2 downto 0);
 signal nes_x        : std_logic_vector (8 downto 0);
---signal nes_y        : std_logic_vector (7 downto 0);
+signal nes_y        : std_logic_vector (8 downto 0);
 
 
 
 -----dummy signal
-signal pos_x       : std_logic_vector (8 downto 0);
-signal pos_y       : std_logic_vector (8 downto 0);
 signal r_nw            : std_logic;
 signal oam_bus_ce_n    : std_logic;
 signal plt_bus_ce_n    : std_logic;
@@ -142,8 +144,7 @@ signal dbg_disp_ptn_h2, dbg_disp_ptn_l2 : std_logic_vector (15 downto 0);
 
 begin
 
-    --dbg_disp_ptn_h <= "000000" & vga_x;
-    dbg_disp_ptn_h <= "0000000" & pos_x;
+    dbg_disp_ptn_h <= "000000" & vga_x;
     dbg_disp_ptn_l <= "0000000" & nes_x;
 
 
@@ -222,6 +223,7 @@ begin
             port map (cnt_clk, count5_res_n, '0', '1', (others => '0'), count5);
     nes_x_inst : counter_register generic map (9, 1)
             port map (emu_ppu_clk , x_res_n, '0', '1', (others => '0'), nes_x);
+    nes_y <= vga_y(9 downto 1);
     emu_clk_p : process (rst_n, vga_clk)
     begin
         if (rst_n = '0') then
@@ -249,6 +251,8 @@ begin
     emu_ppu_clk_n <= not emu_ppu_clk;
     vga_render_inst : ppu_vga_render
         port map (
+        dbg_ppu_clk                      ,
+        dbg_nes_x                        ,
         dbg_disp_nt, dbg_disp_attr      ,
         dbg_disp_ptn_h2, dbg_disp_ptn_l2  ,
         
@@ -260,8 +264,8 @@ begin
                 ale         ,
                 vram_ad     ,
                 vram_a      ,
-                pos_x       ,
-                pos_y       ,
+                nes_x       ,
+                nes_y       ,
                 r           ,
                 g           ,
                 b           ,
@@ -297,8 +301,10 @@ use work.motonesfpga_common.all;
 
 entity ppu_vga_render is 
     port (  
-    signal dbg_disp_nt, dbg_disp_attr : out std_logic_vector (7 downto 0);
-    signal dbg_disp_ptn_h, dbg_disp_ptn_l : out std_logic_vector (15 downto 0);
+    signal dbg_ppu_clk                      : out std_logic;
+    signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
+    signal dbg_disp_nt, dbg_disp_attr       : out std_logic_vector (7 downto 0);
+    signal dbg_disp_ptn_h, dbg_disp_ptn_l   : out std_logic_vector (15 downto 0);
     
             clk         : in std_logic;
             mem_clk     : in std_logic;
@@ -310,8 +316,9 @@ entity ppu_vga_render is
             vram_ad     : inout std_logic_vector (7 downto 0);
             vram_a      : out std_logic_vector (13 downto 8);
 
-            pos_x       : out std_logic_vector (8 downto 0);
-            pos_y       : out std_logic_vector (8 downto 0);
+            --current drawing position 340 x 261
+            cur_x       : in std_logic_vector (8 downto 0);
+            cur_y       : in std_logic_vector (8 downto 0);
             r           : out std_logic_vector (3 downto 0);
             g           : out std_logic_vector (3 downto 0);
             b           : out std_logic_vector (3 downto 0);
@@ -536,12 +543,7 @@ signal ah_oe_n          : std_logic;
 
 signal cnt_x_res_n   : std_logic;
 signal bg_cnt_res_n  : std_logic;
-signal cnt_y_en_n    : std_logic;
-signal cnt_y_res_n   : std_logic;
 
---current drawing position 340 x 261
-signal cur_x            : std_logic_vector(X_SIZE - 1 downto 0);
-signal cur_y            : std_logic_vector(X_SIZE - 1 downto 0);
 --bg prefetch position (scroll + 16 cycle ahead of current pos)
 --511 x 239 (or 255 x 479)
 signal prf_x            : std_logic_vector(X_SIZE - 1 downto 0);
@@ -637,6 +639,8 @@ signal spr_ptn_in       : std_logic_vector (dsize - 1 downto 0);
 
 
 begin
+    dbg_ppu_clk <= clk;
+    dbg_nes_x <= cur_x;
     dbg_disp_nt <= disp_nt;
     dbg_disp_attr <= disp_attr;
     dbg_disp_ptn_h <= disp_ptn_h;
@@ -708,12 +712,6 @@ begin
                             conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE) else
              "000000000"; 
 
-    --current x,y pos
-    cur_x_inst : counter_register generic map (X_SIZE, 1)
-            port map (clk_n, cnt_x_res_n, '0', '1', (others => '0'), cur_x);
-    cur_y_inst : counter_register generic map (X_SIZE, 1)
-            port map (clk_n, cnt_y_res_n, cnt_y_en_n, '1', (others => '0'), cur_y);
-
     nt_inst : d_flip_flop generic map(dsize)
             port map (clk_n, rst_n, '1', nt_we_n, vram_ad, disp_nt);
 
@@ -747,9 +745,6 @@ begin
 
     vram_a_buf : tri_state_buffer generic map (6)
             port map (ah_oe_n, vram_addr(asize - 1 downto dsize), vram_a);
-
-    pos_x <= cur_x;
-    pos_y <= cur_y;
 
     ---palette ram
     r_n <= not r_nw;
@@ -928,22 +923,13 @@ begin
     begin
         if (rst_n = '0') then
             cnt_x_res_n <= '0';
-            cnt_y_res_n <= '0';
             bg_cnt_res_n <= '0';
         elsif (clk'event and clk = '0') then
             if (cur_x = conv_std_logic_vector(HSCAN_MAX - 1, X_SIZE)) then
                 --x pos reset.
                 cnt_x_res_n <= '0';
-
-                --y pos reset.
-                if (cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) then
-                    cnt_y_res_n <= '0';
-                else
-                    cnt_y_res_n <= '1';
-                end if;
             else
                 cnt_x_res_n <= '1';
-                cnt_y_res_n <= '1';
             end if;
 
             if (ppu_scroll_x(0) = '0' and cur_x = conv_std_logic_vector(HSCAN, X_SIZE)) then
@@ -1014,16 +1000,6 @@ end;
             g <= (others => '0');
             r <= (others => '0');
         else
-
-            if (clk'event and clk = '1') then
-                --y pos increment.
-                if (cur_x = conv_std_logic_vector(HSCAN_MAX - 1, X_SIZE)) then
-                    cnt_y_en_n <= '0';
-                else
-                    cnt_y_en_n <= '1';
-                end if;
-            end if; --if (clk'event) then
-
             if (clk'event and clk = '0') then
                 d_print("-");
             end if;
