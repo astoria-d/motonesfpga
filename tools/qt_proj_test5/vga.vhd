@@ -15,6 +15,7 @@ entity vga_ctl is
     port (  
     signal dbg_ppu_clk                      : out std_logic;
     signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
+    signal dbg_vga_x                        : out std_logic_vector (9 downto 0);
     signal dbg_disp_nt, dbg_disp_attr : out std_logic_vector (7 downto 0);
     signal dbg_disp_ptn_h, dbg_disp_ptn_l : out std_logic_vector (15 downto 0);
 
@@ -133,7 +134,6 @@ signal oam_plt_addr    : std_logic_vector (7 downto 0);
 signal oam_plt_data    : std_logic_vector (7 downto 0);
 signal v_bus_busy_n    : std_logic;
 signal ppu_status      : std_logic_vector (7 downto 0);
-signal dbg_disp_ptn_h2, dbg_disp_ptn_l2 : std_logic_vector (15 downto 0);
 
 ---DE1 base clock 50 MHz
 ---motones sim project uses following clock.
@@ -143,10 +143,7 @@ signal dbg_disp_ptn_h2, dbg_disp_ptn_l2 : std_logic_vector (15 downto 0);
 --sdram clock = 135 MHz
 
 begin
-
-    dbg_disp_ptn_h <= "000000" & vga_x;
-    dbg_disp_ptn_l <= "0000000" & nes_x;
-
+    dbg_vga_x <= vga_x;
 
     cnt_clk <= not vga_clk;
     
@@ -254,7 +251,7 @@ begin
         dbg_ppu_clk                      ,
         dbg_nes_x                        ,
         dbg_disp_nt, dbg_disp_attr      ,
-        dbg_disp_ptn_h2, dbg_disp_ptn_l2  ,
+        dbg_disp_ptn_h, dbg_disp_ptn_l  ,
         
                 emu_ppu_clk_n ,
                 mem_clk     ,

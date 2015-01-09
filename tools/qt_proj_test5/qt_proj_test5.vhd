@@ -68,6 +68,7 @@ architecture rtl of qt_proj_test5 is
 
         signal dbg_ppu_clk                      : out std_logic;
         signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
+        signal dbg_vga_x                        : out std_logic_vector (9 downto 0);
         signal dbg_disp_nt, dbg_disp_attr : out std_logic_vector (7 downto 0);
         signal dbg_disp_ptn_h, dbg_disp_ptn_l : out std_logic_vector (15 downto 0);
         signal dbg_ppu_addr_we_n    : out std_logic;
@@ -170,6 +171,7 @@ architecture rtl of qt_proj_test5 is
         
     signal dbg_ppu_addr_dummy               : std_logic_vector (13 downto 0);
     signal dbg_nes_x                        : std_logic_vector (8 downto 0);
+    signal dbg_vga_x                        : std_logic_vector (9 downto 0);
 
 begin
     --ppu/cpu clock generator
@@ -177,7 +179,8 @@ begin
         (base_clk, rst_n, cpu_clk, ppu_clk, mem_clk, vga_clk);
 
     dbg_cpu_clk <= vga_clk;
-    dbg_ppu_addr <= "00000" & dbg_nes_x ;
+    dbg_ppu_addr <= "00000" & dbg_nes_x;
+    dbg_addr <= "000000" & dbg_vga_x;
     ppu_inst: ppu port map (  
         dbg_ppu_ce_n                                        ,
         dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status          ,
@@ -186,6 +189,7 @@ begin
 
         dbg_ppu_clk                      ,
         dbg_nes_x                        ,
+        dbg_vga_x                        ,
         dbg_disp_nt, dbg_disp_attr                          ,
         dbg_disp_ptn_h, dbg_disp_ptn_l                      ,
         dbg_ppu_addr_we_n                                   ,

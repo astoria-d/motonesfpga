@@ -18,14 +18,6 @@ add wave  -label ppu_clk sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_clk
 add wave  sim:/testbench_qt_proj_test5/sim_board/rst_n
 
 
-#add wave  sim:/testbench_qt_proj_test5/sim_board/dbg_cpu_clk
-#add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_addr
-#add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_d_io
-#add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_instruction
-#add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_int_d_bus
-
-
-
 add wave -divider vga_out
 add wave  sim:/testbench_qt_proj_test5/sim_board/v_sync_n
 add wave  sim:/testbench_qt_proj_test5/sim_board/h_sync_n
@@ -34,13 +26,25 @@ add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/g
 add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/b
 
 add wave -divider vga_pos
-add wave -radix decimal -unsigned  -label vga_x sim:/testbench_qt_proj_test5/sim_board/dbg_disp_ptn_h
+add wave -radix decimal -unsigned  -label vga_x sim:/testbench_qt_proj_test5/sim_board/dbg_addr
 add wave -radix decimal -unsigned  -label nes_x sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_addr
+
+add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_disp_nt
+add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_disp_attr
+add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_disp_ptn_h
+add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_disp_ptn_l
+
+
+
+#add wave  sim:/testbench_qt_proj_test5/sim_board/dbg_cpu_clk
+#add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_addr
+#add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_d_io
+#add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_instruction
+#add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_int_d_bus
 
 
 
 #add wave -divider status
-
 #add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_d1
 #add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_d2
 #add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_d_out
@@ -51,7 +55,6 @@ add wave -radix decimal -unsigned  -label nes_x sim:/testbench_qt_proj_test5/sim
 
 
 #add wave -divider status_debug
-
 #add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_status
 #add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_dec_oe_n
 #add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_status_val
