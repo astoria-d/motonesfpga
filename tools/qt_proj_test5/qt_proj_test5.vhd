@@ -240,6 +240,147 @@ begin
     vram_nt1 : ram generic map (vram_1k, data_size)
             port map (mem_clk, nt1_ce_n, rd_n, wr_n, v_addr(vram_1k - 1 downto 0), vram_ad);
 
+    --set initial vram value...
+    vram_p : process (cpu_clk, rst_n)
+use ieee.std_logic_arith.conv_std_logic_vector;
+    variable init_step_cnt, plt_step_cnt, 
+            nt_step_cnt, enable_ppu_step_cnt : integer;
+    variable init_done : std_logic;
+    variable global_step_cnt : integer;
+
+procedure ppu_set (ad: in integer; dt : in integer) is
+begin
+    r_nw <= '0';
+    ppu_ce_n <= '0';
+    cpu_addr <= conv_std_logic_vector(ad, 16)(2 downto 0);
+    cpu_d <= conv_std_logic_vector(dt, 8);
+end;
+procedure ppu_clr is
+begin
+    cpu_addr <= (others => 'Z');
+    cpu_d <= (others => 'Z');
+    r_nw <= '1';
+    ppu_ce_n <= '1';
+end;
+
+    begin
+        if (rst_n = '0') then
+            
+            r_nw <= 'Z';
+            ppu_ce_n <= 'Z';
+            cpu_addr <= (others => 'Z');
+            cpu_d <= (others => 'Z');
+            
+            init_done := '0';
+            global_step_cnt := 0;
+            init_step_cnt := 0;
+            plt_step_cnt := 0;
+            nt_step_cnt := 0;
+            enable_ppu_step_cnt := 0;
+
+        elsif (rising_edge(cpu_clk)) then
+            if (init_done = '0') then
+                if (global_step_cnt = 0) then
+                    --step0.0 = init ppu.
+                    if (init_step_cnt = 0) then
+                        --PPUCTRL=00
+                        ppu_set(16#2000#, 16#00#);
+                    elsif (init_step_cnt = 2) then
+                        --PPUMASK=00
+                        ppu_set(16#2001#, 16#00#);
+                    else
+                        ppu_clr;
+                        if (init_step_cnt > 2) then
+                            global_step_cnt := global_step_cnt + 1;
+                        end if;
+                    end if;
+                    init_step_cnt := init_step_cnt + 1;
+
+                elsif (global_step_cnt = 1) then
+                    --step0.1 = palette set.
+--palettes:
+--;;;bg palette
+--	.byte	$0f, $00, $10, $20
+--	.byte	$0f, $04, $14, $24
+--	.byte	$0f, $08, $18, $28
+--	.byte	$0f, $0c, $1c, $2c
+--;;;spr palette
+--	.byte	$0f, $00, $10, $20
+--	.byte	$0f, $06, $16, $26
+--	.byte	$0f, $08, $18, $28
+--	.byte	$0f, $0a, $1a, $2a
+                    
+                    
+                    if (plt_step_cnt = 0) then
+                        --set vram addr 3f00
+                        ppu_set(16#2006#, 16#3f#);
+                    elsif (plt_step_cnt = 2) then
+                        ppu_set(16#2006#, 16#00#);
+                    elsif (plt_step_cnt = 4) then
+                        --set palette data
+                        ppu_set(16#2007#, 16#0f#);
+                    elsif (plt_step_cnt = 6) then
+                        ppu_set(16#2007#, 16#00#);
+                    elsif (plt_step_cnt = 8) then
+                        ppu_set(16#2007#, 16#10#);
+                    elsif (plt_step_cnt = 10) then
+                        ppu_set(16#2007#, 16#20#);
+                    else
+                        ppu_clr;
+                        if (plt_step_cnt > 10) then
+                            global_step_cnt := global_step_cnt + 1;
+                        end if;
+                    end if;
+                    plt_step_cnt := plt_step_cnt + 1;
+                    
+                elsif (global_step_cnt = 2) then
+                    --step1 = name table set.
+                    if (nt_step_cnt = 0) then
+                        --set vram addr 2000
+                        ppu_set(16#2006#, 16#20#);
+                    elsif (nt_step_cnt = 2) then
+                        ppu_set(16#2006#, 16#00#);
+                    elsif (nt_step_cnt = 4) then
+                        --set name tbl data
+                        ppu_set(16#2007#, 16#41#);
+                    elsif (nt_step_cnt = 6) then
+                        ppu_set(16#2007#, 16#42#);
+                    elsif (nt_step_cnt = 8) then
+                        ppu_set(16#2007#, 16#43#);
+                    else
+                        ppu_clr;
+                        if (nt_step_cnt > 8) then
+                            global_step_cnt := global_step_cnt + 1;
+                        end if;
+                    end if;
+                    nt_step_cnt := nt_step_cnt + 1;
+                    
+                elsif (global_step_cnt = 3) then
+                    --final step = enable ppu.
+                    if (enable_ppu_step_cnt = 0) then
+                        --show bg
+                        --PPUMASK=1e
+                        ppu_set(16#2001#, 16#1e#);
+                    elsif (enable_ppu_step_cnt = 2) then
+                        --show enable nmi
+                        --PPUCTRL=80
+                        ppu_set(16#2000#, 16#80#);
+                    else
+                        ppu_clr;
+                        if (enable_ppu_step_cnt > 2) then
+                            global_step_cnt := global_step_cnt + 1;
+                        end if;
+                    end if;
+                    enable_ppu_step_cnt := enable_ppu_step_cnt + 1;
+
+                else
+                    init_done := '1';
+                end if;
+            end if;
+        
+        end if;
+    end process;
+            
 --    signal addr : std_logic_vector( addr_size - 1 downto 0);
 --    signal d_io : std_logic_vector( data_size - 1 downto 0);
 --
