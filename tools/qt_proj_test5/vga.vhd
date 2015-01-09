@@ -16,8 +16,9 @@ entity vga_ctl is
     signal dbg_ppu_clk                      : out std_logic;
     signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
     signal dbg_vga_x                        : out std_logic_vector (9 downto 0);
-    signal dbg_disp_nt, dbg_disp_attr : out std_logic_vector (7 downto 0);
-    signal dbg_disp_ptn_h, dbg_disp_ptn_l : out std_logic_vector (15 downto 0);
+    signal dbg_disp_nt, dbg_disp_attr       : out std_logic_vector (7 downto 0);
+    signal dbg_disp_ptn_h, dbg_disp_ptn_l   : out std_logic_vector (15 downto 0);
+    signal dbg_plt_addr                     : out std_logic_vector (4 downto 0);
 
             vga_clk     : in std_logic;
             mem_clk     : in std_logic;
@@ -68,6 +69,7 @@ component ppu_vga_render
     signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
     signal dbg_disp_nt, dbg_disp_attr       : out std_logic_vector (7 downto 0);
     signal dbg_disp_ptn_h, dbg_disp_ptn_l   : out std_logic_vector (15 downto 0);
+    signal dbg_plt_addr                     : out std_logic_vector (4 downto 0);
     
             clk         : in std_logic;
             mem_clk     : in std_logic;
@@ -134,6 +136,9 @@ signal oam_plt_addr    : std_logic_vector (7 downto 0);
 signal oam_plt_data    : std_logic_vector (7 downto 0);
 signal v_bus_busy_n    : std_logic;
 signal ppu_status      : std_logic_vector (7 downto 0);
+signal rr           : std_logic_vector (3 downto 0);
+signal gg           : std_logic_vector (3 downto 0);
+signal bb           : std_logic_vector (3 downto 0);
 
 ---DE1 base clock 50 MHz
 ---motones sim project uses following clock.
@@ -159,11 +164,9 @@ begin
             v_sync_n <= '0';
             x_res_n <= '0';
             y_res_n <= '0';
---
---            r<=(others => '0');
---            g<=(others => '0');
---            b<=(others => '0');
---            
+            bb <= (others => '0');
+            gg <= (others => '0');
+            rr <= (others => '0');
         elsif (rising_edge(vga_clk)) then
             --xmax = 799
             if (vga_x = conv_std_logic_vector(VGA_W_MAX, 10)) then
@@ -195,23 +198,17 @@ begin
             else
                 v_sync_n <= '1';
             end if;
---
---            if (vga_y <=conv_std_logic_vector((VGA_H) , 10)) then
---                if (vga_x < conv_std_logic_vector((VGA_W) , 10)) then
---                    r<= "0100";
---                    g<= "0000";
---                    b<= "0010";
---                else
---                    r<=(others => '0');
---                    g<=(others => '0');
---                    b<=(others => '0');
---                end if;
---            else
---                r<=(others => '0');
---                g<=(others => '0');
---                b<=(others => '0');
---            end if;
---            
+
+            if (vga_x <= conv_std_logic_vector((VGA_W) , 10) and 
+                vga_y <= conv_std_logic_vector((VGA_H) , 10)) then
+                bb <= "0110";
+                gg <= (others => '1');
+                rr <= (others => '0');
+            else
+                bb <= (others => '0');
+                gg <= (others => '0');
+                rr <= (others => '0');
+            end if;
         end if;
     end process;
 
@@ -244,7 +241,12 @@ begin
     end process;
 
     --vga emulated render instance...
-    oam_plt_data <= (others => 'Z');
+    r_nw <= '1';
+    oam_bus_ce_n <= '1';
+    plt_bus_ce_n <= '1';
+    oam_plt_addr    <= (others => '0');
+    oam_plt_data    <= (others => 'Z');
+
     emu_ppu_clk_n <= not emu_ppu_clk;
     vga_render_inst : ppu_vga_render
         port map (
@@ -252,6 +254,7 @@ begin
         dbg_nes_x                        ,
         dbg_disp_nt, dbg_disp_attr      ,
         dbg_disp_ptn_h, dbg_disp_ptn_l  ,
+        dbg_plt_addr                    ,
         
                 emu_ppu_clk_n ,
                 mem_clk     ,
@@ -302,6 +305,7 @@ entity ppu_vga_render is
     signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
     signal dbg_disp_nt, dbg_disp_attr       : out std_logic_vector (7 downto 0);
     signal dbg_disp_ptn_h, dbg_disp_ptn_l   : out std_logic_vector (15 downto 0);
+    signal dbg_plt_addr                     : out std_logic_vector (4 downto 0);
     
             clk         : in std_logic;
             mem_clk     : in std_logic;
@@ -642,6 +646,7 @@ begin
     dbg_disp_attr <= disp_attr;
     dbg_disp_ptn_h <= disp_ptn_h;
     dbg_disp_ptn_l <= disp_ptn_l;
+    dbg_plt_addr <= plt_addr;
 
 
     clk_n <= not clk;
@@ -981,10 +986,15 @@ begin
     b <= nes_color_palette(pl_index) (11 downto 8);
     g <= nes_color_palette(pl_index) (7 downto 4);
     r <= nes_color_palette(pl_index) (3 downto 0);
---    d_print("rgb:" &
---        conv_hex8(nes_color_palette(pl_index) (11 downto 8)) &
---        conv_hex8(nes_color_palette(pl_index) (7 downto 4)) &
---        conv_hex8(nes_color_palette(pl_index) (3 downto 0)));
+--    b <= nes_color_palette(1) (11 downto 8);
+--    g <= nes_color_palette(2) (7 downto 4);
+--    r <= nes_color_palette(3) (3 downto 0);
+end;
+procedure stop_rgb is
+begin
+    b <= (others => '0');
+    g <= (others => '0');
+    r <= (others => '0');
 end;
 
     begin
@@ -993,9 +1003,7 @@ end;
 
             ppu_status <= (others => '0');
 
-            b <= (others => '0');
-            g <= (others => '0');
-            r <= (others => '0');
+            stop_rgb;
         else
             if (clk'event and clk = '0') then
                 d_print("-");
@@ -1296,6 +1304,8 @@ end;
                     (cur_y < conv_std_logic_vector(VSCAN, X_SIZE))) then
                     --output image.
                     output_rgb;
+                else
+                    stop_rgb;
                 end if;
 
                 --flag operation

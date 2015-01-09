@@ -31,6 +31,7 @@ add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_disp_nt
 add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_disp_attr
 add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_disp_ptn_h
 add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_disp_ptn_l
+add wave  -radix hex -label plt_addr sim:/testbench_qt_proj_test5/sim_board/dbg_d_io
 
 
 add wave -divider vga_out

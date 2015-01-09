@@ -8,8 +8,9 @@ entity ppu_render is
     signal dbg_ppu_clk                      : out std_logic;
     signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
     signal dbg_vga_x                        : out std_logic_vector (9 downto 0);
-    signal dbg_disp_nt, dbg_disp_attr : out std_logic_vector (7 downto 0);
-    signal dbg_disp_ptn_h, dbg_disp_ptn_l : out std_logic_vector (15 downto 0);
+    signal dbg_disp_nt, dbg_disp_attr       : out std_logic_vector (7 downto 0);
+    signal dbg_disp_ptn_h, dbg_disp_ptn_l   : out std_logic_vector (15 downto 0);
+    signal dbg_plt_addr                     : out std_logic_vector (4 downto 0);
     
             clk         : in std_logic;
             vga_clk     : in std_logic;
@@ -68,8 +69,9 @@ component vga_ctl
     signal dbg_ppu_clk                      : out std_logic;
     signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
     signal dbg_vga_x                        : out std_logic_vector (9 downto 0);
-    signal dbg_disp_nt, dbg_disp_attr : out std_logic_vector (7 downto 0);
-    signal dbg_disp_ptn_h, dbg_disp_ptn_l : out std_logic_vector (15 downto 0);
+    signal dbg_disp_nt, dbg_disp_attr       : out std_logic_vector (7 downto 0);
+    signal dbg_disp_ptn_h, dbg_disp_ptn_l   : out std_logic_vector (15 downto 0);
+    signal dbg_plt_addr                     : out std_logic_vector (4 downto 0);
 
             vga_clk     : in std_logic;
             mem_clk     : in std_logic;
@@ -149,6 +151,7 @@ begin
             dbg_vga_x                        ,
             dbg_disp_nt, dbg_disp_attr     ,
             dbg_disp_ptn_h, dbg_disp_ptn_l ,
+            dbg_plt_addr                     ,
             vga_clk     ,
             mem_clk     ,
             rst_n       ,

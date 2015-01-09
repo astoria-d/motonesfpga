@@ -21,6 +21,7 @@ entity qt_proj_test5 is
     signal dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y : out std_logic_vector (7 downto 0);
     signal dbg_disp_nt, dbg_disp_attr : out std_logic_vector (7 downto 0);
     signal dbg_disp_ptn_h, dbg_disp_ptn_l : out std_logic_vector (15 downto 0);
+
     signal dbg_ppu_addr_we_n    : out std_logic;
     signal dbg_ppu_clk_cnt          : out std_logic_vector(1 downto 0);
 
@@ -69,10 +70,12 @@ architecture rtl of qt_proj_test5 is
         signal dbg_ppu_clk                      : out std_logic;
         signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
         signal dbg_vga_x                        : out std_logic_vector (9 downto 0);
-        signal dbg_disp_nt, dbg_disp_attr : out std_logic_vector (7 downto 0);
-        signal dbg_disp_ptn_h, dbg_disp_ptn_l : out std_logic_vector (15 downto 0);
-        signal dbg_ppu_addr_we_n    : out std_logic;
-        signal dbg_ppu_clk_cnt          : out std_logic_vector(1 downto 0);
+        signal dbg_disp_nt, dbg_disp_attr       : out std_logic_vector (7 downto 0);
+        signal dbg_disp_ptn_h, dbg_disp_ptn_l   : out std_logic_vector (15 downto 0);
+        signal dbg_plt_addr                     : out std_logic_vector (4 downto 0);
+
+        signal dbg_ppu_addr_we_n                : out std_logic;
+        signal dbg_ppu_clk_cnt                  : out std_logic_vector(1 downto 0);
 
                 clk         : in std_logic;
                 mem_clk     : in std_logic;
@@ -172,6 +175,7 @@ architecture rtl of qt_proj_test5 is
     signal dbg_ppu_addr_dummy               : std_logic_vector (13 downto 0);
     signal dbg_nes_x                        : std_logic_vector (8 downto 0);
     signal dbg_vga_x                        : std_logic_vector (9 downto 0);
+    signal dbg_plt_addr                     : std_logic_vector (4 downto 0);
 
 begin
     --ppu/cpu clock generator
@@ -181,6 +185,7 @@ begin
     dbg_cpu_clk <= vga_clk;
     dbg_ppu_addr <= "00000" & dbg_nes_x;
     dbg_addr <= "000000" & dbg_vga_x;
+    dbg_d_io <= "000" & dbg_plt_addr;
     ppu_inst: ppu port map (  
         dbg_ppu_ce_n                                        ,
         dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status          ,
@@ -192,6 +197,7 @@ begin
         dbg_vga_x                        ,
         dbg_disp_nt, dbg_disp_attr                          ,
         dbg_disp_ptn_h, dbg_disp_ptn_l                      ,
+        dbg_plt_addr                     ,
         dbg_ppu_addr_we_n                                   ,
         dbg_ppu_clk_cnt                                     ,
 
@@ -316,6 +322,7 @@ end;
                         ppu_set(16#2006#, 16#3f#);
                     elsif (plt_step_cnt = 2) then
                         ppu_set(16#2006#, 16#00#);
+                    
                     elsif (plt_step_cnt = 4) then
                         --set palette data
                         ppu_set(16#2007#, 16#0f#);
@@ -325,9 +332,37 @@ end;
                         ppu_set(16#2007#, 16#10#);
                     elsif (plt_step_cnt = 10) then
                         ppu_set(16#2007#, 16#20#);
+
+                    elsif (plt_step_cnt = 12) then
+                        ppu_set(16#2007#, 16#0f#);
+                    elsif (plt_step_cnt = 14) then
+                        ppu_set(16#2007#, 16#04#);
+                    elsif (plt_step_cnt = 16) then
+                        ppu_set(16#2007#, 16#14#);
+                    elsif (plt_step_cnt = 18) then
+                        ppu_set(16#2007#, 16#24#);
+ 
+                    elsif (plt_step_cnt = 20) then
+                        ppu_set(16#2007#, 16#0f#);
+                    elsif (plt_step_cnt = 22) then
+                        ppu_set(16#2007#, 16#08#);
+                    elsif (plt_step_cnt = 24) then
+                        ppu_set(16#2007#, 16#18#);
+                    elsif (plt_step_cnt = 26) then
+                        ppu_set(16#2007#, 16#28#);
+ 
+                    elsif (plt_step_cnt = 28) then
+                        ppu_set(16#2007#, 16#0f#);
+                    elsif (plt_step_cnt = 30) then
+                        ppu_set(16#2007#, 16#0c#);
+                    elsif (plt_step_cnt = 32) then
+                        ppu_set(16#2007#, 16#1c#);
+                    elsif (plt_step_cnt = 34) then
+                        ppu_set(16#2007#, 16#2c#);
+ 
                     else
                         ppu_clr;
-                        if (plt_step_cnt > 10) then
+                        if (plt_step_cnt > 34) then
                             global_step_cnt := global_step_cnt + 1;
                         end if;
                     end if;
