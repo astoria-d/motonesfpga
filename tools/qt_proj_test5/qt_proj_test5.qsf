@@ -133,6 +133,8 @@ set_location_assignment PIN_T5 -to dram_ras_n
 set_location_assignment PIN_M5 -to dram_udqm
 set_location_assignment PIN_R8 -to dram_we_n
 
+set_global_assignment -name VHDL_FILE ../../de1_nes/mem/chr_rom.vhd
+set_global_assignment -name VHDL_FILE ../../de1_nes/address_decoder.vhd
 set_global_assignment -name VHDL_FILE ../../de1_nes/mem/ram.vhd
 set_global_assignment -name VHDL_FILE ../../de1_nes/motonesfpga_common.vhd
 set_global_assignment -name VHDL_FILE ../../de1_nes/ppu/ppu_registers.vhd

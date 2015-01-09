@@ -50,6 +50,16 @@ architecture rtl of qt_proj_test5 is
             );
     end component;
 
+    component ram
+        generic (abus_size : integer := 16; dbus_size : integer := 8);
+        port (  
+                clk               : in std_logic;
+                ce_n, oe_n, we_n  : in std_logic;   --select pin active low.
+                addr              : in std_logic_vector (abus_size - 1 downto 0);
+                d_io              : inout std_logic_vector (dbus_size - 1 downto 0)
+        );
+    end component;
+
     component ppu port (
         signal dbg_ppu_ce_n    : out std_logic;
         signal dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status : out std_logic_vector (7 downto 0);
@@ -86,17 +96,56 @@ architecture rtl of qt_proj_test5 is
                 b           : out std_logic_vector(3 downto 0)
     );
     end component;
-    
-    
-signal pos_x       : std_logic_vector (8 downto 0);
-signal pos_y       : std_logic_vector (8 downto 0);
-signal nes_r       : std_logic_vector (3 downto 0);
-signal nes_g       : std_logic_vector (3 downto 0);
-signal nes_b       : std_logic_vector (3 downto 0);
 
+    component v_address_decoder
+    generic (abus_size : integer := 14; dbus_size : integer := 8);
+        port (  clk         : in std_logic; 
+                mem_clk     : in std_logic;
+                rd_n        : in std_logic;
+                wr_n        : in std_logic;
+                ale         : in std_logic;
+                v_addr      : in std_logic_vector (13 downto 0);
+                v_data      : in std_logic_vector (7 downto 0);
+                nt_v_mirror : in std_logic;
+                pt_ce_n     : out std_logic;
+                nt0_ce_n    : out std_logic;
+                nt1_ce_n    : out std_logic
+            );
+    end component;
+
+    component chr_rom
+        generic (abus_size : integer := 13; dbus_size : integer := 8);
+        port (  
+                clk             : in std_logic;
+                ce_n            : in std_logic;     --active low.
+                addr            : in std_logic_vector (abus_size - 1 downto 0);
+                data            : out std_logic_vector (dbus_size - 1 downto 0);
+                nt_v_mirror     : out std_logic
+        );
+    end component;
+
+    component ls373
+        generic (
+            dsize : integer := 8
+        );
+        port (  c         : in std_logic;
+                oc_n      : in std_logic;
+                d         : in std_logic_vector(dsize - 1 downto 0);
+                q         : out std_logic_vector(dsize - 1 downto 0)
+        );
+    end component;
+
+    
+    
     constant data_size : integer := 8;
     constant addr_size : integer := 16;
-    constant size14    : integer := 14;
+    constant vram_size14    : integer := 14;
+
+    constant ram_2k : integer := 11;      --2k = 11 bit width.
+    constant rom_32k : integer := 15;     --32k = 15 bit width.
+    constant rom_4k : integer := 12;     --4k = 12 bit width. (for test use)
+    constant vram_1k : integer := 10;      --1k = 10 bit width.
+    constant chr_rom_8k : integer := 13;     --32k = 15 bit width.
 
     signal cpu_clk  : std_logic;
     signal ppu_clk  : std_logic;
@@ -113,6 +162,11 @@ signal nes_b       : std_logic_vector (3 downto 0);
     signal ale         : std_logic;
     signal vram_ad     : std_logic_vector (7 downto 0);
     signal vram_a      : std_logic_vector (13 downto 8);
+    signal v_addr   : std_logic_vector (13 downto 0);
+    signal nt_v_mirror  : std_logic;
+    signal pt_ce_n  : std_logic;
+    signal nt0_ce_n : std_logic;
+    signal nt1_ce_n : std_logic;
         
     signal dbg_ppu_addr_dummy               : std_logic_vector (13 downto 0);
     signal dbg_nes_x                        : std_logic_vector (8 downto 0);
@@ -161,51 +215,27 @@ begin
 
         );
 
---    ppu_inst: dummy_ppu 
---        port map (  ppu_clk     ,
---                rst_n       ,
---                pos_x       ,
---                pos_y       ,
---                nes_r       ,
---                nes_g       ,
---                nes_b       
---        );
+    ppu_addr_decoder : v_address_decoder generic map (vram_size14, data_size) 
+        port map (ppu_clk, mem_clk, rd_n, wr_n, ale, v_addr, vram_ad, 
+                nt_v_mirror, pt_ce_n, nt0_ce_n, nt1_ce_n);
 
---        vga_clk_gen_inst : vga_clk_gen
---        PORT map
---        (
---            --mem_clk_pll = 160 MHz.
---            base_clk, vga_clk_pll, pll_locked
---        );
-    --- testbench pll clock..
---    dummy_clock_p: process
---    begin
---        sdram_clk <= '1';
---        wait for 6250 ps / 2;
---        sdram_clk <= '0';
---        wait for 6250 ps / 2;
---    end process;
+    ---VRAM/CHR ROM instances
+    v_addr (13 downto 8) <= vram_a;
 
-    
---    vga_ctl_inst : vga_ctl
---    port map (  ppu_clk     ,
---            --vga_clk_pll, 
---            --ppu_clk ,
---            vga_clk     ,
---            rst_n       ,
---            pos_x       ,
---            pos_y       ,
---            nes_r       ,
---            nes_g       ,
---            nes_b       ,
---            h_sync_n    ,
---            v_sync_n    ,
---            r           ,
---            g           ,
---            b           
---    );
+    --transparent d-latch
+    vram_latch : ls373 generic map (data_size)
+                port map(ale, '0', vram_ad, v_addr(7 downto 0));
 
-   
+    vchr_rom : chr_rom generic map (chr_rom_8k, data_size)
+            port map (mem_clk, pt_ce_n, v_addr(chr_rom_8k - 1 downto 0), vram_ad, nt_v_mirror);
+
+    --name table/attr table
+    vram_nt0 : ram generic map (vram_1k, data_size)
+            port map (mem_clk, nt0_ce_n, rd_n, wr_n, v_addr(vram_1k - 1 downto 0), vram_ad);
+
+    vram_nt1 : ram generic map (vram_1k, data_size)
+            port map (mem_clk, nt1_ce_n, rd_n, wr_n, v_addr(vram_1k - 1 downto 0), vram_ad);
+
 --    signal addr : std_logic_vector( addr_size - 1 downto 0);
 --    signal d_io : std_logic_vector( data_size - 1 downto 0);
 --
