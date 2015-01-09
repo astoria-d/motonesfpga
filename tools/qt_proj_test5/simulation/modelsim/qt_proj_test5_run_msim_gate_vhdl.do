@@ -33,8 +33,8 @@ add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/g
 add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/b
 
 add wave -divider vga_pos
-add wave -radix decimal -unsigned  -label vga_x sim:/testbench_qt_proj_test5/sim_board/dbg_disp_ptn_h
 add wave -radix decimal -unsigned  -label nes_x sim:/testbench_qt_proj_test5/sim_board/dbg_disp_ptn_l
+add wave -radix decimal -unsigned  -label pos_x sim:/testbench_qt_proj_test5/sim_board/dbg_disp_ptn_h
 
 
 

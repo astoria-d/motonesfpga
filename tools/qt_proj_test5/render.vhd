@@ -73,7 +73,7 @@ component vga_ctl
             rd_n        : out std_logic;
             wr_n        : out std_logic;
             ale         : out std_logic;
-            vram_ad     : in  std_logic_vector (7 downto 0);
+            vram_ad     : inout  std_logic_vector (7 downto 0);
             vram_a      : out std_logic_vector (13 downto 8);
 
             --vga output
