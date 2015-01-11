@@ -11,6 +11,7 @@ entity ppu_render is
     signal dbg_disp_nt, dbg_disp_attr       : out std_logic_vector (7 downto 0);
     signal dbg_disp_ptn_h, dbg_disp_ptn_l   : out std_logic_vector (15 downto 0);
     signal dbg_plt_addr                     : out std_logic_vector (4 downto 0);
+    signal dbg_plt_data                     : out std_logic_vector (7 downto 0);
     
             clk         : in std_logic;
             vga_clk     : in std_logic;
@@ -40,6 +41,7 @@ entity ppu_render is
             ppu_status      : out std_logic_vector (7 downto 0);
             v_bus_busy_n    : out std_logic;
 
+            --ppu internal ram access
             r_nw            : in std_logic;
             oam_bus_ce_n    : in std_logic;
             plt_bus_ce_n    : in std_logic;
@@ -72,6 +74,7 @@ component vga_ctl
     signal dbg_disp_nt, dbg_disp_attr       : out std_logic_vector (7 downto 0);
     signal dbg_disp_ptn_h, dbg_disp_ptn_l   : out std_logic_vector (15 downto 0);
     signal dbg_plt_addr                     : out std_logic_vector (4 downto 0);
+    signal dbg_plt_data                     : out std_logic_vector (7 downto 0);
 
             vga_clk     : in std_logic;
             mem_clk     : in std_logic;
@@ -96,7 +99,14 @@ component vga_ctl
             ppu_mask        : in std_logic_vector (7 downto 0);
             read_status     : in std_logic;
             ppu_scroll_x    : in std_logic_vector (7 downto 0);
-            ppu_scroll_y    : in std_logic_vector (7 downto 0)
+            ppu_scroll_y    : in std_logic_vector (7 downto 0);
+
+            --ppu internal ram access
+            r_nw            : in std_logic;
+            oam_bus_ce_n    : in std_logic;
+            plt_bus_ce_n    : in std_logic;
+            oam_plt_addr    : in std_logic_vector (7 downto 0);
+            oam_plt_data    : inout std_logic_vector (7 downto 0)
     );
 end component;
 
@@ -152,6 +162,7 @@ begin
             dbg_disp_nt, dbg_disp_attr     ,
             dbg_disp_ptn_h, dbg_disp_ptn_l ,
             dbg_plt_addr                     ,
+            dbg_plt_data                     ,
             vga_clk     ,
             mem_clk     ,
             rst_n       ,
@@ -172,7 +183,13 @@ begin
             ppu_mask    ,
             read_status ,
             ppu_scroll_x ,
-            ppu_scroll_y 
+            ppu_scroll_y ,
+
+            r_nw            ,
+            oam_bus_ce_n    ,
+            plt_bus_ce_n    ,
+            oam_plt_addr    ,
+            oam_plt_data    
         );
 
     pos_p : process (rst_n, clk)

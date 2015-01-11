@@ -73,6 +73,7 @@ architecture rtl of qt_proj_test5 is
         signal dbg_disp_nt, dbg_disp_attr       : out std_logic_vector (7 downto 0);
         signal dbg_disp_ptn_h, dbg_disp_ptn_l   : out std_logic_vector (15 downto 0);
         signal dbg_plt_addr                     : out std_logic_vector (4 downto 0);
+        signal dbg_plt_data                     : out std_logic_vector (7 downto 0);
 
         signal dbg_ppu_addr_we_n                : out std_logic;
         signal dbg_ppu_clk_cnt                  : out std_logic_vector(1 downto 0);
@@ -176,6 +177,10 @@ architecture rtl of qt_proj_test5 is
     signal dbg_nes_x                        : std_logic_vector (8 downto 0);
     signal dbg_vga_x                        : std_logic_vector (9 downto 0);
     signal dbg_plt_addr                     : std_logic_vector (4 downto 0);
+    signal dbg_plt_data                     : std_logic_vector (7 downto 0);
+    signal dbg_ppu_data_dummy               : std_logic_vector (7 downto 0);
+    signal dbg_ppu_status_dummy             : std_logic_vector (7 downto 0);
+    
 
 begin
     --ppu/cpu clock generator
@@ -184,13 +189,15 @@ begin
 
     dbg_cpu_clk <= vga_clk;
     dbg_ppu_addr <= "00000" & dbg_nes_x;
-    dbg_addr <= "000000" & dbg_vga_x;
     dbg_d_io <= "000" & dbg_plt_addr;
+    dbg_ppu_data <= dbg_plt_data;
+    dbg_addr <= "00" & v_addr;
+    dbg_ppu_status <= vram_ad;
     ppu_inst: ppu port map (  
         dbg_ppu_ce_n                                        ,
-        dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status          ,
+        dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status_dummy          ,
         dbg_ppu_addr_dummy                                        ,
-        dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y        ,
+        dbg_ppu_data_dummy, dbg_ppu_scrl_x, dbg_ppu_scrl_y        ,
 
         dbg_ppu_clk                      ,
         dbg_nes_x                        ,
@@ -198,6 +205,7 @@ begin
         dbg_disp_nt, dbg_disp_attr                          ,
         dbg_disp_ptn_h, dbg_disp_ptn_l                      ,
         dbg_plt_addr                     ,
+        dbg_plt_data                     ,
         dbg_ppu_addr_we_n                                   ,
         dbg_ppu_clk_cnt                                     ,
 
@@ -371,17 +379,18 @@ end;
                 elsif (global_step_cnt = 2) then
                     --step1 = name table set.
                     if (nt_step_cnt = 0) then
-                        --set vram addr 2000
+                        --set vram addr 2004 (first row, 4th col)
                         ppu_set(16#2006#, 16#20#);
                     elsif (nt_step_cnt = 2) then
-                        ppu_set(16#2006#, 16#00#);
+                        ppu_set(16#2006#, 16#04#);
                     elsif (nt_step_cnt = 4) then
                         --set name tbl data
-                        ppu_set(16#2007#, 16#41#);
+                        --0x44, 45, 45 = DEE
+                        ppu_set(16#2007#, 16#44#);
                     elsif (nt_step_cnt = 6) then
-                        ppu_set(16#2007#, 16#42#);
+                        ppu_set(16#2007#, 16#45#);
                     elsif (nt_step_cnt = 8) then
-                        ppu_set(16#2007#, 16#43#);
+                        ppu_set(16#2007#, 16#45#);
                     else
                         ppu_clr;
                         if (nt_step_cnt > 8) then
@@ -394,8 +403,9 @@ end;
                     --final step = enable ppu.
                     if (enable_ppu_step_cnt = 0) then
                         --show bg
-                        --PPUMASK=1e
-                        ppu_set(16#2001#, 16#1e#);
+                        --PPUMASK=1e (show bg and sprite)
+                        --PPUMASK=0e (show bg only)
+                        ppu_set(16#2001#, 16#0e#);
                     elsif (enable_ppu_step_cnt = 2) then
                         --show enable nmi
                         --PPUCTRL=80

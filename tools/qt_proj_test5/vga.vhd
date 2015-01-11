@@ -19,6 +19,7 @@ entity vga_ctl is
     signal dbg_disp_nt, dbg_disp_attr       : out std_logic_vector (7 downto 0);
     signal dbg_disp_ptn_h, dbg_disp_ptn_l   : out std_logic_vector (15 downto 0);
     signal dbg_plt_addr                     : out std_logic_vector (4 downto 0);
+    signal dbg_plt_data                     : out std_logic_vector (7 downto 0);
 
             vga_clk     : in std_logic;
             mem_clk     : in std_logic;
@@ -43,7 +44,14 @@ entity vga_ctl is
             ppu_mask        : in std_logic_vector (7 downto 0);
             read_status     : in std_logic;
             ppu_scroll_x    : in std_logic_vector (7 downto 0);
-            ppu_scroll_y    : in std_logic_vector (7 downto 0)
+            ppu_scroll_y    : in std_logic_vector (7 downto 0);
+
+            --ppu internal ram access
+            r_nw            : in std_logic;
+            oam_bus_ce_n    : in std_logic;
+            plt_bus_ce_n    : in std_logic;
+            oam_plt_addr    : in std_logic_vector (7 downto 0);
+            oam_plt_data    : inout std_logic_vector (7 downto 0)
     );
 end vga_ctl;
 
@@ -70,6 +78,7 @@ component ppu_vga_render
     signal dbg_disp_nt, dbg_disp_attr       : out std_logic_vector (7 downto 0);
     signal dbg_disp_ptn_h, dbg_disp_ptn_l   : out std_logic_vector (15 downto 0);
     signal dbg_plt_addr                     : out std_logic_vector (4 downto 0);
+    signal dbg_plt_data                     : out std_logic_vector (7 downto 0);
     
             clk         : in std_logic;
             mem_clk     : in std_logic;
@@ -90,6 +99,7 @@ component ppu_vga_render
             ppu_status      : out std_logic_vector (7 downto 0);
             ppu_scroll_x    : in std_logic_vector (7 downto 0);
             ppu_scroll_y    : in std_logic_vector (7 downto 0);
+            
             r_nw            : in std_logic;
             oam_bus_ce_n    : in std_logic;
             plt_bus_ce_n    : in std_logic;
@@ -129,11 +139,6 @@ signal nes_y        : std_logic_vector (8 downto 0);
 
 
 -----dummy signal
-signal r_nw            : std_logic;
-signal oam_bus_ce_n    : std_logic;
-signal plt_bus_ce_n    : std_logic;
-signal oam_plt_addr    : std_logic_vector (7 downto 0);
-signal oam_plt_data    : std_logic_vector (7 downto 0);
 signal v_bus_busy_n    : std_logic;
 signal ppu_status      : std_logic_vector (7 downto 0);
 signal rr           : std_logic_vector (3 downto 0);
@@ -240,13 +245,6 @@ begin
         end if;
     end process;
 
-    --vga emulated render instance...
-    r_nw <= '1';
-    oam_bus_ce_n <= '1';
-    plt_bus_ce_n <= '1';
-    oam_plt_addr    <= (others => '0');
-    oam_plt_data    <= (others => 'Z');
-
     emu_ppu_clk_n <= not emu_ppu_clk;
     vga_render_inst : ppu_vga_render
         port map (
@@ -255,6 +253,7 @@ begin
         dbg_disp_nt, dbg_disp_attr      ,
         dbg_disp_ptn_h, dbg_disp_ptn_l  ,
         dbg_plt_addr                    ,
+        dbg_plt_data                    ,
         
                 emu_ppu_clk_n ,
                 mem_clk     ,
@@ -306,6 +305,7 @@ entity ppu_vga_render is
     signal dbg_disp_nt, dbg_disp_attr       : out std_logic_vector (7 downto 0);
     signal dbg_disp_ptn_h, dbg_disp_ptn_l   : out std_logic_vector (15 downto 0);
     signal dbg_plt_addr                     : out std_logic_vector (4 downto 0);
+    signal dbg_plt_data                     : out std_logic_vector (7 downto 0);
     
             clk         : in std_logic;
             mem_clk     : in std_logic;
@@ -647,6 +647,7 @@ begin
     dbg_disp_ptn_h <= disp_ptn_h;
     dbg_disp_ptn_l <= disp_ptn_l;
     dbg_plt_addr <= plt_addr;
+    dbg_plt_data <= plt_data;
 
 
     clk_n <= not clk;
