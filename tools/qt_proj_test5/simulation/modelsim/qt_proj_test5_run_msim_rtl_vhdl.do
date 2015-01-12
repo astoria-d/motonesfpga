@@ -48,8 +48,15 @@ add wave -label wr_n sim:/testbench_qt_proj_test5/sim_board/wr_n
 
 add wave  -label vram_a   -radix hex sim:/testbench_qt_proj_test5/sim_board/vram_a
 add wave  -label vram_ad  -radix hex sim:/testbench_qt_proj_test5/sim_board/vram_ad
-add wave  -label plt_addr -radix hex sim:/testbench_qt_proj_test5/sim_board/ppu_inst/render_inst/vga_render_inst/vga_render_inst/plt_addr
-add wave  -label plt_data -radix hex sim:/testbench_qt_proj_test5/sim_board/ppu_inst/render_inst/vga_render_inst/vga_render_inst/plt_data
+#add wave  -label plt_addr -radix hex sim:/testbench_qt_proj_test5/sim_board/ppu_inst/render_inst/vga_render_inst/vga_render_inst/plt_addr
+#add wave  -label plt_data -radix hex sim:/testbench_qt_proj_test5/sim_board/ppu_inst/render_inst/vga_render_inst/vga_render_inst/plt_data
+
+add wave -divider nt_ram
+add wave  -label ce_n   sim:/testbench_qt_proj_test5/sim_board/vram_nt0/ce_n
+add wave  -label oe_n   sim:/testbench_qt_proj_test5/sim_board/vram_nt0/oe_n
+add wave  -label we_n   sim:/testbench_qt_proj_test5/sim_board/vram_nt0/we_n
+add wave  -label addr   -radix hex sim:/testbench_qt_proj_test5/sim_board/vram_nt0/addr
+add wave  -label data   -radix hex sim:/testbench_qt_proj_test5/sim_board/vram_nt0/d_io
 
 add wave -divider vga_output
 add wave  -label h_sync_n   sim:/testbench_qt_proj_test5/sim_board/h_sync_n

@@ -445,7 +445,7 @@ begin
                 end if;
             else
                 ppu_addr_cnt_ce_n <= '1';
-                ale <= 'Z';
+                ale <= '0';
             end if; --if (cpu_addr = PPUADDR and ppu_clk_cnt = "00") then
 
             if (cpu_addr = PPUDATA and ppu_clk_cnt = "00") then

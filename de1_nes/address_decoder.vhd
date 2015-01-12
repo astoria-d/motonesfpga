@@ -155,7 +155,7 @@ begin
                         nt1_ce_n_in <= '1';
                         if (wr_n = '0') then
                             --write
-                            nt0_ce_n_in <= clk;
+                            nt0_ce_n_in <= not clk;
                         elsif (rd_n = '0') then 
                             --read
                             nt0_ce_n_in <= '0';
