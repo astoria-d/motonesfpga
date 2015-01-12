@@ -180,6 +180,8 @@ architecture rtl of qt_proj_test5 is
     signal dbg_plt_data                     : std_logic_vector (7 downto 0);
     signal dbg_ppu_data_dummy               : std_logic_vector (7 downto 0);
     signal dbg_ppu_status_dummy             : std_logic_vector (7 downto 0);
+    signal dbg_ppu_scrl_x_dummy             : std_logic_vector (7 downto 0);
+    
     
 
 begin
@@ -191,13 +193,17 @@ begin
     dbg_ppu_addr <= "00000" & dbg_nes_x;
     dbg_d_io <= "000" & dbg_plt_addr;
     dbg_ppu_data <= dbg_plt_data;
-    dbg_addr <= "00" & v_addr;
+    dbg_addr <= "0000000000" & vram_a;
     dbg_ppu_status <= vram_ad;
+    dbg_ppu_scrl_x(0) <= ale;
+    dbg_ppu_scrl_x(1) <= rd_n;
+    dbg_ppu_scrl_x(2) <= wr_n;
+    
     ppu_inst: ppu port map (  
         dbg_ppu_ce_n                                        ,
         dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status_dummy          ,
         dbg_ppu_addr_dummy                                        ,
-        dbg_ppu_data_dummy, dbg_ppu_scrl_x, dbg_ppu_scrl_y        ,
+        dbg_ppu_data_dummy, dbg_ppu_scrl_x_dummy, dbg_ppu_scrl_y        ,
 
         dbg_ppu_clk                      ,
         dbg_nes_x                        ,
