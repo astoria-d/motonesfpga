@@ -32,13 +32,16 @@ add wave -label dbg_disp_ptn_h  -radix hex sim:/testbench_qt_proj_test5/sim_boar
 add wave -label dbg_disp_ptn_l  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_disp_ptn_l
 
 add wave -divider vram
+add wave -label vga_clk_n sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_scrl_x(4)
 add wave -label ale sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_scrl_x(0)
 add wave -label rd_n sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_scrl_x(1)
 add wave -label wr_n sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_scrl_x(2)
 add wave -label nt0_ce_n sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_scrl_x(3)
 
-add wave  -radix hex -label vram_addr sim:/testbench_qt_proj_test5/sim_board/dbg_addr
-add wave  -radix hex -label vram_data sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_status
+add wave  -radix hex -label vram_a sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_data
+add wave  -radix hex -label vram_ad sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_status
+add wave  -radix hex -label v_addr sim:/testbench_qt_proj_test5/sim_board/dbg_addr
+
 #add wave  -radix hex -label plt_addr sim:/testbench_qt_proj_test5/sim_board/dbg_d_io
 #add wave  -radix hex -label plt_data sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_data
 
@@ -87,3 +90,4 @@ run 20 us
 wave zoom full
 
 #run 100 us
+

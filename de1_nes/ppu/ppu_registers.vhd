@@ -69,6 +69,7 @@ entity ls373 is
         dsize : integer := 8
     );
     port (  c         : in std_logic;
+            we_n      : in std_logic;
             oc_n      : in std_logic;
             d         : in std_logic_vector(dsize - 1 downto 0);
             q         : out std_logic_vector(dsize - 1 downto 0)
@@ -77,12 +78,15 @@ end ls373;
 
 architecture rtl of ls373 is
 
-component data_latch
+component d_flip_flop
     generic (
             dsize : integer := 8
             );
     port (  
             clk     : in std_logic;
+            res_n   : in std_logic;
+            set_n   : in std_logic;
+            we_n    : in std_logic;
             d       : in std_logic_vector (dsize - 1 downto 0);
             q       : out std_logic_vector (dsize - 1 downto 0)
         );
@@ -102,8 +106,8 @@ end component;
 signal q_out       : std_logic_vector (dsize - 1 downto 0);
 
 begin
-    ls373_inst : data_latch generic map (dsize)
-            port map (c, d, q_out);
+    out_reg_inst : d_flip_flop generic map (dsize)
+            port map (c, '1', '1', we_n, d, q_out);
     tsb_inst : tri_state_buffer generic map (dsize)
             port map (oc_n, q_out, q);
 end rtl;

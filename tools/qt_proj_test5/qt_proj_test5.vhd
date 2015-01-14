@@ -134,6 +134,7 @@ architecture rtl of qt_proj_test5 is
             dsize : integer := 8
         );
         port (  c         : in std_logic;
+                we_n      : in std_logic;
                 oc_n      : in std_logic;
                 d         : in std_logic_vector(dsize - 1 downto 0);
                 q         : out std_logic_vector(dsize - 1 downto 0)
@@ -172,6 +173,9 @@ architecture rtl of qt_proj_test5 is
     signal pt_ce_n  : std_logic;
     signal nt0_ce_n : std_logic;
     signal nt1_ce_n : std_logic;
+
+    signal ale_n       : std_logic;
+    signal vga_clk_n   : std_logic;
         
     signal dbg_ppu_addr_dummy               : std_logic_vector (13 downto 0);
     signal dbg_nes_x                        : std_logic_vector (8 downto 0);
@@ -192,13 +196,15 @@ begin
     dbg_cpu_clk <= vga_clk;
     dbg_ppu_addr <= "00000" & dbg_nes_x;
     dbg_d_io <= "000" & dbg_plt_addr;
-    dbg_ppu_data <= dbg_plt_data;
+    --dbg_ppu_data <= dbg_plt_data;
+    dbg_ppu_data <= "00" & vram_a;
     dbg_addr <= "00" & v_addr;
     dbg_ppu_status <= vram_ad;
     dbg_ppu_scrl_x(0) <= ale;
     dbg_ppu_scrl_x(1) <= rd_n;
     dbg_ppu_scrl_x(2) <= wr_n;
     dbg_ppu_scrl_x(3) <= nt0_ce_n;
+    dbg_ppu_scrl_x(4) <= vga_clk_n;
     
     ppu_inst: ppu port map (  
         dbg_ppu_ce_n                                        ,
@@ -248,8 +254,10 @@ begin
     v_addr (13 downto 8) <= vram_a;
 
     --transparent d-latch
+	 ale_n <= not ale;
+	 vga_clk_n <= not vga_clk;
     vram_latch : ls373 generic map (data_size)
-                port map(ale, '0', vram_ad, v_addr(7 downto 0));
+                port map(vga_clk, ale_n, ale, vram_ad, v_addr(7 downto 0));
 
     vchr_rom : chr_rom generic map (chr_rom_8k, data_size)
             port map (mem_clk, pt_ce_n, v_addr(chr_rom_8k - 1 downto 0), vram_ad, nt_v_mirror);
@@ -275,6 +283,7 @@ begin
     ppu_ce_n <= '0';
     cpu_addr <= conv_std_logic_vector(ad, 16)(2 downto 0);
     cpu_d <= conv_std_logic_vector(dt, 8);
+    ale <= 'Z';
 end;
 procedure ppu_clr is
 begin
@@ -282,6 +291,7 @@ begin
     cpu_d <= (others => 'Z');
     r_nw <= '1';
     ppu_ce_n <= '1';
+    ale <= '0';
 end;
 
     begin
@@ -426,6 +436,7 @@ end;
                     enable_ppu_step_cnt := enable_ppu_step_cnt + 1;
 
                 else
+                    ale <= 'Z';
                     init_done := '1';
                 end if;
             end if;
