@@ -38,12 +38,10 @@ add wave -label rd_n sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_scrl_x(1)
 add wave -label wr_n sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_scrl_x(2)
 add wave -label nt0_ce_n sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_scrl_x(3)
 
-add wave  -radix hex -label vram_a sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_data
-add wave  -radix hex -label vram_ad sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_status
 add wave  -radix hex -label v_addr sim:/testbench_qt_proj_test5/sim_board/dbg_addr
-
-#add wave  -radix hex -label plt_addr sim:/testbench_qt_proj_test5/sim_board/dbg_d_io
-#add wave  -radix hex -label plt_data sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_data
+add wave  -radix hex -label vram_ad sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_status
+add wave  -radix hex -label plt_addr sim:/testbench_qt_proj_test5/sim_board/dbg_d_io
+add wave  -radix hex -label plt_data sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_data
 
 
 
@@ -85,9 +83,7 @@ view signals
 ###run 10 us
 run 3 us
 
-run 20 us
+run 100 us
 
 wave zoom full
-
-#run 100 us
 

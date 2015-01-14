@@ -196,8 +196,7 @@ begin
     dbg_cpu_clk <= vga_clk;
     dbg_ppu_addr <= "00000" & dbg_nes_x;
     dbg_d_io <= "000" & dbg_plt_addr;
-    --dbg_ppu_data <= dbg_plt_data;
-    dbg_ppu_data <= "00" & vram_a;
+    dbg_ppu_data <= dbg_plt_data;
     dbg_addr <= "00" & v_addr;
     dbg_ppu_status <= vram_ad;
     dbg_ppu_scrl_x(0) <= ale;
@@ -357,34 +356,34 @@ end;
                         ppu_set(16#2007#, 16#10#);
                     elsif (plt_step_cnt = 10) then
                         ppu_set(16#2007#, 16#20#);
---
---                    elsif (plt_step_cnt = 12) then
---                        ppu_set(16#2007#, 16#0f#);
---                    elsif (plt_step_cnt = 14) then
---                        ppu_set(16#2007#, 16#04#);
---                    elsif (plt_step_cnt = 16) then
---                        ppu_set(16#2007#, 16#14#);
---                    elsif (plt_step_cnt = 18) then
---                        ppu_set(16#2007#, 16#24#);
--- 
---                    elsif (plt_step_cnt = 20) then
---                        ppu_set(16#2007#, 16#0f#);
---                    elsif (plt_step_cnt = 22) then
---                        ppu_set(16#2007#, 16#08#);
---                    elsif (plt_step_cnt = 24) then
---                        ppu_set(16#2007#, 16#18#);
---                    elsif (plt_step_cnt = 26) then
---                        ppu_set(16#2007#, 16#28#);
--- 
---                    elsif (plt_step_cnt = 28) then
---                        ppu_set(16#2007#, 16#0f#);
---                    elsif (plt_step_cnt = 30) then
---                        ppu_set(16#2007#, 16#0c#);
---                    elsif (plt_step_cnt = 32) then
---                        ppu_set(16#2007#, 16#1c#);
---                    elsif (plt_step_cnt = 34) then
---                        ppu_set(16#2007#, 16#2c#);
--- 
+
+                    elsif (plt_step_cnt = 12) then
+                        ppu_set(16#2007#, 16#0f#);
+                    elsif (plt_step_cnt = 14) then
+                        ppu_set(16#2007#, 16#04#);
+                    elsif (plt_step_cnt = 16) then
+                        ppu_set(16#2007#, 16#14#);
+                    elsif (plt_step_cnt = 18) then
+                        ppu_set(16#2007#, 16#24#);
+ 
+                    elsif (plt_step_cnt = 20) then
+                        ppu_set(16#2007#, 16#0f#);
+                    elsif (plt_step_cnt = 22) then
+                        ppu_set(16#2007#, 16#08#);
+                    elsif (plt_step_cnt = 24) then
+                        ppu_set(16#2007#, 16#18#);
+                    elsif (plt_step_cnt = 26) then
+                        ppu_set(16#2007#, 16#28#);
+ 
+                    elsif (plt_step_cnt = 28) then
+                        ppu_set(16#2007#, 16#0f#);
+                    elsif (plt_step_cnt = 30) then
+                        ppu_set(16#2007#, 16#0c#);
+                    elsif (plt_step_cnt = 32) then
+                        ppu_set(16#2007#, 16#1c#);
+                    elsif (plt_step_cnt = 34) then
+                        ppu_set(16#2007#, 16#2c#);
+ 
                     else
                         ppu_clr;
                         if (plt_step_cnt > 10) then
