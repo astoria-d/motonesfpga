@@ -1,0 +1,7 @@
+
+in order to build regression test, you need to have nes development tools.
+grab cc65 from github by following command.
+
+git clone https://github.com/cc65/cc65.git
+
+
