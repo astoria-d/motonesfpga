@@ -407,9 +407,35 @@ end;
                         ppu_set(16#2007#, 16#45#);
                     elsif (nt_step_cnt = 8) then
                         ppu_set(16#2007#, 16#45#);
+
+                    elsif (nt_step_cnt = 10) then
+                        --set vram addr 21d1
+                        ppu_set(16#2006#, 16#21#);
+                    elsif (nt_step_cnt = 12) then
+                        ppu_set(16#2006#, 16#E6#);
+                    elsif (nt_step_cnt = 14) then
+                        --msg=DEE TEST !!!
+                        ppu_set(16#2007#, 16#44#);
+                    elsif (nt_step_cnt = 16) then
+                        ppu_set(16#2007#, 16#45#);
+                    elsif (nt_step_cnt = 18) then
+                        ppu_set(16#2007#, 16#45#);
+                    elsif (nt_step_cnt = 20) then
+                        ppu_set(16#2007#, 16#00#);
+                    elsif (nt_step_cnt = 22) then
+                        ppu_set(16#2007#, 16#54#);
+                    elsif (nt_step_cnt = 24) then
+                        ppu_set(16#2007#, 16#45#);
+                    elsif (nt_step_cnt = 26) then
+                        ppu_set(16#2007#, 16#53#);
+                    elsif (nt_step_cnt = 28) then
+                        ppu_set(16#2007#, 16#54#);
+                    elsif (nt_step_cnt = 30) then
+                        ppu_set(16#2007#, 16#21#);
+
                     else
                         ppu_clr;
-                        if (nt_step_cnt > 8) then
+                        if (nt_step_cnt > 30) then
                             global_step_cnt := global_step_cnt + 1;
                         end if;
                     end if;
