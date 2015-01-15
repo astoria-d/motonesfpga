@@ -148,6 +148,23 @@ nt2_st:
     lda #$e4
     sta $2007
 
+;;---------------------
+;;;set sprite
+    ;;sprite addr=00
+    lda #$00
+    sta $2003
+    ;;sprite data: y=60
+    lda #$3c
+    sta $2004
+    ;;tile=0x4d (ascii 'M')
+    lda #$4d
+    sta $2004
+    lda #$00
+    sta $2004
+    ;x=39
+    lda #$27
+    sta $2004
+
 ;;;    ;;dma test data.
 ;;;    ldy #$00
 ;;;    ldx #$41
