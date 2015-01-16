@@ -8,44 +8,47 @@ entity ppu is
     signal dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status : out std_logic_vector (7 downto 0);
     signal dbg_ppu_addr : out std_logic_vector (13 downto 0);
     signal dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y : out std_logic_vector (7 downto 0);
-    signal dbg_disp_nt, dbg_disp_attr : out std_logic_vector (7 downto 0);
-    signal dbg_disp_ptn_h, dbg_disp_ptn_l : out std_logic_vector (15 downto 0);
-    signal dbg_ppu_addr_we_n    : out std_logic;
-    signal dbg_ppu_clk_cnt          : out std_logic_vector(1 downto 0);
+
+    signal dbg_ppu_clk                      : out std_logic;
+    signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
+    signal dbg_vga_x                        : out std_logic_vector (9 downto 0);
+    signal dbg_disp_nt, dbg_disp_attr       : out std_logic_vector (7 downto 0);
+    signal dbg_disp_ptn_h, dbg_disp_ptn_l   : out std_logic_vector (15 downto 0);
+    signal dbg_plt_addr                     : out std_logic_vector (4 downto 0);
+    signal dbg_plt_data                     : out std_logic_vector (7 downto 0);
+    signal dbg_p_oam_ce_rn_wn               : out std_logic_vector (2 downto 0);
+    signal dbg_p_oam_addr                   : out std_logic_vector (7 downto 0);
+    signal dbg_p_oam_data                   : out std_logic_vector (7 downto 0);
+    signal dbg_s_oam_ce_rn_wn               : out std_logic_vector (2 downto 0);
+    signal dbg_s_oam_addr                   : out std_logic_vector (4 downto 0);
+    signal dbg_s_oam_data                   : out std_logic_vector (7 downto 0);
+
+    signal dbg_ppu_addr_we_n                : out std_logic;
+    signal dbg_ppu_clk_cnt                  : out std_logic_vector(1 downto 0);
 
     
             clk         : in std_logic;
             mem_clk     : in std_logic;
-            sdram_clk   : in std_logic;
             ce_n        : in std_logic;
             rst_n       : in std_logic;
             r_nw        : in std_logic;
             cpu_addr    : in std_logic_vector (2 downto 0);
             cpu_d       : inout std_logic_vector (7 downto 0);
+
             vblank_n    : out std_logic;
             rd_n        : out std_logic;
             wr_n        : out std_logic;
             ale         : out std_logic;
             vram_ad     : inout std_logic_vector (7 downto 0);
             vram_a      : out std_logic_vector (13 downto 8);
+
             vga_clk     : in std_logic;
             h_sync_n    : out std_logic;
             v_sync_n    : out std_logic;
             r           : out std_logic_vector(3 downto 0);
             g           : out std_logic_vector(3 downto 0);
-            b           : out std_logic_vector(3 downto 0);
+            b           : out std_logic_vector(3 downto 0)
 
-            --SDRAM Signals
-            wbs_adr_i	:	out std_logic_vector (21 downto 0);		--Address (Bank, Row, Col)
-            wbs_dat_i	:	out std_logic_vector (15 downto 0);		--Data In (16 bits)
-            wbs_we_i	:	out std_logic;							--Write Enable
-            wbs_tga_i	:	out std_logic_vector (7 downto 0);		--Address Tag : Read/write burst length-1 (0 represents 1 word, FF represents 256 words)
-            wbs_cyc_i	:	out std_logic;							--Cycle Command from interface
-            wbs_stb_i	:	out std_logic;							--Strobe Command from interface
-            wbs_dat_o	:	in std_logic_vector (15 downto 0);		--Data Out (16 bits)
-            wbs_stall_o	:	in std_logic;							--Slave is not ready to receive new data
-            wbs_err_o	:	in std_logic;							--Error flag: OOR Burst. Burst length is greater that 256-column address
-            wbs_ack_o	:	in std_logic 							--When Read Burst: DATA bus must be valid in this cycle
     );
 end ppu;
 
@@ -53,11 +56,23 @@ architecture rtl of ppu is
 
 component ppu_render
     port (  
-    signal dbg_disp_nt, dbg_disp_attr : out std_logic_vector (7 downto 0);
-    signal dbg_disp_ptn_h, dbg_disp_ptn_l : out std_logic_vector (15 downto 0);
+    signal dbg_ppu_clk                      : out std_logic;
+    signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
+    signal dbg_vga_x                        : out std_logic_vector (9 downto 0);
+    signal dbg_disp_nt, dbg_disp_attr       : out std_logic_vector (7 downto 0);
+    signal dbg_disp_ptn_h, dbg_disp_ptn_l   : out std_logic_vector (15 downto 0);
+    signal dbg_plt_addr                     : out std_logic_vector (4 downto 0);
+    signal dbg_plt_data                     : out std_logic_vector (7 downto 0);
+    signal dbg_p_oam_ce_rn_wn               : out std_logic_vector (2 downto 0);
+    signal dbg_p_oam_addr                   : out std_logic_vector (7 downto 0);
+    signal dbg_p_oam_data                   : out std_logic_vector (7 downto 0);
+    signal dbg_s_oam_ce_rn_wn               : out std_logic_vector (2 downto 0);
+    signal dbg_s_oam_addr                   : out std_logic_vector (4 downto 0);
+    signal dbg_s_oam_data                   : out std_logic_vector (7 downto 0);
     
     
             clk         : in std_logic;
+            vga_clk     : in std_logic;
             mem_clk     : in std_logic;
             rst_n       : in std_logic;
             rd_n        : out std_logic;
@@ -65,53 +80,26 @@ component ppu_render
             ale         : out std_logic;
             vram_ad     : inout std_logic_vector (7 downto 0);
             vram_a      : out std_logic_vector (13 downto 8);
-            pos_x       : out std_logic_vector (8 downto 0);
-            pos_y       : out std_logic_vector (8 downto 0);
+
+            h_sync_n    : out std_logic;
+            v_sync_n    : out std_logic;
             r           : out std_logic_vector (3 downto 0);
             g           : out std_logic_vector (3 downto 0);
             b           : out std_logic_vector (3 downto 0);
+
             ppu_ctrl        : in std_logic_vector (7 downto 0);
             ppu_mask        : in std_logic_vector (7 downto 0);
             read_status     : in std_logic;
-            ppu_status      : out std_logic_vector (7 downto 0);
             ppu_scroll_x    : in std_logic_vector (7 downto 0);
             ppu_scroll_y    : in std_logic_vector (7 downto 0);
+            ppu_status      : out std_logic_vector (7 downto 0);
+            v_bus_busy_n    : out std_logic;
+
             r_nw            : in std_logic;
             oam_bus_ce_n    : in std_logic;
             plt_bus_ce_n    : in std_logic;
             oam_plt_addr    : in std_logic_vector (7 downto 0);
-            oam_plt_data    : inout std_logic_vector (7 downto 0);
-            v_bus_busy_n    : out std_logic
-    );
-end component;
-
-component vga_ctl
-    port (  ppu_clk     : in std_logic;
-            sdram_clk   : in std_logic;
-            vga_clk     : in std_logic;
-            rst_n       : in std_logic;
-            pos_x       : in std_logic_vector (8 downto 0);
-            pos_y       : in std_logic_vector (8 downto 0);
-            nes_r       : in std_logic_vector (3 downto 0);
-            nes_g       : in std_logic_vector (3 downto 0);
-            nes_b       : in std_logic_vector (3 downto 0);
-            h_sync_n    : out std_logic;
-            v_sync_n    : out std_logic;
-            r           : out std_logic_vector(3 downto 0);
-            g           : out std_logic_vector(3 downto 0);
-            b           : out std_logic_vector(3 downto 0);
-
-            --SDRAM Signals
-            wbs_adr_i	:	out std_logic_vector (21 downto 0);		--Address (Bank, Row, Col)
-            wbs_dat_i	:	out std_logic_vector (15 downto 0);		--Data In (16 bits)
-            wbs_we_i	:	out std_logic;							--Write Enable
-            wbs_tga_i	:	out std_logic_vector (7 downto 0);		--Address Tag : Read/write burst length-1 (0 represents 1 word, FF represents 256 words)
-            wbs_cyc_i	:	out std_logic;							--Cycle Command from interface
-            wbs_stb_i	:	out std_logic;							--Strobe Command from interface
-            wbs_dat_o	:	in std_logic_vector (15 downto 0);		--Data Out (16 bits)
-            wbs_stall_o	:	in std_logic;							--Slave is not ready to receive new data
-            wbs_err_o	:	in std_logic;							--Error flag: OOR Burst. Burst length is greater that 256-column address
-            wbs_ack_o	:	in std_logic 							--When Read Burst: DATA bus must be valid in this cycle
+            oam_plt_data    : inout std_logic_vector (7 downto 0)
     );
 end component;
 
@@ -142,12 +130,6 @@ component counter_register
             q           : out std_logic_vector(dsize - 1 downto 0)
     );
 end component;
-
-signal pos_x       : std_logic_vector (8 downto 0);
-signal pos_y       : std_logic_vector (8 downto 0);
-signal nes_r       : std_logic_vector (3 downto 0);
-signal nes_g       : std_logic_vector (3 downto 0);
-signal nes_b       : std_logic_vector (3 downto 0);
 
 constant dsize     : integer := 8;
 
@@ -227,43 +209,26 @@ begin
 
 
     render_inst : ppu_render port map (
+    dbg_ppu_clk                      ,
+    dbg_nes_x                        ,
+    dbg_vga_x                        ,
     dbg_disp_nt, dbg_disp_attr, dbg_disp_ptn_h, dbg_disp_ptn_l,
+    dbg_plt_addr                     ,
+    dbg_plt_data                     ,
+    dbg_p_oam_ce_rn_wn              ,
+    dbg_p_oam_addr                  ,
+    dbg_p_oam_data                  ,
+    dbg_s_oam_ce_rn_wn              ,
+    dbg_s_oam_addr                  ,
+    dbg_s_oam_data                  ,
     
-            clk, mem_clk, rst_n,
+            clk, vga_clk, mem_clk, rst_n,
             rd_n, wr_n, ale, vram_ad, vram_a,
-            pos_x, pos_y, nes_r, nes_g, nes_b,
-            ppu_ctrl, ppu_mask, read_status, ppu_status, ppu_scroll_x, ppu_scroll_y,
+            h_sync_n, v_sync_n, r, g, b, 
+            ppu_ctrl, ppu_mask, read_status, ppu_scroll_x, ppu_scroll_y,
+            ppu_status, v_bus_busy_n, 
             r_nw, oam_bus_ce_n, plt_bus_ce_n, 
-            oam_plt_addr, oam_plt_data, v_bus_busy_n);
-
-    vga_ctl_inst : vga_ctl
-    port map (  clk     ,
-            sdram_clk   ,
-            vga_clk     ,
-            rst_n       ,
-            pos_x       ,
-            pos_y       ,
-            nes_r       ,
-            nes_g       ,
-            nes_b       ,
-            h_sync_n    ,
-            v_sync_n    ,
-            r           ,
-            g           ,
-            b           ,
-            
-            --SDRAM Signals
-            wbs_adr_i	,
-            wbs_dat_i	,
-            wbs_we_i	,
-            wbs_tga_i	,
-            wbs_cyc_i	,
-            wbs_stb_i	,
-            wbs_dat_o	,
-            wbs_stall_o	,
-            wbs_err_o	,
-            wbs_ack_o	
-    );
+            oam_plt_addr, oam_plt_data);
 
     --PPU registers.
     clk_n <= not clk;
@@ -498,7 +463,7 @@ begin
                 end if;
             else
                 ppu_addr_cnt_ce_n <= '1';
-                ale <= 'Z';
+                ale <= '0';
             end if; --if (cpu_addr = PPUADDR and ppu_clk_cnt = "00") then
 
             if (cpu_addr = PPUDATA and ppu_clk_cnt = "00") then

@@ -49,7 +49,6 @@ architecture stimulus of testbench_motones_sim is
             rst_n     	: in std_logic;
             joypad1     : in std_logic_vector(7 downto 0);
             joypad2     : in std_logic_vector(7 downto 0);
-            vga_clk     : out std_logic;
             h_sync_n    : out std_logic;
             v_sync_n    : out std_logic;
             r           : out std_logic_vector(3 downto 0);
@@ -58,19 +57,7 @@ architecture stimulus of testbench_motones_sim is
              );
     end component;
 
-    component vga_device
-    port (  vga_clk     : in std_logic;
-            rst_n       : in std_logic;
-            h_sync_n    : in std_logic;
-            v_sync_n    : in std_logic;
-            r           : in std_logic_vector(3 downto 0);
-            g           : in std_logic_vector(3 downto 0);
-            b           : in std_logic_vector(3 downto 0)
-            );
-    end component;
-
     signal base_clk         : std_logic;
-    signal vga_clk         : std_logic;
     signal reset_input      : std_logic;
 
     signal h_sync_n    : std_logic;
@@ -159,10 +146,7 @@ dbg_ppu_clk_cnt          ,
 
     
     base_clk, reset_input, joypad1, joypad2, 
-            vga_clk, h_sync_n, v_sync_n, r, g, b);
-
---    dummy_vga_disp : vga_device 
---        port map (vga_clk, reset_input, h_sync_n, v_sync_n, r, g, b);
+            h_sync_n, v_sync_n, r, g, b);
 
     --- input reset.
     reset_p: process
