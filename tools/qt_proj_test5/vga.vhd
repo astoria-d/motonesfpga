@@ -1001,14 +1001,9 @@ end;
     begin
         if (rst_n = '0') then
             nt_we_n <= '1';
-
             ppu_status <= (others => '0');
-
             stop_rgb;
         else
-            if (clk'event and clk = '0') then
-                d_print("-");
-            end if;
 
             if (clk'event and clk = '1') then
 
@@ -1055,8 +1050,6 @@ end;
                                               disp_nt(dsize - 1 downto 0) 
                                                     & "0"  & prf_y(2 downto 0) + "00000000001000";
                     end if;
-
-
 
                     ----fetch next tile byte.
                     if (prf_x (2 downto 0) = "010") then
