@@ -1033,16 +1033,8 @@ end;
                                 & prf_x(dsize - 1 downto 3);
                         vram_addr(asize - 1 downto 10) <= "10" & ppu_ctrl(PPUBNA downto 0) 
                                                         + ("000" & prf_x(dsize));
-                    end if;
-                    if (prf_x (2 downto 0) = "010") then
-                        nt_we_n <= '0';
-                    else
-                        nt_we_n <= '1';
-                    end if;
-
-                    --TODO must load 8 cycle each for the first two tiles!!!
                     ----fetch attr table byte.
-                    if (prf_x (4 downto 0) = "00011") then
+                    elsif (prf_x (4 downto 0) = "00011") then
                         --attribute table is loaded every 32 cycle.
                         --attr table at 0x23c0
                         vram_addr(dsize - 1 downto 0) <= "11000000" +
@@ -1050,7 +1042,30 @@ end;
                         vram_addr(asize - 1 downto dsize) <= "10" &
                                 ppu_ctrl(PPUBNA downto 0) & "11"
                                     + ("000" & prf_x(dsize) & "00");
+                    ----fetch pattern table low byte.
+                    elsif (prf_x (2 downto 0) = "101") then
+                         --vram addr is incremented every 8 cycle.
+                         vram_addr <= "0" & ppu_ctrl(PPUBPA) & 
+                                              disp_nt(dsize - 1 downto 0) 
+                                                    & "0"  & prf_y(2  downto 0);
+                    ----fetch pattern table high byte.
+                    elsif (prf_x (2 downto 0) = "111") then
+                         --vram addr is incremented every 8 cycle.
+                         vram_addr <= "0" & ppu_ctrl(PPUBPA) & 
+                                              disp_nt(dsize - 1 downto 0) 
+                                                    & "0"  & prf_y(2 downto 0) + "00000000001000";
                     end if;
+
+
+
+                    ----fetch next tile byte.
+                    if (prf_x (2 downto 0) = "010") then
+                        nt_we_n <= '0';
+                    else
+                        nt_we_n <= '1';
+                    end if;
+
+                    ----fetch attr table byte.
                     if (prf_x (4 downto 0) = "00100") then
                         attr_we_n <= '0';
                     else
@@ -1067,32 +1082,20 @@ end;
                     else
                         attr_ce_n <= '1';
                     end if;
-                    
-                        ----fetch pattern table low byte.
-                        if (prf_x (2 downto 0) = "101") then
-                            --vram addr is incremented every 8 cycle.
-                            vram_addr <= "0" & ppu_ctrl(PPUBPA) & 
-                                            disp_nt(dsize - 1 downto 0) 
-                                                & "0"  & prf_y(2  downto 0);
-                        end if;
-                        if (prf_x (2 downto 0) = "110") then
-                            ptn_l_we_n <= '0';
-                        else
-                            ptn_l_we_n <= '1';
-                        end if;
 
-                        ----fetch pattern table high byte.
-                        if (prf_x (2 downto 0) = "111") then
-                            --vram addr is incremented every 8 cycle.
-                            vram_addr <= "0" & ppu_ctrl(PPUBPA) & 
-                                            disp_nt(dsize - 1 downto 0) 
-                                                & "0"  & prf_y(2 downto 0) + "00000000001000";
-                        end if;
-                        if (prf_x (2 downto 0) = "000") then
-                            ptn_h_we_n <= '0';
-                        else
-                            ptn_h_we_n <= '1';
-                        end if;
+                    ----fetch pattern table low byte.
+                    if (prf_x (2 downto 0) = "110") then
+                         ptn_l_we_n <= '0';
+                    else
+                         ptn_l_we_n <= '1';
+                    end if;
+
+                    ----fetch pattern table high byte.
+                    if (prf_x (2 downto 0) = "000") then
+                         ptn_h_we_n <= '0';
+                    else
+                         ptn_h_we_n <= '1';
+                    end if;
 
                 end if;--if (ppu_mask(PPUSBG) = '1') and
 

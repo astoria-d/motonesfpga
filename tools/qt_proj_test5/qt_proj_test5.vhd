@@ -272,7 +272,7 @@ begin
     vram_p : process (cpu_clk, rst_n)
 use ieee.std_logic_arith.conv_std_logic_vector;
     variable init_step_cnt, plt_step_cnt, 
-            nt_step_cnt, enable_ppu_step_cnt : integer;
+            nt_step_cnt, spr_step_cnt, enable_ppu_step_cnt : integer;
     variable init_done : std_logic;
     variable global_step_cnt : integer;
 
@@ -306,6 +306,7 @@ end;
             init_step_cnt := 0;
             plt_step_cnt := 0;
             nt_step_cnt := 0;
+				spr_step_cnt := 0;
             enable_ppu_step_cnt := 0;
 
         elsif (rising_edge(cpu_clk)) then
@@ -349,13 +350,13 @@ end;
                     
                     elsif (plt_step_cnt = 4) then
                         --set palette data
-                        ppu_set(16#2007#, 16#0f#);
+                        ppu_set(16#2007#, 16#11#);
                     elsif (plt_step_cnt = 6) then
-                        ppu_set(16#2007#, 16#00#);
+                        ppu_set(16#2007#, 16#01#);
                     elsif (plt_step_cnt = 8) then
-                        ppu_set(16#2007#, 16#10#);
+                        ppu_set(16#2007#, 16#03#);
                     elsif (plt_step_cnt = 10) then
-                        ppu_set(16#2007#, 16#20#);
+                        ppu_set(16#2007#, 16#13#);
 
                     elsif (plt_step_cnt = 12) then
                         ppu_set(16#2007#, 16#0f#);
@@ -376,7 +377,7 @@ end;
                         ppu_set(16#2007#, 16#28#);
  
                     elsif (plt_step_cnt = 28) then
-                        ppu_set(16#2007#, 16#0f#);
+                        ppu_set(16#2007#, 16#05#);
                     elsif (plt_step_cnt = 30) then
                         ppu_set(16#2007#, 16#0c#);
                     elsif (plt_step_cnt = 32) then
@@ -395,10 +396,10 @@ end;
                 elsif (global_step_cnt = 2) then
                     --step1 = name table set.
                     if (nt_step_cnt = 0) then
-                        --set vram addr 2004 (first row, 4th col)
+                        --set vram addr 2006 (first row, 6th col)
                         ppu_set(16#2006#, 16#20#);
                     elsif (nt_step_cnt = 2) then
-                        ppu_set(16#2006#, 16#04#);
+                        ppu_set(16#2006#, 16#06#);
                     elsif (nt_step_cnt = 4) then
                         --set name tbl data
                         --0x44, 45, 45 = DEE
@@ -433,21 +434,55 @@ end;
                     elsif (nt_step_cnt = 30) then
                         ppu_set(16#2007#, 16#21#);
 
+                    elsif (nt_step_cnt = 32) then
+                        --set vram addr 23c1
+                        ppu_set(16#2006#, 16#23#);
+                    elsif (nt_step_cnt = 34) then
+                        ppu_set(16#2006#, 16#c1#);
+                    elsif (nt_step_cnt = 36) then
+								--attr=11011000
+                        ppu_set(16#2007#, 16#d8#);
+
                     else
                         ppu_clr;
-                        if (nt_step_cnt > 30) then
+                        if (nt_step_cnt > 36) then
                             global_step_cnt := global_step_cnt + 1;
                         end if;
                     end if;
                     nt_step_cnt := nt_step_cnt + 1;
                     
+                elsif (global_step_cnt = 2) then
+                    --step2 = sprite set.
+                    if (spr_step_cnt = 0) then
+                        --set sprite addr=00
+                        ppu_set(16#2003#, 16#00#);
+                    elsif (spr_step_cnt = 2) then
+                        --set sprite data: y=01
+                        ppu_set(16#2004#, 16#01#);
+                    elsif (spr_step_cnt = 4) then
+                        --tile=0x4d (ascii 'M')
+                        ppu_set(16#2004#, 16#4d#);
+                    elsif (spr_step_cnt = 6) then
+                        --set sprite attr=00
+                        ppu_set(16#2004#, 16#00#);
+                    elsif (spr_step_cnt = 8) then
+                        --set sprite data: x=39
+                        ppu_set(16#2004#, 16#27#);
+                    else
+                        ppu_clr;
+                        if (spr_step_cnt > 8) then
+                            global_step_cnt := global_step_cnt + 1;
+                        end if;
+                    end if;
+                    spr_step_cnt := spr_step_cnt + 1;
+
                 elsif (global_step_cnt = 3) then
                     --final step = enable ppu.
                     if (enable_ppu_step_cnt = 0) then
                         --show bg
                         --PPUMASK=1e (show bg and sprite)
                         --PPUMASK=0e (show bg only)
-                        ppu_set(16#2001#, 16#0e#);
+                        ppu_set(16#2001#, 16#1e#);
                     elsif (enable_ppu_step_cnt = 2) then
                         --show enable nmi
                         --PPUCTRL=80
