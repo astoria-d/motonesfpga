@@ -14,6 +14,7 @@ vsim -t 1ps +transport_int_delays +transport_path_delays -sdftyp /sim_board=qt_p
 ###add wave *
 
 #add wave  -label vga_clk sim:/testbench_qt_proj_test5/dbg_cpu_clk
+add wave -label vga_clk_n sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_scrl_x(4)
 add wave  -label ppu_clk sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_clk
 add wave  sim:/testbench_qt_proj_test5/sim_board/rst_n
 
@@ -24,15 +25,20 @@ add wave -label ppu_mask  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_
 
 
 add wave -divider vga_pos
-#add wave -radix decimal -unsigned  -label vga_x sim:/testbench_qt_proj_test5/sim_board/dbg_addr
 add wave -label nes_x           -radix decimal -unsigned  -label nes_x sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_addr
 add wave -label dbg_disp_nt     -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_disp_nt
 add wave -label dbg_disp_attr   -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_disp_attr
 add wave -label dbg_disp_ptn_h  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_disp_ptn_h
-add wave -label dbg_disp_ptn_l  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_disp_ptn_l
+#add wave -label dbg_disp_ptn_l  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_disp_ptn_l
+
+add wave -divider sprite
+add wave -label p_oam_ce_n sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_scrl_y(2)
+add wave -label p_oam_r_n sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_scrl_y(1)
+add wave -label p_oam_w_n sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_scrl_y(0)
+add wave -label p_oam_addr  -radix hex {sim:/testbench_qt_proj_test5/sim_board/dbg_disp_ptn_l(7 downto 0)}
+add wave -label p_oam_data  -radix hex {sim:/testbench_qt_proj_test5/sim_board/dbg_disp_ptn_l (15 downto 8)}
 
 add wave -divider vram
-add wave -label vga_clk_n sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_scrl_x(4)
 add wave -label ale sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_scrl_x(0)
 add wave -label rd_n sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_scrl_x(1)
 add wave -label wr_n sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_scrl_x(2)
@@ -53,37 +59,14 @@ add wave -label g           -radix hex sim:/testbench_qt_proj_test5/sim_board/g
 add wave -label b           -radix hex sim:/testbench_qt_proj_test5/sim_board/b
 
 
-#add wave  sim:/testbench_qt_proj_test5/sim_board/dbg_cpu_clk
-#add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_addr
-#add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_d_io
-#add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_instruction
-#add wave  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_int_d_bus
-
-
-
-#add wave -divider status
-#add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_d1
-#add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_d2
-#add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_d_out
-#add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_ea_carry
-#add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_carry_clr_n
-#add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_gate_n
-
-
-
-#add wave -divider status_debug
-#add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_status
-#add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_dec_oe_n
-#add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_status_val
-#add wave -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_stat_we_n
-
 view structure
 view signals
 
 ###run 10 us
 run 3 us
 
-run 100 us
+run 50 us
+#run 100 us
 
 wave zoom full
 

@@ -12,6 +12,12 @@ entity ppu_render is
     signal dbg_disp_ptn_h, dbg_disp_ptn_l   : out std_logic_vector (15 downto 0);
     signal dbg_plt_addr                     : out std_logic_vector (4 downto 0);
     signal dbg_plt_data                     : out std_logic_vector (7 downto 0);
+    signal dbg_p_oam_ce_rn_wn               : out std_logic_vector (2 downto 0);
+    signal dbg_p_oam_addr                   : out std_logic_vector (7 downto 0);
+    signal dbg_p_oam_data                   : out std_logic_vector (7 downto 0);
+    signal dbg_s_oam_ce_rn_wn               : out std_logic_vector (2 downto 0);
+    signal dbg_s_oam_addr                   : out std_logic_vector (4 downto 0);
+    signal dbg_s_oam_data                   : out std_logic_vector (7 downto 0);
     
             clk         : in std_logic;
             vga_clk     : in std_logic;
@@ -75,6 +81,12 @@ component vga_ctl
     signal dbg_disp_ptn_h, dbg_disp_ptn_l   : out std_logic_vector (15 downto 0);
     signal dbg_plt_addr                     : out std_logic_vector (4 downto 0);
     signal dbg_plt_data                     : out std_logic_vector (7 downto 0);
+    signal dbg_p_oam_ce_rn_wn               : out std_logic_vector (2 downto 0);
+    signal dbg_p_oam_addr                   : out std_logic_vector (7 downto 0);
+    signal dbg_p_oam_data                   : out std_logic_vector (7 downto 0);
+    signal dbg_s_oam_ce_rn_wn               : out std_logic_vector (2 downto 0);
+    signal dbg_s_oam_addr                   : out std_logic_vector (4 downto 0);
+    signal dbg_s_oam_data                   : out std_logic_vector (7 downto 0);
 
             vga_clk     : in std_logic;
             mem_clk     : in std_logic;
@@ -163,6 +175,12 @@ begin
             dbg_disp_ptn_h, dbg_disp_ptn_l ,
             dbg_plt_addr                     ,
             dbg_plt_data                     ,
+            dbg_p_oam_ce_rn_wn              ,
+            dbg_p_oam_addr                  ,
+            dbg_p_oam_data                  ,
+            dbg_s_oam_ce_rn_wn              ,
+            dbg_s_oam_addr                  ,
+            dbg_s_oam_data                  ,
             vga_clk     ,
             mem_clk     ,
             rst_n       ,

@@ -20,6 +20,12 @@ entity vga_ctl is
     signal dbg_disp_ptn_h, dbg_disp_ptn_l   : out std_logic_vector (15 downto 0);
     signal dbg_plt_addr                     : out std_logic_vector (4 downto 0);
     signal dbg_plt_data                     : out std_logic_vector (7 downto 0);
+    signal dbg_p_oam_ce_rn_wn               : out std_logic_vector (2 downto 0);
+    signal dbg_p_oam_addr                   : out std_logic_vector (7 downto 0);
+    signal dbg_p_oam_data                   : out std_logic_vector (7 downto 0);
+    signal dbg_s_oam_ce_rn_wn               : out std_logic_vector (2 downto 0);
+    signal dbg_s_oam_addr                   : out std_logic_vector (4 downto 0);
+    signal dbg_s_oam_data                   : out std_logic_vector (7 downto 0);
 
             vga_clk     : in std_logic;
             mem_clk     : in std_logic;
@@ -79,6 +85,12 @@ component ppu_vga_render
     signal dbg_disp_ptn_h, dbg_disp_ptn_l   : out std_logic_vector (15 downto 0);
     signal dbg_plt_addr                     : out std_logic_vector (4 downto 0);
     signal dbg_plt_data                     : out std_logic_vector (7 downto 0);
+    signal dbg_p_oam_ce_rn_wn               : out std_logic_vector (2 downto 0);
+    signal dbg_p_oam_addr                   : out std_logic_vector (7 downto 0);
+    signal dbg_p_oam_data                   : out std_logic_vector (7 downto 0);
+    signal dbg_s_oam_ce_rn_wn               : out std_logic_vector (2 downto 0);
+    signal dbg_s_oam_addr                   : out std_logic_vector (4 downto 0);
+    signal dbg_s_oam_data                   : out std_logic_vector (7 downto 0);
     
             clk         : in std_logic;
             mem_clk     : in std_logic;
@@ -254,6 +266,12 @@ begin
         dbg_disp_ptn_h, dbg_disp_ptn_l  ,
         dbg_plt_addr                    ,
         dbg_plt_data                    ,
+        dbg_p_oam_ce_rn_wn              ,
+        dbg_p_oam_addr                  ,
+        dbg_p_oam_data                  ,
+        dbg_s_oam_ce_rn_wn              ,
+        dbg_s_oam_addr                  ,
+        dbg_s_oam_data                  ,
         
                 emu_ppu_clk_n ,
                 mem_clk     ,
@@ -306,6 +324,12 @@ entity ppu_vga_render is
     signal dbg_disp_ptn_h, dbg_disp_ptn_l   : out std_logic_vector (15 downto 0);
     signal dbg_plt_addr                     : out std_logic_vector (4 downto 0);
     signal dbg_plt_data                     : out std_logic_vector (7 downto 0);
+    signal dbg_p_oam_ce_rn_wn               : out std_logic_vector (2 downto 0);
+    signal dbg_p_oam_addr                   : out std_logic_vector (7 downto 0);
+    signal dbg_p_oam_data                   : out std_logic_vector (7 downto 0);
+    signal dbg_s_oam_ce_rn_wn               : out std_logic_vector (2 downto 0);
+    signal dbg_s_oam_addr                   : out std_logic_vector (4 downto 0);
+    signal dbg_s_oam_data                   : out std_logic_vector (7 downto 0);
     
             clk         : in std_logic;
             mem_clk     : in std_logic;
@@ -648,6 +672,12 @@ begin
     dbg_disp_ptn_l <= disp_ptn_l;
     dbg_plt_addr <= plt_addr;
     dbg_plt_data <= plt_data;
+    dbg_p_oam_ce_rn_wn               <= p_oam_ram_ce_n & p_oam_r_n & p_oam_w_n;
+    dbg_p_oam_addr                   <= p_oam_addr;
+    dbg_p_oam_data                   <= p_oam_data;
+    dbg_s_oam_ce_rn_wn               <= s_oam_ram_ce_n & s_oam_r_n & s_oam_w_n;
+    dbg_s_oam_addr                   <= s_oam_addr;
+    dbg_s_oam_data                   <= p_oam_data;
 
 
     clk_n <= not clk;
@@ -861,9 +891,9 @@ begin
     p_oam_w_n <= r_nw when oam_bus_ce_n = '0' else
                 '1';
     oam_d_buf_w : tri_state_buffer generic map (dsize)
-            port map (r_nw, oam_plt_data, p_oam_data);
+            port map (p_oam_w_n, oam_plt_data, p_oam_data);
     oam_d_buf_r : tri_state_buffer generic map (dsize)
-            port map (r_n, p_oam_data, oam_plt_data);
+            port map (p_oam_r_n, p_oam_data, oam_plt_data);
 
     p_oam_ram_ctl : ram_ctrl
             port map (mem_clk, p_oam_ram_ce_n_in, p_oam_r_n, p_oam_w_n, p_oam_ram_ce_n);
@@ -894,8 +924,8 @@ begin
 
     s_oam_ram_ctl : ram_ctrl
             port map (mem_clk, s_oam_ram_ce_n_in, s_oam_r_n, s_oam_w_n, s_oam_ram_ce_n);
---    secondary_oam_inst : ram generic map (5, dsize)
---            port map (mem_clk, s_oam_ram_ce_n, s_oam_r_n, s_oam_w_n, s_oam_addr, s_oam_data);
+    secondary_oam_inst : ram generic map (5, dsize)
+            port map (mem_clk, s_oam_ram_ce_n, s_oam_r_n, s_oam_w_n, s_oam_addr, s_oam_data);
 
     spr_y_inst : d_flip_flop generic map(dsize)
             port map (clk_n, p_oam_cnt_res_n, '1', spr_y_we_n, s_oam_data, spr_y_tmp);
@@ -1002,6 +1032,7 @@ end;
         if (rst_n = '0') then
             nt_we_n <= '1';
             ppu_status <= (others => '0');
+            s_oam_data <= (others => 'Z');
             stop_rgb;
         else
 

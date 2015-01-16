@@ -74,6 +74,12 @@ architecture rtl of qt_proj_test5 is
         signal dbg_disp_ptn_h, dbg_disp_ptn_l   : out std_logic_vector (15 downto 0);
         signal dbg_plt_addr                     : out std_logic_vector (4 downto 0);
         signal dbg_plt_data                     : out std_logic_vector (7 downto 0);
+        signal dbg_p_oam_ce_rn_wn               : out std_logic_vector (2 downto 0);
+        signal dbg_p_oam_addr                   : out std_logic_vector (7 downto 0);
+        signal dbg_p_oam_data                   : out std_logic_vector (7 downto 0);
+        signal dbg_s_oam_ce_rn_wn               : out std_logic_vector (2 downto 0);
+        signal dbg_s_oam_addr                   : out std_logic_vector (4 downto 0);
+        signal dbg_s_oam_data                   : out std_logic_vector (7 downto 0);
 
         signal dbg_ppu_addr_we_n                : out std_logic;
         signal dbg_ppu_clk_cnt                  : out std_logic_vector(1 downto 0);
@@ -182,9 +188,17 @@ architecture rtl of qt_proj_test5 is
     signal dbg_vga_x                        : std_logic_vector (9 downto 0);
     signal dbg_plt_addr                     : std_logic_vector (4 downto 0);
     signal dbg_plt_data                     : std_logic_vector (7 downto 0);
+    signal dbg_p_oam_ce_rn_wn               : std_logic_vector (2 downto 0);
+    signal dbg_p_oam_addr                   : std_logic_vector (7 downto 0);
+    signal dbg_p_oam_data                   : std_logic_vector (7 downto 0);
+    signal dbg_s_oam_ce_rn_wn               : std_logic_vector (2 downto 0);
+    signal dbg_s_oam_addr                   : std_logic_vector (4 downto 0);
+    signal dbg_s_oam_data                   : std_logic_vector (7 downto 0);
     signal dbg_ppu_data_dummy               : std_logic_vector (7 downto 0);
     signal dbg_ppu_status_dummy             : std_logic_vector (7 downto 0);
     signal dbg_ppu_scrl_x_dummy             : std_logic_vector (7 downto 0);
+    signal dbg_ppu_scrl_y_dummy             : std_logic_vector (7 downto 0);
+    signal dbg_disp_ptn_h_dummy, dbg_disp_ptn_l_dummy   : std_logic_vector (15 downto 0);
     
     
 
@@ -204,20 +218,29 @@ begin
     dbg_ppu_scrl_x(2) <= wr_n;
     dbg_ppu_scrl_x(3) <= nt0_ce_n;
     dbg_ppu_scrl_x(4) <= vga_clk_n;
+    dbg_ppu_scrl_y(2 downto 0) <= dbg_p_oam_ce_rn_wn(2 downto 0);
+    dbg_disp_ptn_l (7 downto 0) <= dbg_p_oam_addr;
+    dbg_disp_ptn_l (15 downto 8) <= dbg_p_oam_data;
     
     ppu_inst: ppu port map (  
         dbg_ppu_ce_n                                        ,
         dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status_dummy          ,
         dbg_ppu_addr_dummy                                        ,
-        dbg_ppu_data_dummy, dbg_ppu_scrl_x_dummy, dbg_ppu_scrl_y        ,
+        dbg_ppu_data_dummy, dbg_ppu_scrl_x_dummy, dbg_ppu_scrl_y_dummy        ,
 
         dbg_ppu_clk                      ,
         dbg_nes_x                        ,
         dbg_vga_x                        ,
         dbg_disp_nt, dbg_disp_attr                          ,
-        dbg_disp_ptn_h, dbg_disp_ptn_l                      ,
+        dbg_disp_ptn_h, dbg_disp_ptn_l_dummy                      ,
         dbg_plt_addr                     ,
         dbg_plt_data                     ,
+        dbg_p_oam_ce_rn_wn              ,
+        dbg_p_oam_addr                  ,
+        dbg_p_oam_data                  ,
+        dbg_s_oam_ce_rn_wn              ,
+        dbg_s_oam_addr                  ,
+        dbg_s_oam_data                  ,
         dbg_ppu_addr_we_n                                   ,
         dbg_ppu_clk_cnt                                     ,
 
@@ -306,7 +329,7 @@ end;
             init_step_cnt := 0;
             plt_step_cnt := 0;
             nt_step_cnt := 0;
-				spr_step_cnt := 0;
+            spr_step_cnt := 0;
             enable_ppu_step_cnt := 0;
 
         elsif (rising_edge(cpu_clk)) then
@@ -349,7 +372,7 @@ end;
                         ppu_set(16#2006#, 16#00#);
                     
                     elsif (plt_step_cnt = 4) then
-                        --set palette data
+                        --set palette bg data
                         ppu_set(16#2007#, 16#11#);
                     elsif (plt_step_cnt = 6) then
                         ppu_set(16#2007#, 16#01#);
@@ -384,10 +407,38 @@ end;
                         ppu_set(16#2007#, 16#1c#);
                     elsif (plt_step_cnt = 34) then
                         ppu_set(16#2007#, 16#2c#);
- 
+
+                     elsif (plt_step_cnt = 36) then
+                        --below is sprite pallete
+                        ppu_set(16#2007#, 16#00#);
+                    elsif (plt_step_cnt = 38) then
+                        ppu_set(16#2007#, 16#24#);
+                    elsif (plt_step_cnt = 40) then
+                        ppu_set(16#2007#, 16#1b#);
+                    elsif (plt_step_cnt = 42) then
+                        ppu_set(16#2007#, 16#11#);
+
+                    elsif (plt_step_cnt = 44) then
+                        ppu_set(16#2007#, 16#00#);
+                    elsif (plt_step_cnt = 46) then
+                        ppu_set(16#2007#, 16#32#);
+                    elsif (plt_step_cnt = 48) then
+                        ppu_set(16#2007#, 16#16#);
+                    elsif (plt_step_cnt = 50) then
+                        ppu_set(16#2007#, 16#20#);
+
+                    elsif (plt_step_cnt = 52) then
+                        ppu_set(16#2007#, 16#00#);
+                    elsif (plt_step_cnt = 54) then
+                        ppu_set(16#2007#, 16#26#);
+                    elsif (plt_step_cnt = 56) then
+                        ppu_set(16#2007#, 16#01#);
+                    elsif (plt_step_cnt = 58) then
+                        ppu_set(16#2007#, 16#31#);
+
                     else
                         ppu_clr;
-                        if (plt_step_cnt > 10) then
+                        if (plt_step_cnt > 58) then
                             global_step_cnt := global_step_cnt + 1;
                         end if;
                     end if;
@@ -396,7 +447,7 @@ end;
                 elsif (global_step_cnt = 2) then
                     --step1 = name table set.
                     if (nt_step_cnt = 0) then
-                        --set vram addr 2006 (first row, 6th col)
+                        --set vram addr 2005 (first row, 6th col)
                         ppu_set(16#2006#, 16#20#);
                     elsif (nt_step_cnt = 2) then
                         ppu_set(16#2006#, 16#06#);
@@ -435,7 +486,7 @@ end;
                         ppu_set(16#2007#, 16#21#);
 
                     elsif (nt_step_cnt = 32) then
-                        --set vram addr 23c1
+                        --set vram addr 23c1 (attribute)
                         ppu_set(16#2006#, 16#23#);
                     elsif (nt_step_cnt = 34) then
                         ppu_set(16#2006#, 16#c1#);
@@ -451,32 +502,72 @@ end;
                     end if;
                     nt_step_cnt := nt_step_cnt + 1;
                     
-                elsif (global_step_cnt = 2) then
+                elsif (global_step_cnt = 3) then
                     --step2 = sprite set.
                     if (spr_step_cnt = 0) then
-                        --set sprite addr=00
+                        --set sprite addr=00 (first sprite)
                         ppu_set(16#2003#, 16#00#);
                     elsif (spr_step_cnt = 2) then
-                        --set sprite data: y=01
-                        ppu_set(16#2004#, 16#01#);
+                        --set sprite data: y=02
+                        ppu_set(16#2004#, 16#02#);
                     elsif (spr_step_cnt = 4) then
                         --tile=0x4d (ascii 'M')
                         ppu_set(16#2004#, 16#4d#);
                     elsif (spr_step_cnt = 6) then
-                        --set sprite attr=00
-                        ppu_set(16#2004#, 16#00#);
+                        --set sprite attr=03 (palette 03)
+                        ppu_set(16#2004#, 16#03#);
                     elsif (spr_step_cnt = 8) then
-                        --set sprite data: x=39
-                        ppu_set(16#2004#, 16#27#);
+                        --set sprite data: x=100
+                        ppu_set(16#2004#, 16#64#);
+
+                    elsif (spr_step_cnt = 10) then
+                        --set sprite data: y=50
+                        ppu_set(16#2004#, 16#32#);
+                    elsif (spr_step_cnt = 12) then
+                        --tile=0x4d (ascii 'O')
+                        ppu_set(16#2004#, 16#4f#);
+                    elsif (spr_step_cnt = 14) then
+                        --set sprite attr=01
+                        ppu_set(16#2004#, 16#01#);
+                    elsif (spr_step_cnt = 16) then
+                        --set sprite data: x=30
+                        ppu_set(16#2004#, 16#1e#);
+
+                    elsif (spr_step_cnt = 18) then
+                        --set sprite data: y=53
+                        ppu_set(16#2004#, 16#33#);
+                    elsif (spr_step_cnt = 20) then
+                        --tile=0x4d (ascii 'P')
+                        ppu_set(16#2004#, 16#50#);
+                    elsif (spr_step_cnt = 22) then
+                        --set sprite attr=01
+                        ppu_set(16#2004#, 16#01#);
+                    elsif (spr_step_cnt = 24) then
+                        --set sprite data: x=33
+                        ppu_set(16#2004#, 16#21#);
+
+                    elsif (spr_step_cnt = 26) then
+                        --set sprite data: y=61
+                        ppu_set(16#2004#, 16#3d#);
+                    elsif (spr_step_cnt = 28) then
+                        --tile=0x4d (ascii 'Q')
+                        ppu_set(16#2004#, 16#50#);
+                    elsif (spr_step_cnt = 30) then
+                        --set sprite attr=02
+                        ppu_set(16#2004#, 16#02#);
+                    elsif (spr_step_cnt = 32) then
+                        --set sprite data: x=35
+                        ppu_set(16#2004#, 16#23#);
+
                     else
                         ppu_clr;
-                        if (spr_step_cnt > 8) then
+                        if (spr_step_cnt > 32) then
                             global_step_cnt := global_step_cnt + 1;
                         end if;
                     end if;
                     spr_step_cnt := spr_step_cnt + 1;
 
-                elsif (global_step_cnt = 3) then
+                elsif (global_step_cnt = 4) then
                     --final step = enable ppu.
                     if (enable_ppu_step_cnt = 0) then
                         --show bg
@@ -484,7 +575,7 @@ end;
                         --PPUMASK=0e (show bg only)
                         ppu_set(16#2001#, 16#1e#);
                     elsif (enable_ppu_step_cnt = 2) then
-                        --show enable nmi
+                        --enable nmi
                         --PPUCTRL=80
                         ppu_set(16#2000#, 16#80#);
                     else
