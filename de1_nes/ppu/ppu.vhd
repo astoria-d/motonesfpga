@@ -385,6 +385,11 @@ begin
         if (rst_n = '0') then
             ppu_latch_rst_n <= '0';
             ppu_addr_we_n    <= '1';
+            oam_addr_ce_n <= '1';
+            ppu_addr_cnt_ce_n    <= '1';
+            ppu_data_we_n    <= '1';
+            plt_bus_ce_n <= '1';
+            oam_bus_ce_n     <= '1';
             rd_n <= 'Z';
             wr_n <= 'Z';
             ale <= 'Z';
@@ -413,89 +418,60 @@ begin
             --oam data set
             if (cpu_addr = OAMDATA and ppu_clk_cnt = "00") then
                 oam_bus_ce_n <= '0';
-                if (r_nw = '1') then
-                    cpu_d <= oam_plt_data;
-                else
-                    cpu_d <= (others => 'Z');
-                end if;
-                --address increment for burst write. 
                 oam_addr_ce_n <= '0';
             else
-                cpu_d <= (others => 'Z');
-                oam_addr_ce_n <= '1';
                 oam_bus_ce_n <= '1';
+                oam_addr_ce_n <= '1';
             end if; --if (cpu_addr = OAMDATA and ppu_clk_cnt = "00") then
-
-            --vram address access.
-            if(cpu_addr = PPUADDR and ppu_clk_cnt = "00") then
-                ppu_addr_we_n <= '0';
-            else
-                ppu_addr_we_n <= '1';
-            end if;
 
             if (cpu_addr = PPUADDR and ppu_clk_cnt = "00") then
                 ppu_addr_cnt_ce_n <= '0';
+                ppu_addr_we_n <= '0';
                 if (ppu_addr_cnt(0) = '0') then
                     --load addr high
                     ale <= '0';
                 else
                     --load addr low and output vram/plt bus.
-
                     --if address is 3fxx, set palette table.
                     if (ppu_addr(13 downto 8) = "111111") then
                         ale <= '0';
                     else
-                        vram_ad <= cpu_d;
-                        vram_a <= ppu_addr(13 downto 8);
                         ale <= '1';
                     end if;
                 end if;
             elsif (cpu_addr = PPUDATA and ppu_clk_cnt = "01") then
                 ppu_addr_cnt_ce_n <= '1';
+                ppu_addr_we_n <= '1';
                 --for burst write.
                 if (ppu_addr(13 downto 8) = "111111") then
                     ale <= '0';
                 else
-                    vram_a <= ppu_addr(13 downto 8);
-                    vram_ad <= ppu_addr(7 downto 0);
                     ale <= '1';
                 end if;
             else
                 ppu_addr_cnt_ce_n <= '1';
+                ppu_addr_we_n    <= '1';
                 ale <= '0';
             end if; --if (cpu_addr = PPUADDR and ppu_clk_cnt = "00") then
 
             if (cpu_addr = PPUDATA and ppu_clk_cnt = "00") then
                 ppu_data_we_n <= '0';
-                vram_a <= ppu_addr(13 downto 8);
                 if (ppu_addr(13 downto 8) = "111111") then
                     --case palette tbl.
                     plt_bus_ce_n <= '0';
-                    if (r_nw = '1') then
-                        cpu_d <= oam_plt_data;
-                    else
-                        cpu_d <= (others => 'Z');
-                    end if;
                     rd_n <= '1';
                     wr_n <= '1';
                 else
+                    plt_bus_ce_n <= '1';
                     rd_n <= not r_nw;
                     wr_n <= r_nw;
-                    plt_bus_ce_n <= '1';
-                    if (r_nw = '0') then
-                        vram_ad <= cpu_d;
-                    else
-                        cpu_d <= ppu_data_out;
-                    end if;
                 end if;
             else
-                plt_bus_ce_n <= '1';
                 ppu_data_we_n <= '1';
+                plt_bus_ce_n <= '1';
                 rd_n <= 'Z';
                 wr_n <= 'Z';
             end if; --if (cpu_addr = PPUDATA and ppu_clk_cnt = "00") then
-
-
 
             --oam_plt_addr output...
             if (cpu_addr = OAMDATA and ppu_clk_cnt = "00") then
@@ -537,23 +513,72 @@ begin
                 oam_plt_data <= (others => 'Z');
             end if; --if (cpu_addr = OAMDATA and ppu_clk_cnt = "00") then
 
-
-
-            --sustain cpu output data when reading.
-            if (cpu_addr = PPUDATA and r_nw = '1' and ppu_clk_cnt /= "00") then
-                if (ppu_addr(13 downto 8) = "111111") then
-                    cpu_d <= plt_data_out;
+            --cpu_d data set
+            if (cpu_addr = OAMDATA and r_nw = '1') then
+                if (ppu_clk_cnt = "00") then
+                    cpu_d <= oam_plt_data;
                 else
-                    cpu_d <= ppu_data_out;
+                    cpu_d <= oam_data;
                 end if;
-            end if;
-            if (cpu_addr = OAMDATA and r_nw = '1' and ppu_clk_cnt /= "00") then
-                cpu_d <= oam_data;
-            end if;
-
-            if(cpu_addr = PPUSTATUS and r_nw = '1') then
+            elsif (cpu_addr = PPUDATA and r_nw = '1' and ppu_clk_cnt = "00") then
+                if (ppu_clk_cnt = "00") then
+                    if (ppu_addr(13 downto 8) = "111111") then
+                        cpu_d <= oam_plt_data;
+                    else
+                        cpu_d <= ppu_data_out;
+                    end if;
+                else
+                    if (ppu_addr(13 downto 8) = "111111") then
+                        cpu_d <= plt_data_out;
+                    else
+                        cpu_d <= ppu_data_out;
+                    end if;
+                end if;
+            elsif (cpu_addr = PPUSTATUS and r_nw = '1') then
                 cpu_d <= ppu_stat_out;
-            end if;
+            else
+                cpu_d <= (others => 'Z');
+            end if; --if (cpu_addr = OAMDATA and ppu_clk_cnt = "00") then
+
+
+
+            --vram_a/vram_ad data set
+            if (cpu_addr = PPUADDR and ppu_clk_cnt = "00" and ppu_addr_cnt(0) = '1') then
+                if (ppu_addr(13 downto 8) = "111111") then
+                    vram_a <= (others => 'Z');
+                    vram_ad <= (others => 'Z');
+                else
+                    vram_a <= ppu_addr(13 downto 8);
+                    vram_ad <= cpu_d;
+                end if;
+            elsif (cpu_addr = PPUDATA and ppu_clk_cnt = "01") then
+                if (ppu_addr(13 downto 8) = "111111") then
+                    vram_a <= (others => 'Z');
+                    vram_ad <= (others => 'Z');
+                else
+                    vram_a <= ppu_addr(13 downto 8);
+                    vram_ad <= ppu_addr(7 downto 0);
+                end if;
+            elsif (cpu_addr = PPUDATA and ppu_clk_cnt = "00") then
+                vram_a <= ppu_addr(13 downto 8);
+                if (ppu_addr(13 downto 8) = "111111") then
+                    vram_ad <= (others => 'Z');
+                else
+                    if (r_nw = '0') then
+                        vram_ad <= cpu_d;
+                    else
+                        vram_ad <= (others => 'Z');
+                    end if;
+                end if;
+            else
+                vram_a <= (others => 'Z');
+                vram_ad <= (others => 'Z');
+            end if; --if (cpu_addr = PPUADDR and ppu_clk_cnt = "00") then
+
+
+
+
+
 
         else
             ppu_addr_we_n    <= '1';

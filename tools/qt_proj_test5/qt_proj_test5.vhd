@@ -166,8 +166,8 @@ architecture rtl of qt_proj_test5 is
 
     signal ppu_ce_n    : std_logic;
     signal r_nw        : std_logic;
-    signal cpu_addr    : std_logic_vector (2 downto 0);
-    signal cpu_d       : std_logic_vector (7 downto 0);
+    signal addr        : std_logic_vector (2 downto 0);
+    signal d_io        : std_logic_vector (7 downto 0);
     signal vblank_n    : std_logic;
     signal rd_n        : std_logic;
     signal wr_n        : std_logic;
@@ -249,8 +249,8 @@ begin
                 ppu_ce_n        ,
                 rst_n       ,
                 r_nw        ,
-                cpu_addr    ,
-                cpu_d       ,
+                addr        ,
+                d_io        ,
 
                 vblank_n    ,
                 rd_n        ,
@@ -303,13 +303,13 @@ procedure ppu_set (ad: in integer; dt : in integer) is
 begin
     r_nw <= '0';
     ppu_ce_n <= '0';
-    cpu_addr <= conv_std_logic_vector(ad, 16)(2 downto 0);
-    cpu_d <= conv_std_logic_vector(dt, 8);
+    addr(2 downto 0) <= conv_std_logic_vector(ad, 16)(2 downto 0);
+    d_io <= conv_std_logic_vector(dt, 8);
 end;
 procedure ppu_clr is
 begin
-    cpu_addr <= (others => 'Z');
-    cpu_d <= (others => 'Z');
+    addr <= (others => 'Z');
+    d_io <= (others => 'Z');
     r_nw <= '1';
     ppu_ce_n <= '1';
 end;
@@ -319,8 +319,8 @@ end;
             
             r_nw <= 'Z';
             ppu_ce_n <= 'Z';
-            cpu_addr <= (others => 'Z');
-            cpu_d <= (others => 'Z');
+            addr <= (others => 'Z');
+            d_io <= (others => 'Z');
             
             init_done := '0';
             global_step_cnt := 0;
