@@ -362,7 +362,7 @@ begin
     dbg_d_io <= d_io;
     dbg_vram_ad  <= vram_ad ;
     dbg_disp_ptn_l <= "00" & v_addr ;
-    dbg_disp_ptn_h <= "0000000000" & vram_a;
+    dbg_disp_ptn_h <= "000" & dbg_plt_addr & dbg_plt_data;
 
     --nes ppu instance
     ppu_inst: ppu port map (  

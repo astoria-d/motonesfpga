@@ -63,10 +63,9 @@ add wave -label wr_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x(2)
 add wave -label nt0_ce_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x(3)
 
 add wave  -radix hex -label v_addr sim:/testbench_motones_sim/sim_board/dbg_disp_ptn_l
-#add wave  -radix hex -label vram_a {sim:/testbench_motones_sim/sim_board/dbg_disp_ptn_h(5 downto 0)}
 add wave  -radix hex -label vram_ad sim:/testbench_motones_sim/sim_board/dbg_vram_ad
-add wave  -radix hex -label plt_addr sim:/testbench_motones_sim/sim_board/dbg_d_io
-add wave  -radix hex -label plt_data sim:/testbench_motones_sim/sim_board/dbg_ppu_data
+add wave  -radix hex -label plt_addr {sim:/testbench_motones_sim/sim_board/dbg_disp_ptn_h(12 downto 8)}
+add wave  -radix hex -label plt_data {sim:/testbench_motones_sim/sim_board/dbg_disp_ptn_h(7 downto 0)}
 
 
 
