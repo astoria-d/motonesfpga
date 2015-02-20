@@ -413,12 +413,10 @@ begin
             --oam data set
             if (cpu_addr = OAMDATA and ppu_clk_cnt = "00") then
                 oam_bus_ce_n <= '0';
-                oam_plt_addr <= oam_addr;
                 if (r_nw = '1') then
-                    oam_plt_data <= (others => 'Z');
                     cpu_d <= oam_plt_data;
                 else
-                    oam_plt_data <= cpu_d;
+                    cpu_d <= (others => 'Z');
                 end if;
                 --address increment for burst write. 
                 oam_addr_ce_n <= '0';
@@ -445,7 +443,6 @@ begin
 
                     --if address is 3fxx, set palette table.
                     if (ppu_addr(13 downto 8) = "111111") then
-                        oam_plt_addr <= cpu_d;
                         ale <= '0';
                     else
                         vram_ad <= cpu_d;
@@ -457,7 +454,6 @@ begin
                 ppu_addr_cnt_ce_n <= '1';
                 --for burst write.
                 if (ppu_addr(13 downto 8) = "111111") then
-                    oam_plt_addr <= ppu_addr(7 downto 0);
                     ale <= '0';
                 else
                     vram_a <= ppu_addr(13 downto 8);
@@ -475,11 +471,10 @@ begin
                 if (ppu_addr(13 downto 8) = "111111") then
                     --case palette tbl.
                     plt_bus_ce_n <= '0';
-                    if (r_nw = '0') then
-                        oam_plt_data <= cpu_d;
-                    else
-                        oam_plt_data <= (others => 'Z');
+                    if (r_nw = '1') then
                         cpu_d <= oam_plt_data;
+                    else
+                        cpu_d <= (others => 'Z');
                     end if;
                     rd_n <= '1';
                     wr_n <= '1';
@@ -499,6 +494,50 @@ begin
                 rd_n <= 'Z';
                 wr_n <= 'Z';
             end if; --if (cpu_addr = PPUDATA and ppu_clk_cnt = "00") then
+
+
+
+            --oam_plt_addr output...
+            if (cpu_addr = OAMDATA and ppu_clk_cnt = "00") then
+                oam_plt_addr <= oam_addr;
+            elsif (cpu_addr = PPUADDR and ppu_clk_cnt = "00") then
+                if (ppu_addr_cnt(0) = '1' and ppu_addr(13 downto 8) = "111111") then
+                    oam_plt_addr <= cpu_d;
+                else
+                    oam_plt_addr <= (others => 'Z');
+                end if;
+            elsif (cpu_addr = PPUDATA and ppu_clk_cnt = "01") then
+                if (ppu_addr(13 downto 8) = "111111") then
+                    oam_plt_addr <= ppu_addr(7 downto 0);
+                else
+                    oam_plt_addr <= (others => 'Z');
+                end if;
+            else
+                oam_plt_addr <= (others => 'Z');
+            end if; --if (cpu_addr = OAMDATA and ppu_clk_cnt = "00") then
+
+            --oam_plt_data output...
+            if (cpu_addr = OAMDATA and ppu_clk_cnt = "00") then
+                if (r_nw = '0') then
+                    oam_plt_data <= cpu_d;
+                else
+                    oam_plt_data <= (others => 'Z');
+                end if;
+            elsif (cpu_addr = PPUDATA and ppu_clk_cnt = "00") then
+                if (ppu_addr(13 downto 8) = "111111") then
+                    if (r_nw = '0') then
+                        oam_plt_data <= cpu_d;
+                    else
+                        oam_plt_data <= (others => 'Z');
+                    end if;
+                else
+                    oam_plt_data <= (others => 'Z');
+                end if;
+            else
+                oam_plt_data <= (others => 'Z');
+            end if; --if (cpu_addr = OAMDATA and ppu_clk_cnt = "00") then
+
+
 
             --sustain cpu output data when reading.
             if (cpu_addr = PPUDATA and r_nw = '1' and ppu_clk_cnt /= "00") then
