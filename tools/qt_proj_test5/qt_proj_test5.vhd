@@ -305,7 +305,6 @@ begin
     ppu_ce_n <= '0';
     cpu_addr <= conv_std_logic_vector(ad, 16)(2 downto 0);
     cpu_d <= conv_std_logic_vector(dt, 8);
-    ale <= 'Z';
 end;
 procedure ppu_clr is
 begin
@@ -313,7 +312,6 @@ begin
     cpu_d <= (others => 'Z');
     r_nw <= '1';
     ppu_ce_n <= '1';
-    ale <= '0';
 end;
 
     begin
@@ -587,7 +585,6 @@ end;
                     enable_ppu_step_cnt := enable_ppu_step_cnt + 1;
 
                 else
-                    ale <= 'Z';
                     init_done := '1';
                 end if;
             end if;

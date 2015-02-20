@@ -352,8 +352,17 @@ begin
     dbg_ppu_scrl_x(3) <= nt0_ce_n;
     dbg_ppu_scrl_x(4) <= vga_clk;
     dbg_ppu_scrl_y(2 downto 0) <= dbg_p_oam_ce_rn_wn(2 downto 0);
-    dbg_disp_ptn_l (7 downto 0) <= dbg_p_oam_addr;
-    dbg_disp_ptn_l (15 downto 8) <= dbg_p_oam_data;
+--    dbg_disp_ptn_l (7 downto 0) <= dbg_p_oam_addr;
+--    dbg_disp_ptn_l (15 downto 8) <= dbg_p_oam_data;
+
+    dbg_cpu_clk <= cpu_clk;
+    dbg_mem_clk <= mem_clk;
+    dbg_r_nw <= r_nw;
+    dbg_addr <= addr;
+    dbg_d_io <= d_io;
+    dbg_vram_ad  <= vram_ad ;
+    dbg_disp_ptn_l <= "00" & v_addr ;
+    dbg_disp_ptn_h <= "0000000000" & vram_a;
 
     --nes ppu instance
     ppu_inst: ppu port map (  
@@ -366,7 +375,7 @@ begin
         dbg_nes_x                        ,
         dbg_vga_x                        ,
         dbg_disp_nt, dbg_disp_attr                          ,
-        dbg_disp_ptn_h, dbg_disp_ptn_l_dummy                      ,
+        dbg_disp_ptn_h_dummy, dbg_disp_ptn_l_dummy                      ,
         dbg_plt_addr                     ,
         dbg_plt_data                     ,
         dbg_p_oam_ce_rn_wn              ,
@@ -427,16 +436,6 @@ begin
 --    --APU/DMA instance
 --    apu_inst : apu
 --        port map (cpu_clk, apu_ce_n, rst_n, r_nw, addr, d_io, rdy);
-
-    dbg_cpu_clk <= cpu_clk;
-    --dbg_ppu_clk <= ppu_clk;
-    dbg_mem_clk <= mem_clk;
-    dbg_r_nw <= r_nw;
-    dbg_addr <= addr;
-    dbg_d_io <= d_io;
-    dbg_vram_ad  <= vram_ad ;
-    dbg_vram_a   <= vram_a  ;
-
 
 end rtl;
 

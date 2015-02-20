@@ -142,6 +142,9 @@ constant PPUSCROLL : std_logic_vector(2 downto 0) := "101";
 constant PPUADDR   : std_logic_vector(2 downto 0) := "110";
 constant PPUDATA   : std_logic_vector(2 downto 0) := "111";
 
+constant PPUSBG    : integer := 3;  --show bg
+constant PPUSSP    : integer := 4;  --show sprie
+
 constant PPUVAI     : integer := 2;  --vram address increment
 constant PPUNEN     : integer := 7;  --nmi enable
 constant ST_VBL     : integer := 7;  --vblank
@@ -524,7 +527,11 @@ begin
 
             rd_n <= 'Z';
             wr_n <= 'Z';
-            ale <= 'Z';
+            if ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1' then
+                ale <= 'Z';
+            else
+                ale <= '0';
+            end if;
             oam_plt_data <= (others => 'Z');
             vram_ad <= (others => 'Z');
             vram_a <= (others => 'Z');
