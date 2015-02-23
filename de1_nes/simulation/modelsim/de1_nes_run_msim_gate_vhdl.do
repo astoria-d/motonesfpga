@@ -26,6 +26,7 @@ add wave -label vga_clk   sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x(4)
 
 add wave -label addr       -radix hex sim:/testbench_motones_sim/sim_board/dbg_addr
 add wave -label d_io       -radix hex sim:/testbench_motones_sim/sim_board/dbg_d_io
+add wave -label dbg_ppu_ce_n          sim:/testbench_motones_sim/sim_board/dbg_ppu_ce_n
 
 #add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_instruction
 #add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_int_d_bus
