@@ -14,9 +14,9 @@ vsim -t 1ps +transport_int_delays +transport_path_delays -sdftyp /sim_board=qt_p
 ###add wave *
 
 add wave  -label rst_n sim:/testbench_qt_proj_test5/sim_board/rst_n
-add wave  -label vga_clk_n sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_scrl_x(4)
 add wave  -label cpu_clk sim:/testbench_qt_proj_test5/dbg_cpu_clk
 add wave  -label ppu_clk sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_clk
+add wave  -label vga_clk sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_scrl_x(4)
 
 add wave -divider ppu
 add wave -label ppu_ctrl  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_ctrl
