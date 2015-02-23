@@ -64,32 +64,32 @@
 	sta	$2007
 
 ;;;sprite palette
-	lda	#$00
-	sta	$2007
-	lda	#$24
-	sta	$2007
-	lda	#$1b
-	sta	$2007
-	lda	#$11
-	sta	$2007
-
-	lda	#$00
-	sta	$2007
-	lda	#$32
-	sta	$2007
-	lda	#$16
-	sta	$2007
-	lda	#$20
-	sta	$2007
-
-	lda	#$00
-	sta	$2007
-	lda	#$26
-	sta	$2007
-	lda	#$01
-	sta	$2007
-	lda	#$31
-	sta	$2007
+;;	lda	#$00
+;;	sta	$2007
+;;	lda	#$24
+;;	sta	$2007
+;;	lda	#$1b
+;;	sta	$2007
+;;	lda	#$11
+;;	sta	$2007
+;;
+;;	lda	#$00
+;;	sta	$2007
+;;	lda	#$32
+;;	sta	$2007
+;;	lda	#$16
+;;	sta	$2007
+;;	lda	#$20
+;;	sta	$2007
+;;
+;;	lda	#$00
+;;	sta	$2007
+;;	lda	#$26
+;;	sta	$2007
+;;	lda	#$01
+;;	sta	$2007
+;;	lda	#$31
+;;	sta	$2007
 
 ;;init vram
 ;;name table
@@ -142,49 +142,49 @@
 	sta	$2007
 
 ;;sprite
-	lda	#$00
-	sta	$2003
-	lda	#$02
-	sta	$2004
-	lda	#$4d
-	sta	$2004
-	lda	#$03
-	sta	$2004
-	lda	#$64
-	sta	$2004
-
-	lda	#$04
-	sta	$2003
-	lda	#$32
-	sta	$2004
-	lda	#$4f
-	sta	$2004
-	lda	#$01
-	sta	$2004
-	lda	#$1e
-	sta	$2004
-
-	lda	#$08
-	sta	$2003
-	lda	#$33
-	sta	$2004
-	lda	#$50
-	sta	$2004
-	lda	#$01
-	sta	$2004
-	lda	#$21
-	sta	$2004
-
-	lda	#$0c
-	sta	$2003
-	lda	#$3d
-	sta	$2004
-	lda	#$51
-	sta	$2004
-	lda	#$02
-	sta	$2004
-	lda	#$23
-	sta	$2004
+;;	lda	#$00
+;;	sta	$2003
+;;	lda	#$02
+;;	sta	$2004
+;;	lda	#$4d
+;;	sta	$2004
+;;	lda	#$03
+;;	sta	$2004
+;;	lda	#$64
+;;	sta	$2004
+;;
+;;	lda	#$04
+;;	sta	$2003
+;;	lda	#$32
+;;	sta	$2004
+;;	lda	#$4f
+;;	sta	$2004
+;;	lda	#$01
+;;	sta	$2004
+;;	lda	#$1e
+;;	sta	$2004
+;;
+;;	lda	#$08
+;;	sta	$2003
+;;	lda	#$33
+;;	sta	$2004
+;;	lda	#$50
+;;	sta	$2004
+;;	lda	#$01
+;;	sta	$2004
+;;	lda	#$21
+;;	sta	$2004
+;;
+;;	lda	#$0c
+;;	sta	$2003
+;;	lda	#$3d
+;;	sta	$2004
+;;	lda	#$51
+;;	sta	$2004
+;;	lda	#$02
+;;	sta	$2004
+;;	lda	#$23
+;;	sta	$2004
 
 
 ;;enble ppu.
