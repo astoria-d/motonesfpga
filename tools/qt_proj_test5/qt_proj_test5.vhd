@@ -308,6 +308,22 @@ begin
     clock_inst : clock_divider port map 
         (base_clk, rst_n, cpu_clk, ppu_clk, mem_clk, vga_clk);
 
+    phi2 <= not cpu_clk;
+
+    addr_dec_inst : address_decoder generic map (addr_size, data_size) 
+        port map (phi2, mem_clk, r_nw, addr, d_io, rom_ce_n, ram_ce_n, ppu_ce_n, apu_ce_n);
+
+    --main ROM/RAM instance
+--    prg_rom_inst : prg_rom generic map (rom_32k, data_size)
+--            port map (mem_clk, rom_ce_n, addr(rom_32k - 1 downto 0), d_io);
+
+    prg_rom_inst : prg_rom generic map (rom_4k, data_size)
+            port map (mem_clk, rom_ce_n, addr(rom_4k - 1 downto 0), d_io);
+
+    ram_oe_n <= not R_nW;
+    prg_ram_inst : ram generic map (ram_2k, data_size)
+            port map (mem_clk, ram_ce_n, ram_oe_n, R_nW, addr(ram_2k - 1 downto 0), d_io);
+
     dbg_ppu_addr <= "00000" & dbg_nes_x;
     dbg_ppu_scrl_x(0) <= ale;
     dbg_ppu_scrl_x(1) <= rd_n;
@@ -411,14 +427,12 @@ use ieee.std_logic_arith.conv_std_logic_vector;
 procedure ppu_set (ad: in integer; dt : in integer) is
 begin
     r_nw <= '0';
-    ppu_ce_n <= '0';
-    addr(2 downto 0) <= conv_std_logic_vector(ad, 16)(2 downto 0);
+    addr <= conv_std_logic_vector(ad, 16);
     d_io <= conv_std_logic_vector(dt, 8);
 end;
 procedure ppu_clr is
 begin
     r_nw <= '1';
-    ppu_ce_n <= '1';
     addr <= (others => 'Z');
     d_io <= (others => 'Z');
 end;
@@ -427,7 +441,6 @@ end;
         if (rst_n = '0') then
             
             r_nw <= 'Z';
-            ppu_ce_n <= 'Z';
             addr <= (others => 'Z');
             d_io <= (others => 'Z');
             
