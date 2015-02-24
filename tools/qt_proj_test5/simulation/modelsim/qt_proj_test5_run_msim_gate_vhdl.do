@@ -20,8 +20,13 @@ add wave  -label vga_clk sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_scrl_x(4
 
 add wave -divider cpu/io
 add wave -label r_nw  sim:/testbench_qt_proj_test5/sim_board/dbg_r_nw
-add wave -label addr  -radix hex {sim:/testbench_qt_proj_test5/sim_board/dbg_addr(2 downto 0)}
+add wave -label addr  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_addr
 add wave -label d_io  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_d_io
+
+
+add wave -divider ce-pins
+add wave -label rom_ce_n sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_scrl_x(5)
+add wave -label ram_ce_n sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_scrl_x(6)
 add wave -label dbg_ppu_ce_n sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_ce_n
 
 add wave -divider ppu

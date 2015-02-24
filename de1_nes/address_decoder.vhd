@@ -8,7 +8,6 @@ generic (abus_size : integer := 16; dbus_size : integer := 8);
             mem_clk     : in std_logic;
             R_nW        : in std_logic; -- active high on read / active low on write.
             addr        : in std_logic_vector (abus_size - 1 downto 0);
-            d_io        : in std_logic_vector (dbus_size - 1 downto 0);
             rom_ce_n    : out std_logic;
             ram_ce_n    : out std_logic;
             ppu_ce_n    : out std_logic;
@@ -41,8 +40,7 @@ signal r_n            : std_logic;
 
 begin
 
-    rom_ce_n <= '0' when (addr(15) = '1' and R_nW = '1') else
-             '1' ;
+    rom_ce_n <= not addr(15);
 
     ppu_ce_n <= '0'
             when (addr(15) = '0' and addr(14) = '0' and addr(13) = '1')  else
@@ -57,7 +55,7 @@ begin
             port map (mem_clk, ram_ce_n_in, r_n, r_nw, ram_ce_n);
 
     --ram io timing.
-    main_p : process (phi2, addr, d_io, R_nW)
+    main_p : process (phi2, addr, R_nW)
     begin
             -- ram range : 0 - 0x2000.
             -- 0x2000 is 0010_0000_0000_0000

@@ -111,7 +111,6 @@ architecture rtl of qt_proj_test5 is
                 mem_clk     : in std_logic;
                 R_nW        : in std_logic; 
                 addr        : in std_logic_vector (abus_size - 1 downto 0);
-                d_io        : in std_logic_vector (dbus_size - 1 downto 0);
                 rom_ce_n    : out std_logic;
                 ram_ce_n    : out std_logic;
                 ppu_ce_n    : out std_logic;
@@ -311,7 +310,7 @@ begin
     phi2 <= not cpu_clk;
 
     addr_dec_inst : address_decoder generic map (addr_size, data_size) 
-        port map (phi2, mem_clk, r_nw, addr, d_io, rom_ce_n, ram_ce_n, ppu_ce_n, apu_ce_n);
+        port map (phi2, mem_clk, r_nw, addr, rom_ce_n, ram_ce_n, ppu_ce_n, apu_ce_n);
 
     --main ROM/RAM instance
 --    prg_rom_inst : prg_rom generic map (rom_32k, data_size)
@@ -330,6 +329,9 @@ begin
     dbg_ppu_scrl_x(2) <= wr_n;
     dbg_ppu_scrl_x(3) <= nt0_ce_n;
     dbg_ppu_scrl_x(4) <= vga_clk;
+    dbg_ppu_scrl_x(5) <= rom_ce_n;
+    dbg_ppu_scrl_x(6) <= ram_ce_n;
+    dbg_ppu_scrl_x(7) <= addr(15);
     dbg_ppu_scrl_y(2 downto 0) <= dbg_p_oam_ce_rn_wn(2 downto 0);
 --    dbg_disp_ptn_l (7 downto 0) <= dbg_p_oam_addr;
 --    dbg_disp_ptn_l (15 downto 8) <= dbg_p_oam_data;
@@ -433,7 +435,7 @@ end;
 procedure ppu_clr is
 begin
     r_nw <= '1';
-    addr <= (others => 'Z');
+    addr <= (others => '0');
     d_io <= (others => 'Z');
 end;
 
