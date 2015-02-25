@@ -111,7 +111,6 @@ architecture rtl of de1_nes is
                 mem_clk     : in std_logic;
                 R_nW        : in std_logic; 
                 addr        : in std_logic_vector (abus_size - 1 downto 0);
-                d_io        : in std_logic_vector (dbus_size - 1 downto 0);
                 rom_ce_n    : out std_logic;
                 ram_ce_n    : out std_logic;
                 ppu_ce_n    : out std_logic;
@@ -150,6 +149,7 @@ architecture rtl of de1_nes is
         signal dbg_vga_x                        : out std_logic_vector (9 downto 0);
         signal dbg_disp_nt, dbg_disp_attr       : out std_logic_vector (7 downto 0);
         signal dbg_disp_ptn_h, dbg_disp_ptn_l   : out std_logic_vector (15 downto 0);
+        signal dbg_plt_ce_rn_wn                 : out std_logic_vector (2 downto 0);
         signal dbg_plt_addr                     : out std_logic_vector (4 downto 0);
         signal dbg_plt_data                     : out std_logic_vector (7 downto 0);
         signal dbg_p_oam_ce_rn_wn               : out std_logic_vector (2 downto 0);
@@ -286,6 +286,7 @@ architecture rtl of de1_nes is
     signal dbg_ppu_addr_dummy               : std_logic_vector (13 downto 0);
     signal dbg_nes_x                        : std_logic_vector (8 downto 0);
     signal dbg_vga_x                        : std_logic_vector (9 downto 0);
+    signal dbg_plt_ce_rn_wn                 : std_logic_vector (2 downto 0);
     signal dbg_plt_addr                     : std_logic_vector (4 downto 0);
     signal dbg_plt_data                     : std_logic_vector (7 downto 0);
     signal dbg_p_oam_ce_rn_wn               : std_logic_vector (2 downto 0);
@@ -332,7 +333,7 @@ begin
                 phi1, phi2, addr, d_io);
 
     addr_dec_inst : address_decoder generic map (addr_size, data_size) 
-        port map (phi2, mem_clk, r_nw, addr, d_io, rom_ce_n, ram_ce_n, ppu_ce_n, apu_ce_n);
+        port map (phi2, mem_clk, r_nw, addr, rom_ce_n, ram_ce_n, ppu_ce_n, apu_ce_n);
 
     --main ROM/RAM instance
 --    prg_rom_inst : prg_rom generic map (rom_32k, data_size)
@@ -351,7 +352,11 @@ begin
     dbg_ppu_scrl_x(2) <= wr_n;
     dbg_ppu_scrl_x(3) <= nt0_ce_n;
     dbg_ppu_scrl_x(4) <= vga_clk;
+    dbg_ppu_scrl_x(5) <= rom_ce_n;
+    dbg_ppu_scrl_x(6) <= ram_ce_n;
+    dbg_ppu_scrl_x(7) <= addr(15);
     dbg_ppu_scrl_y(2 downto 0) <= dbg_p_oam_ce_rn_wn(2 downto 0);
+    dbg_ppu_scrl_y(5 downto 3) <= dbg_plt_ce_rn_wn(2 downto 0);
 --    dbg_disp_ptn_l (7 downto 0) <= dbg_p_oam_addr;
 --    dbg_disp_ptn_l (15 downto 8) <= dbg_p_oam_data;
 
@@ -376,6 +381,7 @@ begin
         dbg_vga_x                        ,
         dbg_disp_nt, dbg_disp_attr                          ,
         dbg_disp_ptn_h_dummy, dbg_disp_ptn_l_dummy                      ,
+        dbg_plt_ce_rn_wn                 ,
         dbg_plt_addr                     ,
         dbg_plt_data                     ,
         dbg_p_oam_ce_rn_wn              ,

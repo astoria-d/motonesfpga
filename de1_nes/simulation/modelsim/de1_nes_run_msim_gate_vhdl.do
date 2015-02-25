@@ -18,14 +18,19 @@ add wave -divider cpu
 add wave -label rst_n       sim:/testbench_motones_sim/sim_board/rst_n
 add wave -label r_nw       sim:/testbench_motones_sim/sim_board/dbg_r_nw
 add wave -label cpu_clk       sim:/testbench_motones_sim/sim_board/dbg_cpu_clk
-add wave  -label ppu_clk    sim:/testbench_motones_sim/sim_board/dbg_ppu_clk
+add wave -label ppu_clk    sim:/testbench_motones_sim/sim_board/dbg_ppu_clk
 add wave -label vga_clk   sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x(4)
-##add wave  sim:/testbench_motones_sim/sim_board/dbg_mem_clk
+add wave -label mem_clk sim:/testbench_motones_sim/sim_board/dbg_mem_clk
 
 
 
 add wave -label addr       -radix hex sim:/testbench_motones_sim/sim_board/dbg_addr
 add wave -label d_io       -radix hex sim:/testbench_motones_sim/sim_board/dbg_d_io
+
+
+add wave -divider ce-pins
+add wave -label rom_ce_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x(5)
+add wave -label ram_ce_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x(6)
 add wave -label dbg_ppu_ce_n          sim:/testbench_motones_sim/sim_board/dbg_ppu_ce_n
 
 #add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_instruction
@@ -65,6 +70,11 @@ add wave -label nt0_ce_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x(3)
 
 add wave  -radix hex -label v_addr sim:/testbench_motones_sim/sim_board/dbg_disp_ptn_l
 add wave  -radix hex -label vram_ad sim:/testbench_motones_sim/sim_board/dbg_vram_ad
+
+
+add wave -label plt_ce_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_y(5)
+add wave -label plt_r_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_y(4)
+add wave -label plt_w_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_y(3)
 add wave  -radix hex -label plt_addr {sim:/testbench_motones_sim/sim_board/dbg_disp_ptn_h(12 downto 8)}
 add wave  -radix hex -label plt_data {sim:/testbench_motones_sim/sim_board/dbg_disp_ptn_h(7 downto 0)}
 

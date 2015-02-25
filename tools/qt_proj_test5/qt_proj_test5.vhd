@@ -149,6 +149,7 @@ architecture rtl of qt_proj_test5 is
         signal dbg_vga_x                        : out std_logic_vector (9 downto 0);
         signal dbg_disp_nt, dbg_disp_attr       : out std_logic_vector (7 downto 0);
         signal dbg_disp_ptn_h, dbg_disp_ptn_l   : out std_logic_vector (15 downto 0);
+        signal dbg_plt_ce_rn_wn                 : out std_logic_vector (2 downto 0);
         signal dbg_plt_addr                     : out std_logic_vector (4 downto 0);
         signal dbg_plt_data                     : out std_logic_vector (7 downto 0);
         signal dbg_p_oam_ce_rn_wn               : out std_logic_vector (2 downto 0);
@@ -285,6 +286,7 @@ architecture rtl of qt_proj_test5 is
     signal dbg_ppu_addr_dummy               : std_logic_vector (13 downto 0);
     signal dbg_nes_x                        : std_logic_vector (8 downto 0);
     signal dbg_vga_x                        : std_logic_vector (9 downto 0);
+    signal dbg_plt_ce_rn_wn                 : std_logic_vector (2 downto 0);
     signal dbg_plt_addr                     : std_logic_vector (4 downto 0);
     signal dbg_plt_data                     : std_logic_vector (7 downto 0);
     signal dbg_p_oam_ce_rn_wn               : std_logic_vector (2 downto 0);
@@ -333,6 +335,7 @@ begin
     dbg_ppu_scrl_x(6) <= ram_ce_n;
     dbg_ppu_scrl_x(7) <= addr(15);
     dbg_ppu_scrl_y(2 downto 0) <= dbg_p_oam_ce_rn_wn(2 downto 0);
+    dbg_ppu_scrl_y(5 downto 3) <= dbg_plt_ce_rn_wn(2 downto 0);
 --    dbg_disp_ptn_l (7 downto 0) <= dbg_p_oam_addr;
 --    dbg_disp_ptn_l (15 downto 8) <= dbg_p_oam_data;
 
@@ -357,6 +360,7 @@ begin
         dbg_vga_x                        ,
         dbg_disp_nt, dbg_disp_attr                          ,
         dbg_disp_ptn_h_dummy, dbg_disp_ptn_l_dummy                      ,
+        dbg_plt_ce_rn_wn                 ,
         dbg_plt_addr                     ,
         dbg_plt_data                     ,
         dbg_p_oam_ce_rn_wn              ,
@@ -435,7 +439,7 @@ end;
 procedure ppu_clr is
 begin
     r_nw <= '1';
-    addr <= (others => '0');
+    addr <= conv_std_logic_vector(16#8000#, 16);
     d_io <= (others => 'Z');
 end;
 

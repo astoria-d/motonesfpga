@@ -18,6 +18,7 @@ entity vga_ctl is
     signal dbg_vga_x                        : out std_logic_vector (9 downto 0);
     signal dbg_disp_nt, dbg_disp_attr       : out std_logic_vector (7 downto 0);
     signal dbg_disp_ptn_h, dbg_disp_ptn_l   : out std_logic_vector (15 downto 0);
+    signal dbg_plt_ce_rn_wn                 : out std_logic_vector (2 downto 0);
     signal dbg_plt_addr                     : out std_logic_vector (4 downto 0);
     signal dbg_plt_data                     : out std_logic_vector (7 downto 0);
     signal dbg_p_oam_ce_rn_wn               : out std_logic_vector (2 downto 0);
@@ -83,6 +84,7 @@ component ppu_vga_render
     signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
     signal dbg_disp_nt, dbg_disp_attr       : out std_logic_vector (7 downto 0);
     signal dbg_disp_ptn_h, dbg_disp_ptn_l   : out std_logic_vector (15 downto 0);
+    signal dbg_plt_ce_rn_wn                 : out std_logic_vector (2 downto 0);
     signal dbg_plt_addr                     : out std_logic_vector (4 downto 0);
     signal dbg_plt_data                     : out std_logic_vector (7 downto 0);
     signal dbg_p_oam_ce_rn_wn               : out std_logic_vector (2 downto 0);
@@ -264,6 +266,7 @@ begin
         dbg_nes_x                        ,
         dbg_disp_nt, dbg_disp_attr      ,
         dbg_disp_ptn_h, dbg_disp_ptn_l  ,
+        dbg_plt_ce_rn_wn                 ,
         dbg_plt_addr                    ,
         dbg_plt_data                    ,
         dbg_p_oam_ce_rn_wn              ,
@@ -322,6 +325,7 @@ entity ppu_vga_render is
     signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
     signal dbg_disp_nt, dbg_disp_attr       : out std_logic_vector (7 downto 0);
     signal dbg_disp_ptn_h, dbg_disp_ptn_l   : out std_logic_vector (15 downto 0);
+    signal dbg_plt_ce_rn_wn                 : out std_logic_vector (2 downto 0);
     signal dbg_plt_addr                     : out std_logic_vector (4 downto 0);
     signal dbg_plt_data                     : out std_logic_vector (7 downto 0);
     signal dbg_p_oam_ce_rn_wn               : out std_logic_vector (2 downto 0);
@@ -672,6 +676,7 @@ begin
     dbg_disp_ptn_l <= disp_ptn_l;
     dbg_plt_addr <= plt_addr;
     dbg_plt_data <= plt_data;
+    dbg_plt_ce_rn_wn               <= plt_ram_ce_n & plt_r_n & plt_w_n;
     dbg_p_oam_ce_rn_wn               <= p_oam_ram_ce_n & p_oam_r_n & p_oam_w_n;
     dbg_p_oam_addr                   <= p_oam_addr;
     dbg_p_oam_data                   <= p_oam_data;

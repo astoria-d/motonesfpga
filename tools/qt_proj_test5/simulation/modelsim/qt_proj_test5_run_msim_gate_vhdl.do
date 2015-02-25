@@ -17,6 +17,7 @@ add wave  -label rst_n sim:/testbench_qt_proj_test5/sim_board/rst_n
 add wave  -label cpu_clk sim:/testbench_qt_proj_test5/dbg_cpu_clk
 add wave  -label ppu_clk sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_clk
 add wave  -label vga_clk sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_scrl_x(4)
+add wave  -label mem_clk sim:/testbench_qt_proj_test5/sim_board/dbg_mem_clk
 
 add wave -divider cpu/io
 add wave -label r_nw  sim:/testbench_qt_proj_test5/sim_board/dbg_r_nw
@@ -42,13 +43,6 @@ add wave -label dbg_disp_attr   -radix hex sim:/testbench_qt_proj_test5/sim_boar
 #add wave -label dbg_disp_ptn_h  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_disp_ptn_h
 #add wave -label dbg_disp_ptn_l  -radix hex sim:/testbench_qt_proj_test5/sim_board/dbg_disp_ptn_l
 
-add wave -divider sprite
-add wave -label p_oam_ce_n sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_scrl_y(2)
-add wave -label p_oam_r_n sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_scrl_y(1)
-add wave -label p_oam_w_n sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_scrl_y(0)
-add wave -label p_oam_addr  -radix hex {sim:/testbench_qt_proj_test5/sim_board/dbg_disp_ptn_l(7 downto 0)}
-add wave -label p_oam_data  -radix hex {sim:/testbench_qt_proj_test5/sim_board/dbg_disp_ptn_l (15 downto 8)}
-
 add wave -divider vram
 add wave -label ale sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_scrl_x(0)
 add wave -label rd_n sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_scrl_x(1)
@@ -57,9 +51,21 @@ add wave -label nt0_ce_n sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_scrl_x(3
 
 add wave  -radix hex -label v_addr {sim:/testbench_qt_proj_test5/sim_board/dbg_disp_ptn_l (13 downto 0)}
 add wave  -radix hex -label vram_ad sim:/testbench_qt_proj_test5/sim_board/dbg_vram_ad
+
+
+add wave -label plt_ce_n sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_scrl_y(5)
+add wave -label plt_r_n sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_scrl_y(4)
+add wave -label plt_w_n sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_scrl_y(3)
 add wave  -radix hex -label plt_addr {sim:/testbench_qt_proj_test5/sim_board/dbg_disp_ptn_h(12 downto 8)}
 add wave  -radix hex -label plt_data {sim:/testbench_qt_proj_test5/sim_board/dbg_disp_ptn_h(7 downto 0)}
 
+
+#add wave -divider sprite
+#add wave -label p_oam_ce_n sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_scrl_y(2)
+#add wave -label p_oam_r_n sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_scrl_y(1)
+#add wave -label p_oam_w_n sim:/testbench_qt_proj_test5/sim_board/dbg_ppu_scrl_y(0)
+#add wave -label p_oam_addr  -radix hex {sim:/testbench_qt_proj_test5/sim_board/dbg_disp_ptn_l(7 downto 0)}
+#add wave -label p_oam_data  -radix hex {sim:/testbench_qt_proj_test5/sim_board/dbg_disp_ptn_l (15 downto 8)}
 
 
 add wave -divider vga_out
