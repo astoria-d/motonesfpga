@@ -439,7 +439,7 @@ end;
 procedure ppu_clr is
 begin
     r_nw <= '1';
-    addr <= conv_std_logic_vector(16#8000#, 16);
+    addr <= conv_std_logic_vector(16#0000#, 16);
     d_io <= (others => 'Z');
 end;
 
