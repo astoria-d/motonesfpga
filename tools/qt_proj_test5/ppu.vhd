@@ -287,7 +287,7 @@ begin
     plt_data_out_inst : d_flip_flop generic map(dsize)
             port map (clk_n, rst_n, '1', ppu_data_we_n, oam_plt_data, plt_data_out);
 
-    reg_set_p : process (rst_n, ce_n, r_nw, cpu_addr, cpu_d, 
+    reg_set_p : process (rst_n, ce_n, r_nw, cpu_addr, 
                         ppu_status(ST_VBL), ppu_ctrl(PPUNEN))
     begin
 
@@ -303,6 +303,15 @@ begin
 
         if (rst_n = '0') then
             vblank_n <= '1';
+            ppu_ctrl_we_n    <= '1';
+            ppu_mask_we_n    <= '1';
+            oam_addr_we_n    <= '1';
+            oam_data_we_n    <= '1';
+            ppu_scroll_x_we_n    <= '1';
+            ppu_scroll_y_we_n    <= '1';
+            ppu_scroll_cnt_ce_n  <= '1';
+            read_status <= '0';
+            read_data_n <= '1';
         elsif (rst_n = '1' and ce_n = '0') then
 
             --register set.
@@ -382,8 +391,7 @@ begin
     ppu_clk_cnt_res_n <= not ce_n;
     
     --cpu and ppu clock timing adjustment...
-    clk_cnt_set_p : process (rst_n, ce_n, r_nw, cpu_addr, cpu_d, clk, 
-                                oam_plt_data, vram_ad, ppu_stat_out)
+    clk_cnt_set_p : process (rst_n, ce_n, r_nw, cpu_addr, clk)
     begin
         if (rst_n = '0') then
             ppu_latch_rst_n <= '0';

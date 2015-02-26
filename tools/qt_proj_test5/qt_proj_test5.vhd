@@ -303,6 +303,7 @@ architecture rtl of qt_proj_test5 is
 
     signal ram_ce_n_dummy : std_logic;
     signal rom_ce_n_dummy : std_logic;
+    signal d_io_dummy : std_logic_vector( data_size - 1 downto 0);
 begin
 
     irq_n <= '0';
@@ -312,10 +313,10 @@ begin
         (base_clk, rst_n, cpu_clk, ppu_clk, mem_clk, vga_clk);
 
     phi2 <= not cpu_clk;
-    rom_ce_n <= '1';
+    --rom_ce_n <= '1';
 
     addr_dec_inst : address_decoder generic map (addr_size, data_size) 
-        port map (phi2, mem_clk, r_nw, addr, rom_ce_n_dummy, ram_ce_n, ppu_ce_n, apu_ce_n);
+        port map (phi2, mem_clk, r_nw, addr, rom_ce_n, ram_ce_n, ppu_ce_n, apu_ce_n);
 
     --main ROM/RAM instance
 --    prg_rom_inst : prg_rom generic map (rom_32k, data_size)
@@ -436,12 +437,14 @@ use ieee.std_logic_arith.conv_std_logic_vector;
 procedure ppu_set (ad: in integer; dt : in integer) is
 begin
     r_nw <= '0';
+    --ppu_ce_n <= '0';
     addr <= conv_std_logic_vector(ad, 16);
     d_io <= conv_std_logic_vector(dt, 8);
 end;
 procedure ppu_clr is
 begin
     r_nw <= '1';
+    --ppu_ce_n <= '1';
     addr <= conv_std_logic_vector(16#8000#, 16);
     d_io <= (others => 'Z');
 end;
@@ -450,6 +453,7 @@ end;
         if (rst_n = '0') then
             
             r_nw <= 'Z';
+            --ppu_ce_n <= '1';
             addr <= (others => 'Z');
             d_io <= (others => 'Z');
             
@@ -568,6 +572,7 @@ end;
                     else
                         ppu_clr;
                         if (plt_step_cnt > 58) then
+--                        if (plt_step_cnt > 34) then
                             global_step_cnt := global_step_cnt + 1;
                         end if;
                     end if;
@@ -626,75 +631,76 @@ end;
                     else
                         ppu_clr;
                         if (nt_step_cnt > 36) then
+--                        if (nt_step_cnt > 14) then
                             global_step_cnt := global_step_cnt + 1;
                         end if;
                     end if;
                     nt_step_cnt := nt_step_cnt + 1;
                     
                 elsif (global_step_cnt = 3) then
-                    --step2 = sprite set.
-                    if (spr_step_cnt = 0) then
-                        --set sprite addr=00 (first sprite)
-                        ppu_set(16#2003#, 16#00#);
-                    elsif (spr_step_cnt = 2) then
-                        --set sprite data: y=02
-                        ppu_set(16#2004#, 16#02#);
-                    elsif (spr_step_cnt = 4) then
-                        --tile=0x4d (ascii 'M')
-                        ppu_set(16#2004#, 16#4d#);
-                    elsif (spr_step_cnt = 6) then
-                        --set sprite attr=03 (palette 03)
-                        ppu_set(16#2004#, 16#03#);
-                    elsif (spr_step_cnt = 8) then
-                        --set sprite data: x=100
-                        ppu_set(16#2004#, 16#64#);
-
-                    elsif (spr_step_cnt = 10) then
-                        --set sprite data: y=50
-                        ppu_set(16#2004#, 16#32#);
-                    elsif (spr_step_cnt = 12) then
-                        --tile=0x4d (ascii 'O')
-                        ppu_set(16#2004#, 16#4f#);
-                    elsif (spr_step_cnt = 14) then
-                        --set sprite attr=01
-                        ppu_set(16#2004#, 16#01#);
-                    elsif (spr_step_cnt = 16) then
-                        --set sprite data: x=30
-                        ppu_set(16#2004#, 16#1e#);
-
-                    elsif (spr_step_cnt = 18) then
-                        --set sprite data: y=53
-                        ppu_set(16#2004#, 16#33#);
-                    elsif (spr_step_cnt = 20) then
-                        --tile=0x4d (ascii 'P')
-                        ppu_set(16#2004#, 16#50#);
-                    elsif (spr_step_cnt = 22) then
-                        --set sprite attr=01
-                        ppu_set(16#2004#, 16#01#);
-                    elsif (spr_step_cnt = 24) then
-                        --set sprite data: x=33
-                        ppu_set(16#2004#, 16#21#);
-
-                    elsif (spr_step_cnt = 26) then
-                        --set sprite data: y=61
-                        ppu_set(16#2004#, 16#3d#);
-                    elsif (spr_step_cnt = 28) then
-                        --tile=0x4d (ascii 'Q')
-                        ppu_set(16#2004#, 16#51#);
-                    elsif (spr_step_cnt = 30) then
-                        --set sprite attr=02
-                        ppu_set(16#2004#, 16#02#);
-                    elsif (spr_step_cnt = 32) then
-                        --set sprite data: x=35
-                        ppu_set(16#2004#, 16#23#);
-
-                    else
-                        ppu_clr;
-                        if (spr_step_cnt > 32) then
+--                    --step2 = sprite set.
+--                    if (spr_step_cnt = 0) then
+--                        --set sprite addr=00 (first sprite)
+--                        ppu_set(16#2003#, 16#00#);
+--                    elsif (spr_step_cnt = 2) then
+--                        --set sprite data: y=02
+--                        ppu_set(16#2004#, 16#02#);
+--                    elsif (spr_step_cnt = 4) then
+--                        --tile=0x4d (ascii 'M')
+--                        ppu_set(16#2004#, 16#4d#);
+--                    elsif (spr_step_cnt = 6) then
+--                        --set sprite attr=03 (palette 03)
+--                        ppu_set(16#2004#, 16#03#);
+--                    elsif (spr_step_cnt = 8) then
+--                        --set sprite data: x=100
+--                        ppu_set(16#2004#, 16#64#);
+--
+--                    elsif (spr_step_cnt = 10) then
+--                        --set sprite data: y=50
+--                        ppu_set(16#2004#, 16#32#);
+--                    elsif (spr_step_cnt = 12) then
+--                        --tile=0x4d (ascii 'O')
+--                        ppu_set(16#2004#, 16#4f#);
+--                    elsif (spr_step_cnt = 14) then
+--                        --set sprite attr=01
+--                        ppu_set(16#2004#, 16#01#);
+--                    elsif (spr_step_cnt = 16) then
+--                        --set sprite data: x=30
+--                        ppu_set(16#2004#, 16#1e#);
+--
+--                    elsif (spr_step_cnt = 18) then
+--                        --set sprite data: y=53
+--                        ppu_set(16#2004#, 16#33#);
+--                    elsif (spr_step_cnt = 20) then
+--                        --tile=0x4d (ascii 'P')
+--                        ppu_set(16#2004#, 16#50#);
+--                    elsif (spr_step_cnt = 22) then
+--                        --set sprite attr=01
+--                        ppu_set(16#2004#, 16#01#);
+--                    elsif (spr_step_cnt = 24) then
+--                        --set sprite data: x=33
+--                        ppu_set(16#2004#, 16#21#);
+--
+--                    elsif (spr_step_cnt = 26) then
+--                        --set sprite data: y=61
+--                        ppu_set(16#2004#, 16#3d#);
+--                    elsif (spr_step_cnt = 28) then
+--                        --tile=0x4d (ascii 'Q')
+--                        ppu_set(16#2004#, 16#51#);
+--                    elsif (spr_step_cnt = 30) then
+--                        --set sprite attr=02
+--                        ppu_set(16#2004#, 16#02#);
+--                    elsif (spr_step_cnt = 32) then
+--                        --set sprite data: x=35
+--                        ppu_set(16#2004#, 16#23#);
+--
+--                    else
+--                        ppu_clr;
+--                        if (spr_step_cnt > 32) then
                             global_step_cnt := global_step_cnt + 1;
-                        end if;
-                    end if;
-                    spr_step_cnt := spr_step_cnt + 1;
+--                        end if;
+--                    end if;
+--                    spr_step_cnt := spr_step_cnt + 1;
 
                 elsif (global_step_cnt = 4) then
                     --final step = enable ppu.
