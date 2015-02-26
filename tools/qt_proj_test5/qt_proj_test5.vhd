@@ -301,6 +301,8 @@ architecture rtl of qt_proj_test5 is
     signal dbg_ppu_scrl_y_dummy             : std_logic_vector (7 downto 0);
     signal dbg_disp_ptn_h_dummy, dbg_disp_ptn_l_dummy   : std_logic_vector (15 downto 0);
 
+    signal ram_ce_n_dummy : std_logic;
+    signal rom_ce_n_dummy : std_logic;
 begin
 
     irq_n <= '0';
@@ -310,9 +312,10 @@ begin
         (base_clk, rst_n, cpu_clk, ppu_clk, mem_clk, vga_clk);
 
     phi2 <= not cpu_clk;
+    rom_ce_n <= '1';
 
     addr_dec_inst : address_decoder generic map (addr_size, data_size) 
-        port map (phi2, mem_clk, r_nw, addr, rom_ce_n, ram_ce_n, ppu_ce_n, apu_ce_n);
+        port map (phi2, mem_clk, r_nw, addr, rom_ce_n_dummy, ram_ce_n, ppu_ce_n, apu_ce_n);
 
     --main ROM/RAM instance
 --    prg_rom_inst : prg_rom generic map (rom_32k, data_size)
@@ -439,7 +442,7 @@ end;
 procedure ppu_clr is
 begin
     r_nw <= '1';
-    addr <= conv_std_logic_vector(16#0000#, 16);
+    addr <= conv_std_logic_vector(16#8000#, 16);
     d_io <= (others => 'Z');
 end;
 
