@@ -9,91 +9,37 @@ use ieee.std_logic_unsigned.conv_integer;
 
 entity qt_proj_test5 is 
     port (
---debug signal
+
     signal dbg_cpu_clk  : out std_logic;
     signal dbg_ppu_clk  : out std_logic;
-    signal dbg_mem_clk  : out std_logic;
-    signal dbg_r_nw     : out std_logic;
-    signal dbg_addr     : out std_logic_vector( 16 - 1 downto 0);
-    signal dbg_d_io     : out std_logic_vector( 8 - 1 downto 0);
-    signal dbg_vram_ad  : out std_logic_vector (7 downto 0);
-    signal dbg_vram_a   : out std_logic_vector (13 downto 8);
+    signal dbg_addr : out std_logic_vector( 16 - 1 downto 0);
+    signal dbg_d_io : out std_logic_vector( 8 - 1 downto 0);
 
----monitor inside cpu
-    signal dbg_instruction  : out std_logic_vector(7 downto 0);
-    signal dbg_int_d_bus    : out std_logic_vector(7 downto 0);
-    signal dbg_exec_cycle   : out std_logic_vector (5 downto 0);
-    signal dbg_ea_carry     : out std_logic;
-    signal dbg_wait_a58_branch_next     : out std_logic;
---    signal dbg_index_bus    : out std_logic_vector(7 downto 0);
---    signal dbg_acc_bus      : out std_logic_vector(7 downto 0);
-    signal dbg_status       : out std_logic_vector(7 downto 0);
---    signal dbg_pcl, dbg_pch : out std_logic_vector(7 downto 0);
-    signal dbg_sp, dbg_x, dbg_y, dbg_acc       : out std_logic_vector(7 downto 0);
-    signal dbg_dec_oe_n    : out std_logic;
-    signal dbg_dec_val     : out std_logic_vector (7 downto 0);
-    signal dbg_int_dbus    : out std_logic_vector (7 downto 0);
---    signal dbg_status_val    : out std_logic_vector (7 downto 0);
---    signal dbg_stat_we_n    : out std_logic;
---    signal dbg_idl_h, dbg_idl_l, dbg_dbb_r, dbg_dbb_w    : out std_logic_vector (7 downto 0);
-
---ppu debug pins
     signal dbg_ppu_ce_n    : out std_logic;
     signal dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status : out std_logic_vector (7 downto 0);
     signal dbg_ppu_addr : out std_logic_vector (13 downto 0);
     signal dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y : out std_logic_vector (7 downto 0);
     signal dbg_disp_nt, dbg_disp_attr : out std_logic_vector (7 downto 0);
     signal dbg_disp_ptn_h, dbg_disp_ptn_l : out std_logic_vector (15 downto 0);
-    
-    
---NES instance
+
+    signal dbg_ppu_addr_we_n    : out std_logic;
+    signal dbg_ppu_clk_cnt          : out std_logic_vector(1 downto 0);
+
+
+
         base_clk 	: in std_logic;
+        base_clk_27mhz 	: in std_logic;
         rst_n     	: in std_logic;
-        joypad1     : in std_logic_vector(7 downto 0);
-        joypad2     : in std_logic_vector(7 downto 0);
         h_sync_n    : out std_logic;
         v_sync_n    : out std_logic;
         r           : out std_logic_vector(3 downto 0);
         g           : out std_logic_vector(3 downto 0);
         b           : out std_logic_vector(3 downto 0)
+
         );
 end qt_proj_test5;
 
 architecture rtl of qt_proj_test5 is
-    component mos6502
-        generic (   dsize : integer := 8;
-                    asize : integer :=16
-                );
-        port (  
-    signal dbg_instruction  : out std_logic_vector(7 downto 0);
-    signal dbg_int_d_bus  : out std_logic_vector(7 downto 0);
-    signal dbg_exec_cycle      : out std_logic_vector (5 downto 0);
-    signal dbg_ea_carry     : out std_logic;
-    signal dbg_wait_a58_branch_next     : out std_logic;
---    signal dbg_index_bus    : out std_logic_vector(7 downto 0);
---    signal dbg_acc_bus      : out std_logic_vector(7 downto 0);
-    signal dbg_status       : out std_logic_vector(7 downto 0);
-    signal dbg_pcl, dbg_pch, dbg_sp, dbg_x, dbg_y, dbg_acc       : out std_logic_vector(7 downto 0);
-    signal dbg_dec_oe_n    : out std_logic;
-    signal dbg_dec_val     : out std_logic_vector (7 downto 0);
-    signal dbg_int_dbus    : out std_logic_vector (7 downto 0);
---    signal dbg_status_val    : out std_logic_vector (7 downto 0);
-    signal dbg_stat_we_n    : out std_logic;
-    signal dbg_idl_h, dbg_idl_l, dbg_dbb_r, dbg_dbb_w    : out std_logic_vector (7 downto 0);
-    
-                input_clk   : in std_logic; --phi0 input pin.
-                rdy         : in std_logic;
-                rst_n       : in std_logic;
-                irq_n       : in std_logic;
-                nmi_n       : in std_logic;
-                dbe         : in std_logic;
-                r_nw        : out std_logic;
-                phi1        : out std_logic;
-                phi2        : out std_logic;
-                addr        : out std_logic_vector ( asize - 1 downto 0);
-                d_io        : inout std_logic_vector ( dsize - 1 downto 0)
-        );
-    end component;
 
     component clock_divider
         port (  base_clk    : in std_logic;
@@ -105,19 +51,6 @@ architecture rtl of qt_proj_test5 is
             );
     end component;
 
-    component address_decoder
-    generic (abus_size : integer := 16; dbus_size : integer := 8);
-        port (  phi2        : in std_logic;
-                mem_clk     : in std_logic;
-                R_nW        : in std_logic; 
-                addr        : in std_logic_vector (abus_size - 1 downto 0);
-                rom_ce_n    : out std_logic;
-                ram_ce_n    : out std_logic;
-                ppu_ce_n    : out std_logic;
-                apu_ce_n    : out std_logic
-    );
-    end component;
-
     component ram
         generic (abus_size : integer := 16; dbus_size : integer := 8);
         port (  
@@ -125,16 +58,6 @@ architecture rtl of qt_proj_test5 is
                 ce_n, oe_n, we_n  : in std_logic;   --select pin active low.
                 addr              : in std_logic_vector (abus_size - 1 downto 0);
                 d_io              : inout std_logic_vector (dbus_size - 1 downto 0)
-        );
-    end component;
-
-    component prg_rom
-        generic (abus_size : integer := 15; dbus_size : integer := 8);
-        port (
-                clk             : in std_logic;
-                ce_n            : in std_logic;     --active low.
-                addr            : in std_logic_vector (abus_size - 1 downto 0);
-                data            : out std_logic_vector (dbus_size - 1 downto 0)
         );
     end component;
 
@@ -149,7 +72,6 @@ architecture rtl of qt_proj_test5 is
         signal dbg_vga_x                        : out std_logic_vector (9 downto 0);
         signal dbg_disp_nt, dbg_disp_attr       : out std_logic_vector (7 downto 0);
         signal dbg_disp_ptn_h, dbg_disp_ptn_l   : out std_logic_vector (15 downto 0);
-        signal dbg_plt_ce_rn_wn                 : out std_logic_vector (2 downto 0);
         signal dbg_plt_addr                     : out std_logic_vector (4 downto 0);
         signal dbg_plt_data                     : out std_logic_vector (7 downto 0);
         signal dbg_p_oam_ce_rn_wn               : out std_logic_vector (2 downto 0);
@@ -225,17 +147,8 @@ architecture rtl of qt_proj_test5 is
         );
     end component;
 
-    component apu
-        port (  clk         : in std_logic;
-                ce_n        : in std_logic;
-                rst_n       : in std_logic;
-                r_nw        : inout std_logic;
-                cpu_addr    : inout std_logic_vector (15 downto 0);
-                cpu_d       : inout std_logic_vector (7 downto 0);
-                rdy         : out std_logic
-        );
-    end component;
-
+    
+    
     constant data_size : integer := 8;
     constant addr_size : integer := 16;
     constant vram_size14    : integer := 14;
@@ -248,25 +161,19 @@ architecture rtl of qt_proj_test5 is
 
     signal cpu_clk  : std_logic;
     signal ppu_clk  : std_logic;
-    signal mem_clk  : std_logic;
+    signal mem_clk   : std_logic;
     signal vga_clk   : std_logic;
 
-    signal rdy, irq_n, nmi_n, dbe, r_nw : std_logic;
-    signal phi1, phi2 : std_logic;
-    signal addr : std_logic_vector( addr_size - 1 downto 0);
-    signal d_io : std_logic_vector( data_size - 1 downto 0);
-
-    signal rom_ce_n : std_logic;
-    signal ram_ce_n : std_logic;
-    signal ram_oe_n : std_logic;
-    signal ppu_ce_n : std_logic;
-    signal apu_ce_n : std_logic;
-
-    signal rd_n     : std_logic;
-    signal wr_n     : std_logic;
-    signal ale      : std_logic;
-    signal vram_ad  : std_logic_vector (7 downto 0);
-    signal vram_a   : std_logic_vector (13 downto 8);
+    signal ppu_ce_n    : std_logic;
+    signal r_nw        : std_logic;
+    signal addr        : std_logic_vector (2 downto 0);
+    signal d_io        : std_logic_vector (7 downto 0);
+    signal vblank_n    : std_logic;
+    signal rd_n        : std_logic;
+    signal wr_n        : std_logic;
+    signal ale         : std_logic;
+    signal vram_ad     : std_logic_vector (7 downto 0);
+    signal vram_a      : std_logic_vector (13 downto 8);
     signal v_addr   : std_logic_vector (13 downto 0);
     signal nt_v_mirror  : std_logic;
     signal pt_ce_n  : std_logic;
@@ -274,19 +181,11 @@ architecture rtl of qt_proj_test5 is
     signal nt1_ce_n : std_logic;
 
     signal ale_n       : std_logic;
-
---    signal dbg_disp_nt, dbg_disp_attr : std_logic_vector (7 downto 0);
---    signal dbg_disp_ptn_h, dbg_disp_ptn_l : std_logic_vector (15 downto 0);
-    signal dbg_pcl, dbg_pch : std_logic_vector(7 downto 0);
-    signal dbg_stat_we_n    : std_logic;
-    signal dbg_idl_h, dbg_idl_l, dbg_dbb_r, dbg_dbb_w    : std_logic_vector (7 downto 0);
-
-    signal dbg_ppu_addr_we_n                : std_logic;
-    signal dbg_ppu_clk_cnt                  : std_logic_vector(1 downto 0);
+    signal vga_clk_n   : std_logic;
+        
     signal dbg_ppu_addr_dummy               : std_logic_vector (13 downto 0);
     signal dbg_nes_x                        : std_logic_vector (8 downto 0);
     signal dbg_vga_x                        : std_logic_vector (9 downto 0);
-    signal dbg_plt_ce_rn_wn                 : std_logic_vector (2 downto 0);
     signal dbg_plt_addr                     : std_logic_vector (4 downto 0);
     signal dbg_plt_data                     : std_logic_vector (7 downto 0);
     signal dbg_p_oam_ce_rn_wn               : std_logic_vector (2 downto 0);
@@ -300,62 +199,32 @@ architecture rtl of qt_proj_test5 is
     signal dbg_ppu_scrl_x_dummy             : std_logic_vector (7 downto 0);
     signal dbg_ppu_scrl_y_dummy             : std_logic_vector (7 downto 0);
     signal dbg_disp_ptn_h_dummy, dbg_disp_ptn_l_dummy   : std_logic_vector (15 downto 0);
+    
+    
 
-    signal ram_ce_n_dummy : std_logic;
-    signal rom_ce_n_dummy : std_logic;
-    signal d_io_dummy : std_logic_vector( data_size - 1 downto 0);
 begin
-
-    irq_n <= '0';
-
     --ppu/cpu clock generator
     clock_inst : clock_divider port map 
         (base_clk, rst_n, cpu_clk, ppu_clk, mem_clk, vga_clk);
 
-    phi2 <= not cpu_clk;
-    --rom_ce_n <= '1';
-
-    addr_dec_inst : address_decoder generic map (addr_size, data_size) 
-        port map (phi2, mem_clk, r_nw, addr, rom_ce_n, ram_ce_n, ppu_ce_n, apu_ce_n);
-
-    --main ROM/RAM instance
---    prg_rom_inst : prg_rom generic map (rom_32k, data_size)
---            port map (mem_clk, rom_ce_n, addr(rom_32k - 1 downto 0), d_io);
-
-    prg_rom_inst : prg_rom generic map (rom_4k, data_size)
-            port map (mem_clk, rom_ce_n, addr(rom_4k - 1 downto 0), d_io);
-
-    ram_oe_n <= not R_nW;
-    prg_ram_inst : ram generic map (ram_2k, data_size)
-            port map (mem_clk, ram_ce_n, ram_oe_n, R_nW, addr(ram_2k - 1 downto 0), d_io);
-
+    dbg_cpu_clk <= vga_clk;
     dbg_ppu_addr <= "00000" & dbg_nes_x;
+    dbg_d_io <= "000" & dbg_plt_addr;
+    dbg_ppu_data <= dbg_plt_data;
+    dbg_addr <= "00" & v_addr;
+    dbg_ppu_status <= vram_ad;
     dbg_ppu_scrl_x(0) <= ale;
     dbg_ppu_scrl_x(1) <= rd_n;
     dbg_ppu_scrl_x(2) <= wr_n;
     dbg_ppu_scrl_x(3) <= nt0_ce_n;
-    dbg_ppu_scrl_x(4) <= vga_clk;
-    dbg_ppu_scrl_x(5) <= rom_ce_n;
-    dbg_ppu_scrl_x(6) <= ram_ce_n;
-    dbg_ppu_scrl_x(7) <= addr(15);
+    dbg_ppu_scrl_x(4) <= vga_clk_n;
     dbg_ppu_scrl_y(2 downto 0) <= dbg_p_oam_ce_rn_wn(2 downto 0);
-    dbg_ppu_scrl_y(5 downto 3) <= dbg_plt_ce_rn_wn(2 downto 0);
---    dbg_disp_ptn_l (7 downto 0) <= dbg_p_oam_addr;
---    dbg_disp_ptn_l (15 downto 8) <= dbg_p_oam_data;
-
-    dbg_cpu_clk <= cpu_clk;
-    dbg_mem_clk <= mem_clk;
-    dbg_r_nw <= r_nw;
-    dbg_addr <= addr;
-    dbg_d_io <= d_io;
-    dbg_vram_ad  <= vram_ad ;
-    dbg_disp_ptn_l <= "00" & v_addr ;
-    dbg_disp_ptn_h <= "000" & dbg_plt_addr & dbg_plt_data;
-
-    --nes ppu instance
+    dbg_disp_ptn_l (7 downto 0) <= dbg_p_oam_addr;
+    dbg_disp_ptn_l (15 downto 8) <= dbg_p_oam_data;
+    
     ppu_inst: ppu port map (  
         dbg_ppu_ce_n                                        ,
-        dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status          ,
+        dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status_dummy          ,
         dbg_ppu_addr_dummy                                        ,
         dbg_ppu_data_dummy, dbg_ppu_scrl_x_dummy, dbg_ppu_scrl_y_dummy        ,
 
@@ -363,8 +232,7 @@ begin
         dbg_nes_x                        ,
         dbg_vga_x                        ,
         dbg_disp_nt, dbg_disp_attr                          ,
-        dbg_disp_ptn_h_dummy, dbg_disp_ptn_l_dummy                      ,
-        dbg_plt_ce_rn_wn                 ,
+        dbg_disp_ptn_h, dbg_disp_ptn_l_dummy                      ,
         dbg_plt_addr                     ,
         dbg_plt_data                     ,
         dbg_p_oam_ce_rn_wn              ,
@@ -381,10 +249,10 @@ begin
                 ppu_ce_n        ,
                 rst_n       ,
                 r_nw        ,
-                addr(2 downto 0)    ,
-                d_io       ,
+                addr        ,
+                d_io        ,
 
-                nmi_n    ,
+                vblank_n    ,
                 rd_n        ,
                 wr_n        ,
                 ale         ,
@@ -408,8 +276,9 @@ begin
     v_addr (13 downto 8) <= vram_a;
 
     --transparent d-latch
-	ale_n <= not ale;
-	vram_latch : ls373 generic map (data_size)
+	 ale_n <= not ale;
+	 vga_clk_n <= not vga_clk;
+    vram_latch : ls373 generic map (data_size)
                 port map(vga_clk, ale_n, ale, vram_ad, v_addr(7 downto 0));
 
     vchr_rom : chr_rom generic map (chr_rom_8k, data_size)
@@ -422,10 +291,6 @@ begin
     vram_nt1 : ram generic map (vram_1k, data_size)
             port map (mem_clk, nt1_ce_n, rd_n, wr_n, v_addr(vram_1k - 1 downto 0), vram_ad);
 
---    --APU/DMA instance
---    apu_inst : apu
---        port map (cpu_clk, apu_ce_n, rst_n, r_nw, addr, d_io, rdy);
-
     --set initial vram value...
     vram_p : process (cpu_clk, rst_n)
 use ieee.std_logic_arith.conv_std_logic_vector;
@@ -433,27 +298,28 @@ use ieee.std_logic_arith.conv_std_logic_vector;
             nt_step_cnt, spr_step_cnt, enable_ppu_step_cnt : integer;
     variable init_done : std_logic;
     variable global_step_cnt : integer;
+    variable cpu_cnt : integer;
 
 procedure ppu_set (ad: in integer; dt : in integer) is
 begin
     r_nw <= '0';
-    --ppu_ce_n <= '0';
-    addr <= conv_std_logic_vector(ad, 16);
+    ppu_ce_n <= '0';
+    addr(2 downto 0) <= conv_std_logic_vector(ad, 16)(2 downto 0);
     d_io <= conv_std_logic_vector(dt, 8);
 end;
 procedure ppu_clr is
 begin
-    r_nw <= '1';
-    --ppu_ce_n <= '1';
-    addr <= conv_std_logic_vector(16#8000#, 16);
+    addr <= (others => 'Z');
     d_io <= (others => 'Z');
+    r_nw <= '1';
+    ppu_ce_n <= '1';
 end;
 
     begin
         if (rst_n = '0') then
             
             r_nw <= 'Z';
-            --ppu_ce_n <= '1';
+            ppu_ce_n <= 'Z';
             addr <= (others => 'Z');
             d_io <= (others => 'Z');
             
@@ -464,9 +330,12 @@ end;
             nt_step_cnt := 0;
             spr_step_cnt := 0;
             enable_ppu_step_cnt := 0;
+            cpu_cnt := 0;
 
         elsif (rising_edge(cpu_clk)) then
-            if (init_done = '0') then
+        cpu_cnt := cpu_cnt + 1;
+
+        if (init_done = '0') then
                 if (global_step_cnt = 0) then
                     --step0.0 = init ppu.
                     if (init_step_cnt = 0) then
@@ -477,25 +346,27 @@ end;
                         ppu_set(16#2001#, 16#00#);
                     else
                         ppu_clr;
-                        if (init_step_cnt > 2) then
+                        if (init_step_cnt > 3) then
                             global_step_cnt := global_step_cnt + 1;
                         end if;
                     end if;
-                    init_step_cnt := init_step_cnt + 1;
+                    if (cpu_cnt mod 18 <= 1) then
+                        init_step_cnt := init_step_cnt + 1;
+                    end if;
 
                 elsif (global_step_cnt = 1) then
                     --step0.1 = palette set.
 --palettes:
 --;;;bg palette
---	.byte	$11, $01, $03, $13
+--	.byte	$0f, $00, $10, $20
 --	.byte	$0f, $04, $14, $24
 --	.byte	$0f, $08, $18, $28
---	.byte	$05, $0c, $1c, $2c
+--	.byte	$0f, $0c, $1c, $2c
 --;;;spr palette
---	.byte	$00, $24, $1b, $11
---	.byte	$00, $32, $16, $20
---	.byte	$00, $26, $01, $31
---	.byte	$00, $00, $00, $00
+--	.byte	$0f, $00, $10, $20
+--	.byte	$0f, $06, $16, $26
+--	.byte	$0f, $08, $18, $28
+--	.byte	$0f, $0a, $1a, $2a
                     
                     
                     if (plt_step_cnt = 0) then
@@ -571,12 +442,13 @@ end;
 
                     else
                         ppu_clr;
-                        if (plt_step_cnt > 58) then
---                        if (plt_step_cnt > 34) then
+                        if (plt_step_cnt > 59) then
                             global_step_cnt := global_step_cnt + 1;
                         end if;
                     end if;
-                    plt_step_cnt := plt_step_cnt + 1;
+                    if (cpu_cnt mod 18 >= 1 and cpu_cnt mod 18 <= 2) then
+                        plt_step_cnt := plt_step_cnt + 1;
+                    end if;
                     
                 elsif (global_step_cnt = 2) then
                     --step1 = name table set.
@@ -630,77 +502,81 @@ end;
 
                     else
                         ppu_clr;
-                        if (nt_step_cnt > 36) then
---                        if (nt_step_cnt > 14) then
+                        if (nt_step_cnt > 37) then
                             global_step_cnt := global_step_cnt + 1;
                         end if;
                     end if;
-                    nt_step_cnt := nt_step_cnt + 1;
+                    
+                    if (cpu_cnt mod 18 >= 2 and cpu_cnt mod 18 <= 3) then
+                        nt_step_cnt := nt_step_cnt + 1;
+                    end if;
                     
                 elsif (global_step_cnt = 3) then
---                    --step2 = sprite set.
---                    if (spr_step_cnt = 0) then
---                        --set sprite addr=00 (first sprite)
---                        ppu_set(16#2003#, 16#00#);
---                    elsif (spr_step_cnt = 2) then
---                        --set sprite data: y=02
---                        ppu_set(16#2004#, 16#02#);
---                    elsif (spr_step_cnt = 4) then
---                        --tile=0x4d (ascii 'M')
---                        ppu_set(16#2004#, 16#4d#);
---                    elsif (spr_step_cnt = 6) then
---                        --set sprite attr=03 (palette 03)
---                        ppu_set(16#2004#, 16#03#);
---                    elsif (spr_step_cnt = 8) then
---                        --set sprite data: x=100
---                        ppu_set(16#2004#, 16#64#);
---
---                    elsif (spr_step_cnt = 10) then
---                        --set sprite data: y=50
---                        ppu_set(16#2004#, 16#32#);
---                    elsif (spr_step_cnt = 12) then
---                        --tile=0x4d (ascii 'O')
---                        ppu_set(16#2004#, 16#4f#);
---                    elsif (spr_step_cnt = 14) then
---                        --set sprite attr=01
---                        ppu_set(16#2004#, 16#01#);
---                    elsif (spr_step_cnt = 16) then
---                        --set sprite data: x=30
---                        ppu_set(16#2004#, 16#1e#);
---
---                    elsif (spr_step_cnt = 18) then
---                        --set sprite data: y=53
---                        ppu_set(16#2004#, 16#33#);
---                    elsif (spr_step_cnt = 20) then
---                        --tile=0x4d (ascii 'P')
---                        ppu_set(16#2004#, 16#50#);
---                    elsif (spr_step_cnt = 22) then
---                        --set sprite attr=01
---                        ppu_set(16#2004#, 16#01#);
---                    elsif (spr_step_cnt = 24) then
---                        --set sprite data: x=33
---                        ppu_set(16#2004#, 16#21#);
---
---                    elsif (spr_step_cnt = 26) then
---                        --set sprite data: y=61
---                        ppu_set(16#2004#, 16#3d#);
---                    elsif (spr_step_cnt = 28) then
---                        --tile=0x4d (ascii 'Q')
---                        ppu_set(16#2004#, 16#51#);
---                    elsif (spr_step_cnt = 30) then
---                        --set sprite attr=02
---                        ppu_set(16#2004#, 16#02#);
---                    elsif (spr_step_cnt = 32) then
---                        --set sprite data: x=35
---                        ppu_set(16#2004#, 16#23#);
---
---                    else
---                        ppu_clr;
---                        if (spr_step_cnt > 32) then
+                    --step2 = sprite set.
+                    if (spr_step_cnt = 0) then
+                        --set sprite addr=00 (first sprite)
+                        ppu_set(16#2003#, 16#00#);
+                    elsif (spr_step_cnt = 2) then
+                        --set sprite data: y=02
+                        ppu_set(16#2004#, 16#02#);
+                    elsif (spr_step_cnt = 4) then
+                        --tile=0x4d (ascii 'M')
+                        ppu_set(16#2004#, 16#4d#);
+                    elsif (spr_step_cnt = 6) then
+                        --set sprite attr=03 (palette 03)
+                        ppu_set(16#2004#, 16#03#);
+                    elsif (spr_step_cnt = 8) then
+                        --set sprite data: x=100
+                        ppu_set(16#2004#, 16#64#);
+
+                    elsif (spr_step_cnt = 10) then
+                        --set sprite data: y=50
+                        ppu_set(16#2004#, 16#32#);
+                    elsif (spr_step_cnt = 12) then
+                        --tile=0x4d (ascii 'O')
+                        ppu_set(16#2004#, 16#4f#);
+                    elsif (spr_step_cnt = 14) then
+                        --set sprite attr=01
+                        ppu_set(16#2004#, 16#01#);
+                    elsif (spr_step_cnt = 16) then
+                        --set sprite data: x=30
+                        ppu_set(16#2004#, 16#1e#);
+
+                    elsif (spr_step_cnt = 18) then
+                        --set sprite data: y=60
+                        ppu_set(16#2004#, 60);
+                    elsif (spr_step_cnt = 20) then
+                        --tile=0x4d (ascii 'P')
+                        ppu_set(16#2004#, 16#50#);
+                    elsif (spr_step_cnt = 22) then
+                        --set sprite attr=01
+                        ppu_set(16#2004#, 16#01#);
+                    elsif (spr_step_cnt = 24) then
+                        --set sprite data: x=33
+                        ppu_set(16#2004#, 16#21#);
+
+                    elsif (spr_step_cnt = 26) then
+                        --set sprite data: y=61
+                        ppu_set(16#2004#, 16#3d#);
+                    elsif (spr_step_cnt = 28) then
+                        --tile=0x4d (ascii 'Q')
+                        ppu_set(16#2004#, 16#51#);
+                    elsif (spr_step_cnt = 30) then
+                        --set sprite attr=02
+                        ppu_set(16#2004#, 16#02#);
+                    elsif (spr_step_cnt = 32) then
+                        --set sprite data: x=45
+                        ppu_set(16#2004#, 45);
+
+                    else
+                        ppu_clr;
+                        if (spr_step_cnt > 33) then
                             global_step_cnt := global_step_cnt + 1;
---                        end if;
---                    end if;
---                    spr_step_cnt := spr_step_cnt + 1;
+                        end if;
+                    end if;
+                    if (cpu_cnt mod 18 >= 3 and cpu_cnt mod 18 <= 4) then
+                        spr_step_cnt := spr_step_cnt + 1;
+                    end if;
 
                 elsif (global_step_cnt = 4) then
                     --final step = enable ppu.
@@ -719,15 +595,263 @@ end;
                             global_step_cnt := global_step_cnt + 1;
                         end if;
                     end if;
-                    enable_ppu_step_cnt := enable_ppu_step_cnt + 1;
+                    if (cpu_cnt mod 18 >= 4 and cpu_cnt mod 18 <= 5) then
+                        enable_ppu_step_cnt := enable_ppu_step_cnt + 1;
+                    end if;
 
                 else
+                    ppu_clr;
                     init_done := '1';
                 end if;
             end if;
         
         end if;
     end process;
+            
+--    signal addr : std_logic_vector( addr_size - 1 downto 0);
+--    signal d_io : std_logic_vector( data_size - 1 downto 0);
+--
+--component counter_register
+--    generic (
+--        dsize       : integer := 8;
+--        inc         : integer := 1
+--    );
+--    port (  clk         : in std_logic;
+--            rst_n       : in std_logic;
+--            ce_n        : in std_logic;
+--            we_n        : in std_logic;
+--            d           : in std_logic_vector(dsize - 1 downto 0);
+--            q           : out std_logic_vector(dsize - 1 downto 0)
+--    );
+--end component;
+--
+--component prg_rom
+--    generic (abus_size : integer := 15; dbus_size : integer := 8);
+--    port (  clk             : in std_logic;
+--            ce_n           : in std_logic;   --select pin active low.
+--            addr            : in std_logic_vector (abus_size - 1 downto 0);
+--            data            : inout std_logic_vector (dbus_size - 1 downto 0)
+--        );
+--end component;
+--
+--component processor_status 
+--    generic (
+--            dsize : integer := 8
+--            );
+--    port (  
+--    signal dbg_dec_oe_n    : out std_logic;
+--    signal dbg_dec_val     : out std_logic_vector (dsize - 1 downto 0);
+--    signal dbg_int_dbus    : out std_logic_vector (dsize - 1 downto 0);
+--    signal dbg_status_val    : out std_logic_vector (7 downto 0);
+--    signal dbg_stat_we_n    : out std_logic;
+--    
+--            clk         : in std_logic;
+--            res_n       : in std_logic;
+--            dec_oe_n    : in std_logic;
+--            bus_oe_n    : in std_logic;
+--            set_flg_n   : in std_logic;
+--            flg_val     : in std_logic;
+--            load_bus_all_n      : in std_logic;
+--            load_bus_nz_n       : in std_logic;
+--            set_from_alu_n      : in std_logic;
+--            alu_n       : in std_logic;
+--            alu_v       : in std_logic;
+--            alu_z       : in std_logic;
+--            alu_c       : in std_logic;
+--            stat_c      : out std_logic;
+--            dec_val     : inout std_logic_vector (dsize - 1 downto 0);
+--            int_dbus    : inout std_logic_vector (dsize - 1 downto 0)
+--        );
+--end component;
+--
+--    ---status register
+--    signal status_reg, int_d_bus : std_logic_vector (7 downto 0);
+--    signal stat_dec_oe_n : std_logic;
+--    signal stat_bus_oe_n : std_logic;
+--    signal stat_set_flg_n : std_logic;
+--    signal stat_flg : std_logic;
+--    signal stat_bus_all_n : std_logic;
+--    signal stat_bus_nz_n : std_logic;
+--    signal stat_alu_we_n : std_logic;
+--    signal alu_n : std_logic;
+--    signal alu_z : std_logic;
+--    signal alu_c : std_logic;
+--    signal alu_v : std_logic;
+--    signal stat_c : std_logic;
+--    signal trig_clk : std_logic;
+--    
+--    
+--    
+--    component alu_test
+--    port (  
+--        d1    : in std_logic_vector(7 downto 0);
+--        d2    : in std_logic_vector(7 downto 0);
+--        d_out    : out std_logic_vector(7 downto 0);
+--        carry_clr_n : in std_logic;
+--        ea_carry : out std_logic
+--        );
+--end component;
+--
+--    signal d1, d2, d_out : std_logic_vector (7 downto 0);
+--    signal ea_carry, gate_n    : std_logic;
+--        signal carry_clr_n : std_logic;
+
+
+    
+    
+--    trig_clk <= not cpu_clk;
+--
+--    pcl_inst : counter_register generic map (16) port map
+--        (cpu_clk, rst_n, '0', '1', (others => '0'), addr(15 downto 0));
+--
+--    rom_inst : prg_rom generic map (12, 8) port map
+--        (base_clk, '0', addr(11 downto 0), d_io);
+--
+--    dbg_addr <= addr;
+--    dbg_d_io <= d_io;
+--
+--    dbg_cpu_clk <= cpu_clk;
+--    dbg_ppu_clk <= ppu_clk;
+--
+--    dbg_d1 <= d1;
+--    dbg_d2 <= d2;
+--    dbg_d_out <= d_out;
+--    dbg_ea_carry <= ea_carry;
+--    dbg_carry_clr_n <= carry_clr_n;
+--    dbg_gate_n <= gate_n;
+--    
+--    dummy_alu : alu_test
+--    port map (  
+--        d1, d2, d_out, carry_clr_n , ea_carry
+--        );
+--
+--        gate_n <= not ea_carry;
+--    dec_test_p : process (rst_n, ea_carry, trig_clk)
+--    begin
+--        if (rst_n = '0') then
+--            d1 <= "00000000";
+--            d2 <= "00000000";
+--            carry_clr_n <= '0';
+--            --gate_n <= '1';
+----        elsif (ea_carry = '1') then
+----            gate_n <= '0';
+----            carry_clr_n <= '0';
+--        elsif (rising_edge(trig_clk)) then
+--            if (addr(5 downto 0) = "000001") then
+--            --addr=01
+--                carry_clr_n <= '1';
+--                d1 <= "00010011";
+--                d2 <= "01000111";
+--                --gate_n <= '1';
+--            elsif (addr(5 downto 0) = "000010") then
+--            --addr=02
+--                carry_clr_n <= '1';
+--                d1 <= "00110011";
+--                d2 <= "11001111";
+--                --gate_n <= '1';
+--            elsif (addr(5 downto 0) = "000011") then
+--            --addr=03
+--                carry_clr_n <= '1';
+--                d1 <= "00001010";
+--                d2 <= "01011001";
+--                --gate_n <= '1';
+--            elsif (addr(5 downto 0) = "000100") then
+--            --addr=04
+--                carry_clr_n <= '1';
+--                d1 <= "10001010";
+--                d2 <= "10011001";
+--                --gate_n <= '1';
+--            else
+--                carry_clr_n <= '1';
+--                d1 <= "00000000";
+--                d2 <= "00000000";
+--                --gate_n <= '1';
+--            end if;
+--        end if;
+--    end process;
+--
+--
+--    --status register
+--    status_register : processor_status generic map (8) 
+--            port map (
+--    dbg_dec_oe_n,
+--    dbg_dec_val,
+--    dbg_int_dbus,
+--    dbg_status_val,
+--    dbg_stat_we_n    ,
+--                    trig_clk , rst_n, 
+--                    stat_dec_oe_n, stat_bus_oe_n, 
+--                    stat_set_flg_n, stat_flg, stat_bus_all_n, stat_bus_nz_n, 
+--                    stat_alu_we_n, alu_n, alu_v, alu_z, alu_c, stat_c,
+--                    status_reg, int_d_bus);
+--
+--    dbg_status <= status_reg;
+--    status_test_p : process (addr)
+--    begin
+--        if (addr(5 downto 0) = "000010") then
+--        --addr=02
+--        --set status(7) = '1'
+--            stat_dec_oe_n <= '1';
+--            stat_bus_oe_n <= '1';
+--            stat_set_flg_n <= '0';
+--            stat_flg <= '1';
+--            stat_bus_all_n <= '1';
+--            stat_bus_nz_n <= '1'; 
+--            stat_alu_we_n <= '1';
+--            status_reg <= "01000000";
+--            int_d_bus <= "00000000";
+--
+--        elsif (addr(5 downto 0) = "000100") then
+--        --addr=04
+--        --set status(2) = '0'
+--            stat_dec_oe_n <= '1';
+--            stat_bus_oe_n <= '1';
+--            stat_set_flg_n <= '0';
+--            stat_flg <= '0';
+--            stat_bus_all_n <= '1';
+--            stat_bus_nz_n <= '1'; 
+--            stat_alu_we_n <= '1';
+--            status_reg <= "00000100";
+--            int_d_bus <= "00000000";
+--
+--        elsif (addr(5 downto 0) = "000110") then
+--        --addr=06
+--        --set nz from bus, n=1
+--            stat_dec_oe_n <= '1';
+--            stat_bus_oe_n <= '1';
+--            stat_set_flg_n <= '1';
+--            stat_flg <= '0';
+--            stat_bus_all_n <= '1';
+--            stat_bus_nz_n <= '0'; 
+--            stat_alu_we_n <= '1';
+--            status_reg <= (others => 'Z');
+--            int_d_bus <= "10000000";
+--
+--        elsif (addr(5 downto 0) = "001000") then
+--        --addr=08
+--        --set nz from bus, z=1
+--            stat_dec_oe_n <= '1';
+--            stat_bus_oe_n <= '1';
+--            stat_set_flg_n <= '1';
+--            stat_flg <= '0';
+--            stat_bus_all_n <= '1';
+--            stat_bus_nz_n <= '0'; 
+--            stat_alu_we_n <= '1';
+--            status_reg <= (others => 'Z');
+--            int_d_bus <= "00000000";
+--
+--        else
+--            stat_dec_oe_n <= '0';
+--            stat_bus_oe_n <= '1';
+--            stat_set_flg_n <= '1';
+--            stat_flg <= '1';
+--            stat_bus_all_n <= '1';
+--            stat_bus_nz_n <= '1'; 
+--            stat_alu_we_n <= '1';
+--            status_reg <= (others => 'Z');
+--            int_d_bus <= (others => 'Z');
+--        end if;
+--    end process;
 
 end rtl;
 

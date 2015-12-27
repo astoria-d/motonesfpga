@@ -24,14 +24,25 @@ vsim -t 1ps -L altera -L lpm -L sgate -L altera_mf -L altera_lnsim -L cycloneii 
 
 
 
-add wave  sim:/testbench_qt_proj_test5/sim_board/rst_n
+add wave  -label rst_n sim:/testbench_qt_proj_test5/sim_board/rst_n
+add wave  -label cpu_clk sim:/testbench_qt_proj_test5/sim_board/cpu_clk
+add wave  -label ppu_clk sim:/testbench_qt_proj_test5/sim_board/ppu_clk
+
 #add wave  sim:/testbench_qt_proj_test5/base_clk
 #add wave  -label emu_ppu_clk sim:/testbench_qt_proj_test5/sim_board/ppu_inst/render_inst/vga_render_inst/emu_ppu_clk
 
-
 add wave -divider ppu
+
+add wave  -label cpu_addr -radix hex sim:/testbench_qt_proj_test5/sim_board/ppu_inst/cpu_addr
+add wave  -label cpu_d -radix hex sim:/testbench_qt_proj_test5/sim_board/ppu_inst/cpu_d
+
+add wave  -label ppu_ce_n sim:/testbench_qt_proj_test5/sim_board/ppu_inst/ce_n
+add wave -label ppu_clk_cnt -radix hex sim:/testbench_qt_proj_test5/sim_board/ppu_inst/ppu_clk_cnt
 add wave  -label ppu_ctrl -radix hex sim:/testbench_qt_proj_test5/sim_board/ppu_inst/ppu_ctrl
 add wave  -label ppu_mask -radix hex sim:/testbench_qt_proj_test5/sim_board/ppu_inst/ppu_mask
+add wave -label ppu_status -radix hex sim:/testbench_qt_proj_test5/sim_board/ppu_inst/ppu_status
+add wave -label ppu_addr -radix hex sim:/testbench_qt_proj_test5/sim_board/ppu_inst/ppu_addr 
+add wave -label ppu_data -radix hex sim:/testbench_qt_proj_test5/sim_board/ppu_inst/ppu_data
 
 add wave -divider vga_pos
 add wave  -label nes_x          -radix decimal -unsigned  sim:/testbench_qt_proj_test5/sim_board/ppu_inst/render_inst/vga_render_inst/nes_x
@@ -87,6 +98,9 @@ add wave  -label b          -radix hex sim:/testbench_qt_proj_test5/sim_board/b
 
 view structure
 view signals
-run 3 us
-run 200 us
+
+run 500 us
+wave zoom full
+
+run 1000 us
 wave zoom full
