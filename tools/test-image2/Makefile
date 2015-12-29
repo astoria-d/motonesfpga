@@ -6,6 +6,7 @@ LIBRARIES =
 #-------------------------------------------------------------------------------
 all :	$(OBJECTS) $(LIBRARIES)
 	ld65 -o sample1.nes --config sample1.cfg --obj $(OBJECTS)
+	./dd-img.sh sample1
 
 .SUFFIXES : .asm .o
 
