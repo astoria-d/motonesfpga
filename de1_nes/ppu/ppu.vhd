@@ -10,6 +10,7 @@ entity ppu is
     signal dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y : out std_logic_vector (7 downto 0);
 
     signal dbg_ppu_clk                      : out std_logic;
+    signal dbg_vga_clk                      : out std_logic;
     signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
     signal dbg_vga_x                        : out std_logic_vector (9 downto 0);
     signal dbg_disp_nt, dbg_disp_attr       : out std_logic_vector (7 downto 0);
@@ -28,7 +29,7 @@ entity ppu is
     signal dbg_ppu_clk_cnt                  : out std_logic_vector(1 downto 0);
 
     
-            clk         : in std_logic;
+            ppu_clk     : in std_logic;
             mem_clk     : in std_logic;
             ce_n        : in std_logic;
             rst_n       : in std_logic;
@@ -57,7 +58,7 @@ architecture rtl of ppu is
 
 component ppu_render
     port (  
-    signal dbg_ppu_clk                      : out std_logic;
+    signal dbg_vga_clk                      : out std_logic;
     signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
     signal dbg_vga_x                        : out std_logic_vector (9 downto 0);
     signal dbg_disp_nt, dbg_disp_attr       : out std_logic_vector (7 downto 0);
@@ -73,7 +74,7 @@ component ppu_render
     signal dbg_s_oam_data                   : out std_logic_vector (7 downto 0);
     
     
-            clk         : in std_logic;
+            ppu_clk     : in std_logic;
             vga_clk     : in std_logic;
             mem_clk     : in std_logic;
             rst_n       : in std_logic;
@@ -151,7 +152,7 @@ constant PPUVAI     : integer := 2;  --vram address increment
 constant PPUNEN     : integer := 7;  --nmi enable
 constant ST_VBL     : integer := 7;  --vblank
 
-signal clk_n            : std_logic;
+signal ppu_clk_n            : std_logic;
 
 signal ppu_clk_cnt_res_n    : std_logic;
 signal ppu_clk_cnt          : std_logic_vector(1 downto 0);
@@ -200,6 +201,7 @@ signal plt_data_out     : std_logic_vector (dsize - 1 downto 0);
 begin
 
 
+    dbg_ppu_clk <= ppu_clk;
     dbg_ppu_ce_n <= ce_n;
     dbg_ppu_ctrl <= ppu_ctrl;
     dbg_ppu_mask <= ppu_mask;
@@ -214,7 +216,7 @@ begin
 
 
     render_inst : ppu_render port map (
-    dbg_ppu_clk                      ,
+    dbg_vga_clk                      ,
     dbg_nes_x                        ,
     dbg_vga_x                        ,
     dbg_disp_nt, dbg_disp_attr, dbg_disp_ptn_h, dbg_disp_ptn_l,
@@ -228,7 +230,7 @@ begin
     dbg_s_oam_addr                  ,
     dbg_s_oam_data                  ,
     
-            clk, vga_clk, mem_clk, rst_n,
+            ppu_clk, vga_clk, mem_clk, rst_n,
             rd_n, wr_n, ale, vram_ad, vram_a,
             h_sync_n, v_sync_n, r, g, b, 
             ppu_ctrl, ppu_mask, read_status, ppu_scroll_x, ppu_scroll_y,
@@ -237,31 +239,31 @@ begin
             oam_plt_addr, oam_plt_data);
 
     --PPU registers.
-    clk_n <= not clk;
+    ppu_clk_n <= not ppu_clk;
 
     ppu_clk_cnt_inst : counter_register generic map (2, 1)
-            port map (clk_n, ppu_clk_cnt_res_n, '0', '1', (others => '0'), ppu_clk_cnt); 
+            port map (ppu_clk_n, ppu_clk_cnt_res_n, '0', '1', (others => '0'), ppu_clk_cnt); 
 
     ppu_ctrl_inst : d_flip_flop generic map(dsize)
-            port map (clk_n, rst_n, '1', ppu_ctrl_we_n, cpu_d, ppu_ctrl);
+            port map (ppu_clk_n, rst_n, '1', ppu_ctrl_we_n, cpu_d, ppu_ctrl);
 
     ppu_mask_inst : d_flip_flop generic map(dsize)
-            port map (clk_n, rst_n, '1', ppu_mask_we_n, cpu_d, ppu_mask);
+            port map (ppu_clk_n, rst_n, '1', ppu_mask_we_n, cpu_d, ppu_mask);
 
     ppu_status_inst : d_flip_flop generic map(dsize)
             port map (read_status, rst_n, '1', '0', ppu_status, ppu_stat_out);
 
     oma_addr_inst : counter_register generic map(dsize, 1)
-            port map (clk_n, rst_n, oam_addr_ce_n, oam_addr_we_n, cpu_d, oam_addr);
+            port map (ppu_clk_n, rst_n, oam_addr_ce_n, oam_addr_we_n, cpu_d, oam_addr);
     oma_data_inst : d_flip_flop generic map(dsize)
-            port map (clk_n, rst_n, '1', oam_data_we_n, cpu_d, oam_data);
+            port map (ppu_clk_n, rst_n, '1', oam_data_we_n, cpu_d, oam_data);
 
     ppu_scroll_x_inst : d_flip_flop generic map(dsize)
-            port map (clk_n, rst_n, '1', ppu_scroll_x_we_n, cpu_d, ppu_scroll_x);
+            port map (ppu_clk_n, rst_n, '1', ppu_scroll_x_we_n, cpu_d, ppu_scroll_x);
     ppu_scroll_y_inst : d_flip_flop generic map(dsize)
-            port map (clk_n, rst_n, '1', ppu_scroll_y_we_n, cpu_d, ppu_scroll_y);
+            port map (ppu_clk_n, rst_n, '1', ppu_scroll_y_we_n, cpu_d, ppu_scroll_y);
     ppu_scroll_cnt_inst : counter_register generic map (1, 1)
-            port map (clk_n, ppu_latch_rst_n, ppu_scroll_cnt_ce_n, 
+            port map (ppu_clk_n, ppu_latch_rst_n, ppu_scroll_cnt_ce_n, 
                                             '1', (others => '0'), ppu_scroll_cnt);
 
     ppu_addr_in <=  cpu_d(5 downto 0) & ppu_addr(7 downto 0)
@@ -269,27 +271,27 @@ begin
                     ppu_addr(13 downto 8) & cpu_d;
 
     ppu_addr_inst_inc1 : counter_register generic map(14, 1)
-            port map (clk_n, rst_n, ppu_data_we_n, ppu_addr_we_n, ppu_addr_in, ppu_addr_inc1);
+            port map (ppu_clk_n, rst_n, ppu_data_we_n, ppu_addr_we_n, ppu_addr_in, ppu_addr_inc1);
     ppu_addr_inst_inc32 : counter_register generic map(14, 32)
-            port map (clk_n, rst_n, ppu_data_we_n, ppu_addr_we_n, ppu_addr_in, ppu_addr_inc32);
+            port map (ppu_clk_n, rst_n, ppu_data_we_n, ppu_addr_we_n, ppu_addr_in, ppu_addr_inc32);
 
     ppu_addr <= ppu_addr_inc32 when ppu_ctrl(PPUVAI) = '1' else
                 ppu_addr_inc1;
 
     ppu_addr_cnt_inst : counter_register generic map (1, 1)
-            port map (clk_n, ppu_latch_rst_n, ppu_addr_cnt_ce_n, 
+            port map (ppu_clk_n, ppu_latch_rst_n, ppu_addr_cnt_ce_n, 
                                             '1', (others => '0'), ppu_addr_cnt);
     ppu_data_inst : d_flip_flop generic map(dsize)
-            port map (clk_n, rst_n, '1', ppu_data_we_n, cpu_d, ppu_data);
+            port map (ppu_clk_n, rst_n, '1', ppu_data_we_n, cpu_d, ppu_data);
 
     ppu_data_in_inst : d_flip_flop generic map(dsize)
-            port map (clk_n, rst_n, '1', ppu_data_we_n, vram_ad, ppu_data_in);
+            port map (ppu_clk_n, rst_n, '1', ppu_data_we_n, vram_ad, ppu_data_in);
 
     ppu_data_out_inst : d_flip_flop generic map(dsize)
             port map (read_data_n, rst_n, '1', '0', ppu_data_in, ppu_data_out);
 
     plt_data_out_inst : d_flip_flop generic map(dsize)
-            port map (clk_n, rst_n, '1', ppu_data_we_n, oam_plt_data, plt_data_out);
+            port map (ppu_clk_n, rst_n, '1', ppu_data_we_n, oam_plt_data, plt_data_out);
 
     reg_set_p : process (rst_n, ce_n, r_nw, cpu_addr, 
                         ppu_status(ST_VBL), ppu_ctrl(PPUNEN))
@@ -387,7 +389,7 @@ begin
     ppu_clk_cnt_res_n <= not ce_n;
     
     --cpu and ppu clock timing adjustment...
-    clk_cnt_set_p : process (rst_n, ce_n, r_nw, cpu_addr, clk)
+    clk_cnt_set_p : process (rst_n, ce_n, r_nw, cpu_addr, ppu_clk)
     begin
         if (rst_n = '0') then
             ppu_latch_rst_n <= '0';
@@ -412,7 +414,7 @@ begin
 --            end if;
 
             --start counter.
-            if (clk'event and clk = '0') then
+            if (ppu_clk'event and ppu_clk = '0') then
                 if (read_status = '1') then
                     --reading status resets ppu_addr/scroll cnt.
                     ppu_latch_rst_n <= '0';

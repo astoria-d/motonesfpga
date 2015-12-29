@@ -162,7 +162,7 @@ architecture rtl of de1_nes is
         signal dbg_ppu_addr_we_n                : out std_logic;
         signal dbg_ppu_clk_cnt                  : out std_logic_vector(1 downto 0);
 
-                clk         : in std_logic;
+                ppu_clk     : in std_logic;
                 mem_clk     : in std_logic;
                 ce_n        : in std_logic;
                 rst_n       : in std_logic;

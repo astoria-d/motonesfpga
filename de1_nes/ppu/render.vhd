@@ -5,7 +5,7 @@ use work.motonesfpga_common.all;
 
 entity ppu_render is 
     port (  
-    signal dbg_ppu_clk                      : out std_logic;
+    signal dbg_vga_clk                      : out std_logic;
     signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
     signal dbg_vga_x                        : out std_logic_vector (9 downto 0);
     signal dbg_disp_nt, dbg_disp_attr       : out std_logic_vector (7 downto 0);
@@ -20,7 +20,7 @@ entity ppu_render is
     signal dbg_s_oam_addr                   : out std_logic_vector (4 downto 0);
     signal dbg_s_oam_data                   : out std_logic_vector (7 downto 0);
     
-            clk         : in std_logic;
+            ppu_clk     : in std_logic;
             vga_clk     : in std_logic;
             mem_clk     : in std_logic;
             rst_n       : in std_logic;
@@ -75,7 +75,7 @@ end component;
 
 component vga_ctl
     port (  
-    signal dbg_ppu_clk                      : out std_logic;
+    signal dbg_vga_clk                      : out std_logic;
     signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
     signal dbg_vga_x                        : out std_logic_vector (9 downto 0);
     signal dbg_disp_nt, dbg_disp_attr       : out std_logic_vector (7 downto 0);
@@ -170,7 +170,7 @@ begin
     --vga rendering module instance...
     vga_render_inst : vga_ctl
             port map (
-            dbg_ppu_clk                      ,
+            dbg_vga_clk                      ,
             dbg_nes_x                        ,
             dbg_vga_x                        ,
             dbg_disp_nt, dbg_disp_attr     ,
@@ -213,12 +213,12 @@ begin
             oam_plt_data    
         );
 
-    pos_p : process (rst_n, clk)
+    pos_p : process (rst_n, ppu_clk)
     begin
         if (rst_n = '0') then
             cnt_x_res_n <= '0';
             cnt_y_res_n <= '0';
-        elsif (clk'event and clk = '0') then
+        elsif (ppu_clk'event and ppu_clk = '0') then
             if (cur_x = conv_std_logic_vector(HSCAN_MAX - 1, X_SIZE)) then
                 --x pos reset.
                 cnt_x_res_n <= '0';
@@ -249,7 +249,7 @@ begin
                 cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
               '1';
 
-    ppu_flag_p : process (rst_n, clk, read_status)
+    ppu_flag_p : process (rst_n, ppu_clk, read_status)
 
 procedure set_spr0_hit is
 begin
@@ -261,7 +261,7 @@ end;
             ppu_status <= (others => '0');
         else
 
-            if (clk'event and clk = '1') then
+            if (ppu_clk'event and ppu_clk = '1') then
                 if ((cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
                     (cur_y < conv_std_logic_vector(VSCAN, X_SIZE))) then
                     --check if sprite 0 is hit.
