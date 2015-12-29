@@ -2715,11 +2715,15 @@ end  procedure;
                 r_nw <= '1';
                 dbuf_int_oe_n <= '0';
                 front_we(pcl_cmd, '0');
+                dl_al_oe_n <= '1';
+                dl_ah_oe_n <= '1';
 
                 if exec_cycle = R4 then
                     r_vec_oe_n <= '0';
+                    n_vec_oe_n <= '1';
                     wk_next_cycle <= R5;
                 elsif exec_cycle = N4 then
+                    r_vec_oe_n <= '1';
                     n_vec_oe_n <= '0';
                     wk_next_cycle <= N5;
                 end if;
@@ -2728,6 +2732,8 @@ end  procedure;
                 front_we(pcl_cmd, '1');
 
                 --fetch reset vector hi
+                r_nw <= '1';
+                dbuf_int_oe_n <= '0';
                 front_we(pch_cmd, '0');
                 indir_n <= '0';
 

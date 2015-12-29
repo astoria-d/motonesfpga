@@ -68,12 +68,19 @@ function vmirror return std_logic is
         return ret(0);
     end vmirror;
 
+--for GHDL environment
 --itinialize with the rom_fill function.
-constant p_rom : rom_array := rom_fill;
+--signal p_rom : rom_array := rom_fill;
+
+--for Quartus II environment
+signal p_rom : rom_array;
+attribute ram_init_file : string;
+attribute ram_init_file of p_rom : signal is "sample1-chr.hex";
 
 begin
     
-    nt_v_mirror <= vmirror;
+    --nt_v_mirror <= vmirror;
+    nt_v_mirror <= '1';
 
     p : process (clk)
     begin

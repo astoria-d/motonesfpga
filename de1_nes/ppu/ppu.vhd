@@ -8,44 +8,49 @@ entity ppu is
     signal dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status : out std_logic_vector (7 downto 0);
     signal dbg_ppu_addr : out std_logic_vector (13 downto 0);
     signal dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y : out std_logic_vector (7 downto 0);
-    signal dbg_disp_nt, dbg_disp_attr : out std_logic_vector (7 downto 0);
-    signal dbg_disp_ptn_h, dbg_disp_ptn_l : out std_logic_vector (15 downto 0);
-    signal dbg_ppu_addr_we_n    : out std_logic;
-    signal dbg_ppu_clk_cnt          : out std_logic_vector(1 downto 0);
+
+    signal dbg_ppu_clk                      : out std_logic;
+    signal dbg_vga_clk                      : out std_logic;
+    signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
+    signal dbg_vga_x                        : out std_logic_vector (9 downto 0);
+    signal dbg_disp_nt, dbg_disp_attr       : out std_logic_vector (7 downto 0);
+    signal dbg_disp_ptn_h, dbg_disp_ptn_l   : out std_logic_vector (15 downto 0);
+    signal dbg_plt_ce_rn_wn                 : out std_logic_vector (2 downto 0);
+    signal dbg_plt_addr                     : out std_logic_vector (4 downto 0);
+    signal dbg_plt_data                     : out std_logic_vector (7 downto 0);
+    signal dbg_p_oam_ce_rn_wn               : out std_logic_vector (2 downto 0);
+    signal dbg_p_oam_addr                   : out std_logic_vector (7 downto 0);
+    signal dbg_p_oam_data                   : out std_logic_vector (7 downto 0);
+    signal dbg_s_oam_ce_rn_wn               : out std_logic_vector (2 downto 0);
+    signal dbg_s_oam_addr                   : out std_logic_vector (4 downto 0);
+    signal dbg_s_oam_data                   : out std_logic_vector (7 downto 0);
+
+    signal dbg_ppu_addr_we_n                : out std_logic;
+    signal dbg_ppu_clk_cnt                  : out std_logic_vector(1 downto 0);
 
     
-            clk         : in std_logic;
+            ppu_clk     : in std_logic;
             mem_clk     : in std_logic;
-            sdram_clk   : in std_logic;
             ce_n        : in std_logic;
             rst_n       : in std_logic;
             r_nw        : in std_logic;
             cpu_addr    : in std_logic_vector (2 downto 0);
             cpu_d       : inout std_logic_vector (7 downto 0);
+
             vblank_n    : out std_logic;
             rd_n        : out std_logic;
             wr_n        : out std_logic;
             ale         : out std_logic;
             vram_ad     : inout std_logic_vector (7 downto 0);
             vram_a      : out std_logic_vector (13 downto 8);
+
             vga_clk     : in std_logic;
             h_sync_n    : out std_logic;
             v_sync_n    : out std_logic;
             r           : out std_logic_vector(3 downto 0);
             g           : out std_logic_vector(3 downto 0);
-            b           : out std_logic_vector(3 downto 0);
+            b           : out std_logic_vector(3 downto 0)
 
-            --SDRAM Signals
-            wbs_adr_i	:	out std_logic_vector (21 downto 0);		--Address (Bank, Row, Col)
-            wbs_dat_i	:	out std_logic_vector (15 downto 0);		--Data In (16 bits)
-            wbs_we_i	:	out std_logic;							--Write Enable
-            wbs_tga_i	:	out std_logic_vector (7 downto 0);		--Address Tag : Read/write burst length-1 (0 represents 1 word, FF represents 256 words)
-            wbs_cyc_i	:	out std_logic;							--Cycle Command from interface
-            wbs_stb_i	:	out std_logic;							--Strobe Command from interface
-            wbs_dat_o	:	in std_logic_vector (15 downto 0);		--Data Out (16 bits)
-            wbs_stall_o	:	in std_logic;							--Slave is not ready to receive new data
-            wbs_err_o	:	in std_logic;							--Error flag: OOR Burst. Burst length is greater that 256-column address
-            wbs_ack_o	:	in std_logic 							--When Read Burst: DATA bus must be valid in this cycle
     );
 end ppu;
 
@@ -53,11 +58,24 @@ architecture rtl of ppu is
 
 component ppu_render
     port (  
-    signal dbg_disp_nt, dbg_disp_attr : out std_logic_vector (7 downto 0);
-    signal dbg_disp_ptn_h, dbg_disp_ptn_l : out std_logic_vector (15 downto 0);
+    signal dbg_vga_clk                      : out std_logic;
+    signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
+    signal dbg_vga_x                        : out std_logic_vector (9 downto 0);
+    signal dbg_disp_nt, dbg_disp_attr       : out std_logic_vector (7 downto 0);
+    signal dbg_disp_ptn_h, dbg_disp_ptn_l   : out std_logic_vector (15 downto 0);
+    signal dbg_plt_ce_rn_wn                 : out std_logic_vector (2 downto 0);
+    signal dbg_plt_addr                     : out std_logic_vector (4 downto 0);
+    signal dbg_plt_data                     : out std_logic_vector (7 downto 0);
+    signal dbg_p_oam_ce_rn_wn               : out std_logic_vector (2 downto 0);
+    signal dbg_p_oam_addr                   : out std_logic_vector (7 downto 0);
+    signal dbg_p_oam_data                   : out std_logic_vector (7 downto 0);
+    signal dbg_s_oam_ce_rn_wn               : out std_logic_vector (2 downto 0);
+    signal dbg_s_oam_addr                   : out std_logic_vector (4 downto 0);
+    signal dbg_s_oam_data                   : out std_logic_vector (7 downto 0);
     
     
-            clk         : in std_logic;
+            ppu_clk     : in std_logic;
+            vga_clk     : in std_logic;
             mem_clk     : in std_logic;
             rst_n       : in std_logic;
             rd_n        : out std_logic;
@@ -65,53 +83,26 @@ component ppu_render
             ale         : out std_logic;
             vram_ad     : inout std_logic_vector (7 downto 0);
             vram_a      : out std_logic_vector (13 downto 8);
-            pos_x       : out std_logic_vector (8 downto 0);
-            pos_y       : out std_logic_vector (8 downto 0);
+
+            h_sync_n    : out std_logic;
+            v_sync_n    : out std_logic;
             r           : out std_logic_vector (3 downto 0);
             g           : out std_logic_vector (3 downto 0);
             b           : out std_logic_vector (3 downto 0);
+
             ppu_ctrl        : in std_logic_vector (7 downto 0);
             ppu_mask        : in std_logic_vector (7 downto 0);
             read_status     : in std_logic;
-            ppu_status      : out std_logic_vector (7 downto 0);
             ppu_scroll_x    : in std_logic_vector (7 downto 0);
             ppu_scroll_y    : in std_logic_vector (7 downto 0);
+            ppu_status      : out std_logic_vector (7 downto 0);
+            v_bus_busy_n    : out std_logic;
+
             r_nw            : in std_logic;
             oam_bus_ce_n    : in std_logic;
             plt_bus_ce_n    : in std_logic;
             oam_plt_addr    : in std_logic_vector (7 downto 0);
-            oam_plt_data    : inout std_logic_vector (7 downto 0);
-            v_bus_busy_n    : out std_logic
-    );
-end component;
-
-component vga_ctl
-    port (  ppu_clk     : in std_logic;
-            sdram_clk   : in std_logic;
-            vga_clk     : in std_logic;
-            rst_n       : in std_logic;
-            pos_x       : in std_logic_vector (8 downto 0);
-            pos_y       : in std_logic_vector (8 downto 0);
-            nes_r       : in std_logic_vector (3 downto 0);
-            nes_g       : in std_logic_vector (3 downto 0);
-            nes_b       : in std_logic_vector (3 downto 0);
-            h_sync_n    : out std_logic;
-            v_sync_n    : out std_logic;
-            r           : out std_logic_vector(3 downto 0);
-            g           : out std_logic_vector(3 downto 0);
-            b           : out std_logic_vector(3 downto 0);
-
-            --SDRAM Signals
-            wbs_adr_i	:	out std_logic_vector (21 downto 0);		--Address (Bank, Row, Col)
-            wbs_dat_i	:	out std_logic_vector (15 downto 0);		--Data In (16 bits)
-            wbs_we_i	:	out std_logic;							--Write Enable
-            wbs_tga_i	:	out std_logic_vector (7 downto 0);		--Address Tag : Read/write burst length-1 (0 represents 1 word, FF represents 256 words)
-            wbs_cyc_i	:	out std_logic;							--Cycle Command from interface
-            wbs_stb_i	:	out std_logic;							--Strobe Command from interface
-            wbs_dat_o	:	in std_logic_vector (15 downto 0);		--Data Out (16 bits)
-            wbs_stall_o	:	in std_logic;							--Slave is not ready to receive new data
-            wbs_err_o	:	in std_logic;							--Error flag: OOR Burst. Burst length is greater that 256-column address
-            wbs_ack_o	:	in std_logic 							--When Read Burst: DATA bus must be valid in this cycle
+            oam_plt_data    : inout std_logic_vector (7 downto 0)
     );
 end component;
 
@@ -143,12 +134,6 @@ component counter_register
     );
 end component;
 
-signal pos_x       : std_logic_vector (8 downto 0);
-signal pos_y       : std_logic_vector (8 downto 0);
-signal nes_r       : std_logic_vector (3 downto 0);
-signal nes_g       : std_logic_vector (3 downto 0);
-signal nes_b       : std_logic_vector (3 downto 0);
-
 constant dsize     : integer := 8;
 
 constant PPUCTRL   : std_logic_vector(2 downto 0) := "000";
@@ -160,11 +145,14 @@ constant PPUSCROLL : std_logic_vector(2 downto 0) := "101";
 constant PPUADDR   : std_logic_vector(2 downto 0) := "110";
 constant PPUDATA   : std_logic_vector(2 downto 0) := "111";
 
+constant PPUSBG    : integer := 3;  --show bg
+constant PPUSSP    : integer := 4;  --show sprie
+
 constant PPUVAI     : integer := 2;  --vram address increment
 constant PPUNEN     : integer := 7;  --nmi enable
 constant ST_VBL     : integer := 7;  --vblank
 
-signal clk_n            : std_logic;
+signal ppu_clk_n            : std_logic;
 
 signal ppu_clk_cnt_res_n    : std_logic;
 signal ppu_clk_cnt          : std_logic_vector(1 downto 0);
@@ -213,6 +201,7 @@ signal plt_data_out     : std_logic_vector (dsize - 1 downto 0);
 begin
 
 
+    dbg_ppu_clk <= ppu_clk;
     dbg_ppu_ce_n <= ce_n;
     dbg_ppu_ctrl <= ppu_ctrl;
     dbg_ppu_mask <= ppu_mask;
@@ -227,96 +216,84 @@ begin
 
 
     render_inst : ppu_render port map (
+    dbg_vga_clk                      ,
+    dbg_nes_x                        ,
+    dbg_vga_x                        ,
     dbg_disp_nt, dbg_disp_attr, dbg_disp_ptn_h, dbg_disp_ptn_l,
+    dbg_plt_ce_rn_wn                 ,
+    dbg_plt_addr                     ,
+    dbg_plt_data                     ,
+    dbg_p_oam_ce_rn_wn              ,
+    dbg_p_oam_addr                  ,
+    dbg_p_oam_data                  ,
+    dbg_s_oam_ce_rn_wn              ,
+    dbg_s_oam_addr                  ,
+    dbg_s_oam_data                  ,
     
-            clk, mem_clk, rst_n,
+            ppu_clk, vga_clk, mem_clk, rst_n,
             rd_n, wr_n, ale, vram_ad, vram_a,
-            pos_x, pos_y, nes_r, nes_g, nes_b,
-            ppu_ctrl, ppu_mask, read_status, ppu_status, ppu_scroll_x, ppu_scroll_y,
+            h_sync_n, v_sync_n, r, g, b, 
+            ppu_ctrl, ppu_mask, read_status, ppu_scroll_x, ppu_scroll_y,
+            ppu_status, v_bus_busy_n, 
             r_nw, oam_bus_ce_n, plt_bus_ce_n, 
-            oam_plt_addr, oam_plt_data, v_bus_busy_n);
-
-    vga_ctl_inst : vga_ctl
-    port map (  clk     ,
-            sdram_clk   ,
-            vga_clk     ,
-            rst_n       ,
-            pos_x       ,
-            pos_y       ,
-            nes_r       ,
-            nes_g       ,
-            nes_b       ,
-            h_sync_n    ,
-            v_sync_n    ,
-            r           ,
-            g           ,
-            b           ,
-            
-            --SDRAM Signals
-            wbs_adr_i	,
-            wbs_dat_i	,
-            wbs_we_i	,
-            wbs_tga_i	,
-            wbs_cyc_i	,
-            wbs_stb_i	,
-            wbs_dat_o	,
-            wbs_stall_o	,
-            wbs_err_o	,
-            wbs_ack_o	
-    );
+            oam_plt_addr, oam_plt_data);
 
     --PPU registers.
-    clk_n <= not clk;
+    ppu_clk_n <= not ppu_clk;
 
     ppu_clk_cnt_inst : counter_register generic map (2, 1)
-            port map (clk_n, ppu_clk_cnt_res_n, '0', '1', (others => '0'), ppu_clk_cnt); 
+            port map (ppu_clk_n, ppu_clk_cnt_res_n, '0', '1', (others => '0'), ppu_clk_cnt); 
 
     ppu_ctrl_inst : d_flip_flop generic map(dsize)
-            port map (clk_n, rst_n, '1', ppu_ctrl_we_n, cpu_d, ppu_ctrl);
+            port map (ppu_clk_n, rst_n, '1', ppu_ctrl_we_n, cpu_d, ppu_ctrl);
 
     ppu_mask_inst : d_flip_flop generic map(dsize)
-            port map (clk_n, rst_n, '1', ppu_mask_we_n, cpu_d, ppu_mask);
+            port map (ppu_clk_n, rst_n, '1', ppu_mask_we_n, cpu_d, ppu_mask);
 
     ppu_status_inst : d_flip_flop generic map(dsize)
             port map (read_status, rst_n, '1', '0', ppu_status, ppu_stat_out);
 
     oma_addr_inst : counter_register generic map(dsize, 1)
-            port map (clk_n, rst_n, oam_addr_ce_n, oam_addr_we_n, cpu_d, oam_addr);
+            port map (ppu_clk_n, rst_n, oam_addr_ce_n, oam_addr_we_n, cpu_d, oam_addr);
     oma_data_inst : d_flip_flop generic map(dsize)
-            port map (clk_n, rst_n, '1', oam_data_we_n, cpu_d, oam_data);
+            port map (ppu_clk_n, rst_n, '1', oam_data_we_n, cpu_d, oam_data);
 
     ppu_scroll_x_inst : d_flip_flop generic map(dsize)
-            port map (clk_n, rst_n, '1', ppu_scroll_x_we_n, cpu_d, ppu_scroll_x);
+            port map (ppu_clk_n, rst_n, '1', ppu_scroll_x_we_n, cpu_d, ppu_scroll_x);
     ppu_scroll_y_inst : d_flip_flop generic map(dsize)
-            port map (clk_n, rst_n, '1', ppu_scroll_y_we_n, cpu_d, ppu_scroll_y);
+            port map (ppu_clk_n, rst_n, '1', ppu_scroll_y_we_n, cpu_d, ppu_scroll_y);
     ppu_scroll_cnt_inst : counter_register generic map (1, 1)
-            port map (clk_n, ppu_latch_rst_n, ppu_scroll_cnt_ce_n, 
+            port map (ppu_clk_n, ppu_latch_rst_n, ppu_scroll_cnt_ce_n, 
                                             '1', (others => '0'), ppu_scroll_cnt);
 
+    ppu_addr_in <=  cpu_d(5 downto 0) & ppu_addr(7 downto 0)
+                        when ppu_addr_cnt(0) = '1' else
+                    ppu_addr(13 downto 8) & cpu_d;
+
     ppu_addr_inst_inc1 : counter_register generic map(14, 1)
-            port map (clk_n, rst_n, ppu_data_we_n, ppu_addr_we_n, ppu_addr_in, ppu_addr_inc1);
+            port map (ppu_clk_n, rst_n, ppu_data_we_n, ppu_addr_we_n, ppu_addr_in, ppu_addr_inc1);
     ppu_addr_inst_inc32 : counter_register generic map(14, 32)
-            port map (clk_n, rst_n, ppu_data_we_n, ppu_addr_we_n, ppu_addr_in, ppu_addr_inc32);
+            port map (ppu_clk_n, rst_n, ppu_data_we_n, ppu_addr_we_n, ppu_addr_in, ppu_addr_inc32);
 
     ppu_addr <= ppu_addr_inc32 when ppu_ctrl(PPUVAI) = '1' else
                 ppu_addr_inc1;
 
     ppu_addr_cnt_inst : counter_register generic map (1, 1)
-            port map (clk_n, ppu_latch_rst_n, ppu_addr_cnt_ce_n, 
+            port map (ppu_clk_n, ppu_latch_rst_n, ppu_addr_cnt_ce_n, 
                                             '1', (others => '0'), ppu_addr_cnt);
     ppu_data_inst : d_flip_flop generic map(dsize)
-            port map (clk_n, rst_n, '1', ppu_data_we_n, cpu_d, ppu_data);
+            port map (ppu_clk_n, rst_n, '1', ppu_data_we_n, cpu_d, ppu_data);
 
     ppu_data_in_inst : d_flip_flop generic map(dsize)
-            port map (clk_n, rst_n, '1', ppu_data_we_n, vram_ad, ppu_data_in);
+            port map (ppu_clk_n, rst_n, '1', ppu_data_we_n, vram_ad, ppu_data_in);
 
     ppu_data_out_inst : d_flip_flop generic map(dsize)
             port map (read_data_n, rst_n, '1', '0', ppu_data_in, ppu_data_out);
 
     plt_data_out_inst : d_flip_flop generic map(dsize)
-            port map (clk_n, rst_n, '1', ppu_data_we_n, oam_plt_data, plt_data_out);
+            port map (ppu_clk_n, rst_n, '1', ppu_data_we_n, oam_plt_data, plt_data_out);
 
-    reg_set_p : process (rst_n, ce_n, r_nw, cpu_addr, cpu_d, 
+    reg_set_p : process (rst_n, ce_n, r_nw, cpu_addr, 
                         ppu_status(ST_VBL), ppu_ctrl(PPUNEN))
     begin
 
@@ -332,6 +309,15 @@ begin
 
         if (rst_n = '0') then
             vblank_n <= '1';
+            ppu_ctrl_we_n    <= '1';
+            ppu_mask_we_n    <= '1';
+            oam_addr_we_n    <= '1';
+            oam_data_we_n    <= '1';
+            ppu_scroll_x_we_n    <= '1';
+            ppu_scroll_y_we_n    <= '1';
+            ppu_scroll_cnt_ce_n  <= '1';
+            read_status <= '0';
+            read_data_n <= '1';
         elsif (rst_n = '1' and ce_n = '0') then
 
             --register set.
@@ -381,14 +367,6 @@ begin
                 ppu_scroll_cnt_ce_n <= '1';
             end if;
 
-            if(cpu_addr = PPUADDR) then
-                if (ppu_addr_cnt(0) = '0') then
-                    ppu_addr_in <= cpu_d(5 downto 0) & ppu_addr(7 downto 0);
-                else
-                    ppu_addr_in <= ppu_addr(13 downto 8) & cpu_d;
-                end if;
-            end if;
-
             if (cpu_addr = PPUDATA and r_nw = '1') then
                 read_data_n <= '0';
             else
@@ -411,12 +389,16 @@ begin
     ppu_clk_cnt_res_n <= not ce_n;
     
     --cpu and ppu clock timing adjustment...
-    clk_cnt_set_p : process (rst_n, ce_n, r_nw, cpu_addr, cpu_d, clk, 
-                                oam_plt_data, vram_ad, ppu_stat_out)
+    clk_cnt_set_p : process (rst_n, ce_n, r_nw, cpu_addr, ppu_clk)
     begin
         if (rst_n = '0') then
             ppu_latch_rst_n <= '0';
             ppu_addr_we_n    <= '1';
+            oam_addr_ce_n <= '1';
+            ppu_addr_cnt_ce_n    <= '1';
+            ppu_data_we_n    <= '1';
+            plt_bus_ce_n <= '1';
+            oam_bus_ce_n     <= '1';
             rd_n <= 'Z';
             wr_n <= 'Z';
             ale <= 'Z';
@@ -432,7 +414,7 @@ begin
 --            end if;
 
             --start counter.
-            if (clk'event and clk = '0') then
+            if (ppu_clk'event and ppu_clk = '0') then
                 if (read_status = '1') then
                     --reading status resets ppu_addr/scroll cnt.
                     ppu_latch_rst_n <= '0';
@@ -445,27 +427,11 @@ begin
             --oam data set
             if (cpu_addr = OAMDATA and ppu_clk_cnt = "00") then
                 oam_bus_ce_n <= '0';
-                oam_plt_addr <= oam_addr;
-                if (r_nw = '1') then
-                    oam_plt_data <= (others => 'Z');
-                    cpu_d <= oam_plt_data;
-                else
-                    oam_plt_data <= cpu_d;
-                end if;
-                --address increment for burst write. 
                 oam_addr_ce_n <= '0';
             else
-                cpu_d <= (others => 'Z');
-                oam_addr_ce_n <= '1';
                 oam_bus_ce_n <= '1';
+                oam_addr_ce_n <= '1';
             end if; --if (cpu_addr = OAMDATA and ppu_clk_cnt = "00") then
-
-            --vram address access.
-            if(cpu_addr = PPUADDR and ppu_clk_cnt = "00") then
-                ppu_addr_we_n <= '0';
-            else
-                ppu_addr_we_n <= '1';
-            end if;
 
             if (cpu_addr = PPUADDR and ppu_clk_cnt = "00") then
                 ppu_addr_cnt_ce_n <= '0';
@@ -474,14 +440,10 @@ begin
                     ale <= '0';
                 else
                     --load addr low and output vram/plt bus.
-
                     --if address is 3fxx, set palette table.
                     if (ppu_addr(13 downto 8) = "111111") then
-                        oam_plt_addr <= cpu_d;
                         ale <= '0';
                     else
-                        vram_ad <= cpu_d;
-                        vram_a <= ppu_addr(13 downto 8);
                         ale <= '1';
                     end if;
                 end if;
@@ -489,64 +451,148 @@ begin
                 ppu_addr_cnt_ce_n <= '1';
                 --for burst write.
                 if (ppu_addr(13 downto 8) = "111111") then
-                    oam_plt_addr <= ppu_addr(7 downto 0);
                     ale <= '0';
                 else
-                    vram_a <= ppu_addr(13 downto 8);
-                    vram_ad <= ppu_addr(7 downto 0);
                     ale <= '1';
                 end if;
             else
                 ppu_addr_cnt_ce_n <= '1';
-                ale <= 'Z';
+                ale <= '0';
             end if; --if (cpu_addr = PPUADDR and ppu_clk_cnt = "00") then
 
+            if (cpu_addr = PPUADDR and ppu_clk_cnt = "01") then
+                ppu_addr_we_n <= '0';
+            elsif (cpu_addr = PPUDATA and ppu_clk_cnt = "10") then
+                ppu_addr_we_n <= '1';
+            else
+                ppu_addr_we_n    <= '1';
+            end if; --if (cpu_addr = PPUADDR and ppu_clk_cnt = "01") then
+            
             if (cpu_addr = PPUDATA and ppu_clk_cnt = "00") then
                 ppu_data_we_n <= '0';
-                vram_a <= ppu_addr(13 downto 8);
                 if (ppu_addr(13 downto 8) = "111111") then
                     --case palette tbl.
                     plt_bus_ce_n <= '0';
-                    if (r_nw = '0') then
-                        oam_plt_data <= cpu_d;
-                    else
-                        oam_plt_data <= (others => 'Z');
-                        cpu_d <= oam_plt_data;
-                    end if;
                     rd_n <= '1';
                     wr_n <= '1';
                 else
+                    plt_bus_ce_n <= '1';
                     rd_n <= not r_nw;
                     wr_n <= r_nw;
-                    plt_bus_ce_n <= '1';
-                    if (r_nw = '0') then
-                        vram_ad <= cpu_d;
-                    else
-                        cpu_d <= ppu_data_out;
-                    end if;
                 end if;
             else
-                plt_bus_ce_n <= '1';
                 ppu_data_we_n <= '1';
+                plt_bus_ce_n <= '1';
                 rd_n <= 'Z';
                 wr_n <= 'Z';
             end if; --if (cpu_addr = PPUDATA and ppu_clk_cnt = "00") then
 
-            --sustain cpu output data when reading.
-            if (cpu_addr = PPUDATA and r_nw = '1' and ppu_clk_cnt /= "00") then
-                if (ppu_addr(13 downto 8) = "111111") then
-                    cpu_d <= plt_data_out;
+            --oam_plt_addr output...
+            if (cpu_addr = OAMDATA and ppu_clk_cnt = "00") then
+                oam_plt_addr <= oam_addr;
+            elsif (cpu_addr = PPUADDR and ppu_clk_cnt = "00") then
+                if (ppu_addr_cnt(0) = '1' and ppu_addr(13 downto 8) = "111111") then
+                    oam_plt_addr <= cpu_d;
                 else
-                    cpu_d <= ppu_data_out;
+                    oam_plt_addr <= (others => 'Z');
                 end if;
-            end if;
-            if (cpu_addr = OAMDATA and r_nw = '1' and ppu_clk_cnt /= "00") then
-                cpu_d <= oam_data;
-            end if;
+            elsif (cpu_addr = PPUDATA and ppu_clk_cnt = "01") then
+                if (ppu_addr(13 downto 8) = "111111") then
+                    oam_plt_addr <= ppu_addr(7 downto 0);
+                else
+                    oam_plt_addr <= (others => 'Z');
+                end if;
+            else
+                oam_plt_addr <= (others => 'Z');
+            end if; --if (cpu_addr = OAMDATA and ppu_clk_cnt = "00") then
 
-            if(cpu_addr = PPUSTATUS and r_nw = '1') then
+            --oam_plt_data output...
+            if (cpu_addr = OAMDATA and ppu_clk_cnt = "00") then
+                if (r_nw = '0') then
+                    oam_plt_data <= cpu_d;
+                else
+                    oam_plt_data <= (others => 'Z');
+                end if;
+            elsif (cpu_addr = PPUDATA and ppu_clk_cnt = "00") then
+                if (ppu_addr(13 downto 8) = "111111") then
+                    if (r_nw = '0') then
+                        oam_plt_data <= cpu_d;
+                    else
+                        oam_plt_data <= (others => 'Z');
+                    end if;
+                else
+                    oam_plt_data <= (others => 'Z');
+                end if;
+            else
+                oam_plt_data <= (others => 'Z');
+            end if; --if (cpu_addr = OAMDATA and ppu_clk_cnt = "00") then
+
+            --cpu_d data set
+            if (cpu_addr = OAMDATA and r_nw = '1') then
+                if (ppu_clk_cnt = "00") then
+                    cpu_d <= oam_plt_data;
+                else
+                    cpu_d <= oam_data;
+                end if;
+            elsif (cpu_addr = PPUDATA and r_nw = '1' and ppu_clk_cnt = "00") then
+                if (ppu_clk_cnt = "00") then
+                    if (ppu_addr(13 downto 8) = "111111") then
+                        cpu_d <= oam_plt_data;
+                    else
+                        cpu_d <= ppu_data_out;
+                    end if;
+                else
+                    if (ppu_addr(13 downto 8) = "111111") then
+                        cpu_d <= plt_data_out;
+                    else
+                        cpu_d <= ppu_data_out;
+                    end if;
+                end if;
+            elsif (cpu_addr = PPUSTATUS and r_nw = '1') then
                 cpu_d <= ppu_stat_out;
-            end if;
+            else
+                cpu_d <= (others => 'Z');
+            end if; --if (cpu_addr = OAMDATA and ppu_clk_cnt = "00") then
+
+
+
+            --vram_a/vram_ad data set
+            if (cpu_addr = PPUADDR and ppu_clk_cnt = "00" and ppu_addr_cnt(0) = '1') then
+                if (ppu_addr(13 downto 8) = "111111") then
+                    vram_a <= (others => 'Z');
+                    vram_ad <= (others => 'Z');
+                else
+                    vram_a <= ppu_addr(13 downto 8);
+                    vram_ad <= cpu_d;
+                end if;
+            elsif (cpu_addr = PPUDATA and ppu_clk_cnt = "01") then
+                if (ppu_addr(13 downto 8) = "111111") then
+                    vram_a <= (others => 'Z');
+                    vram_ad <= (others => 'Z');
+                else
+                    vram_a <= ppu_addr(13 downto 8);
+                    vram_ad <= ppu_addr(7 downto 0);
+                end if;
+            elsif (cpu_addr = PPUDATA and ppu_clk_cnt = "00") then
+                vram_a <= ppu_addr(13 downto 8);
+                if (ppu_addr(13 downto 8) = "111111") then
+                    vram_ad <= (others => 'Z');
+                else
+                    if (r_nw = '0') then
+                        vram_ad <= cpu_d;
+                    else
+                        vram_ad <= (others => 'Z');
+                    end if;
+                end if;
+            else
+                vram_a <= (others => 'Z');
+                vram_ad <= (others => 'Z');
+            end if; --if (cpu_addr = PPUADDR and ppu_clk_cnt = "00") then
+
+
+
+
+
 
         else
             ppu_addr_we_n    <= '1';
@@ -559,7 +605,11 @@ begin
 
             rd_n <= 'Z';
             wr_n <= 'Z';
-            ale <= 'Z';
+            if ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1' then
+                ale <= 'Z';
+            else
+                ale <= '0';
+            end if;
             oam_plt_data <= (others => 'Z');
             vram_ad <= (others => 'Z');
             vram_a <= (others => 'Z');

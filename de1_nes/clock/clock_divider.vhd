@@ -14,14 +14,6 @@ end clock_divider;
 
 architecture rtl of clock_divider is
 
-signal loop8 : std_logic_vector (2 downto 0);
-signal loop24 : std_logic_vector (4 downto 0);
-signal base_clk_n       : std_logic;
-signal cpu_cnt_rst_n 	: std_logic;
-signal cpu_we_n			: std_logic;
-signal cpu_clk_new	 	: std_logic;
-signal cpu_clk_old	 	: std_logic;
-
 component counter_register 
     generic (
         dsize       : integer := 8;
@@ -47,6 +39,12 @@ component d_flip_flop_bit
         );
 end component;
 
+signal loop8 : std_logic_vector (2 downto 0);
+signal loop6 : std_logic_vector (2 downto 0);
+signal cpu_cnt_rst_n 	: std_logic;
+signal base_clk_n 	: std_logic;
+signal cpu_clk_wk 	: std_logic;
+
 begin
     --Actual NES base clock =  21.477272 MHz
     --CPU clock = base clock / 12
@@ -62,34 +60,40 @@ begin
     --vga clock = base clock / 2
     --mem clock = base clock
 
-    base_clk_n <= not base_clk;
-
-	cpu_clk_old <= not cpu_clk_new;
-	cpu_clk <= cpu_clk_new;
-
-    ppu_clk <= loop8(2);
+    ppu_clk <= not loop8(2);
 	vga_clk <= not loop8(0);
     mem_clk <= base_clk;
+    --cpu_clk <= not (loop6(2) or loop6(1));
+    cpu_clk <= not cpu_clk_wk;
+    base_clk_n <= base_clk;
     
-    cpu_we_n <= '0' when loop24 = "00011" else
-                '0' when loop24 = "01111" else
-                '1';
     ppu_clk_cnt : counter_register generic map (3) port map 
-        (base_clk, reset_n, '0', '1', (others=>'0'), loop8);
+        (base_clk_n, reset_n, '0', '1', (others=>'0'), loop8);
 
-    cpu_clk_cnt : counter_register generic map (5) port map 
-        (base_clk_n, cpu_cnt_rst_n, '0', '1', (others=>'0'), loop24);
+    cpu_clk_cnt : counter_register generic map (3) port map 
+        (loop8(1), cpu_cnt_rst_n, '0', '1', (others=>'0'), loop6);
 
-    cpu_clk_inst : d_flip_flop_bit port map 
-        (base_clk, reset_n, '1', cpu_we_n, cpu_clk_old, cpu_clk_new);
 
-    clock_p : process (base_clk)
+    clock_p : process (loop8(1))
+    begin
+        if (reset_n = '0') then
+            cpu_clk_wk <= '0';
+        else
+            if (loop8(1)'event and loop8(1) = '0') then
+                if (loop6(0) = '1') then
+                    cpu_clk_wk <= not cpu_clk_wk ;
+                end if;
+            end if;
+        end if;
+    end process;
+
+    clock_p2 : process (loop8(1))
     begin
         if (reset_n = '0') then
             cpu_cnt_rst_n <= '0';
         else
-            if (base_clk'event and base_clk = '1') then
-                if (loop24 = "10111") then
+            if (loop8(1)'event and loop8(1) = '1') then
+                if (loop6 = "100") then
                     cpu_cnt_rst_n <= '0';
                 else
                     cpu_cnt_rst_n <= '1';

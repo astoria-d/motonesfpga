@@ -3,6 +3,7 @@ aaa
 bbb
 ghdl-dir
 tmp/
+old/
 bl.sh
 motonesemu
 *.bin
@@ -17,4 +18,4 @@ ref-sdr-sdram-vhdl.zip
 DE1_control_panel
 ~$*
 *.lnk
-
+bin2hex*
