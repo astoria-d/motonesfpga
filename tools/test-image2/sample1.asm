@@ -128,31 +128,31 @@
 	lda	#$45
 	sta	$2007
 
-;;set vram addr 21d1
-	lda	#$21
-	sta	$2006
-	lda	#$E6
-	sta	$2006
-
-;;msg=DEE TEST !!!
-	lda	#$44
-	sta	$2007
-	lda	#$45
-	sta	$2007
-	lda	#$45
-	sta	$2007
-	lda	#$00
-	sta	$2007
-	lda	#$54
-	sta	$2007
-	lda	#$45
-	sta	$2007
-	lda	#$53
-	sta	$2007
-	lda	#$54
-	sta	$2007
-	lda	#$21
-	sta	$2007
+;;;;;set vram addr 21d1
+;;;	lda	#$21
+;;;	sta	$2006
+;;;	lda	#$E6
+;;;	sta	$2006
+;;;
+;;;;;msg=DEE TEST !!!
+;;;	lda	#$44
+;;;	sta	$2007
+;;;	lda	#$45
+;;;	sta	$2007
+;;;	lda	#$45
+;;;	sta	$2007
+;;;	lda	#$00
+;;;	sta	$2007
+;;;	lda	#$54
+;;;	sta	$2007
+;;;	lda	#$45
+;;;	sta	$2007
+;;;	lda	#$53
+;;;	sta	$2007
+;;;	lda	#$54
+;;;	sta	$2007
+;;;	lda	#$21
+;;;	sta	$2007
 
 
 ;;set vram addr 23c1 (attribute)
@@ -165,61 +165,61 @@
 	sta	$2007
 
 
-;;step2 = sprite set.
-;;set sprite addr=00 (first sprite)
-	lda	#$00
-	sta	$2003
-;;set sprite data: y=02
-	lda	#$02
-	sta	$2004
-;;tile=0x4d (ascii 'M')
-	lda	#$4d
-	sta	$2004
-;;set sprite attr=03 (palette 03)
-	lda	#$03
-	sta	$2004
-;;set sprite data: x=100
-	lda	#$64
-	sta	$2004
-
-;;set sprite data: y=50
-	lda	#$32
-	sta	$2004
-;;tile=0x4d (ascii 'O')
-	lda	#$4f
-	sta	$2004
-;;set sprite attr=01
-	lda	#$01
-	sta	$2004
-;;set sprite data: x=30
-	lda	#$1e
-	sta	$2004
-
-;;set sprite data: y=60
-	lda	#60
-	sta	$2004
-;;tile=0x4d (ascii 'P')
-	lda	#$50
-	sta	$2004
-;;set sprite attr=01
-	lda	#$01
-	sta	$2004
-;;set sprite data: x=33
-	lda	#$21
-	sta	$2004
-
-;;set sprite data: y=61
-	lda	#$3d
-	sta	$2004
-;;tile=0x4d (ascii 'Q')
-	lda	#$51
-	sta	$2004
-;;set sprite attr=02
-	lda	#$02
-	sta	$2004
-;;set sprite data: x=45
-	lda	#45
-	sta	$2004
+;;;;;;step2 = sprite set.
+;;;;;;set sprite addr=00 (first sprite)
+;;;;	lda	#$00
+;;;;	sta	$2003
+;;;;;;set sprite data: y=02
+;;;;	lda	#$02
+;;;;	sta	$2004
+;;;;;;tile=0x4d (ascii 'M')
+;;;;	lda	#$4d
+;;;;	sta	$2004
+;;;;;;set sprite attr=03 (palette 03)
+;;;;	lda	#$03
+;;;;	sta	$2004
+;;;;;;set sprite data: x=100
+;;;;	lda	#$64
+;;;;	sta	$2004
+;;;;
+;;;;;;set sprite data: y=50
+;;;;	lda	#$32
+;;;;	sta	$2004
+;;;;;;tile=0x4d (ascii 'O')
+;;;;	lda	#$4f
+;;;;	sta	$2004
+;;;;;;set sprite attr=01
+;;;;	lda	#$01
+;;;;	sta	$2004
+;;;;;;set sprite data: x=30
+;;;;	lda	#$1e
+;;;;	sta	$2004
+;;;;
+;;;;;;set sprite data: y=60
+;;;;	lda	#60
+;;;;	sta	$2004
+;;;;;;tile=0x4d (ascii 'P')
+;;;;	lda	#$50
+;;;;	sta	$2004
+;;;;;;set sprite attr=01
+;;;;	lda	#$01
+;;;;	sta	$2004
+;;;;;;set sprite data: x=33
+;;;;	lda	#$21
+;;;;	sta	$2004
+;;;;
+;;;;;;set sprite data: y=61
+;;;;	lda	#$3d
+;;;;	sta	$2004
+;;;;;;tile=0x4d (ascii 'Q')
+;;;;	lda	#$51
+;;;;	sta	$2004
+;;;;;;set sprite attr=02
+;;;;	lda	#$02
+;;;;	sta	$2004
+;;;;;;set sprite data: x=45
+;;;;	lda	#45
+;;;;	sta	$2004
 
     ;;show bg...
 	lda	#$1e

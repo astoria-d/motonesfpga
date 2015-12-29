@@ -264,6 +264,10 @@ begin
             port map (clk_n, ppu_latch_rst_n, ppu_scroll_cnt_ce_n, 
                                             '1', (others => '0'), ppu_scroll_cnt);
 
+    ppu_addr_in <=  cpu_d(5 downto 0) & ppu_addr(7 downto 0)
+                        when ppu_addr_cnt(0) = '1' else
+                    ppu_addr(13 downto 8) & cpu_d;
+
     ppu_addr_inst_inc1 : counter_register generic map(14, 1)
             port map (clk_n, rst_n, ppu_data_we_n, ppu_addr_we_n, ppu_addr_in, ppu_addr_inc1);
     ppu_addr_inst_inc32 : counter_register generic map(14, 32)
@@ -361,14 +365,6 @@ begin
                 ppu_scroll_cnt_ce_n <= '1';
             end if;
 
-            if(cpu_addr = PPUADDR) then
-                if (ppu_addr_cnt(0) = '0') then
-                    ppu_addr_in <= cpu_d(5 downto 0) & ppu_addr(7 downto 0);
-                else
-                    ppu_addr_in <= ppu_addr(13 downto 8) & cpu_d;
-                end if;
-            end if;
-
             if (cpu_addr = PPUDATA and r_nw = '1') then
                 read_data_n <= '0';
             else
@@ -437,7 +433,6 @@ begin
 
             if (cpu_addr = PPUADDR and ppu_clk_cnt = "00") then
                 ppu_addr_cnt_ce_n <= '0';
-                ppu_addr_we_n <= '0';
                 if (ppu_addr_cnt(0) = '0') then
                     --load addr high
                     ale <= '0';
@@ -452,7 +447,6 @@ begin
                 end if;
             elsif (cpu_addr = PPUDATA and ppu_clk_cnt = "01") then
                 ppu_addr_cnt_ce_n <= '1';
-                ppu_addr_we_n <= '1';
                 --for burst write.
                 if (ppu_addr(13 downto 8) = "111111") then
                     ale <= '0';
@@ -461,10 +455,17 @@ begin
                 end if;
             else
                 ppu_addr_cnt_ce_n <= '1';
-                ppu_addr_we_n    <= '1';
                 ale <= '0';
             end if; --if (cpu_addr = PPUADDR and ppu_clk_cnt = "00") then
 
+            if (cpu_addr = PPUADDR and ppu_clk_cnt = "01") then
+                ppu_addr_we_n <= '0';
+            elsif (cpu_addr = PPUDATA and ppu_clk_cnt = "10") then
+                ppu_addr_we_n <= '1';
+            else
+                ppu_addr_we_n    <= '1';
+            end if; --if (cpu_addr = PPUADDR and ppu_clk_cnt = "01") then
+            
             if (cpu_addr = PPUDATA and ppu_clk_cnt = "00") then
                 ppu_data_we_n <= '0';
                 if (ppu_addr(13 downto 8) = "111111") then

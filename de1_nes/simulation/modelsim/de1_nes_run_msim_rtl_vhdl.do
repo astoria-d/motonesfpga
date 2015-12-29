@@ -66,7 +66,15 @@ add wave -label ppu_clk_cnt -radix hex sim:/testbench_motones_sim/sim_board/ppu_
 add wave -label ppu_ctl -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/ppu_ctrl
 add wave -label ppu_mask -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/ppu_mask
 add wave -label ppu_status -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/ppu_status
-add wave -label ppu_addr -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/ppu_addr 
+
+
+#add wave -label ppu_addr_cnt -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/ppu_addr_cnt
+#add wave -label ppu_addr_we_n -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/ppu_addr_we_n
+#add wave -label ppu_addr_in -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/ppu_addr_in
+#add wave -label ppu_addr_inc1 -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/ppu_addr_inc1
+#add wave -label ppu_addr_inc32 -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/ppu_addr_inc32
+
+add wave -label ppu_addr -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/ppu_addr
 add wave -label ppu_data -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/ppu_data
 #add wave -label ppu_scr_x -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/ppu_scrl_x
 #add wave -label ppu_scr_y -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/ppu_scrl_y
@@ -87,8 +95,8 @@ add wave -label v_sync_n sim:/testbench_motones_sim/sim_board/ppu_inst/v_sync_n
 
 view structure
 view signals
-run 500 us
-wave zoom full
+#run 500 us
+#wave zoom full
 
 run 1000 us
 wave zoom full
