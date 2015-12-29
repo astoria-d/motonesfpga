@@ -1,4 +1,5 @@
-ASMSOURCES =	regression.asm
+#ASMSOURCES =	regression.asm
+ASMSOURCES =	ppu-minimum.asm
 
 OBJECTS	=	$(ASMSOURCES:.asm=.o)
 
