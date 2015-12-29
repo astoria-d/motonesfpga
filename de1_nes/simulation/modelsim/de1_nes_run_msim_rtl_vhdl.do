@@ -95,8 +95,12 @@ add wave -label v_sync_n sim:/testbench_motones_sim/sim_board/ppu_inst/v_sync_n
 
 view structure
 view signals
+
+run 8 us
+wave zoom full
+
 #run 500 us
 #wave zoom full
 
-run 1000 us
-wave zoom full
+#run 1000 us
+#wave zoom full
