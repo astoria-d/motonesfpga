@@ -12,6 +12,7 @@ entity qt_proj_test5 is
 
     signal dbg_cpu_clk  : out std_logic;
     signal dbg_ppu_clk  : out std_logic;
+    signal dbg_vga_clk  : out std_logic;
     signal dbg_addr : out std_logic_vector( 16 - 1 downto 0);
     signal dbg_d_io : out std_logic_vector( 8 - 1 downto 0);
 
@@ -68,6 +69,7 @@ architecture rtl of qt_proj_test5 is
         signal dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y : out std_logic_vector (7 downto 0);
 
         signal dbg_ppu_clk                      : out std_logic;
+        signal dbg_vga_clk                      : out std_logic;
         signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
         signal dbg_vga_x                        : out std_logic_vector (9 downto 0);
         signal dbg_disp_nt, dbg_disp_attr       : out std_logic_vector (7 downto 0);
@@ -84,7 +86,7 @@ architecture rtl of qt_proj_test5 is
         signal dbg_ppu_addr_we_n                : out std_logic;
         signal dbg_ppu_clk_cnt                  : out std_logic_vector(1 downto 0);
 
-                clk         : in std_logic;
+                ppu_clk     : in std_logic;
                 mem_clk     : in std_logic;
                 ce_n        : in std_logic;
                 rst_n       : in std_logic;
@@ -207,10 +209,10 @@ begin
     clock_inst : clock_divider port map 
         (base_clk, rst_n, cpu_clk, ppu_clk, mem_clk, vga_clk);
 
-    dbg_cpu_clk <= vga_clk;
-    dbg_ppu_addr <= "00000" & dbg_nes_x;
+    dbg_cpu_clk <= cpu_clk;
+    --dbg_ppu_addr <= "00000" & dbg_nes_x;
     dbg_d_io <= "000" & dbg_plt_addr;
-    dbg_ppu_data <= dbg_plt_data;
+    --dbg_ppu_data <= dbg_plt_data;
     dbg_addr <= "00" & v_addr;
     dbg_ppu_status <= vram_ad;
     dbg_ppu_scrl_x(0) <= ale;
@@ -225,10 +227,11 @@ begin
     ppu_inst: ppu port map (  
         dbg_ppu_ce_n                                        ,
         dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status_dummy          ,
-        dbg_ppu_addr_dummy                                        ,
-        dbg_ppu_data_dummy, dbg_ppu_scrl_x_dummy, dbg_ppu_scrl_y_dummy        ,
+        dbg_ppu_addr                                        ,
+        dbg_ppu_data, dbg_ppu_scrl_x_dummy, dbg_ppu_scrl_y_dummy        ,
 
         dbg_ppu_clk                      ,
+        dbg_vga_clk                      ,
         dbg_nes_x                        ,
         dbg_vga_x                        ,
         dbg_disp_nt, dbg_disp_attr                          ,

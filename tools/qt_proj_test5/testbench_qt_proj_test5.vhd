@@ -12,6 +12,7 @@ architecture stimulus of testbench_qt_proj_test5 is
 
     signal dbg_cpu_clk  : out std_logic;
     signal dbg_ppu_clk  : out std_logic;
+    signal dbg_vga_clk  : out std_logic;
     signal dbg_addr : out std_logic_vector( 16 - 1 downto 0);
     signal dbg_d_io : out std_logic_vector( 8 - 1 downto 0);
 
@@ -64,6 +65,7 @@ architecture stimulus of testbench_qt_proj_test5 is
 
     signal dbg_cpu_clk  : std_logic;
     signal dbg_ppu_clk  : std_logic;
+    signal dbg_vga_clk  : std_logic;
     signal dbg_mem_clk  : std_logic;
     signal dbg_r_nw     : std_logic;
     signal dbg_addr : std_logic_vector( 16 - 1 downto 0);
@@ -100,6 +102,7 @@ begin
 
     dbg_cpu_clk  ,
     dbg_ppu_clk  ,
+    dbg_vga_clk  ,
     dbg_addr     ,
     dbg_d_io     ,
 

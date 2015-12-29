@@ -27,6 +27,10 @@ vsim -t 1ps -L altera -L lpm -L sgate -L altera_mf -L altera_lnsim -L cycloneii 
 add wave  -label rst_n sim:/testbench_qt_proj_test5/sim_board/rst_n
 add wave  -label cpu_clk sim:/testbench_qt_proj_test5/sim_board/cpu_clk
 add wave  -label ppu_clk sim:/testbench_qt_proj_test5/sim_board/ppu_clk
+add wave  -label vga_clk sim:/testbench_qt_proj_test5/sim_board/vga_clk
+
+add wave  -label loop6 -radix decimal -unsigned   sim:/testbench_qt_proj_test5/sim_board/clock_inst/loop6
+
 
 #add wave  sim:/testbench_qt_proj_test5/base_clk
 #add wave  -label emu_ppu_clk sim:/testbench_qt_proj_test5/sim_board/ppu_inst/render_inst/vga_render_inst/emu_ppu_clk
@@ -99,8 +103,8 @@ add wave  -label b          -radix hex sim:/testbench_qt_proj_test5/sim_board/b
 view structure
 view signals
 
-run 500 us
+run 10 us
 wave zoom full
 
-run 1000 us
-wave zoom full
+#run 1000 us
+#wave zoom full
