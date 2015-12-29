@@ -346,7 +346,7 @@ begin
     prg_ram_inst : ram generic map (ram_2k, data_size)
             port map (mem_clk, ram_ce_n, ram_oe_n, R_nW, addr(ram_2k - 1 downto 0), d_io);
 
-    dbg_ppu_addr <= "00000" & dbg_nes_x;
+--    dbg_ppu_addr <= "00000" & dbg_nes_x;
     dbg_ppu_scrl_x(0) <= ale;
     dbg_ppu_scrl_x(1) <= rd_n;
     dbg_ppu_scrl_x(2) <= wr_n;
@@ -373,8 +373,8 @@ begin
     ppu_inst: ppu port map (  
         dbg_ppu_ce_n                                        ,
         dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status          ,
-        dbg_ppu_addr_dummy                                        ,
-        dbg_ppu_data_dummy, dbg_ppu_scrl_x_dummy, dbg_ppu_scrl_y_dummy        ,
+        dbg_ppu_addr                                        ,
+        dbg_ppu_data, dbg_ppu_scrl_x_dummy, dbg_ppu_scrl_y_dummy        ,
 
         dbg_ppu_clk                      ,
         dbg_nes_x                        ,
