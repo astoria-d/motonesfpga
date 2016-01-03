@@ -1,4 +1,6 @@
-# Copyright (C) 1991-2007 Altera Corporation
+# -------------------------------------------------------------------------- #
+#
+# Copyright (C) 1991-2013 Altera Corporation
 # Your use of Altera Corporation's design tools, logic functions 
 # and other software and tools, and its AMPP partner logic 
 # functions, and any output files from any of the foregoing 
@@ -11,50 +13,42 @@
 # programming logic devices manufactured by Altera and sold by 
 # Altera or its authorized distributors.  Please refer to the 
 # applicable agreement for further details.
-
-
-# The default values for assignments are stored in the file
+#
+# -------------------------------------------------------------------------- #
+#
+# Quartus II 32-bit
+# Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
+# Date created = 10:56:05  January 03, 2016
+#
+# -------------------------------------------------------------------------- #
+#
+# Notes:
+#
+# 1) The default values for assignments are stored in the file:
 #		de1_nes_assignment_defaults.qdf
-# If this file doesn't exist, and for assignments not listed, see file
+#    If this file doesn't exist, see file:
 #		assignment_defaults.qdf
-
-# Altera recommends that you do not modify this file. This
-# file is updated automatically by the Quartus II software
-# and any changes you make may be lost or overwritten.
+#
+# 2) Altera recommends that you do not modify this file. This
+#    file is updated automatically by the Quartus II software
+#    and any changes you make may be lost or overwritten.
+#
+# -------------------------------------------------------------------------- #
 
 
 set_global_assignment -name FAMILY "Cyclone II"
 set_global_assignment -name DEVICE EP2C20F484C7
 set_global_assignment -name TOP_LEVEL_ENTITY de1_nes
-set_global_assignment -name ORIGINAL_QUARTUS_VERSION 7.2
-set_global_assignment -name PROJECT_CREATION_TIME_DATE "10:06:40  SEPTEMBER 01, 2013"
+set_global_assignment -name ORIGINAL_QUARTUS_VERSION "13.0 SP1"
+set_global_assignment -name PROJECT_CREATION_TIME_DATE "10:56:05  JANUARY 03, 2016"
 set_global_assignment -name LAST_QUARTUS_VERSION "13.0 SP1"
-set_global_assignment -name USE_GENERATED_PHYSICAL_CONSTRAINTS OFF -section_id eda_palace
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
+set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
+set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
 set_global_assignment -name DEVICE_FILTER_PACKAGE FBGA
 set_global_assignment -name DEVICE_FILTER_PIN_COUNT 484
 set_global_assignment -name DEVICE_FILTER_SPEED_GRADE 7
-set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
-set_global_assignment -name PARTITION_COLOR 2147039 -section_id Top
-set_global_assignment -name LL_ROOT_REGION ON -section_id "Root Region"
-set_global_assignment -name LL_MEMBER_STATE LOCKED -section_id "Root Region"
-set_global_assignment -name INCREMENTAL_VECTOR_INPUT_SOURCE de1_nes.vwf
-set_global_assignment -name EDA_SIMULATION_TOOL "ModelSim-Altera (VHDL)"
-set_global_assignment -name EDA_OUTPUT_DATA_FORMAT VHDL -section_id eda_simulation
-set_global_assignment -name EDA_TEST_BENCH_ENABLE_STATUS TEST_BENCH_MODE -section_id eda_simulation
-set_global_assignment -name EDA_NATIVELINK_SIMULATION_TEST_BENCH testbench_motones_sim -section_id eda_simulation
-set_global_assignment -name EDA_TEST_BENCH_NAME testbench_motones_sim -section_id eda_simulation
-set_global_assignment -name EDA_DESIGN_INSTANCE_NAME sim_board -section_id testbench_motones_sim
-set_global_assignment -name EDA_TEST_BENCH_MODULE_NAME testbench_motones_sim -section_id testbench_motones_sim
-set_global_assignment -name EDA_TEST_BENCH_NAME testbench_clock_divider -section_id eda_simulation
-set_global_assignment -name EDA_DESIGN_INSTANCE_NAME dut -section_id testbench_clock_divider
-set_global_assignment -name EDA_TEST_BENCH_MODULE_NAME testbench_clock_divider -section_id testbench_clock_divider
-set_global_assignment -name EDA_TEST_BENCH_RUN_SIM_FOR "100 us" -section_id testbench_motones_sim
-set_global_assignment -name EDA_TEST_BENCH_FILE testbench_motones_sim.vhd -section_id testbench_motones_sim
-set_global_assignment -name EDA_TEST_BENCH_FILE testbench_clock_divider.vhd -section_id testbench_clock_divider
-set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
-
-##set_location_assignment LCCOMB_X22_Y13_N8 -to "mos6502:cpu_inst|alu:alu_inst|alu_core:alu_inst|Equal8~65"
-
+set_global_assignment -name ERROR_CHECK_FREQUENCY_DIVISOR 1
 ##VGA
 set_location_assignment PIN_D9 -to r[0]
 set_location_assignment PIN_C9 -to r[1]
@@ -115,8 +109,8 @@ set_location_assignment PIN_T5 -to dram_ras_n
 set_location_assignment PIN_M5 -to dram_udqm
 set_location_assignment PIN_R8 -to dram_we_n
 
-
-#set_global_assignment -name VHDL_FILE apu/apu.vhd
+#project files
+set_global_assignment -name VHDL_FILE apu/apu.vhd
 set_global_assignment -name VHDL_FILE address_decoder.vhd
 set_global_assignment -name VHDL_FILE motonesfpga_common.vhd
 set_global_assignment -name VHDL_FILE clock/clock_divider.vhd
@@ -132,8 +126,14 @@ set_global_assignment -name VHDL_FILE cpu/cpu_registers.vhd
 set_global_assignment -name VHDL_FILE cpu/decoder.vhd
 set_global_assignment -name VHDL_FILE cpu/mos6502.vhd
 set_global_assignment -name VHDL_FILE de1_nes.vhd
-set_global_assignment -name STRATIX_DEVICE_IO_STANDARD "3.3-V LVTTL"
-set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
-set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
-set_global_assignment -name DEVICE_MIGRATION_LIST EP2C20F484C7
+
+#need this config to program active serial mode...
+set_global_assignment -name STRATIX_CONFIGURATION_DEVICE EPCS4
+
+#other setting...
+set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+
+
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
