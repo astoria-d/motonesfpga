@@ -22,4 +22,7 @@ dd if=$in_file of=$out_file2 bs=16 skip=2049 2> /dev/null
 #4k img creation
 dd if=sample1-prg.bin of=sample1-prg-4k.bin bs=512 count=8
 
+bin2hex sample1-prg-4k.bin sample1-prg.hex
+bin2hex sample1-chr.bin sample1-chr.hex
+
 echo "done."
