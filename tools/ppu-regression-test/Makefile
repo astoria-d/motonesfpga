@@ -15,4 +15,6 @@ all :	$(OBJECTS) $(LIBRARIES)
 clean :
 	-rm sample1.nes
 	-rm *.o
+	-rm *.hex
+	-rm *.bin
 
