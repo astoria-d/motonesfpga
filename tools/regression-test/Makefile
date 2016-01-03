@@ -16,4 +16,5 @@ all :	$(OBJECTS) $(LIBRARIES)
 clean :
 	-rm *.nes
 	-rm *.o
+	-rm *.bin *.hex
 
