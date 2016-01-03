@@ -523,7 +523,7 @@ nmi_test:
     sta $91
     lda #$d9
     sta $0902       ;@0902=d9
-    lda #0a
+    lda #$0a
     ldy #$ca
     clc
     adc ($90),y      ;@0902, 0a+d9=e3
