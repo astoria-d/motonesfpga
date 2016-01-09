@@ -6,6 +6,11 @@ LIBRARIES =
 #-------------------------------------------------------------------------------
 all :	$(OBJECTS) $(LIBRARIES)
 	ld65 -o regression.nes --config linker.cfg --obj $(OBJECTS)
+	./dd-img.sh regression
+    
+run : all
+	/cygdrive/d/daisuke/programs/virtuanes097j/VirtuaNES.exe regression.nes
+
 
 .SUFFIXES : .asm .o
 

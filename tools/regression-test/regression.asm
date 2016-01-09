@@ -34,6 +34,11 @@
     lda ad_start_msg+1
     sta $01
     jsr print_ln
+    jsr print_ln
+    jsr print_ln
+    jsr print_ln
+    jsr print_ln
+    jsr print_ln
 
     ;;test start...
     jsr single_inst_test
@@ -72,6 +77,16 @@ test_failure:
     jsr print_ln
 
 test_done:
+
+;;;set image attribute
+	lda	#$23
+	sta	$2006
+	lda	#$c1
+	sta	$2006
+;;attr=11011000
+	lda	#$d8
+	sta	$2007
+
     ;;show bg...
 	lda	#$1e
 	sta	$2001
@@ -924,20 +939,20 @@ nmi_test:
     sta vram_current + 1
 @vpos_done:
 
-    ;;scroll 1 line
-    lda scroll_x
-    sta $2005
-
-    lda scroll_y
-    clc
-    adc #8
-    cmp #240
-    bne @scr_done
-    lda #$0
-@scr_done:
-    sta scroll_y
-    sta $2005
-
+;;    ;;scroll 1 line
+;;    lda scroll_x
+;;    sta $2005
+;;
+;;    lda scroll_y
+;;    clc
+;;    adc #8
+;;    cmp #240
+;;    bne @scr_done
+;;    lda #$0
+;;@scr_done:
+;;    sta scroll_y
+;;    sta $2005
+;;
     rts
 .endproc
 
@@ -996,15 +1011,17 @@ nmi_test:
     lda use_ppu
     beq @ppu_skip
 
-;;vram pos start from the bottom line.
-    lda #$23
+;;vram pos start from the top left.
+;;(pos 0,0 is sprite hit point.)
+    lda #$20
     sta vram_current
-    lda #$a0
+    lda #$01
     sta vram_current + 1
 
     lda #$00
     sta scroll_x
-    lda #232
+;    lda #232
+    lda #$00
     sta scroll_y
 @ppu_skip:
 
