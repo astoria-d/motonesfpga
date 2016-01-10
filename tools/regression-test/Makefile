@@ -7,6 +7,9 @@ LIBRARIES =
 all :	$(OBJECTS) $(LIBRARIES)
 	ld65 -o regression.nes --config linker.cfg --obj $(OBJECTS)
 	./dd-img.sh regression
+	cp regression.nes ../../de1_nes/simulation/modelsim/rom-file.nes
+	cp sample1-chr.hex ../../de1_nes/
+
     
 run : all
 	/cygdrive/d/daisuke/programs/virtuanes097j/VirtuaNES.exe regression.nes
