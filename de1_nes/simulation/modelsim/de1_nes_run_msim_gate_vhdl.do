@@ -96,6 +96,8 @@ view signals
 run 8 us
 
 #wave zoom range 3339700 ps 5138320 ps
+
+run 100 us
 wave zoom full
 
 #run 12 us
