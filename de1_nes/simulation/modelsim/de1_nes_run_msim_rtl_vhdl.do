@@ -59,7 +59,7 @@ add wave  -label cpu_addr -radix hex sim:/testbench_motones_sim/sim_board/ppu_in
 add wave  -label cpu_d -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/cpu_d
 
 add wave -label ppu_ce_n sim:/testbench_motones_sim/sim_board/ppu_inst/ce_n
-add wave -label ppu_clk sim:/testbench_motones_sim/sim_board/ppu_inst/clk
+add wave -label ppu_clk sim:/testbench_motones_sim/sim_board/ppu_inst/ppu_clk
 
 add wave -label ppu_clk_cnt -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/ppu_clk_cnt
 
@@ -99,8 +99,8 @@ view signals
 run 8 us
 wave zoom full
 
-#run 500 us
-#wave zoom full
+run 500 us
+wave zoom full
 
 #run 1000 us
 #wave zoom full

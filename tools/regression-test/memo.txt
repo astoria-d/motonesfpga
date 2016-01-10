@@ -1,0 +1,59 @@
+following test failed....
+other tests all passed!!!
+
+
+a2
+
+;;    ;;a.2.4 indirect,x is not implemented...
+;;
+;;    ;;abs,x/y test...
+;;    ldx #$17
+;;    ldy #$a1
+;;    lda #$2f
+;;    sta $359        ;;@359=2f
+;;    lda #$90
+;;    sta $0190, y    ;;@231=90
+;;    txa
+;;    ora $0190, y    ;;@231(page cross), 90 | 17 = 97
+;;    sec
+;;    sbc $0342, x    ;;@359, 97-2f=68
+;;    tay
+;;    cpy #$68
+;;    beq :+
+;;    jsr test_failure
+;;:
+;;
+;;    ;;zp,xy test
+;;    ldx #$cd
+;;    lda #$f1
+;;    sta $35     ;;@35=f1
+;;    lda #$ac
+;;    sta $bc     ;;@bc=ac
+;;
+;;    lda #$8d
+;;    and $68,x   ;;@35, 8d & f1=81
+;;    ldy #$9a
+;;    eor $22,y   ;;@bc, ac^81=2d
+;;    tax
+;;    cpx #$2d
+;;    beq :+
+;;    jsr test_failure
+;;:
+;;
+;;    ;;(ind),y test...
+;;    lda #$38
+;;    sta $90
+;;    lda #$08
+;;    sta $91
+;;    lda #$d9
+;;    sta $0902       ;@0902=d9
+;;    lda #$0a
+;;    ldy #$ca
+;;    clc
+;;    adc ($90),y      ;@0902, 0a+d9=e3
+;;    cmp #$e3
+;;    beq :+
+;;    jsr test_failure
+;;:
+
+;    jsr a4_inst_test
