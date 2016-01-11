@@ -229,6 +229,7 @@ constant ALU_INC    : std_logic_vector (3 downto 0) := "1011";
 constant ALU_DEC    : std_logic_vector (3 downto 0) := "1100";
 
 ---for indirect addressing.
+constant T0 : std_logic_vector (5 downto 0) := "000000";
 constant T1 : std_logic_vector (5 downto 0) := "000001";
 constant T2 : std_logic_vector (5 downto 0) := "000010";
 constant T3 : std_logic_vector (5 downto 0) := "000011";
@@ -458,18 +459,13 @@ end procedure;
             al_reg_in <= addr_out;
             ah_buf_we_n <= '0';
             ah_reg_in <= ah_reg;
-        elsif (exec_cycle = T5) then
-
-            if (pg_next_n = '0') then
-                a_sel <= ADDR_INC;
-                addr1 <= ah_reg;
-                ---next page.
-                abh <= addr_out;
-                abl <= al_reg;
-            else
-                abh <= ah_reg;
-                abl <= al_reg;
-            end if;
+        elsif (exec_cycle = T0 and pg_next_n = '0') then
+            ea_carry <= '0';
+            a_sel <= ADDR_INC;
+            addr1 <= ah_reg;
+            ---next page.
+            abh <= addr_out;
+            abl <= al_reg;
         end if; -- if (exec_cycle = T2) then
         end if; --if (clk = '0') then
     else

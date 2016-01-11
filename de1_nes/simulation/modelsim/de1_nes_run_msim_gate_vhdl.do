@@ -33,8 +33,8 @@ add wave -label rom_ce_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x(5)
 add wave -label ram_ce_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x(6)
 
 #add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_int_d_bus
-#add wave -radix hex sim:/testbench_motones_sim/sim_board/dbg_exec_cycle
-add wave -label ea_carry  -radix hex sim:/testbench_motones_sim/sim_board/dbg_ea_carry     
+add wave -label exec_cycle -radix hex sim:/testbench_motones_sim/sim_board/dbg_exec_cycle
+add wave -label ea_carry   -radix decimal -unsigned  sim:/testbench_motones_sim/sim_board/dbg_ea_carry     
 #add wave -label wait_a58_branch_next -radix hex sim:/testbench_motones_sim/sim_board/dbg_wait_a58_branch_next     
 
 
@@ -97,7 +97,7 @@ wave zoom full
 
 #wave zoom range 3339700 ps 5138320 ps
 
-run 75000914 ps
+run 122626377 ps
 
 #wave zoom full
 
