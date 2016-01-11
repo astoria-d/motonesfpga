@@ -57,3 +57,26 @@ a2
 ;;:
 
 ;    jsr a4_inst_test
+
+
+
+http://hp.vector.co.jp/authors/VA042397/nes/6502.html
+
+アドレッシングモード
+
+6502のアドレッシングモードを紹介します。IM8は8bit値、IM16は16bit値を意味します。【N】は「アドレスN」と言う意味になります。6502アセンブラは、大抵16進数を表記する際に数字の頭に"$"を付けて"$2e"のように書く事が多いです。また、ゼロページ用の記号等も多くの場合"<"等の記号が必要なことが多いですが、処理系によって異なるので詳細はアセンブラのマニュアルを参照してください。
+
+名称	表記例	動作
+Implied	TAX	AをXにコピー
+Accumulator	LSR A	Aを左に1bitシフト
+Immediate	LDA #IM8	即値IM8をAにロード
+Zeropage	LDA IM8	【IM8】の8bit値をAにロード
+Zeropage, X	LDA IM8, X	【IM8 + X】の8bit値をAにロード
+Zeropage, Y	LDA IM8, Y	【IM8 + Y】の8bit値をAにロード
+Relative	BEQ IM8	P[Z]がセットの時【PC + IM8】へジャンプ
+Absolute	LDA IM16	【IM16】の8bit値をAにロード
+Absolute, X	LDA IM16, X	【IM16 + X】の8bit値をAにロード
+Absolute, Y	LDA IM16, Y	【IM16 + Y】の8bit値をAにロード
+Indirect	JMP (IM16)	【【IM16】の16bit値】へジャンプ
+(Indirect, X)	LDA (IM8, X)	【【IM8 + X】の16bit値】の8bit値をAにロード
+(Indirect), Y	LDA (IM8), Y	【【IM8】の16bit値 + Y】の8bit値をAにロード

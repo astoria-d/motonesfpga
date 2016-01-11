@@ -141,10 +141,8 @@ signal pch_inc_input : std_logic;
 signal nmi_handled_n : std_logic;
 
 -- page boundary handling
-signal a2_abs_xy_next_cycle     : std_logic_vector (5 downto 0);
 signal a2_indir_y_next_cycle    : std_logic_vector (5 downto 0);
 
-signal wait_a2_abs_xy_next      : std_logic;
 signal wait_a2_indir_y_next     : std_logic;
 signal wait_a58_branch_next     : std_logic;
 
@@ -155,7 +153,6 @@ signal wk_y_cmd           : std_logic_vector(3 downto 0);
 signal wk_stat_alu_we_n   : std_logic;
 
 begin
-    --dbg_ea_carry <= ea_carry;
     dbg_wait_a58_branch_next <= wait_a58_branch_next;
 
     ---pc page next is connected to top bit of exec_cycle
@@ -163,8 +160,6 @@ begin
     pch_inc_reg : d_flip_flop_bit 
             port map(set_clk, '1', '1', '0', pch_inc_input, pch_inc_n);
 
-    a2_abs_xy_next_cycle <= T4 when ea_carry = '1' else
-                    T0;
     a2_indir_y_next_cycle <= T5 when ea_carry = '1' else
                     T0;
 
@@ -185,7 +180,7 @@ begin
                      wk_stat_alu_we_n;
 
     main_p : process (set_clk, res_n, nmi_n)
-                     --a2_abs_xy_next_cycle(2), a2_indir_y_next_cycle, a58_branch_wk_next_cycle)
+                     --a2_indir_y_next_cycle, a58_branch_wk_next_cycle)
 
 -------------------------------------------------------------
 -------------------------------------------------------------
@@ -289,7 +284,6 @@ begin
     n_vec_oe_n <= '1';
     i_vec_oe_n <= '1';
 
-    wait_a2_abs_xy_next <= '0';
     wait_a2_indir_y_next <= '0';
     wait_a58_branch_next <= '0';
 end  procedure;
@@ -524,15 +518,14 @@ begin
         end if;
         dbuf_int_oe_n <= '0';
 
-        wait_a2_abs_xy_next <= '1';
-        wk_next_cycle <= a2_abs_xy_next_cycle;
+        wk_next_cycle <= T0;
         d_print("absx step 1");
-    elsif exec_cycle = T4 then
+    elsif (exec_cycle = T0 and ea_carry = '1') then
         --case page boundary crossed.
         --redo inst.
         d_print("absx 5 (page boudary crossed.)");
         --next page.
-        pg_next_n <= not ea_carry;
+        pg_next_n <= '0';
         wk_next_cycle <= T0;
     end if;
 end  procedure;
@@ -605,7 +598,7 @@ begin
         --redo inst.
         d_print("(indir), y (page boudary crossed.)");
         --next page.
-        pg_next_n <= not ea_carry;
+        pg_next_n <= '0';
         wk_next_cycle <= T0;
     end if;
 end  procedure;
@@ -691,7 +684,7 @@ begin
         end if;
         wk_next_cycle <= T4;
     elsif exec_cycle = T4 then
-        pg_next_n <= not ea_carry;
+        pg_next_n <= '0';
         abs_latch_out;
         if (is_x = true) then
             ea_x_out;
@@ -743,7 +736,7 @@ begin
         --page handling.
         back_oe(wk_y_cmd, '1');
         indir_y_n <= '0';
-        pg_next_n <= not ea_carry;
+        pg_next_n <= '0';
         r_nw <= '0';
         wk_next_cycle <= T0;
     end if;
@@ -875,7 +868,7 @@ begin
         --t4 cycle fetch only.
         abs_latch_out;
         ea_x_out;
-        pg_next_n <= not ea_carry;
+        pg_next_n <= '0';
         wk_next_cycle <= T5;
 
     elsif exec_cycle = T5 then
@@ -1014,15 +1007,6 @@ end  procedure;
 --            nmi_handled_n <= '1';
 --        end if;
 
---        elsif (ea_carry = '1') then
---            if (wait_a2_abs_xy_next = '1') then
---                d_print("absx step 2");
-----                wk_next_cycle <= a2_abs_xy_next_cycle;
-----                if (ea_carry = '1') then
-----                    a2_page_next;
-----                end if;
---            end if;
-
 --        elsif (a2_indir_y_next_cycle = T5) then
 --            if (wait_a2_indir_y_next = '1') then
 --                d_print("indir step 2");
@@ -1045,12 +1029,13 @@ end  procedure;
                 pcl_cmd <= "1111";
                 pch_cmd <= "1111";
                 r_nw <= 'Z';
-            elsif exec_cycle = T0 then
+            elsif (exec_cycle = T0 and ea_carry = '0') then
                 --cycle #1
                 t0_cycle;
 
             elsif exec_cycle = T1 or exec_cycle = T2 or exec_cycle = T3 or 
-                exec_cycle = T4 or exec_cycle = T5 or exec_cycle = T6 then
+                exec_cycle = T4 or exec_cycle = T5 or exec_cycle = T6 or 
+                (exec_cycle = T0 and ea_carry = '1') then
                 --execute inst.
 
                 ---asyncronous page change might happen.
