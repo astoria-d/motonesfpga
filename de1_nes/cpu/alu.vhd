@@ -153,9 +153,6 @@ signal arith_reg : std_logic_vector (dsize - 1 downto 0);
 signal arith_reg_out : std_logic_vector (dsize - 1 downto 0);
 signal d_oe_n : std_logic;
 
-signal m2m_stat_1 : std_logic;
-signal m2m_stat_2 : std_logic;
-
 begin
 
     ----------------------------------------
@@ -546,6 +543,15 @@ end procedure;
             output_d_bus;
 
         --instruction is aaabbbcc format.
+        --aaa=opcode
+        --bbb=addr mode
+        --000	#immediate
+        --001	zero page
+        --010	accumulator
+        --011	absolute
+        --101	zero page,X
+        --111	absolute,X
+        --cc=optional field.
         elsif instruction (1 downto 0) = "01" then
             if instruction (7 downto 5) = "000" then
                 --d_print("ora");
@@ -616,34 +622,31 @@ end procedure;
             --first is write original data 
             --second is write modified data
 
-            arith_reg_in <= int_d_bus;
-            d1 <= arith_reg_out;
-            int_d_bus <= d_out;
+            --001	zero page
+            --011	absolute
+            --101	zero page,X
+            --111	absolute,X
+            if ((exec_cycle = T3 and instruction (4 downto 2) = "001") or 
+                (exec_cycle = T4 and instruction (4 downto 2) = "011") or 
+                (exec_cycle = T4 and instruction (4 downto 2) = "101") or 
+                (exec_cycle = T5 and instruction (4 downto 2) = "111")) then
+                --first cycle. keep input variable.
+                --d_print("inc first.");
+                arith_buf_we_n <= '0';
+                arith_buf_oe_n <= '1';
+                d_oe_n <= '1';
 
-            if (clk = '0') then
-                --d_print("clk hi");
-                if (m2m_stat_1 = '0') then
-                    --first cycle. keep input variable.
-                    --d_print("inc first.");
-                    m2m_stat_1 <= '1';
-                    arith_buf_we_n <= '0';
-                    arith_buf_oe_n <= '1';
-                    d_oe_n <= '1';
+                arith_reg_in <= int_d_bus;
+                d1 <= arith_reg;
+            else
+                --second cycle read from register, output modified data.
+                --d_print("inc second...");
+                arith_buf_we_n <= '1';
+                arith_buf_oe_n <= '0';
+                d_oe_n <= '0';
 
-                end if;
+                int_d_bus <= d_out;
             end if;
-
---            if (clk'event and clk = '0') then
---                if (m2m_stat_2 = '0') then
---                    --second cycle read from register, output modified data.
---                    --d_print("inc second...");
---                    m2m_stat_2 <= '1';
---                    arith_buf_we_n <= '1';
---                    arith_buf_oe_n <= '0';
---                    d_oe_n <= '0';
---                end if;
---            end if;
-
 
             if instruction (7 downto 5) = "000" then
                 --d_print("asl");
@@ -709,8 +712,6 @@ end procedure;
         end if; --if instruction = conv_std_logic_vector(16#ca#, dsize) 
     else
         --d_print("no arith");
-        m2m_stat_1 <= '0';
-        m2m_stat_2 <= '0';
         d_oe_n <= '1';
         arith_buf_we_n <= '1';
         arith_buf_oe_n <= '1';

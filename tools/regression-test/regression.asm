@@ -43,14 +43,15 @@
 
 ;;;;;following tests all ok
 ;    single_inst_test
+;    a2_inst_test
 ;    a3_inst_test
-;    a5_inst_test
+;    a4_inst_test
 
     ;;test start...
     jsr single_inst_test
     jsr a2_inst_test
     jsr a3_inst_test
-;    jsr a4_inst_test
+    jsr a4_inst_test
     jsr a5_inst_test
     jsr ppu_test
 
@@ -352,14 +353,14 @@ nmi_test:
     ldx #$fd
 
     ;;zp, abs, absx, zpx
-    asl $6b         ;@6b=39 > 72            <<wrong!!!!
+    asl $6b         ;@6b=39 > 72            <<ok...
     lda $6b
     cmp #$72
     beq :+
     jsr test_failure
 :
 
-    dec $04cc       ;@4cc=a1 > a0
+    dec $04cc       ;@4cc=a1 > a0           <<ok...
     lda $04cc
     cmp #$a0
     beq :+
@@ -373,7 +374,7 @@ nmi_test:
     jsr test_failure
 :
 
-    inc $02, x      ;@ff=9f > a0
+    inc $02, x      ;@ff=9f > a0            <<ok....
     lda $ff
     cmp #$a0
     beq :+
