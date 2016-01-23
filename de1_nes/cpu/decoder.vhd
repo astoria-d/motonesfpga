@@ -8,7 +8,6 @@ entity decoder is
     generic (dsize : integer := 8);
     port (  
 --    signal dbg_ea_carry     : out std_logic;
-    signal dbg_wait_a58_branch_next     : out std_logic;
     
     
             set_clk         : in std_logic;
@@ -141,8 +140,6 @@ signal pch_inc_input : std_logic;
 signal nmi_handled_n : std_logic;
 
 -- page boundary handling
-signal wait_a58_branch_next     : std_logic;
-
 signal wk_next_cycle      : std_logic_vector (5 downto 0);
 signal wk_acc_cmd         : std_logic_vector(3 downto 0);
 signal wk_x_cmd           : std_logic_vector(3 downto 0);
@@ -150,7 +147,6 @@ signal wk_y_cmd           : std_logic_vector(3 downto 0);
 signal wk_stat_alu_we_n   : std_logic;
 
 begin
-    dbg_wait_a58_branch_next <= wait_a58_branch_next;
 
     ---pc page next is connected to top bit of exec_cycle
     pch_inc_input <= not exec_cycle(5);
@@ -158,23 +154,26 @@ begin
             port map(set_clk, '1', '1', '0', pch_inc_input, pch_inc_n);
 
     --acc,x,y next cycle is changed when it goes page across.
-    next_cycle <= T3 when ea_carry = '1' and wait_a58_branch_next = '1' else
-                  wk_next_cycle;
+    --The conditional branch instructions all have the form xxy10000
+    next_cycle <= wk_next_cycle;
     acc_cmd <= wk_acc_cmd(3) & '1' & wk_acc_cmd(1) & '1'
-                    when ea_carry = '1' and wait_a58_branch_next = '1' else
+                    when ea_carry = '1' and 
+                         wk_next_cycle = T0 and instruction(4 downto 0) = "10000" else
                wk_acc_cmd;
 
     x_cmd <= wk_x_cmd(3) & '1' & wk_x_cmd(1 downto 0)
-                when ea_carry = '1' and wait_a58_branch_next = '1' else
+                when ea_carry = '1' and 
+                         wk_next_cycle = T0 and instruction(4 downto 0) = "10000" else
              wk_x_cmd;
     y_cmd <= wk_y_cmd(3) & '1' & wk_y_cmd(1 downto 0)
-                when ea_carry = '1' and wait_a58_branch_next = '1' else
+                when ea_carry = '1' and 
+                         wk_next_cycle = T0 and instruction(4 downto 0) = "10000" else
              wk_y_cmd;
-    stat_alu_we_n <= '1' when ea_carry = '1' and wait_a58_branch_next = '1' else
+    stat_alu_we_n <= '1' when ea_carry = '1' and 
+                         wk_next_cycle = T0 and instruction(4 downto 0) = "10000" else
                      wk_stat_alu_we_n;
 
     main_p : process (set_clk, res_n, nmi_n)
-                     --a58_branch_wk_next_cycle)
 
 -------------------------------------------------------------
 -------------------------------------------------------------
@@ -278,7 +277,6 @@ begin
     n_vec_oe_n <= '1';
     i_vec_oe_n <= '1';
 
-    wait_a58_branch_next <= '0';
 end  procedure;
 
 procedure fetch_inst (inc_pcl : in std_logic) is
@@ -954,9 +952,8 @@ begin
         back_oe(pch_cmd, '0');
         back_we(pcl_cmd, '0');
 
-        wait_a58_branch_next <= '1';
         wk_next_cycle <= T0;
-    elsif exec_cycle = T3 then
+    elsif (exec_cycle = T0 and ea_carry = '1') then
         d_print("page crossed.");
         --page crossed. adh calc.
         back_we(pcl_cmd, '1');
@@ -987,7 +984,6 @@ end  procedure;
             stat_bus_all_n <= '1';
             stat_bus_nz_n <= '1';
             wk_stat_alu_we_n <= '1';
-            wait_a58_branch_next <= '0';
 
             --pc l/h is reset vector.
             pcl_cmd <= "1110";

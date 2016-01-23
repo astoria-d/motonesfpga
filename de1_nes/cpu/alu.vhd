@@ -113,7 +113,6 @@ component alu_core
     );
 end component;
 
-
 --------- signals for address calucuration ----------
 signal al_buf_we_n : std_logic;
 signal ah_buf_we_n : std_logic;
@@ -131,6 +130,7 @@ signal addr_out : std_logic_vector (dsize - 1 downto 0);
 
 signal addr_c_in : std_logic;
 signal addr_c : std_logic;
+signal addr_c_reg : std_logic;
 
 signal pcl_carry_reg_in : std_logic;
 
@@ -154,7 +154,6 @@ signal arith_reg_out : std_logic_vector (dsize - 1 downto 0);
 signal d_oe_n : std_logic;
 
 begin
-
     ----------------------------------------
      -- address calucurator instances ----
     ----------------------------------------
@@ -174,6 +173,9 @@ begin
     addr_calc_inst : address_calculator generic map (dsize)
             port map (a_sel, addr1, addr2, addr_out, addr_c_in, addr_c);
 
+    ea_carry_dff_bit : d_flip_flop_bit 
+            port map(clk, '1', '1', 
+                    '0', addr_c, addr_c_reg);
 
     ----------------------------------------
      -- arithmatic operation instances ----
@@ -386,17 +388,14 @@ end procedure;
             ---rel val is on the d_bus.
             addr2 <= int_d_bus;
             addr_back <= addr_out;
-            ea_carry <= addr_c;
+            addr_c_in <= '0';
+            ea_carry <= addr_c_reg;
 
             --keep the value in the cycle
             al_buf_we_n <= '0';
             al_reg_in <= addr_out;
-            if (clk = '0') then
-                abl <= addr_out;
-            else
-                abl <= al_reg;
-            end if;
             abh <= bah;
+            abl <= addr_out;
         end if;
     elsif (indir_n = '0') then
         abh <= bah;

@@ -45,13 +45,13 @@
 ;    single_inst_test
 ;    a2_inst_test
 ;    a3_inst_test
-;    a4_inst_test
+;    a5_inst_test
 
     ;;test start...
     jsr single_inst_test
     jsr a2_inst_test
     jsr a3_inst_test
-    jsr a4_inst_test
+;    jsr a4_inst_test
     jsr a5_inst_test
     jsr ppu_test
 
@@ -179,7 +179,7 @@ nmi_test:
 
     lda #$00
     ldx #00
-    beq @fwd
+    beq @fwd            ;;<<<ok!!!!
     ;;forward page crossing branch
 @bwd:
     jmp @fwd
