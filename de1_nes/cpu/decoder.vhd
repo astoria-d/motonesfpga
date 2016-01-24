@@ -741,23 +741,23 @@ begin
         fetch_low;
     elsif exec_cycle = T2 then
         fetch_stop;
-        dbuf_int_oe_n <= '1';
         dl_al_we_n <= '1';
 
-        --t2 cycle only read
-        dl_al_oe_n <= '0';
-        zp_n <= '0';
-        wk_next_cycle <= T3;
-    elsif exec_cycle = T3 then
+        --t2 cycle read and,
         dl_al_oe_n <= '0';
         zp_n <= '0';
         --keep data in the alu reg.
         arith_en_n <= '0';
         dbuf_int_oe_n <= '0';
+        wk_next_cycle <= T3;
+    elsif exec_cycle = T3 then
+        --t3 fix alu internal register.
+        dl_al_oe_n <= '0';
+        zp_n <= '0';
+        arith_en_n <= '0';
+        dbuf_int_oe_n <= '1';
         wk_next_cycle <= T4;
     elsif exec_cycle = T4 then
-        dbuf_int_oe_n <= '1';
-
         --t5 cycle writes modified value.
         dl_al_oe_n <= '0';
         zp_n <= '0';
@@ -786,6 +786,11 @@ begin
         zp_n <= '0';
         zp_xy_n <= '0';
         back_oe(wk_x_cmd, '0');
+
+        --keep data in the alu reg.
+        arith_en_n <= '0';
+        dbuf_int_oe_n <= '0';
+
         wk_next_cycle <= T4;
     elsif exec_cycle = T4 then
         dl_al_oe_n <= '0';
@@ -793,9 +798,9 @@ begin
         zp_xy_n <= '0';
         back_oe(wk_x_cmd, '0');
 
-        --keep data in the alu reg.
+        --fix alu internal register.
         arith_en_n <= '0';
-        dbuf_int_oe_n <= '0';
+        dbuf_int_oe_n <= '1';
         wk_next_cycle <= T5;
     elsif exec_cycle = T5 then
         dbuf_int_oe_n <= '1';
@@ -819,16 +824,18 @@ begin
     elsif exec_cycle = T2 then
         abs_fetch_high;
     elsif exec_cycle = T3 then
-        --T3 cycle do nothing.
         abs_latch_out;
+
+        --keep data in the alu reg.
+        arith_en_n <= '0';
+        dbuf_int_oe_n <= '0';
         wk_next_cycle <= T4;
     elsif exec_cycle = T4 then
         abs_latch_out;
 
-        --t4 cycle save data in the alu register only.
-        --hardware maunual says write original data, 
-        --but this implementation doesn't write because bus shortage....
+        --fix alu internal register.
         arith_en_n <= '0';
+        dbuf_int_oe_n <= '1';
         wk_next_cycle <= T5;
     elsif exec_cycle = T5 then
         dbuf_int_oe_n <= '1';
@@ -855,22 +862,25 @@ begin
         wk_next_cycle <= T4;
 
     elsif exec_cycle = T4 then
-        --t4 cycle fetch only.
         abs_latch_out;
         ea_x_out;
         pg_next_n <= '0';
+
+        --keep data in the alu reg.
+        arith_en_n <= '0';
+        dbuf_int_oe_n <= '0';
         wk_next_cycle <= T5;
 
     elsif exec_cycle = T5 then
-        --t4 cycle redo fetch and save data in the alu register only.
+        --fix alu internal register.
         arith_en_n <= '0';
+        dbuf_int_oe_n <= '1';
         wk_next_cycle <= T6;
 
     elsif exec_cycle = T6 then
         --t5 cycle writes modified value.
         r_nw <= '0';
         arith_en_n <= '0';
-        dbuf_int_oe_n <= '1';
         wk_next_cycle <= T0;
 
     end if;

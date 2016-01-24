@@ -42,17 +42,14 @@
 
 
 ;;;;;following tests all ok
-;    single_inst_test
-;    a2_inst_test
-;    a3_inst_test
-;    a5_inst_test
+;    a4_inst_test
 
     ;;test start...
-    jsr single_inst_test
-    jsr a2_inst_test
-    jsr a3_inst_test
-;    jsr a4_inst_test
-    jsr a5_inst_test
+;    jsr single_inst_test
+;    jsr a2_inst_test
+;    jsr a3_inst_test
+    jsr a4_inst_test
+;    jsr a5_inst_test
     jsr ppu_test
 
 .endproc
@@ -360,7 +357,7 @@ nmi_test:
     jsr test_failure
 :
 
-    dec $04cc       ;@4cc=a1 > a0           <<ok...
+    dec $04cc       ;@4cc=a1 > a0           <<ok????
     lda $04cc
     cmp #$a0
     beq :+

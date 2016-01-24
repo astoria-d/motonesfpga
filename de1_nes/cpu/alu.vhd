@@ -625,17 +625,24 @@ end procedure;
             --011	absolute
             --101	zero page,X
             --111	absolute,X
-            if ((exec_cycle = T3 and instruction (4 downto 2) = "001") or 
+            if ((exec_cycle = T2 and instruction (4 downto 2) = "001") or 
+                (exec_cycle = T3 and instruction (4 downto 2) = "011") or 
+                (exec_cycle = T3 and instruction (4 downto 2) = "101") or 
+                (exec_cycle = T4 and instruction (4 downto 2) = "111")) then
+                arith_buf_we_n <= '0';
+                arith_reg_in <= int_d_bus;
+
+            elsif ((exec_cycle = T3 and instruction (4 downto 2) = "001") or 
                 (exec_cycle = T4 and instruction (4 downto 2) = "011") or 
                 (exec_cycle = T4 and instruction (4 downto 2) = "101") or 
                 (exec_cycle = T5 and instruction (4 downto 2) = "111")) then
                 --first cycle. keep input variable.
                 --d_print("inc first.");
-                arith_buf_we_n <= '0';
+                arith_buf_we_n <= '1';
+
                 arith_buf_oe_n <= '1';
                 d_oe_n <= '1';
 
-                arith_reg_in <= int_d_bus;
                 d1 <= arith_reg;
             else
                 --second cycle read from register, output modified data.
