@@ -582,8 +582,12 @@ begin
         indir_y_n <= '0';
         dbuf_int_oe_n <= '0';
 
-        wk_next_cycle <= T0;
-    elsif (exec_cycle = T0 and ea_carry = '1') then
+        if (ea_carry = '1') then
+            wk_next_cycle <= T5;
+        else
+            wk_next_cycle <= T0;
+        end if;
+    elsif (exec_cycle = T5) then
         --case page boundary crossed.
         --redo inst.
         d_print("(indir), y (page boudary crossed.)");

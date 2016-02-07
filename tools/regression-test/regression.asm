@@ -43,15 +43,15 @@
 
 ;;;;;following tests all ok
 ;    jsr single_inst_test
+;    a2_inst_test
 ;    a3_inst_test
-;    a4_inst_test
 ;    a5_inst_test
 
     ;;test start...
     jsr single_inst_test
-;    jsr a2_inst_test
+    jsr a2_inst_test
     jsr a3_inst_test
-    jsr a4_inst_test
+;    jsr a4_inst_test
     jsr a5_inst_test
     jsr ppu_test
 
@@ -546,7 +546,7 @@ nmi_test:
     lda #$0a
     ldy #$ca
     clc
-    adc ($90),y      ;@0902, 0a+d9=e3               << ok!!
+    adc ($90),y      ;@0902, 0a+d9=e3               << ok!!!
     cmp #$e3
     beq :+
     jsr test_failure
@@ -1038,10 +1038,6 @@ nmi_test:
 
 
 
-;;;read only global datas
-use_ppu:
-    .byte   $01
-
 ;;;;string datas
 ad_start_msg:
     .addr   :+
@@ -1096,6 +1092,10 @@ ad_single_test:
 :
     .byte   "single byte inst test..."
     .byte   $00
+
+;;;read only global datas
+use_ppu:
+    .byte   $01
 
 ;;;;r/w global variables.
 .segment "BSS"
