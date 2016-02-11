@@ -45,15 +45,16 @@
 ;    jsr single_inst_test
 ;    a2_inst_test
 ;    a3_inst_test
+;    a4_inst_test
 ;    a5_inst_test
 
     ;;test start...
     jsr single_inst_test
     jsr a2_inst_test
     jsr a3_inst_test
-;    jsr a4_inst_test
+    jsr a4_inst_test
     jsr a5_inst_test
-    jsr ppu_test
+    jsr ppu_test            ;;;<<<error!!!!
 
 .endproc
 
