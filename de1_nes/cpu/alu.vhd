@@ -264,6 +264,7 @@ end procedure;
     ----- address calcuration -----
     -------------------------------
     if (pcl_inc_n = '0') then
+        ea_carry <= '0';
         a_sel <= ADDR_INC;
         addr1 <= bal;
         addr_back <= addr_out;
@@ -284,6 +285,7 @@ end procedure;
         abh <= bah;
 
     elsif (pch_inc_n = '0') then
+        ea_carry <= '0';
         a_sel <= ADDR_INC;
         addr1 <= bah;
         addr_back <= addr_out;
@@ -296,6 +298,7 @@ end procedure;
     elsif (sp_oe_n = '0') then
         --stack operation...
         abh <= "00000001";
+        ea_carry <= '0';
 
         if (sp_push_n /= '0' and sp_pop_n /= '0') then
             abl <= bal;
@@ -327,6 +330,7 @@ end procedure;
             end if;
         end if;
     elsif (zp_n = '0') then
+        ea_carry <= '0';
         if (zp_xy_n <= '0') then
             a_sel <= ADDR_ADC;
             addr1 <= bal;
@@ -423,6 +427,7 @@ end procedure;
             ---save BAL.
             al_buf_we_n <= '0';
             al_reg_in <= int_d_bus;
+            ea_carry <= '0';
 
             --get next address (IAL + 1)
             a_sel <= ADDR_INC;
