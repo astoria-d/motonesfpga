@@ -29,6 +29,7 @@
     jsr init_global
     jsr init_ppu
 
+    jsr addr_test
     lda ad_start_msg
     sta $00
     lda ad_start_msg+1
@@ -54,7 +55,7 @@
     jsr a3_inst_test
     jsr a4_inst_test
     jsr a5_inst_test
-    jsr ppu_test            ;;;<<<error!!!!
+    jsr ppu_test
 
 .endproc
 
@@ -111,6 +112,81 @@ mainloop:
 
 nmi_test:
     rti
+
+.proc addr_test
+    nop
+    nop
+    jmp :+
+    .byte   "**********"
+    .byte   "0***************"
+    .byte   "1***************"
+    .byte   "2************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "***************"
+:
+    nop
+    ;;page cross at cycle #0
+    jmp :+
+    .byte   "3***************"
+    .byte   "4***************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+:
+    ;;page cross at the cycle #2
+    jmp :+
+    .byte   "5*********"
+:
+    nop
+    jmp :+
+    .byte   "6***************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+:
+    ;;page cross at the cycle #1
+    jmp :+
+    .byte   "7*********"
+:
+    nop
+    jmp :+
+    .byte   "8***************"
+:
+
+    lda ad_addr_test
+    sta $00
+    lda ad_addr_test+1
+    sta $01
+    jsr print_ln
+
+    rts
+.endproc
 
 
 .proc ppu_test
@@ -1056,6 +1132,12 @@ ad_test_failed_msg:
     .addr   :+
 :
     .byte   "test failed!!!"
+    .byte   $00
+
+ad_addr_test:
+    .addr   :+
+:
+    .byte   "address test..."
     .byte   $00
 
 ad_ppu_test:

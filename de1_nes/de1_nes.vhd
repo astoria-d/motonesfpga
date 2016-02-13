@@ -366,6 +366,8 @@ begin
     dbg_disp_ptn_l <= "00" & v_addr ;
     dbg_disp_ptn_h <= "000" & dbg_plt_addr & dbg_plt_data;
 
+--    dbg_ppu_ctrl <= dbg_pcl;
+--    dbg_ppu_mask <= dbg_pch;
     --nes ppu instance
     ppu_inst: ppu port map (  
         dbg_ppu_ce_n                                        ,

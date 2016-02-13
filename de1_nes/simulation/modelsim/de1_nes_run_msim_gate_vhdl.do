@@ -38,7 +38,12 @@ add wave -label ea_carry   -radix decimal -unsigned  sim:/testbench_motones_sim/
 #add wave -label wait_a58_branch_next -radix hex sim:/testbench_motones_sim/sim_board/dbg_wait_a58_branch_next     
 
 
+
 add wave -divider regs
+
+#add wave -label pcl  -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_ctrl
+#add wave -label pch  -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_mask
+
 add wave -label acc    -radix hex sim:/testbench_motones_sim/sim_board/dbg_acc
 add wave -label sp     -radix hex sim:/testbench_motones_sim/sim_board/dbg_sp
 add wave -label x      -radix hex sim:/testbench_motones_sim/sim_board/dbg_x
@@ -46,14 +51,14 @@ add wave -label y      -radix hex sim:/testbench_motones_sim/sim_board/dbg_y
 add wave -label status -radix hex sim:/testbench_motones_sim/sim_board/dbg_status
 
 
-add wave -divider ppu
-add wave -label ppu_clk    sim:/testbench_motones_sim/sim_board/dbg_ppu_clk
-add wave -label ppu_ce_n          sim:/testbench_motones_sim/sim_board/dbg_ppu_ce_n
-add wave -label ppu_ctrl  -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_ctrl
-add wave -label ppu_mask  -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_mask
-#add wave -label ppu_status   -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_status
-add wave -label ppu_addr -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_addr
-add wave -label ppu_data -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_data
+#add wave -divider ppu
+#add wave -label ppu_clk    sim:/testbench_motones_sim/sim_board/dbg_ppu_clk
+#add wave -label ppu_ce_n          sim:/testbench_motones_sim/sim_board/dbg_ppu_ce_n
+#add wave -label ppu_ctrl  -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_ctrl
+#add wave -label ppu_mask  -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_mask
+##add wave -label ppu_status   -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_status
+#add wave -label ppu_addr -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_addr
+#add wave -label ppu_data -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_data
 
 
 ###add wave -divider vga_pos
@@ -97,7 +102,7 @@ wave zoom full
 
 #wave zoom range 3339700 ps 5138320 ps
 
-run 122626377 ps
+run 36160968 ps
 
 #wave zoom full
 

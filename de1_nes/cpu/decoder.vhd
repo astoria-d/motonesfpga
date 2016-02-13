@@ -2727,9 +2727,17 @@ end  procedure;
                 --pcl stop increment
                 pcl_inc_n <= '1';
                 back_we(pcl_cmd, '1');
-                --pch increment
-                back_we(pch_cmd, '0');
-                back_oe(pch_cmd, '0');
+
+                if ('0' & exec_cycle(4 downto 0) = T0 and
+                    instruction = conv_std_logic_vector(16#4c#, dsize) ) then
+                    --jmp instruction t0 cycle discards pch increment.
+                    back_we(pch_cmd, '1');
+                    front_we(pch_cmd, '1');
+                else
+                    --pch increment
+                    back_we(pch_cmd, '0');
+                    back_oe(pch_cmd, '0');
+                end if;
 
                 if ('0' & exec_cycle(4 downto 0) = T0) then
                     --do the t0 identical routine.
