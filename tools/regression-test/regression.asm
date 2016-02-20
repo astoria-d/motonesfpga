@@ -116,7 +116,7 @@ nmi_test:
 .proc addr_test
     nop
     nop
-    jmp :+
+    jmp @jmp_test1
     .byte   "**********"
     .byte   "0***************"
     .byte   "1***************"
@@ -125,14 +125,13 @@ nmi_test:
     .byte   "****************"
     .byte   "****************"
     .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "***************"
-:
+    .byte   "***"
+
+@jmp_ret1:
     nop
     ;;page cross at cycle #0
-    jmp :+
-    .byte   "3***************"
+    jmp @jmp_test2
+    .byte   "3*************"
     .byte   "4***************"
     .byte   "****************"
     .byte   "****************"
@@ -147,38 +146,59 @@ nmi_test:
     .byte   "****************"
     .byte   "****************"
     .byte   "****************"
-:
-    ;;page cross at the cycle #2
-    jmp :+
-    .byte   "5*********"
-:
-    nop
-    jmp :+
-    .byte   "6***************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-:
-    ;;page cross at the cycle #1
-    jmp :+
-    .byte   "7*********"
-:
-    nop
-    jmp :+
-    .byte   "8***************"
-:
 
+@jmp_ret2:
+    ;;page cross at the cycle #2
+    jmp @jmp_test3
+    .byte   "5*********"
+
+@jmp_ret3:
+    nop
+    jmp @jmp_test4
+    .byte   "6***********"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+
+@jmp_ret4:
+    ;;page cross at the cycle #1
+    jmp @jmp_test5
+    .byte   "7*********"
+
+@jmp_ret5:
+    nop
+    jmp @jmp_test6
+    .byte   "8***************"
+
+@jmp_ret6:
+    jmp @jmp_test_done
+
+@jmp_test1:
+    jmp @jmp_ret1
+@jmp_test2:
+    jmp @jmp_ret2
+@jmp_test3:
+    jmp @jmp_ret3
+@jmp_test4:
+    jmp @jmp_ret4
+@jmp_test5:
+    jmp @jmp_ret5
+@jmp_test6:
+    jmp @jmp_ret6
+
+@jmp_test_done:
     lda ad_addr_test
     sta $00
     lda ad_addr_test+1
