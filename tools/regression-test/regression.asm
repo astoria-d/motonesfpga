@@ -19,114 +19,35 @@
 ;;0300 - 07ff  global: global variables.
 
 .segment "STARTUP"
-.proc	Reset
 
-; interrupt off, initialize sp.
-	sei
-	ldx	#$ff
-	txs
-
-    jsr init_global
-    jsr init_ppu
-
-;;address specific test comes first...
-    jsr addr_test
-
-    lda ad_start_msg
-    sta $00
-    lda ad_start_msg+1
-    sta $01
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-
-
-;;;;;following tests all ok
-;    jsr single_inst_test
-;    a2_inst_test
-;    a3_inst_test
-;    a4_inst_test
-;    a5_inst_test
-
-    ;;test start...
-    jsr single_inst_test
-    jsr a2_inst_test
-    jsr a3_inst_test
-    jsr a4_inst_test
-    jsr a5_inst_test
-    jsr ppu_test
-
-.endproc
-
-
-    ;;fall through from the above func 
-    ;;or jump into from the other failed func.
-
-    ;;test finished...
-test_success:
-    lda ad_test_done_msg
-    sta $00
-    lda ad_test_done_msg+1
-    sta $01
-    jsr print_ln
-    jmp test_done
-
-test_failure:
-    lda use_ppu
-    bne :+
-    lda #$00
-    ;;;generate invalid opcode error.
-    jsr $00
-:
-    lda ad_test_failed_msg
-    sta $00
-    lda ad_test_failed_msg+1
-    sta $01
-    jsr print_ln
-
-test_done:
-
-;;;set image attribute
-	lda	#$23
-	sta	$2006
-	lda	#$c1
-	sta	$2006
-;;attr=11011000
-	lda	#$d8
-	sta	$2007
-
-    ;;show bg...
-	lda	#$1e
-	sta	$2001
-
-    ;;;enable nmi
-	lda	#$80
-	sta	$2000
-
-    ;;done...
-    ;;infinite loop.
-mainloop:
-	jmp	mainloop
-
-
-nmi_test:
-    rti
 
 .proc addr_test
-    nop
-    nop
     jmp @jmp_test1
-    .byte   "0***************"
+    .byte   "*************"
+    .byte   "0**"
     .byte   "****************"
     .byte   "****************"
     .byte   "****************"
     .byte   "****************"
     .byte   "****************"
     .byte   "****************"
-    .byte   "**********"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "***********"
 
 @jmp_ret1:
     nop
@@ -259,8 +180,8 @@ nmi_test:
     jsr test_failure
 :
     jmp @jmp_test7
-    .byte   "*****"
-    .byte   "6*********"
+    .byte   "****"
+    .byte   "6**********"
     .byte   "****************"
     .byte   "****************"
     .byte   "****************"
@@ -348,6 +269,115 @@ nmi_test:
     rts
 .endproc
 
+
+.proc	Reset
+
+; interrupt off, initialize sp.
+	sei
+	ldx	#$ff
+	txs
+
+    jsr init_global
+    jsr init_ppu
+
+;;address specific test comes first...
+    jsr addr_test
+
+    lda ad_start_msg
+    sta $00
+    lda ad_start_msg+1
+    sta $01
+    jsr print_ln
+    jsr print_ln
+    jsr print_ln
+    jsr print_ln
+    jsr print_ln
+    jsr print_ln
+
+
+;;;;;following tests all ok
+;    jsr single_inst_test
+;    a2_inst_test
+;    a3_inst_test
+;    a4_inst_test
+;    a5_inst_test
+
+    ;;test start...
+    jsr single_inst_test
+    jsr a2_inst_test
+    jsr a3_inst_test
+    jsr a4_inst_test
+    jsr a5_inst_test
+    jsr status_test
+    jsr ppu_test
+
+.endproc
+
+
+    ;;fall through from the above func 
+    ;;or jump into from the other failed func.
+
+    ;;test finished...
+test_success:
+    lda ad_test_done_msg
+    sta $00
+    lda ad_test_done_msg+1
+    sta $01
+    jsr print_ln
+    jmp test_done
+
+test_failure:
+    lda use_ppu
+    bne :+
+    lda #$00
+    ;;;generate invalid opcode error.
+    jsr $00
+:
+    lda ad_test_failed_msg
+    sta $00
+    lda ad_test_failed_msg+1
+    sta $01
+    jsr print_ln
+
+test_done:
+
+;;;set image attribute
+	lda	#$23
+	sta	$2006
+	lda	#$c1
+	sta	$2006
+;;attr=11011000
+	lda	#$d8
+	sta	$2007
+
+    ;;show bg...
+	lda	#$1e
+	sta	$2001
+
+    ;;;enable nmi
+	lda	#$80
+	sta	$2000
+
+    ;;done...
+    ;;infinite loop.
+mainloop:
+	jmp	mainloop
+
+
+nmi_test:
+    rti
+
+
+.proc status_test
+    jsr check_ppu
+    lda ad_status_test
+    sta $00
+    lda ad_status_test+1
+    sta $01
+    jsr print_ln
+
+    rts
+.endproc
 
 .proc ppu_test
     jsr check_ppu
@@ -803,6 +833,8 @@ nmi_test:
     lda ad_single_test+1
     sta $01
     jsr print_ln
+
+    ;;cld/sed(bcd mode) not supported...
 
     ;;asl test
     lda #$80
@@ -1300,6 +1332,12 @@ ad_addr_test:
     .byte   "address test..."
     .byte   $00
 
+ad_status_test:
+    .addr   :+
+:
+    .byte   "status test..."
+    .byte   $00
+
 ad_ppu_test:
     .addr   :+
 :
@@ -1351,7 +1389,7 @@ scroll_y:
     .byte   $00
 
 ;;;for DE1 internal memory constraints.
-.segment "VECINFO_4k"
+.segment "VECINFO_8k"
 	.word	nmi_test
 	.word	Reset
 	.word	$0000

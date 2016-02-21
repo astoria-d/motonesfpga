@@ -240,7 +240,7 @@ architecture rtl of de1_nes is
 
     constant ram_2k : integer := 11;      --2k = 11 bit width.
     constant rom_32k : integer := 15;     --32k = 15 bit width.
-    constant rom_4k : integer := 12;     --4k = 12 bit width. (for test use)
+    constant rom_8k : integer := 13;     --8k = 13 bit width. (for test use)
     constant vram_1k : integer := 10;      --1k = 10 bit width.
     constant chr_rom_8k : integer := 13;     --32k = 15 bit width.
 
@@ -336,8 +336,8 @@ begin
 --    prg_rom_inst : prg_rom generic map (rom_32k, data_size)
 --            port map (mem_clk, rom_ce_n, addr(rom_32k - 1 downto 0), d_io);
 
-    prg_rom_inst : prg_rom generic map (rom_4k, data_size)
-            port map (mem_clk, rom_ce_n, addr(rom_4k - 1 downto 0), d_io);
+    prg_rom_inst : prg_rom generic map (rom_8k, data_size)
+            port map (mem_clk, rom_ce_n, addr(rom_8k - 1 downto 0), d_io);
 
     ram_oe_n <= not R_nW;
     prg_ram_inst : ram generic map (ram_2k, data_size)
