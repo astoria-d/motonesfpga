@@ -39,14 +39,6 @@
     .byte   "****************"
     .byte   "****************"
     .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
     .byte   "***********"
 
 @jmp_ret1:
@@ -375,6 +367,504 @@ nmi_test:
     lda ad_status_test+1
     sta $01
     jsr print_ln
+
+
+;;bit7	N	ネガティブ	Aのbit7が1の時にセット
+;;bit6	V	オーバーフロー	演算結果がオーバーフローを起こした時にセット
+;;bit5	R	予約済み	常にセットされている
+;;bit4	B	ブレークモード	BRK発生時にセット、IRQ発生時にクリア
+;;bit3	D	デシマルモード	0:デフォルト、1:BCDモード (ファミコンでは未実装)
+;;bit2	I	IRQ禁止	0:IRQ許可、1:IRQ禁止
+;;bit1	Z	ゼロ	演算結果が0の時にセット
+;;bit0	C	キャリー	キャリー発生時にセット
+
+    ;;save status
+    php
+
+;;LDA
+;;メモリからAにロードします。[N:0:0:0:0:0:Z:0]
+    ;;set status
+    lda #$00
+    pha
+    plp
+
+    lda #$ea
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$a0
+    beq :+
+    jsr test_failure
+:
+    ;;set status
+    lda #$00
+    pha
+    plp
+
+    lda #$00
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$22
+    beq :+
+    jsr test_failure
+:
+
+;;LDX
+;;メモリからXにロードします。[N:0:0:0:0:0:Z:0]
+    ;;set status
+    lda #00
+    pha
+    plp
+
+    ldx #$a4
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$a0
+    beq :+
+    jsr test_failure
+:
+
+    lda #00
+    pha
+    plp
+
+    ldx #$00
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$22
+    beq :+
+    jsr test_failure
+:
+
+;;LDY
+;;メモリからYにロードします。[N:0:0:0:0:0:Z:0]
+    ;;set status
+    lda #00
+    pha
+    plp
+
+    ldy #$2b
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$20
+    beq :+
+    jsr test_failure
+:
+
+    ;;set status
+    lda #00
+    pha
+    plp
+
+    ldy #$bb
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$a0
+    beq :+
+    jsr test_failure
+:
+
+    ;;set status
+    lda #00
+    pha
+    plp
+
+    ldy #$00
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$22
+    beq :+
+    jsr test_failure
+:
+
+;;STA
+;;Aからメモリにストアします。[0:0:0:0:0:0:0:0]
+
+    lda #$fb
+
+    ;;set status
+    lda #$c3
+;;c3 is...1100 0011 = NV00 00ZC
+    pha
+    plp
+
+;;sta test
+    sta $501
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$e3
+    beq :+
+    jsr test_failure
+:
+
+
+;;STX
+;;Xからメモリにストアします。[0:0:0:0:0:0:0:0]
+    ldx #$fb
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    stx $50f
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$e3
+    beq :+
+    jsr test_failure
+:
+
+
+;;STY
+;;Yからメモリにストアします。[0:0:0:0:0:0:0:0]
+    ldy #$00
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    sty $510
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$e3
+    beq :+
+    jsr test_failure
+:
+
+;;TAX
+;;AをXへコピーします。[N:0:0:0:0:0:Z:0]
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    tax
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$e1
+    beq :+
+    jsr test_failure
+:
+
+    ;;set status
+    lda #$00
+    pha
+    plp
+
+    tax
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$22
+    beq :+
+    jsr test_failure
+:
+
+
+;;TAY
+;;AをYへコピーします。[N:0:0:0:0:0:Z:0]
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    tay
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$e1
+    beq :+
+    jsr test_failure
+:
+
+    cpy #$c3
+    beq :+
+    jsr test_failure
+:
+
+    ;;set status
+    lda #$00
+    pha
+    plp
+
+    tay
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$22
+    beq :+
+    jsr test_failure
+:
+:
+    cpy #$00
+    beq :+
+    jsr test_failure
+:
+
+;;TSX
+;;SをXへコピーします。[N:0:0:0:0:0:Z:0]
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    ;;;now sp = 0xfX place...
+    tsx
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$e1
+    beq :+
+    jsr test_failure
+:
+
+    ;;save sp
+    tsx
+    txa
+    tay     ;; now y has the old sp
+    
+    lda #$0
+    tax
+    txs
+    
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    tsx
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$63
+    beq :+
+    jsr test_failure
+:
+    cpx #$00
+    beq :+
+    jsr test_failure
+:
+
+    ;;restore sp
+    tya
+    tax
+    txs
+
+
+;;TXA
+;;XをAへコピーします。[N:0:0:0:0:0:Z:0]
+    ldx #$59
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    txa
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$61
+    beq :+
+    jsr test_failure
+:
+
+
+    ldx #$ac
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    txa
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$e1
+    beq :+
+    jsr test_failure
+:
+
+    ldx #$00
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    txa
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$63
+    beq :+
+    jsr test_failure
+:
+
+;;TXS
+;;XをSへコピーします。[N:0:0:0:0:0:Z:0]
+;;
+;;TYA
+;;YをAへコピーします。[N:0:0:0:0:0:Z:0]
+;;
+;;ADC
+;;(A + メモリ + キャリーフラグ) を演算して結果をAへ返します。[N:V:0:0:0:0:Z:C]
+;;
+;;AND
+;;Aとメモリを論理AND演算して結果をAへ返します。[N:0:0:0:0:0:Z:0]
+;;
+;;ASL
+;;Aまたはメモリを左へシフトします。[N:0:0:0:0:0:Z:C]
+;;
+;;BIT
+;;Aとメモリをビット比較演算します。[N:V:0:0:0:0:Z:0]
+;;
+;;
+;;CMP
+;;Aとメモリを比較演算します。[N:0:0:0:0:0:Z:C]
+;;
+;;CPX
+;;Xとメモリを比較演算します。[N:0:0:0:0:0:Z:C]
+;;
+;;CPY
+;;Yとメモリを比較演算します。[N:0:0:0:0:0:Z:C]
+;;
+;;DEC
+;;メモリをデクリメントします。[N:0:0:0:0:0:Z:0]
+;;
+;;DEX
+;;Xをデクリメントします。[N:0:0:0:0:0:Z:0]
+;;
+;;DEY
+;;Yをデクリメントします。[N:0:0:0:0:0:Z:0]
+;;
+;;EOR
+;;Aとメモリを論理XOR演算して結果をAへ返します。[N:0:0:0:0:0:Z:0]
+;;
+;;INC
+;;メモリをインクリメントします。[N:0:0:0:0:0:Z:0]
+;;
+;;INX
+;;Xをインクリメントします。[N:0:0:0:0:0:Z:0]
+;;
+;;INY
+;;Yをインクリメントします。[N:0:0:0:0:0:Z:0]
+;;
+;;LSR
+;;Aまたはメモリを右へシフトします。[N:0:0:0:0:0:Z:C]
+;;
+;;ORA
+;;Aとメモリを論理OR演算して結果をAへ返します。[N:0:0:0:0:0:Z:0]
+;;
+;;ROL
+;;Aまたはメモリを左へローテートします。[N:0:0:0:0:0:Z:C]
+;;
+;;ROR
+;;Aまたはメモリを右へローテートします。[N:0:0:0:0:0:Z:C]
+;;
+;;SBC
+;;(A - メモリ - キャリーフラグの反転) を演算して結果をAへ返します。[N:V:0:0:0:0:Z:C]
+;;
+;;PHA
+;;Aをスタックにプッシュダウンします。[0:0:0:0:0:0:0:0]
+;;
+;;PHP
+;;Pをスタックにプッシュダウンします。[0:0:0:0:0:0:0:0]
+;;
+;;PLA
+;;スタックからAにポップアップします。[N:0:0:0:0:0:Z:0]
+;;
+;;PLP
+;;スタックからPにポップアップします。[N:V:R:B:D:I:Z:C]
+;;
+;;JMP
+;;アドレスへジャンプします。[0:0:0:0:0:0:0:0]
+;;
+;;JSR
+;;サブルーチンを呼び出します。[0:0:0:0:0:0:0:0]
+;;
+;;RTS
+;;サブルーチンから復帰します。[0:0:0:0:0:0:0:0]
+;;
+;;RTI
+;;割り込みルーチンから復帰します。[N:V:R:B:D:I:Z:C]
+;;
+;;BCC
+;;キャリーフラグがクリアされている時にブランチします。[0:0:0:0:0:0:0:0]
+;;
+;;BCS
+;;キャリーフラグがセットされている時にブランチします。[0:0:0:0:0:0:0:0]
+;;
+;;BEQ
+;;ゼロフラグがセットされている時にブランチします。[0:0:0:0:0:0:0:0]
+;;
+;;BMI
+;;ネガティブフラグがセットされている時にブランチします。[0:0:0:0:0:0:0:0]
+;;
+;;BNE
+;;ゼロフラグがクリアされている時にブランチします。[0:0:0:0:0:0:0:0]
+;;
+;;BPL
+;;ネガティブフラグがクリアされている時にブランチします。[0:0:0:0:0:0:0:0]
+;;
+;;BVC
+;;オーバーフローフラグがクリアされている時にブランチします。[0:0:0:0:0:0:0:0]
+;;
+;;BVS
+;;オーバーフローフラグがセットされている時にブランチします。[0:0:0:0:0:0:0:0]
+;;
+;;CLC
+;;キャリーフラグをクリアします。[0:0:0:0:0:0:0:C]
+;;
+;;CLD
+;;BCDモードから通常モードに戻ります。ファミコンでは実装されていません。[0:0:0:0:D:0:0:0]
+;;
+;;
+;;BCDモードから通常モードに戻ります。ファミコンでは実装されていません。[0:0:0:0:D:0:0:0]
+;;
+;;CLI
+;;IRQ割り込みを許可します。[0:0:0:0:0:I:0:0]
+;;
+;;CLV
+;;オーバーフローフラグをクリアします。[0:V:0:0:0:0:0:0]
+;;
+;;SEC
+;;キャリーフラグをセットします。[0:0:0:0:0:0:0:C]
+;;
+;;SED
+;;BCDモードに設定します。ファミコンでは実装されていません。[0:0:0:0:D:0:0:0]
+;;
+;;SEI
+;;IRQ割り込みを禁止します。[0:0:0:0:0:I:0:0]
+
+
+    ;;restore status
+    plp
 
     rts
 .endproc
