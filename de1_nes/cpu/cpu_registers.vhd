@@ -273,6 +273,7 @@ end component;
 
 signal we_n : std_logic;
 signal d : std_logic_vector (dsize - 1 downto 0);
+signal d2 : std_logic_vector (dsize - 1 downto 0);
 signal status_val : std_logic_vector (dsize - 1 downto 0);
 
 begin
@@ -284,8 +285,10 @@ begin
     we_n <= set_flg_n and load_bus_all_n and 
                 load_bus_nz_n and set_from_alu_n;
 
+    ---status val: researved bit always 1, decimal bit always 0.        
+    d2 <= d(7 downto 6) & "1" & d(4) & "0" & d(2 downto 0);
     dff_inst : d_flip_flop generic map (dsize) 
-                    port map(clk, '1', res_n, we_n, d, status_val);
+                    port map(clk, '1', res_n, we_n, d2, status_val);
 
     --carry status for adc/sbc.
     stat_c <= status_val(0);
@@ -304,9 +307,9 @@ begin
 --
 --        N   ....    Negative
 --        V   ....    Overflow
---        -   ....    ignored
+--        -   ....    ignored   -- always 1 for NES 6502
 --        B   ....    Break
---        D   ....    Decimal (use BCD for arithmetics)
+--        D   ....    Decimal (use BCD for arithmetics)     -- not supported. always 0.
 --        I   ....    Interrupt (IRQ disable)
 --        Z   ....    Zero
 --        C   ....    Carry
