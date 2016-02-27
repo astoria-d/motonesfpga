@@ -981,14 +981,186 @@ nmi_test:
 
 ;;ASL
 ;;A‚Ü‚½‚Íƒƒ‚ƒŠ‚ğ¶‚ÖƒVƒtƒg‚µ‚Ü‚·B[N:0:0:0:0:0:Z:C]
-;;
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    ;;c bit test
+    lda #$b3
+    asl         ;; b3 << 1 = 166
+
+    php
+    tax         ;;x=66
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$61
+    beq :+
+    jsr test_failure
+:
+    cpx #$66
+    beq :+
+    jsr test_failure
+:
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    ;;n bit test
+    lda #$61
+    sta $7b
+    ldx #$ce
+    asl $ad,x       ;;61 << 1 = c2
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$e0
+    beq :+
+    jsr test_failure
+:
+    ldy $ad,x
+    cpy #$c2
+    beq :+
+    jsr test_failure
+:
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    ;;z bit test
+    lda #$80
+    sta $e5
+    asl $e5       ;;80 << 1 = 0
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$63
+    beq :+
+    jsr test_failure
+:
+    ldy $e5
+    cpy #$0
+    beq :+
+    jsr test_failure
+:
+
 ;;BIT
 ;;A‚Æƒƒ‚ƒŠ‚ğƒrƒbƒg”äŠr‰‰Z‚µ‚Ü‚·B[N:V:0:0:0:0:Z:0]
-;;
-;;
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    ;;z bit test
+    lda #$0
+    sta $e5
+    lda #$01
+    bit $e5
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$23
+    beq :+
+    jsr test_failure
+:
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    ;;n/v bit test
+    lda #$4a
+    sta $0440
+    lda #$01
+    bit $0440
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$63
+    beq :+
+    jsr test_failure
+:
+
+
 ;;CMP
 ;;A‚Æƒƒ‚ƒŠ‚ğ”äŠr‰‰Z‚µ‚Ü‚·B[N:0:0:0:0:0:Z:C]
-;;
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    ;;c bit test
+    lda #$91
+    sta $04e5   ;;@04e5 = 91
+    lda #$e5    ;; e5 - 91 = 54
+    ldy #$f2
+    cmp $03f3, y
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$61        ;;c is set when acc >= mem.
+    beq :+
+    jsr test_failure
+:
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    ;;z/c bit test
+    ldx #$e5
+    stx $04e5   ;;@04e5 = 91
+    lda #$e5
+    ldy #$f2
+    cmp $03f3, y
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$63        ;;c is set when acc >= mem.
+    beq :+
+    jsr test_failure
+:
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    ;;n bit test
+    ldx #$7e
+    stx $05d7   ;;@05d7 = 7e
+
+    lda #$e5
+    sta $10
+    lda #$04
+    sta $11
+    ldy #$f2    ;;04e5+f2=05d7
+    lda #$45    ;;45-7e=c7
+    cmp ($10), y
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$e0        ;;c is set when acc >= mem.
+    beq :+
+    jsr test_failure
+:
+
 ;;CPX
 ;;X‚Æƒƒ‚ƒŠ‚ğ”äŠr‰‰Z‚µ‚Ü‚·B[N:0:0:0:0:0:Z:C]
 ;;

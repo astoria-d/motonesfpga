@@ -1,2 +1,4 @@
 disas*
 *.log
+*.cfg-*
+*.sh-*
