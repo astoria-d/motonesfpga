@@ -361,7 +361,6 @@ nmi_test:
 
 
 .proc status_test
-    jsr check_ppu
     lda ad_status_test
     sta $00
     lda ad_status_test+1
