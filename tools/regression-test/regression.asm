@@ -725,12 +725,104 @@ nmi_test:
     jsr test_failure
 :
 
+
+;;;;;;;;;;;;;;ok until above....
+;;;;more tests with various addr mode and status bit combination...
+
 ;;TXS
 ;;XをSへコピーします。[N:0:0:0:0:0:Z:0]
+
+    ;;save sp
+    tsx
+    txa
+    tay     ;; now y has the old sp
+    
+
+    ldx #$0
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    txs ; x > s = 0
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$63
+    beq :+
+
+    ;;;;this is emulator's bug!!!! txs must set n and z bit, but emulator doesn't set...
+    jsr test_failure
+:
+
+    ldx #$9a
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    txs ; x > s = 9a
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$e1
+    beq :+
+
+    ;;;;this is emulator's bug!!!! txs must set n and z bit, but emulator doesn't set...
+    jsr test_failure
+:
+
+    ;;restore sp
+    tya
+    tax
+    txs
+
+
 ;;
 ;;TYA
 ;;YをAへコピーします。[N:0:0:0:0:0:Z:0]
-;;
+
+    ldy #$0
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    tya ; y > a = 0
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$63
+    beq :+
+
+    jsr test_failure
+:
+
+    ldy #$b5
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    tya ; y > a = b5
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$e1
+    beq :+
+
+    jsr test_failure
+:
+
+
 ;;ADC
 ;;(A + メモリ + キャリーフラグ) を演算して結果をAへ返します。[N:V:0:0:0:0:Z:C]
 ;;
