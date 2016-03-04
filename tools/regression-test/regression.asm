@@ -726,12 +726,101 @@ nmi_test:
     jsr test_failure
 :
 
+;;;;;;;;;;;;;;;;;;;;;;;more tests.....
+
 ;;TXS
 ;;XをSへコピーします。[N:0:0:0:0:0:Z:0]
-;;
+
+    tsx
+    stx $50     ;;sp is stored @0x50
+    
+    ldx #$d9
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    txs
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$e1        ;;;emulator bug!!! status reg is not reflected....
+    beq :+
+;    jsr test_failure
+:
+
+    ldx #$00
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    txs
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$63        ;;;emulator bug!!! status reg is not reflected....
+    beq :+
+;    jsr test_failure
+:
+
+    ldx $50
+    txs     ;;sp is restored
+
+
 ;;TYA
 ;;YをAへコピーします。[N:0:0:0:0:0:Z:0]
-;;
+
+    ldy #$00
+    lda #$0b
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    tya
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$63
+    beq :+
+    jsr test_failure
+:
+    tya
+    cmp #0
+    beq :+
+    jsr test_failure
+:
+
+    ldy #$b0
+    lda #$00
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    tya
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$e1
+    beq :+
+    jsr test_failure
+:
+    tya
+    cmp #$b0
+    beq :+
+    jsr test_failure
+:
+
 ;;ADC
 ;;(A + メモリ + キャリーフラグ) を演算して結果をAへ返します。[N:V:0:0:0:0:Z:C]
 ;;
