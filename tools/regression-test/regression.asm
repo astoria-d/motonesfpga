@@ -823,7 +823,39 @@ nmi_test:
 
 ;;ADC
 ;;(A + メモリ + キャリーフラグ) を演算して結果をAへ返します。[N:V:0:0:0:0:Z:C]
-;;
+
+    lda #$76
+    sta $73
+    lda #$05
+    sta $72     ;;;@72=0576
+
+    lda #$91
+    sta $0576     ;;;@0576=91
+
+    lda #$99
+    ldx #$a3
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    ;;91+99=12a
+    adc ($cf, x)        ;;cf+a3=72
+
+    php
+    tax     ;;x=2a
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$a1
+    beq :+
+    jsr test_failure
+:
+    cpx #$2a
+    beq :+
+    jsr test_failure
+:
+
 ;;AND
 ;;Aとメモリを論理AND演算して結果をAへ返します。[N:0:0:0:0:0:Z:0]
 ;;
