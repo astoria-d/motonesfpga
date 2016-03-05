@@ -416,6 +416,56 @@ end procedure;
         ea_carry <= addr_c;
 
     elsif (indir_x_n = '0') then
+        if (exec_cycle = T2) then
+            ---input is IAL, but this cycle doesn't do anything....
+            abh <= "00000000";
+            abl <= bal;
+
+            --save base addr.
+            tmp_buf_we_n <= '0';
+            tmp_reg_in <= bal;
+        elsif (exec_cycle = T3) then
+
+            ---add x reg.
+            a_sel <= ADDR_ADC;
+            addr1 <= tmp_reg;
+            addr2 <= index_bus;
+            addr_c_in <= '0';
+
+            --save base addr.
+            tmp_buf_we_n <= '0';
+            tmp_reg_in <= addr_out;
+
+            --output @IAL+x
+            abh <= "00000000";
+            abl <= addr_out;
+
+            ---save BAL.
+            al_buf_we_n <= '0';
+            al_reg_in <= int_d_bus;
+
+        elsif (exec_cycle = T4) then
+            al_buf_we_n <= '1';
+            tmp_buf_we_n <= '1';
+
+            ---increment.
+            a_sel <= ADDR_INC;
+            addr1 <= tmp_reg;
+
+            --output @IAL+x
+            abh <= "00000000";
+            abl <= addr_out;
+
+            ---save BAH.
+            ah_buf_we_n <= '0';
+            ah_reg_in <= int_d_bus;
+        elsif (exec_cycle = T5) then
+            ah_buf_we_n <= '1';
+
+            --output ah/al reg.
+            abh <= ah_reg;
+            abl <= al_reg;
+        end if; -- if (exec_cycle = T2) then
 
     elsif (indir_y_n = '0') then
 

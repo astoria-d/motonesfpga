@@ -597,6 +597,46 @@ begin
     end if;
 end  procedure;
 
+procedure a2_indir_x is
+begin
+    if exec_cycle = T1 then
+        fetch_low;
+        --get IAL
+        dl_al_we_n <= '0';
+
+    elsif exec_cycle = T2 then
+        fetch_stop;
+        dl_al_we_n <= '1';
+
+        ---address is 00:IAL
+        --output BAL @IAL, but cycle #2 is discarded
+        indir_x_n <= '0';
+        dl_al_oe_n <= '0';
+        wk_next_cycle <= T3;
+
+    elsif exec_cycle = T3 then
+        indir_x_n <= '0';
+        dl_al_oe_n <= '1';
+
+        --output BAH @IAL+x
+        dbuf_int_oe_n <= '0';
+        back_oe(wk_x_cmd, '0');
+        wk_next_cycle <= T4;
+
+    elsif exec_cycle = T4 then
+        indir_x_n <= '0';
+
+        --output BAH @IAL+x+1
+        dbuf_int_oe_n <= '0';
+        back_oe(wk_x_cmd, '0');
+
+        wk_next_cycle <= T5;
+    elsif (exec_cycle = T5) then
+        indir_x_n <= '0';
+        wk_next_cycle <= T0;
+    end if;
+end  procedure;
+
 --A.3. store operation.
 
 procedure a3_zp is
@@ -1276,6 +1316,13 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#61#, dsize) then
                     --(indir, x)
                     d_print("adc");
+                    a2_indir_x;
+                    if exec_cycle = T5 then
+                        arith_en_n <= '0';
+                        back_oe(wk_acc_cmd, '0');
+                        back_we(wk_acc_cmd, '0');
+                        set_nvzc_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#71#, dsize) then
                     --(indir), y
