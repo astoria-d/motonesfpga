@@ -825,14 +825,13 @@ nmi_test:
 ;;(A + メモリ + キャリーフラグ) を演算して結果をAへ返します。[N:V:0:0:0:0:Z:C]
 
     lda #$76
-    sta $73
+    sta $72
     lda #$05
-    sta $72     ;;;@72=0576
+    sta $73     ;;;@72=0576
 
     lda #$91
     sta $0576     ;;;@0576=91
 
-    lda #$99
     ldx #$a3
 
     ;;set status
@@ -840,18 +839,19 @@ nmi_test:
     pha
     plp
 
-    ;;91+99=12a
-    adc ($cf, x)        ;;cf+a3=72
+    lda #$99
+    ;;cf+a3=72
+    adc ($cf, x)        ;;91+99+1=12b
 
     php
     tax     ;;x=2a
     pla
     and #$ef        ;;mask off brk bit...
-    cmp #$a1
+    cmp #$61
     beq :+
     jsr test_failure
 :
-    cpx #$2a
+    cpx #$2b
     beq :+
     jsr test_failure
 :
