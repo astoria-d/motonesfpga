@@ -1259,14 +1259,13 @@ nmi_test:
 ;;(A + メモリ + キャリーフラグ) を演算して結果をAへ返します。[N:V:0:0:0:0:Z:C]
 
     lda #$76
-    sta $73
+    sta $72
     lda #$05
-    sta $72     ;;;@72=0576
+    sta $73     ;;;@72=0576
 
     lda #$91
     sta $0576     ;;;@0576=91
 
-    lda #$99
     ldx #$a3
 
     ;;set status
@@ -1274,18 +1273,19 @@ nmi_test:
     pha
     plp
 
-    ;;91+99=12a
+    ;;91+99+1=12b
+    lda #$99
     adc ($cf, x)        ;;cf+a3=72
 
     php
-    tax     ;;x=2a
+    tax     ;;x=2b
     pla
     and #$ef        ;;mask off brk bit...
-    cmp #$a1
+    cmp #$61
     beq :+
     jsr test_failure
 :
-    cpx #$2a
+    cpx #$2b
     beq :+
     jsr test_failure
 :
@@ -1755,6 +1755,38 @@ nmi_test:
     jsr test_failure
 :
 
+    ;;(indir, x) tests.
+    lda #$f1
+    sta $b0
+    lda #$05
+    sta $b1     ;;;@b0=05f1
+
+    ldx #$7c
+    lda #$61
+    sta ($34, x)
+    
+    lda $05f1
+    cmp #$61
+    beq :+
+    jsr test_failure
+:
+
+    lda #$aa
+    sta $20
+    lda #$04
+    sta $21     ;;;@20=04aa
+
+    ldy #$ec
+    sty $04aa
+
+    ldx #$1b
+    lda ($05, x)
+    
+    cmp #$ec
+    beq :+
+    jsr test_failure
+:
+
     rts
 .endproc
 
@@ -1858,8 +1890,103 @@ nmi_test:
     jsr test_failure
 :
     
-    ;;a.2.4 indirect,x is not implemented...
+    ;;a.2.4 indirect,x
+    lda #$33
+    sta $c0
+    lda #$04
+    sta $c1     ;;;@c0=0433
 
+    lda #$d0
+    sta $0433     ;;;@0433=d0
+
+    ldx #$6b
+    lda #$22
+    sec
+    adc ($55, x)        ;;d0+22+1=f3
+    cmp #$f3
+    beq :+
+    jsr test_failure
+:
+
+    lda #$34
+    sta $c1
+    lda #$04
+    sta $c2     ;;;@c1=0434
+
+    lda #$f5
+    sta $0434     ;;;@0434=1f
+
+    inx
+    lda #$1f
+    and ($55, x)        ;;1f & f5 = 15
+    cmp #$15
+    beq :+
+    jsr test_failure
+:
+
+    lda #$35
+    sta $c2
+    lda #$04
+    sta $c3     ;;;@c2=0435
+
+    ldy #$75
+    sty $0435     ;;;@0434=11
+
+    inx
+    lda #$75
+    cmp ($55, x)        ;;11 ? 1f
+    beq :+
+    jsr test_failure
+:
+
+    lda #$36
+    sta $c3
+    lda #$04
+    sta $c4     ;;;@c3=0436
+
+    lda #$88
+    sta $0436     ;;;@0436=88
+
+    inx
+    lda #$c1
+    eor ($55, x)        ;;c1 ^ 88 = 49
+    cmp #$49
+    beq :+
+    jsr test_failure
+:
+
+    lda #$37
+    sta $c4
+    lda #$04
+    sta $c5     ;;;@c4=0437
+
+    lda #$2e
+    sta $0437     ;;;@0437=2e
+
+    inx
+    lda #$91
+    ora ($55, x)        ;;91 | 2e = bf
+    cmp #$bf
+    beq :+
+    jsr test_failure
+:
+
+    lda #$38
+    sta $c5
+    lda #$04
+    sta $c6     ;;;@c5=0438
+
+    lda #$7f
+    sta $0438     ;;;@0438=7f
+
+    inx
+    lda #$6a
+    clc
+    sbc ($55, x)        ;;6a - 7f - 1= bf
+    cmp #$ea
+    beq :+
+    jsr test_failure
+:
 
     rts
 
