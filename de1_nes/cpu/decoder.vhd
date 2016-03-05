@@ -1402,6 +1402,13 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#21#, dsize) then
                     --(indir, x)
                     d_print("and");
+                    a2_indir_x;
+                    if exec_cycle = T5 then
+                        arith_en_n <= '0';
+                        back_oe(wk_acc_cmd, '0');
+                        back_we(wk_acc_cmd, '0');
+                        set_nz_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#31#, dsize) then
                     --(indir), y
@@ -1495,6 +1502,12 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#c1#, dsize) then
                     --(indir, x)
                     d_print("cmp");
+                    a2_indir_x;
+                    if exec_cycle = T5 then
+                        arith_en_n <= '0';
+                        back_oe(wk_acc_cmd, '0');
+                        set_nzc_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#d1#, dsize) then
                     --(indir), y
@@ -1629,6 +1642,13 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#41#, dsize) then
                     --(indir, x)
                     d_print("eor");
+                    a2_indir_x;
+                    if exec_cycle = T5 then
+                        arith_en_n <= '0';
+                        back_oe(wk_acc_cmd, '0');
+                        back_we(wk_acc_cmd, '0');
+                        set_nz_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#51#, dsize) then
                     --(indir), y
@@ -1862,6 +1882,13 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#01#, dsize) then
                     --(indir, x)
                     d_print("ora");
+                    a2_indir_x;
+                    if exec_cycle = T5 then
+                        arith_en_n <= '0';
+                        back_oe(wk_acc_cmd, '0');
+                        back_we(wk_acc_cmd, '0');
+                        set_nz_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#11#, dsize) then
                     --(indir), y
@@ -1941,6 +1968,13 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#e1#, dsize) then
                     --(indir, x)
                     d_print("sbc");
+                    a2_indir_x;
+                    if exec_cycle = T5 then
+                        arith_en_n <= '0';
+                        back_oe(wk_acc_cmd, '0');
+                        back_we(wk_acc_cmd, '0');
+                        set_nvzc_from_alu;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#f1#, dsize) then
                     --(indir), y
