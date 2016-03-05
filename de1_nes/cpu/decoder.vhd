@@ -776,6 +776,47 @@ begin
     end if;
 end  procedure;
 
+procedure a3_indir_x is
+begin
+    if exec_cycle = T1 then
+        fetch_low;
+        --get IAL
+        dl_al_we_n <= '0';
+
+    elsif exec_cycle = T2 then
+        fetch_stop;
+        dl_al_we_n <= '1';
+
+        ---address is 00:IAL
+        --output BAL @IAL, but cycle #2 is discarded
+        indir_x_n <= '0';
+        dl_al_oe_n <= '0';
+        wk_next_cycle <= T3;
+
+    elsif exec_cycle = T3 then
+        indir_x_n <= '0';
+        dl_al_oe_n <= '1';
+
+        --output BAH @IAL+x
+        dbuf_int_oe_n <= '0';
+        back_oe(wk_x_cmd, '0');
+        wk_next_cycle <= T4;
+
+    elsif exec_cycle = T4 then
+        indir_x_n <= '0';
+
+        --output BAH @IAL+x+1
+        dbuf_int_oe_n <= '0';
+        back_oe(wk_x_cmd, '0');
+
+        wk_next_cycle <= T5;
+    elsif (exec_cycle = T5) then
+        indir_x_n <= '0';
+        dbuf_int_oe_n <= '1';
+        r_nw <= '0';
+        wk_next_cycle <= T0;
+    end if;
+end  procedure;
 
 ---A.4. read-modify-write operation
 
@@ -1718,6 +1759,11 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#a1#, dsize) then
                     --(indir, x)
                     d_print("lda");
+                    a2_indir_x;
+                    if exec_cycle = T5 then
+                        front_we(wk_acc_cmd, '0');
+                        set_nz_from_bus;
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#b1#, dsize) then
                     --(indir), y
@@ -2035,6 +2081,10 @@ end  procedure;
                 elsif instruction  = conv_std_logic_vector(16#81#, dsize) then
                     --(indir, x)
                     d_print("sta");
+                    a3_indir_x;
+                    if exec_cycle = T5 then
+                        front_oe(wk_acc_cmd, '0');
+                    end if;
 
                 elsif instruction  = conv_std_logic_vector(16#91#, dsize) then
                     --(indir), y
