@@ -13,7 +13,7 @@ all :	$(OBJECTS) $(LIBRARIES)
 
     
 run : all
-	/cygdrive/d/daisuke/programs/virtuanes097j/VirtuaNES.exe regression.nes
+	VirtuaNES.exe regression.nes
 
 
 .SUFFIXES : .asm .o
