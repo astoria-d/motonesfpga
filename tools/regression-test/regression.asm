@@ -2512,6 +2512,89 @@ use_ppu:
     jsr test_failure
 :
 
+    ;;jmp indirect instruction
+    ;;page cross at cycle #0
+    jmp @jmp_test9
+    .byte   "******"
+    .byte   "8*********"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+@jmp_test10_addr:
+    .addr   @jmp_test10
+    
+@jmp_ret9:
+    nop
+    jmp (@jmp_test10_addr)
+@jmp_ret10:
+
+
+    ;;jmp indirect instruction
+    ;;page cross at cycle #2
+    jmp @jmp_test11
+    .byte   "*************"
+    .byte   "9**********"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+@jmp_test12_addr:
+    .addr   @jmp_test12
+    
+@jmp_ret11:
+    nop
+    jmp (@jmp_test12_addr)
+@jmp_ret12:
+
+    ;;jmp indirect instruction
+    ;;page cross at cycle #1
+    jmp @jmp_test13
+    .byte   "************"
+    .byte   "10**********"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+@jmp_test14_addr:
+    .addr   @jmp_test14
+    
+@jmp_ret13:
+    nop
+    jmp (@jmp_test14_addr)
+@jmp_ret14:
+
+
 
 
     jmp @jmp_test_done
@@ -2532,6 +2615,18 @@ use_ppu:
     jmp @jmp_ret7
 @jmp_test8:
     jmp @jmp_ret8
+@jmp_test9:
+    jmp @jmp_ret9
+@jmp_test10:
+    jmp @jmp_ret10
+@jmp_test11:
+    jmp @jmp_ret11
+@jmp_test12:
+    jmp @jmp_ret12
+@jmp_test13:
+    jmp @jmp_ret13
+@jmp_test14:
+    jmp @jmp_ret14
 
 @jmp_test_done:
     lda ad_addr_test
