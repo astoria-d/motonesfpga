@@ -2880,7 +2880,6 @@ end  procedure;
                     --if fetch cycle, preserve instrution register
                     inst_we_n <= '1';
 
-                    --TODO: must handle for jmp case???
                 elsif ('0' & exec_cycle(4 downto 0) = T2) then
                     --disable previous we_n gate.
                     --t1 cycle is fetch low oprand.

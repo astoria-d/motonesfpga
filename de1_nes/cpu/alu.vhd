@@ -412,7 +412,6 @@ end procedure;
         a_sel <= ADDR_INC;
         abl <= addr_out;
 
-        --TODO: must handle page crossing case...
         ea_carry <= addr_c;
 
     elsif (indir_x_n = '0') then
