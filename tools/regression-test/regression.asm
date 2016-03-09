@@ -20,248 +20,6 @@
 
 .segment "STARTUP"
 
-
-.proc addr_test
-    jmp @jmp_test1
-    .byte   "*************"
-    .byte   "0**"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "***********"
-
-@jmp_ret1:
-    nop
-    ;;page cross at jmp cycle #0
-    jmp @jmp_test2
-
-    .byte   "**************"
-    .byte   "1***************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "*************"
-
-@jmp_ret2:
-    ;;page cross at the jmp cycle #2
-    nop
-    jmp @jmp_test3
-    .byte   "***************"
-    .byte   "2***********"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-
-@jmp_ret3:
-    ;;page cross at the jmp cycle #1
-    nop
-    jmp @jmp_test4
-    .byte   "3***********"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-
-    ;;a1 instruction
-    ;;page cross at cycle #0
-@jmp_ret4:
-    ldx #$5f
-    nop
-    inx
-    cpx #$60
-    beq :+
-    jsr test_failure
-:
-
-    jmp @jmp_test5
-    .byte   "******"
-    .byte   "4***************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "***************"
-@jmp_ret5:
-    ;;a1 instruction
-    ;;page cross at cycle #0
-    nop
-    inx
-    cpx #$61
-    beq :+
-    jsr test_failure
-:
-
-    jmp @jmp_test6
-    .byte   "*****"
-    .byte   "5***********"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-@jmp_ret6:
-    ;;a2 instruction
-    ;;page cross at cycle #0
-    sec
-    lda #$3b
-    nop
-    adc #$9b        ;;;3b+9b+1=d7
-    cmp #$d7
-    beq :+
-    jsr test_failure
-:
-    jmp @jmp_test7
-    .byte   "****"
-    .byte   "6**********"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-@jmp_ret7:
-    ;;a2 instruction
-    ;;page cross at cycle #1
-    sec
-    lda #$77
-    nop
-    ora #$f0        ;;;3b+9b+1=d7
-    cmp #$f7
-    beq :+
-    jsr test_failure
-:
-    jmp @jmp_test8
-    .byte   "*****"
-    .byte   "7***"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-    .byte   "****************"
-@jmp_ret8:
-    ;;a2 instruction
-    ;;page cross at cycle #2
-    sec
-    lda #$c1
-    sta $0620       ;;@0620=c1
-    lda #$91
-    nop
-    sbc $0620        ;;;91-c1=d0
-    cmp #$d0
-    beq :+
-    jsr test_failure
-:
-
-
-
-    jmp @jmp_test_done
-
-@jmp_test1:
-    jmp @jmp_ret1
-@jmp_test2:
-    jmp @jmp_ret2
-@jmp_test3:
-    jmp @jmp_ret3
-@jmp_test4:
-    jmp @jmp_ret4
-@jmp_test5:
-    jmp @jmp_ret5
-@jmp_test6:
-    jmp @jmp_ret6
-@jmp_test7:
-    jmp @jmp_ret7
-@jmp_test8:
-    jmp @jmp_ret8
-
-@jmp_test_done:
-    lda ad_addr_test
-    sta $00
-    lda ad_addr_test+1
-    sta $01
-    jsr print_ln
-
-    rts
-.endproc
-
-
 .proc	Reset
 
 ; interrupt off, initialize sp.
@@ -271,9 +29,6 @@
 
     jsr init_global
     jsr init_ppu
-
-;;address specific test comes first...
-    jsr addr_test
 
     lda ad_start_msg
     sta $00
@@ -295,6 +50,7 @@
 ;    a5_inst_test
 
     ;;test start...
+    jsr addr_test
     jsr single_inst_test
     jsr a2_inst_test
     jsr a3_inst_test
@@ -2543,6 +2299,250 @@ ad_single_test:
 ;;;read only global datas
 use_ppu:
     .byte   $01
+
+
+;;;;address fixed test code..
+.segment "SEG_5K"
+.proc addr_test
+    jmp @jmp_test1
+    .byte   "*************"
+    .byte   "0**"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "***********"
+
+@jmp_ret1:
+    nop
+    ;;page cross at jmp cycle #0
+    jmp @jmp_test2
+
+    .byte   "**************"
+    .byte   "1***************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "*************"
+
+@jmp_ret2:
+    ;;page cross at the jmp cycle #2
+    nop
+    jmp @jmp_test3
+    .byte   "***************"
+    .byte   "2***********"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+
+@jmp_ret3:
+    ;;page cross at the jmp cycle #1
+    nop
+    jmp @jmp_test4
+    .byte   "3***********"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+
+    ;;a1 instruction
+    ;;page cross at cycle #0
+@jmp_ret4:
+    ldx #$5f
+    nop
+    inx
+    cpx #$60
+    beq :+
+    jsr test_failure
+:
+
+    jmp @jmp_test5
+    .byte   "******"
+    .byte   "4***************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "***************"
+@jmp_ret5:
+    ;;a1 instruction
+    ;;page cross at cycle #0
+    nop
+    inx
+    cpx #$61
+    beq :+
+    jsr test_failure
+:
+
+    jmp @jmp_test6
+    .byte   "*****"
+    .byte   "5***********"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+@jmp_ret6:
+    ;;a2 instruction
+    ;;page cross at cycle #0
+    sec
+    lda #$3b
+    nop
+    adc #$9b        ;;;3b+9b+1=d7
+    cmp #$d7
+    beq :+
+    jsr test_failure
+:
+    jmp @jmp_test7
+    .byte   "****"
+    .byte   "6**********"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+@jmp_ret7:
+    ;;a2 instruction
+    ;;page cross at cycle #1
+    sec
+    lda #$77
+    nop
+    ora #$f0        ;;;3b+9b+1=d7
+    cmp #$f7
+    beq :+
+    jsr test_failure
+:
+    jmp @jmp_test8
+    .byte   "*****"
+    .byte   "7***"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+@jmp_ret8:
+    ;;a2 instruction
+    ;;page cross at cycle #2
+    sec
+    lda #$c1
+    sta $0620       ;;@0620=c1
+    lda #$91
+    nop
+    sbc $0620        ;;;91-c1=d0
+    cmp #$d0
+    beq :+
+    jsr test_failure
+:
+
+
+
+    jmp @jmp_test_done
+
+@jmp_test1:
+    jmp @jmp_ret1
+@jmp_test2:
+    jmp @jmp_ret2
+@jmp_test3:
+    jmp @jmp_ret3
+@jmp_test4:
+    jmp @jmp_ret4
+@jmp_test5:
+    jmp @jmp_ret5
+@jmp_test6:
+    jmp @jmp_ret6
+@jmp_test7:
+    jmp @jmp_ret7
+@jmp_test8:
+    jmp @jmp_ret8
+
+@jmp_test_done:
+    lda ad_addr_test
+    sta $00
+    lda ad_addr_test+1
+    sta $01
+    jsr print_ln
+
+    rts
+.endproc
+
 
 ;;;;r/w global variables.
 .segment "BSS"
