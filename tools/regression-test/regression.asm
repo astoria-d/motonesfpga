@@ -98,13 +98,26 @@ test_done:
 	lda	#$d8
 	sta	$2007
 
+    ;;init scroll point.
+    lda #$00
+    sta $2005
+
+    lda #$00
+    sta $2005
+
+    ;;set vs_cnt init value.
+    lda #60
+    sta vs_cnt
+
     ;;show bg...
 	lda	#$1e
 	sta	$2001
+	sta	ppu_stat2
 
     ;;;enable nmi
 	lda	#$80
 	sta	$2000
+	sta	ppu_stat1
 
     ;;done...
     ;;infinite loop.
@@ -113,8 +126,73 @@ mainloop:
 
 
 nmi_test:
+    jsr update_counter
+    jsr update_scroll
+
     rti
 
+.proc update_counter
+    dec vs_cnt
+    bne @cnt_done
+
+    ;;;stop display first
+	lda ppu_stat2
+	and #$e7
+	sta $2001
+	sta ppu_stat2
+
+    ;;reset counter
+    lda #60
+    sta vs_cnt
+
+    lda disp_cnt
+    beq @case_zero
+@case_one:
+    dec disp_cnt
+    ;;acc has the value to display.
+    lda #'1'
+    jmp @do_disp
+@case_zero:
+    inc disp_cnt
+    lda #'2'
+@do_disp:
+
+    ;;update display
+    ldx vram_current
+    stx $2006
+    ldx vram_current + 1
+    stx $2006
+
+    sta $2007
+
+	;;load from ppu status
+	lda ppu_stat2
+:	ora #$18
+	;;enable display again.
+	sta $2001
+	sta ppu_stat2
+
+@cnt_done:
+
+    rts
+.endproc
+
+.proc update_scroll
+    lda #$00
+    sta $2005
+    sta scroll_x
+
+    ldx scroll_y
+    inx
+    cpx #240
+    bne :+
+    ldx #0
+:
+    stx $2005
+    stx scroll_y
+
+    rts
+.endproc
 
 .proc status_test
     lda ad_status_test
@@ -2137,20 +2215,6 @@ nmi_test:
     sta vram_current + 1
 @vpos_done:
 
-;;    ;;scroll 1 line
-;;    lda scroll_x
-;;    sta $2005
-;;
-;;    lda scroll_y
-;;    clc
-;;    adc #8
-;;    cmp #240
-;;    bne @scr_done
-;;    lda #$0
-;;@scr_done:
-;;    sta scroll_y
-;;    sta $2005
-;;
     rts
 .endproc
 
@@ -2171,7 +2235,9 @@ nmi_test:
     ;ppu register initialize.
 	lda	#$00
 	sta	$2000
+	sta ppu_stat1
 	sta	$2001
+	sta ppu_stat2
 
     ;;load palette.
 	lda	#$3f
@@ -2218,9 +2284,18 @@ nmi_test:
 
     lda #$00
     sta scroll_x
-;    lda #232
     lda #$00
     sta scroll_y
+
+    lda #$00
+    sta ppu_stat1
+    lda #$00
+    sta ppu_stat2
+
+    lda #$00
+    sta vs_cnt
+    lda #$00
+    sta disp_cnt
 @ppu_skip:
 
     rts
@@ -2647,6 +2722,17 @@ vram_current:
 scroll_x:
     .byte   $00
 scroll_y:
+    .byte   $00
+
+;;ppu status reg val @2000
+ppu_stat1:
+    .byte   $00
+;;ppu status reg val @2001
+ppu_stat2:
+    .byte   $00
+vs_cnt:
+    .byte   $00
+disp_cnt:
     .byte   $00
 
 ;;;for DE1 internal memory constraints.
