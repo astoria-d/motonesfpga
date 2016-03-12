@@ -158,8 +158,18 @@ nmi_test:
 @do_disp:
 
     ;;update display
+    ;; clear previous
     ldx vram_current
     stx $2006
+    ldx vram_current + 1
+    stx $2006
+    ldx #0
+    stx $2007
+
+    ;; display new char.
+    ldx vram_current
+    stx $2006
+    inc vram_current + 1
     ldx vram_current + 1
     stx $2006
 
