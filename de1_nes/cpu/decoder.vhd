@@ -1085,14 +1085,14 @@ end  procedure;
             pch_cmd <= "1110";
             wk_next_cycle <= R0;
 
---        if (nmi_n'event and nmi_n = '1') then
---            --reset nmi handle status
---            nmi_handled_n <= '1';
---        end if;
-
         elsif (rising_edge(set_clk)) then
             d_print(string'("-"));
 
+            if (nmi_n = '1') then
+                --nmi handle flag reset.
+                nmi_handled_n <= '1';
+            end if;
+            
             if rdy = '0' then
                 --case dma is runnting.
                 disable_pins;
