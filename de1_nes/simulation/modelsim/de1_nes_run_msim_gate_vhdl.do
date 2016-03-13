@@ -16,6 +16,7 @@ vsim -t 1ps +transport_int_delays +transport_path_delays -sdftyp /sim_board=de1_
 
 add wave -divider cpu
 add wave -label rst_n       sim:/testbench_motones_sim/sim_board/rst_n
+add wave -label nmi_input   sim:/testbench_motones_sim/sim_board/dummy_nmi
 add wave -label cpu_clk       sim:/testbench_motones_sim/sim_board/dbg_cpu_clk
 #add wave -label vga_clk   sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x(4)
 #add wave -label mem_clk sim:/testbench_motones_sim/sim_board/dbg_mem_clk
@@ -102,7 +103,7 @@ wave zoom full
 
 #wave zoom range 3339700 ps 5138320 ps
 
-run 36160968 ps
+run 100 us
 
 #wave zoom full
 
