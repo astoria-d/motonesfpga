@@ -163,7 +163,7 @@ nmi_test:
     stx $2006
     ldx vram_current + 1
     stx $2006
-    ldx #0
+    ldx #'3'
     stx $2007
 
     ;; display new char.
@@ -198,6 +198,7 @@ nmi_test:
     bne :+
     ldx #0
 :
+    ldx #$00
     stx $2005
     stx scroll_y
 

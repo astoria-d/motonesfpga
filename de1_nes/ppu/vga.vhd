@@ -50,6 +50,7 @@ entity vga_ctl is
             ppu_ctrl        : in std_logic_vector (7 downto 0);
             ppu_mask        : in std_logic_vector (7 downto 0);
             read_status     : in std_logic;
+            ppu_status      : out std_logic_vector (7 downto 0);
             ppu_scroll_x    : in std_logic_vector (7 downto 0);
             ppu_scroll_y    : in std_logic_vector (7 downto 0);
 
@@ -58,7 +59,8 @@ entity vga_ctl is
             oam_bus_ce_n    : in std_logic;
             plt_bus_ce_n    : in std_logic;
             oam_plt_addr    : in std_logic_vector (7 downto 0);
-            oam_plt_data    : inout std_logic_vector (7 downto 0)
+            oam_plt_data    : inout std_logic_vector (7 downto 0);
+            v_bus_busy_n    : out std_logic
     );
 end vga_ctl;
 
@@ -150,15 +152,6 @@ signal count5           : std_logic_vector(2 downto 0);
 signal nes_x        : std_logic_vector (8 downto 0);
 signal nes_y        : std_logic_vector (8 downto 0);
 
-
-
------dummy signal
-signal v_bus_busy_n    : std_logic;
-signal ppu_status      : std_logic_vector (7 downto 0);
-signal rr           : std_logic_vector (3 downto 0);
-signal gg           : std_logic_vector (3 downto 0);
-signal bb           : std_logic_vector (3 downto 0);
-
 ---DE1 base clock 50 MHz
 ---motones sim project uses following clock.
 --cpu clock = base clock / 24 = 2.08 MHz (480 ns / cycle)
@@ -183,9 +176,6 @@ begin
             v_sync_n <= '0';
             x_res_n <= '0';
             y_res_n <= '0';
-            bb <= (others => '0');
-            gg <= (others => '0');
-            rr <= (others => '0');
         elsif (rising_edge(vga_clk)) then
             --xmax = 799
             if (vga_x = conv_std_logic_vector(VGA_W_MAX, 10)) then
@@ -218,16 +208,6 @@ begin
                 v_sync_n <= '1';
             end if;
 
-            if (vga_x <= conv_std_logic_vector((VGA_W) , 10) and 
-                vga_y <= conv_std_logic_vector((VGA_H) , 10)) then
-                bb <= "0110";
-                gg <= (others => '1');
-                rr <= (others => '0');
-            else
-                bb <= (others => '0');
-                gg <= (others => '0');
-                rr <= (others => '0');
-            end if;
         end if;
     end process;
 

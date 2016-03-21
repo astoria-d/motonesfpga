@@ -93,16 +93,16 @@ component ppu_render
             ppu_ctrl        : in std_logic_vector (7 downto 0);
             ppu_mask        : in std_logic_vector (7 downto 0);
             read_status     : in std_logic;
+            ppu_status      : out std_logic_vector (7 downto 0);
             ppu_scroll_x    : in std_logic_vector (7 downto 0);
             ppu_scroll_y    : in std_logic_vector (7 downto 0);
-            ppu_status      : out std_logic_vector (7 downto 0);
-            v_bus_busy_n    : out std_logic;
 
             r_nw            : in std_logic;
             oam_bus_ce_n    : in std_logic;
             plt_bus_ce_n    : in std_logic;
             oam_plt_addr    : in std_logic_vector (7 downto 0);
-            oam_plt_data    : inout std_logic_vector (7 downto 0)
+            oam_plt_data    : inout std_logic_vector (7 downto 0);
+            v_bus_busy_n    : out std_logic
     );
 end component;
 
@@ -233,10 +233,9 @@ begin
             ppu_clk, vga_clk, mem_clk, rst_n,
             rd_n, wr_n, ale, vram_ad, vram_a,
             h_sync_n, v_sync_n, r, g, b, 
-            ppu_ctrl, ppu_mask, read_status, ppu_scroll_x, ppu_scroll_y,
-            ppu_status, v_bus_busy_n, 
+            ppu_ctrl, ppu_mask, read_status, ppu_status, ppu_scroll_x, ppu_scroll_y,
             r_nw, oam_bus_ce_n, plt_bus_ce_n, 
-            oam_plt_addr, oam_plt_data);
+            oam_plt_addr, oam_plt_data, v_bus_busy_n);
 
     --PPU registers.
     ppu_clk_n <= not ppu_clk;
@@ -293,22 +292,10 @@ begin
     plt_data_out_inst : d_flip_flop generic map(dsize)
             port map (ppu_clk_n, rst_n, '1', ppu_data_we_n, oam_plt_data, plt_data_out);
 
-    reg_set_p : process (rst_n, ce_n, r_nw, cpu_addr, 
-                        ppu_status(ST_VBL), ppu_ctrl(PPUNEN))
+    reg_set_p : process (rst_n, ce_n, r_nw, cpu_addr)
     begin
 
---        if (ppu_status(ST_VBL)'event or ppu_ctrl(PPUNEN)'event) then
---            if (ppu_status(ST_VBL) = '1' and ppu_ctrl(PPUNEN) = '1') then
---                --start vblank.
---                vblank_n <= '0';
---            else
---                --clear flag.
---                vblank_n <= '1';
---            end if;
---        end if;
-
         if (rst_n = '0') then
-            vblank_n <= '1';
             ppu_ctrl_we_n    <= '1';
             ppu_mask_we_n    <= '1';
             oam_addr_we_n    <= '1';
@@ -387,6 +374,22 @@ begin
     end process;
 
     ppu_clk_cnt_res_n <= not ce_n;
+
+    --cpu nmi generation...
+    clk_nmi_p : process (rst_n, ppu_clk)
+    begin
+        if (rst_n = '0') then
+            vblank_n <= '1';
+        elsif (rising_edge(ppu_clk)) then
+            if (ppu_status(ST_VBL) = '1' and ppu_ctrl(PPUNEN) = '1') then
+                --start vblank.
+                vblank_n <= '0';
+            else
+                --clear flag.
+                vblank_n <= '1';
+            end if;
+        end if;
+    end process;
     
     --cpu and ppu clock timing adjustment...
     clk_cnt_set_p : process (rst_n, ce_n, r_nw, cpu_addr, ppu_clk)
@@ -407,11 +410,6 @@ begin
             vram_a <= (others => 'Z');
             cpu_d <= (others => 'Z');
         elsif (rst_n = '1' and ce_n = '0') then
-            --set counter=0 on register write.   
---            if (ce_n'event or r_nw'event or cpu_addr'event or (cpu_d'event and r_nw = '0')) then
---                ppu_clk_cnt_res_n <= '0';
---                --d_print("write event");
---            end if;
 
             --start counter.
             if (ppu_clk'event and ppu_clk = '0') then
@@ -555,7 +553,6 @@ begin
             end if; --if (cpu_addr = OAMDATA and ppu_clk_cnt = "00") then
 
 
-
             --vram_a/vram_ad data set
             if (cpu_addr = PPUADDR and ppu_clk_cnt = "00" and ppu_addr_cnt(0) = '1') then
                 if (ppu_addr(13 downto 8) = "111111") then
@@ -588,11 +585,6 @@ begin
                 vram_a <= (others => 'Z');
                 vram_ad <= (others => 'Z');
             end if; --if (cpu_addr = PPUADDR and ppu_clk_cnt = "00") then
-
-
-
-
-
 
         else
             ppu_addr_we_n    <= '1';
