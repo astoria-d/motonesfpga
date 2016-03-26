@@ -117,26 +117,79 @@
 	lda	#$e6
 	sta	$2006
 
-;;DEE TEST!
-	lda	#$44
+;;test pattern
+	lda	#$20
+	sta	$2006
+	lda	#$20
+	sta	$2006
+
+	lda	#$01
 	sta	$2007
-	lda	#$45
+	lda	#$02
 	sta	$2007
-	lda	#$45
+	lda	#$03
 	sta	$2007
-	lda	#$00
+	lda	#$04
+	sta	$2007
+	lda	#$05
+	sta	$2007
+	lda	#$06
+	sta	$2007
+	lda	#$07
+	sta	$2007
+	lda	#$08
+	sta	$2007
+	lda	#$09
+	sta	$2007
+	lda	#$0a
+	sta	$2007
+	lda	#$0b
+	sta	$2007
+	lda	#$0c
+	sta	$2007
+	lda	#$0d
+	sta	$2007
+	lda	#$0e
+	sta	$2007
+	lda	#$0f
 	sta	$2007
 
-	lda	#$54
+	lda	#$20
+	sta	$2006
+	lda	#$40
+	sta	$2006
+
+	lda	#$11
 	sta	$2007
-	lda	#$45
+	lda	#$12
 	sta	$2007
-	lda	#$53
+	lda	#$13
 	sta	$2007
-	lda	#$54
+	lda	#$14
 	sta	$2007
-	lda	#$21
+	lda	#$15
 	sta	$2007
+	lda	#$16
+	sta	$2007
+	lda	#$17
+	sta	$2007
+	lda	#$18
+	sta	$2007
+	lda	#$19
+	sta	$2007
+	lda	#$1a
+	sta	$2007
+	lda	#$1b
+	sta	$2007
+	lda	#$1c
+	sta	$2007
+	lda	#$1d
+	sta	$2007
+	lda	#$1e
+	sta	$2007
+	lda	#$1f
+	sta	$2007
+
 
 ;;attr
 	lda	#$23
@@ -193,6 +246,12 @@
     sta $2004
     lda #45
     sta $2004
+
+;    ;;init scroll point.
+;    lda #$00
+;    sta $2005
+;    lda #$00
+;    sta $2005
 
     ;;show bg...
 	lda	#$1e

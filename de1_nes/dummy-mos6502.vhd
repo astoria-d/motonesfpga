@@ -246,9 +246,89 @@ end;
 								--attr=11011000
                         io_out(16#2007#, 16#d8#);
 
+
+                    
+                    --display test pattern
+                    elsif (nt_step_cnt = 19 * cpu_io_multi) then
+                        io_out(16#2006#, 16#20#);
+                    elsif (nt_step_cnt = 20 * cpu_io_multi) then
+                        io_out(16#2006#, 16#20#);
+                    
+                    elsif (nt_step_cnt = 21 * cpu_io_multi) then
+                        io_out(16#2007#, 16#01#);
+                    elsif (nt_step_cnt = 22 * cpu_io_multi) then
+                        io_out(16#2007#, 16#02#);
+                    elsif (nt_step_cnt = 23 * cpu_io_multi) then
+                        io_out(16#2007#, 16#03#);
+                    elsif (nt_step_cnt = 24 * cpu_io_multi) then
+                        io_out(16#2007#, 16#04#);
+                    elsif (nt_step_cnt = 25 * cpu_io_multi) then
+                        io_out(16#2007#, 16#05#);
+                    elsif (nt_step_cnt = 26 * cpu_io_multi) then
+                        io_out(16#2007#, 16#06#);
+                    elsif (nt_step_cnt = 27 * cpu_io_multi) then
+                        io_out(16#2007#, 16#07#);
+                    elsif (nt_step_cnt = 28 * cpu_io_multi) then
+                        io_out(16#2007#, 16#08#);
+                    elsif (nt_step_cnt = 29 * cpu_io_multi) then
+                        io_out(16#2007#, 16#09#);
+                    elsif (nt_step_cnt = 30 * cpu_io_multi) then
+                        io_out(16#2007#, 16#0a#);
+                    elsif (nt_step_cnt = 31 * cpu_io_multi) then
+                        io_out(16#2007#, 16#0b#);
+                    elsif (nt_step_cnt = 32 * cpu_io_multi) then
+                        io_out(16#2007#, 16#0c#);
+                    elsif (nt_step_cnt = 33 * cpu_io_multi) then
+                        io_out(16#2007#, 16#0d#);
+                    elsif (nt_step_cnt = 34 * cpu_io_multi) then
+                        io_out(16#2007#, 16#0e#);
+                    elsif (nt_step_cnt = 35 * cpu_io_multi) then
+                        io_out(16#2007#, 16#0f#);
+                    elsif (nt_step_cnt = 36 * cpu_io_multi) then
+                        io_out(16#2007#, 16#01#);
+
+                    elsif (nt_step_cnt = 37 * cpu_io_multi) then
+                        io_out(16#2006#, 16#20#);
+                    elsif (nt_step_cnt = 38 * cpu_io_multi) then
+                        io_out(16#2006#, 16#40#);
+                    
+                    elsif (nt_step_cnt = 39 * cpu_io_multi) then
+                        io_out(16#2007#, 16#11#);
+                    elsif (nt_step_cnt = 40 * cpu_io_multi) then
+                        io_out(16#2007#, 16#12#);
+                    elsif (nt_step_cnt = 41 * cpu_io_multi) then
+                        io_out(16#2007#, 16#13#);
+                    elsif (nt_step_cnt = 42 * cpu_io_multi) then
+                        io_out(16#2007#, 16#14#);
+                    elsif (nt_step_cnt = 43 * cpu_io_multi) then
+                        io_out(16#2007#, 16#15#);
+                    elsif (nt_step_cnt = 44 * cpu_io_multi) then
+                        io_out(16#2007#, 16#16#);
+                    elsif (nt_step_cnt = 45 * cpu_io_multi) then
+                        io_out(16#2007#, 16#17#);
+                    elsif (nt_step_cnt = 46 * cpu_io_multi) then
+                        io_out(16#2007#, 16#18#);
+                    elsif (nt_step_cnt = 47 * cpu_io_multi) then
+                        io_out(16#2007#, 16#19#);
+                    elsif (nt_step_cnt = 48 * cpu_io_multi) then
+                        io_out(16#2007#, 16#1a#);
+                    elsif (nt_step_cnt = 49 * cpu_io_multi) then
+                        io_out(16#2007#, 16#1b#);
+                    elsif (nt_step_cnt = 50 * cpu_io_multi) then
+                        io_out(16#2007#, 16#1c#);
+                    elsif (nt_step_cnt = 51 * cpu_io_multi) then
+                        io_out(16#2007#, 16#1d#);
+                    elsif (nt_step_cnt = 52 * cpu_io_multi) then
+                        io_out(16#2007#, 16#1e#);
+                    elsif (nt_step_cnt = 53 * cpu_io_multi) then
+                        io_out(16#2007#, 16#1f#);
+                    elsif (nt_step_cnt = 54 * cpu_io_multi) then
+                        io_out(16#2007#, 16#11#);
+
+
                     else
                         io_brk;
-                        if (nt_step_cnt > 19 * cpu_io_multi) then
+                        if (nt_step_cnt > 54 * cpu_io_multi) then
                             global_step_cnt := global_step_cnt + 1;
                         end if;
                     end if;
