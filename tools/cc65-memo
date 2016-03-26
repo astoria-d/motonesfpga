@@ -1,0 +1,11 @@
+
+in order to build regression test, you need to have nes development tools.
+grab cc65 from github by following command.
+
+git clone https://github.com/cc65/cc65.git
+
+
+also motonesemu uses gtk2-devel. install gtk2-devel by 
+sudo yum install gtk2-devel.x86_64
+in fedora environment (fedora 20 in my case)
+
