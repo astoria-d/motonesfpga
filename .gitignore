@@ -18,9 +18,5 @@ ref-sdr-sdram-vhdl.zip
 DE1_control_panel
 ~$*
 *.lnk
-<<<<<<< HEAD
 bin2hex*
-=======
 cc65/
-
->>>>>>> bc7cef00d67db16adec9f9c03eeacb3e3a09bbdf
