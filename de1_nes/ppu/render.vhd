@@ -43,17 +43,17 @@ entity ppu_render is
             ppu_ctrl        : in std_logic_vector (7 downto 0);
             ppu_mask        : in std_logic_vector (7 downto 0);
             read_status     : in std_logic;
+            ppu_status      : out std_logic_vector (7 downto 0);
             ppu_scroll_x    : in std_logic_vector (7 downto 0);
             ppu_scroll_y    : in std_logic_vector (7 downto 0);
-            ppu_status      : out std_logic_vector (7 downto 0);
-            v_bus_busy_n    : out std_logic;
 
             --ppu internal ram access
             r_nw            : in std_logic;
             oam_bus_ce_n    : in std_logic;
             plt_bus_ce_n    : in std_logic;
             oam_plt_addr    : in std_logic_vector (7 downto 0);
-            oam_plt_data    : inout std_logic_vector (7 downto 0)
+            oam_plt_data    : inout std_logic_vector (7 downto 0);
+            v_bus_busy_n    : out std_logic
     );
 end ppu_render;
 
@@ -112,6 +112,7 @@ component vga_ctl
             ppu_ctrl        : in std_logic_vector (7 downto 0);
             ppu_mask        : in std_logic_vector (7 downto 0);
             read_status     : in std_logic;
+            ppu_status      : out std_logic_vector (7 downto 0);
             ppu_scroll_x    : in std_logic_vector (7 downto 0);
             ppu_scroll_y    : in std_logic_vector (7 downto 0);
 
@@ -120,7 +121,8 @@ component vga_ctl
             oam_bus_ce_n    : in std_logic;
             plt_bus_ce_n    : in std_logic;
             oam_plt_addr    : in std_logic_vector (7 downto 0);
-            oam_plt_data    : inout std_logic_vector (7 downto 0)
+            oam_plt_data    : inout std_logic_vector (7 downto 0);
+            v_bus_busy_n    : out std_logic
     );
 end component;
 
@@ -203,6 +205,7 @@ begin
             ppu_ctrl    ,
             ppu_mask    ,
             read_status ,
+            ppu_status  ,
             ppu_scroll_x ,
             ppu_scroll_y ,
 
@@ -210,7 +213,8 @@ begin
             oam_bus_ce_n    ,
             plt_bus_ce_n    ,
             oam_plt_addr    ,
-            oam_plt_data    
+            oam_plt_data    ,
+            v_bus_busy_n    
         );
 
     pos_p : process (rst_n, ppu_clk)
@@ -243,47 +247,47 @@ begin
         end if; --if (rst_n = '0') then
     end process;
 
-    --manipulate ppu flag procedure.
-    v_bus_busy_n <= '0' when (ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
-                (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
-                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
-              '1';
-
-    ppu_flag_p : process (rst_n, ppu_clk, read_status)
-
-procedure set_spr0_hit is
-begin
-    --not ready yet...
-end;
-
-    begin
-        if (rst_n = '0') then
-            ppu_status <= (others => '0');
-        else
-
-            if (ppu_clk'event and ppu_clk = '1') then
-                if ((cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
-                    (cur_y < conv_std_logic_vector(VSCAN, X_SIZE))) then
-                    --check if sprite 0 is hit.
-                    set_spr0_hit;
-                end if;
-
-                --flag operation
-                if ((cur_x = conv_std_logic_vector(1, X_SIZE)) and
-                    (cur_y = conv_std_logic_vector(VSCAN + 1, X_SIZE))) then
-                    --vblank start
-                    ppu_status(ST_VBL) <= '1';
-                elsif ((cur_x = conv_std_logic_vector(1, X_SIZE)) and
-                    (cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE))) then
-                    ppu_status(ST_SP0) <= '0';
-                    --vblank end
-                    ppu_status(ST_VBL) <= '0';
-                    --TODO: sprite overflow is not inplemented!
-                    ppu_status(ST_SOF) <= '0';
-                end if;
-            end if; --if (clk'event and clk = '1') then
-        end if;--if (rst_n = '0') then
-    end process;
+--    --manipulate ppu flag procedure.
+--    v_bus_busy_n <= '0' when (ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
+--                (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+--                cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) else
+--              '1';
+--
+--    ppu_flag_p : process (rst_n, ppu_clk, read_status)
+--
+--procedure set_spr0_hit is
+--begin
+--    --not ready yet...
+--end;
+--
+--    begin
+--        if (rst_n = '0') then
+--            ppu_status <= (others => '0');
+--        else
+--
+--            if (ppu_clk'event and ppu_clk = '1') then
+--                if ((cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
+--                    (cur_y < conv_std_logic_vector(VSCAN, X_SIZE))) then
+--                    --check if sprite 0 is hit.
+--                    set_spr0_hit;
+--                end if;
+--
+--                --flag operation
+--                if ((cur_x = conv_std_logic_vector(1, X_SIZE)) and
+--                    (cur_y = conv_std_logic_vector(VSCAN + 1, X_SIZE))) then
+--                    --vblank start
+--                    ppu_status(ST_VBL) <= '1';
+--                elsif ((cur_x = conv_std_logic_vector(1, X_SIZE)) and
+--                    (cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE))) then
+--                    ppu_status(ST_SP0) <= '0';
+--                    --vblank end
+--                    ppu_status(ST_VBL) <= '0';
+--                    --TODO: sprite overflow is not inplemented!
+--                    ppu_status(ST_SOF) <= '0';
+--                end if;
+--            end if; --if (clk'event and clk = '1') then
+--        end if;--if (rst_n = '0') then
+--    end process;
 
 end rtl;
 

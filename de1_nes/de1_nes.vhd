@@ -24,7 +24,6 @@ entity de1_nes is
     signal dbg_int_d_bus    : out std_logic_vector(7 downto 0);
     signal dbg_exec_cycle   : out std_logic_vector (5 downto 0);
     signal dbg_ea_carry     : out std_logic;
-    signal dbg_wait_a58_branch_next     : out std_logic;
 --    signal dbg_index_bus    : out std_logic_vector(7 downto 0);
 --    signal dbg_acc_bus      : out std_logic_vector(7 downto 0);
     signal dbg_status       : out std_logic_vector(7 downto 0);
@@ -44,6 +43,7 @@ entity de1_nes is
     signal dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y : out std_logic_vector (7 downto 0);
     signal dbg_disp_nt, dbg_disp_attr : out std_logic_vector (7 downto 0);
     signal dbg_disp_ptn_h, dbg_disp_ptn_l : out std_logic_vector (15 downto 0);
+    signal dummy_nmi  : in std_logic;
     
     
 --NES instance
@@ -69,7 +69,6 @@ architecture rtl of de1_nes is
     signal dbg_int_d_bus  : out std_logic_vector(7 downto 0);
     signal dbg_exec_cycle      : out std_logic_vector (5 downto 0);
     signal dbg_ea_carry     : out std_logic;
-    signal dbg_wait_a58_branch_next     : out std_logic;
 --    signal dbg_index_bus    : out std_logic_vector(7 downto 0);
 --    signal dbg_acc_bus      : out std_logic_vector(7 downto 0);
     signal dbg_status       : out std_logic_vector(7 downto 0);
@@ -242,7 +241,7 @@ architecture rtl of de1_nes is
 
     constant ram_2k : integer := 11;      --2k = 11 bit width.
     constant rom_32k : integer := 15;     --32k = 15 bit width.
-    constant rom_4k : integer := 12;     --4k = 12 bit width. (for test use)
+    constant rom_8k : integer := 13;     --8k = 13 bit width. (for test use)
     constant vram_1k : integer := 10;      --1k = 10 bit width.
     constant chr_rom_8k : integer := 13;     --32k = 15 bit width.
 
@@ -316,7 +315,6 @@ begin
     dbg_int_d_bus,
     dbg_exec_cycle,
     dbg_ea_carry,
-    dbg_wait_a58_branch_next,
  --   dbg_index_bus,
  --   dbg_acc_bus,
     dbg_status,
@@ -339,8 +337,8 @@ begin
 --    prg_rom_inst : prg_rom generic map (rom_32k, data_size)
 --            port map (mem_clk, rom_ce_n, addr(rom_32k - 1 downto 0), d_io);
 
-    prg_rom_inst : prg_rom generic map (rom_4k, data_size)
-            port map (mem_clk, rom_ce_n, addr(rom_4k - 1 downto 0), d_io);
+    prg_rom_inst : prg_rom generic map (rom_8k, data_size)
+            port map (mem_clk, rom_ce_n, addr(rom_8k - 1 downto 0), d_io);
 
     ram_oe_n <= not R_nW;
     prg_ram_inst : ram generic map (ram_2k, data_size)
@@ -368,7 +366,9 @@ begin
     dbg_vram_ad  <= vram_ad ;
     dbg_disp_ptn_l <= "00" & v_addr ;
     dbg_disp_ptn_h <= "000" & dbg_plt_addr & dbg_plt_data;
-
+--    nmi_n <= dummy_nmi;
+--    dbg_ppu_ctrl <= dbg_pcl;
+--    dbg_ppu_mask <= dbg_pch;
     --nes ppu instance
     ppu_inst: ppu port map (  
         dbg_ppu_ce_n                                        ,

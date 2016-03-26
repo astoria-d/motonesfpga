@@ -113,15 +113,17 @@ component alu_core
     );
 end component;
 
-
 --------- signals for address calucuration ----------
 signal al_buf_we_n : std_logic;
 signal ah_buf_we_n : std_logic;
+signal tmp_buf_we_n : std_logic;
 
 signal al_reg_in : std_logic_vector (dsize - 1 downto 0);
 signal ah_reg_in : std_logic_vector (dsize - 1 downto 0);
+signal tmp_reg_in : std_logic_vector (dsize - 1 downto 0);
 signal al_reg : std_logic_vector (dsize - 1 downto 0);
 signal ah_reg : std_logic_vector (dsize - 1 downto 0);
+signal tmp_reg : std_logic_vector (dsize - 1 downto 0);
 
 
 signal a_sel : std_logic_vector (1 downto 0);
@@ -131,6 +133,7 @@ signal addr_out : std_logic_vector (dsize - 1 downto 0);
 
 signal addr_c_in : std_logic;
 signal addr_c : std_logic;
+signal addr_c_reg : std_logic;
 
 signal pcl_carry_reg_in : std_logic;
 
@@ -153,11 +156,7 @@ signal arith_reg : std_logic_vector (dsize - 1 downto 0);
 signal arith_reg_out : std_logic_vector (dsize - 1 downto 0);
 signal d_oe_n : std_logic;
 
-signal m2m_stat_1 : std_logic;
-signal m2m_stat_2 : std_logic;
-
 begin
-
     ----------------------------------------
      -- address calucurator instances ----
     ----------------------------------------
@@ -165,6 +164,8 @@ begin
             port map(clk, '1', '1', al_buf_we_n, al_reg_in, al_reg);
     ah_dff : d_flip_flop generic map (dsize) 
             port map(clk, '1', '1', ah_buf_we_n, ah_reg_in, ah_reg);
+    tmp_dff : d_flip_flop generic map (dsize) 
+            port map(clk, '1', '1', tmp_buf_we_n, tmp_reg_in, tmp_reg);
 
     --pcl carry flag set.
     pcl_carry_reg_in <= addr_c when pcl_inc_n = '0' else
@@ -177,6 +178,9 @@ begin
     addr_calc_inst : address_calculator generic map (dsize)
             port map (a_sel, addr1, addr2, addr_out, addr_c_in, addr_c);
 
+    ea_carry_dff_bit : d_flip_flop_bit 
+            port map(clk, '1', '1', 
+                    '0', addr_c, addr_c_reg);
 
     ----------------------------------------
      -- arithmatic operation instances ----
@@ -200,13 +204,12 @@ begin
                     pcl_inc_n, pch_inc_n, sp_oe_n, sp_push_n, sp_pop_n,
                     abs_xy_n, pg_next_n, zp_n, zp_xy_n, rel_calc_n, 
                     indir_n, indir_x_n, indir_y_n, 
-                    index_bus, bal, bah, addr_c_in, addr_out, addr_c,
+                    index_bus, bal, bah,
 
                     --for arithmatic operation.
                     arith_en_n,
                     instruction, exec_cycle, int_d_bus, acc_out, 
-                    carry_in, n, z, c, v,
-                    arith_reg, arith_reg_out, alu_out, d_out
+                    carry_in, n, z, c, v
                     )
 
 constant ADDR_ADC    : std_logic_vector (1 downto 0) := "00";
@@ -229,6 +232,7 @@ constant ALU_INC    : std_logic_vector (3 downto 0) := "1011";
 constant ALU_DEC    : std_logic_vector (3 downto 0) := "1100";
 
 ---for indirect addressing.
+constant T0 : std_logic_vector (5 downto 0) := "000000";
 constant T1 : std_logic_vector (5 downto 0) := "000001";
 constant T2 : std_logic_vector (5 downto 0) := "000010";
 constant T3 : std_logic_vector (5 downto 0) := "000011";
@@ -260,6 +264,7 @@ end procedure;
     ----- address calcuration -----
     -------------------------------
     if (pcl_inc_n = '0') then
+        ea_carry <= '0';
         a_sel <= ADDR_INC;
         addr1 <= bal;
         addr_back <= addr_out;
@@ -280,6 +285,7 @@ end procedure;
         abh <= bah;
 
     elsif (pch_inc_n = '0') then
+        ea_carry <= '0';
         a_sel <= ADDR_INC;
         addr1 <= bah;
         addr_back <= addr_out;
@@ -292,6 +298,7 @@ end procedure;
     elsif (sp_oe_n = '0') then
         --stack operation...
         abh <= "00000001";
+        ea_carry <= '0';
 
         if (sp_push_n /= '0' and sp_pop_n /= '0') then
             abl <= bal;
@@ -323,6 +330,7 @@ end procedure;
             end if;
         end if;
     elsif (zp_n = '0') then
+        ea_carry <= '0';
         if (zp_xy_n <= '0') then
             a_sel <= ADDR_ADC;
             addr1 <= bal;
@@ -388,17 +396,14 @@ end procedure;
             ---rel val is on the d_bus.
             addr2 <= int_d_bus;
             addr_back <= addr_out;
-            ea_carry <= addr_c;
+            addr_c_in <= '0';
+            ea_carry <= addr_c_reg;
 
             --keep the value in the cycle
             al_buf_we_n <= '0';
             al_reg_in <= addr_out;
-            if (clk = '0') then
-                abl <= addr_out;
-            else
-                abl <= al_reg;
-            end if;
             abh <= bah;
+            abl <= addr_out;
         end if;
     elsif (indir_n = '0') then
         abh <= bah;
@@ -407,14 +412,62 @@ end procedure;
         a_sel <= ADDR_INC;
         abl <= addr_out;
 
-        --TODO: must handle page crossing case...
         ea_carry <= addr_c;
 
     elsif (indir_x_n = '0') then
+        if (exec_cycle = T2) then
+            ---input is IAL, but this cycle doesn't do anything....
+            abh <= "00000000";
+            abl <= bal;
+
+            --save base addr.
+            tmp_buf_we_n <= '0';
+            tmp_reg_in <= bal;
+        elsif (exec_cycle = T3) then
+
+            ---add x reg.
+            a_sel <= ADDR_ADC;
+            addr1 <= tmp_reg;
+            addr2 <= index_bus;
+            addr_c_in <= '0';
+
+            --save base addr.
+            tmp_buf_we_n <= '0';
+            tmp_reg_in <= addr_out;
+
+            --output @IAL+x
+            abh <= "00000000";
+            abl <= addr_out;
+
+            ---save BAL.
+            al_buf_we_n <= '0';
+            al_reg_in <= int_d_bus;
+
+        elsif (exec_cycle = T4) then
+            al_buf_we_n <= '1';
+            tmp_buf_we_n <= '1';
+
+            ---increment.
+            a_sel <= ADDR_INC;
+            addr1 <= tmp_reg;
+
+            --output @IAL+x
+            abh <= "00000000";
+            abl <= addr_out;
+
+            ---save BAH.
+            ah_buf_we_n <= '0';
+            ah_reg_in <= int_d_bus;
+        elsif (exec_cycle = T5) then
+            ah_buf_we_n <= '1';
+
+            --output ah/al reg.
+            abh <= ah_reg;
+            abl <= al_reg;
+        end if; -- if (exec_cycle = T2) then
 
     elsif (indir_y_n = '0') then
 
-        if (clk = '0') then
         if (exec_cycle = T2) then
             ---input is IAL.
             abh <= "00000000";
@@ -423,23 +476,29 @@ end procedure;
             ---save BAL.
             al_buf_we_n <= '0';
             al_reg_in <= int_d_bus;
+            ea_carry <= '0';
+
+            --get next address (IAL + 1)
+            a_sel <= ADDR_INC;
+            addr1 <= bal;
+            tmp_buf_we_n <= '0';
+            tmp_reg_in <= addr_out;
 
         elsif (exec_cycle = T3) then
             al_buf_we_n <= '1';
+            tmp_buf_we_n <= '1';
 
             abh <= "00000000";
 
             --input is IAL + 1
-            a_sel <= ADDR_INC;
-            addr1 <= bal;
-            abl <= addr_out;
+            abl <= tmp_reg;
 
             ---save BAH.
             ah_buf_we_n <= '0';
             ah_reg_in <= int_d_bus;
+            ea_carry <= addr_c;
 
         elsif (exec_cycle = T4) then
-
             ---add y reg.
             a_sel <= ADDR_ADC;
 
@@ -456,25 +515,28 @@ end procedure;
             ---save the address.
             al_buf_we_n <= '0';
             al_reg_in <= addr_out;
-            ah_buf_we_n <= '0';
-            ah_reg_in <= ah_reg;
+            tmp_buf_we_n <= '0';
+            tmp_reg_in <= ah_reg;
         elsif (exec_cycle = T5) then
-
-            if (pg_next_n = '0') then
-                a_sel <= ADDR_INC;
-                addr1 <= ah_reg;
-                ---next page.
-                abh <= addr_out;
-                abl <= al_reg;
-            else
-                abh <= ah_reg;
-                abl <= al_reg;
-            end if;
+            al_buf_we_n <= '1';
+            tmp_buf_we_n <= '1';
+            ea_carry <= '0';
+            a_sel <= ADDR_INC;
+            addr1 <= tmp_reg;
+            ---next page.
+            abh <= addr_out;
+            abl <= al_reg;
+        else
+            al_buf_we_n <= '1';
+            ah_buf_we_n <= '1';
+            tmp_buf_we_n <= '1';
+            ea_carry <= '0';
         end if; -- if (exec_cycle = T2) then
-        end if; --if (clk = '0') then
     else
         al_buf_we_n <= '1';
         ah_buf_we_n <= '1';
+        tmp_buf_we_n <= '1';
+        ea_carry <= '0';
 
         abl <= bal;
         abh <= bah;
@@ -550,6 +612,15 @@ end procedure;
             output_d_bus;
 
         --instruction is aaabbbcc format.
+        --aaa=opcode
+        --bbb=addr mode
+        --000	#immediate
+        --001	zero page
+        --010	accumulator
+        --011	absolute
+        --101	zero page,X
+        --111	absolute,X
+        --cc=optional field.
         elsif instruction (1 downto 0) = "01" then
             if instruction (7 downto 5) = "000" then
                 --d_print("ora");
@@ -620,34 +691,38 @@ end procedure;
             --first is write original data 
             --second is write modified data
 
-            arith_reg_in <= int_d_bus;
-            d1 <= arith_reg_out;
-            int_d_bus <= d_out;
+            --001	zero page
+            --011	absolute
+            --101	zero page,X
+            --111	absolute,X
+            if ((exec_cycle = T2 and instruction (4 downto 2) = "001") or 
+                (exec_cycle = T3 and instruction (4 downto 2) = "011") or 
+                (exec_cycle = T3 and instruction (4 downto 2) = "101") or 
+                (exec_cycle = T4 and instruction (4 downto 2) = "111")) then
+                arith_buf_we_n <= '0';
+                arith_reg_in <= int_d_bus;
 
-            if (clk = '0') then
-                --d_print("clk hi");
-                if (m2m_stat_1 = '0') then
-                    --first cycle. keep input variable.
-                    --d_print("inc first.");
-                    m2m_stat_1 <= '1';
-                    arith_buf_we_n <= '0';
-                    arith_buf_oe_n <= '1';
-                    d_oe_n <= '1';
+            elsif ((exec_cycle = T3 and instruction (4 downto 2) = "001") or 
+                (exec_cycle = T4 and instruction (4 downto 2) = "011") or 
+                (exec_cycle = T4 and instruction (4 downto 2) = "101") or 
+                (exec_cycle = T5 and instruction (4 downto 2) = "111")) then
+                --first cycle. keep input variable.
+                --d_print("inc first.");
+                arith_buf_we_n <= '1';
 
-                end if;
+                arith_buf_oe_n <= '1';
+                d_oe_n <= '1';
+
+                d1 <= arith_reg;
+            else
+                --second cycle read from register, output modified data.
+                --d_print("inc second...");
+                arith_buf_we_n <= '1';
+                arith_buf_oe_n <= '0';
+                d_oe_n <= '0';
+
+                int_d_bus <= d_out;
             end if;
-
---            if (clk'event and clk = '0') then
---                if (m2m_stat_2 = '0') then
---                    --second cycle read from register, output modified data.
---                    --d_print("inc second...");
---                    m2m_stat_2 <= '1';
---                    arith_buf_we_n <= '1';
---                    arith_buf_oe_n <= '0';
---                    d_oe_n <= '0';
---                end if;
---            end if;
-
 
             if instruction (7 downto 5) = "000" then
                 --d_print("asl");
@@ -713,8 +788,6 @@ end procedure;
         end if; --if instruction = conv_std_logic_vector(16#ca#, dsize) 
     else
         --d_print("no arith");
-        m2m_stat_1 <= '0';
-        m2m_stat_2 <= '0';
         d_oe_n <= '1';
         arith_buf_we_n <= '1';
         arith_buf_oe_n <= '1';

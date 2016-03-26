@@ -19,6 +19,7 @@
 ;;0300 - 07ff  global: global variables.
 
 .segment "STARTUP"
+
 .proc	Reset
 
 ; interrupt off, initialize sp.
@@ -34,13 +35,28 @@
     lda ad_start_msg+1
     sta $01
     jsr print_ln
+    jsr print_ln
+    jsr print_ln
+    jsr print_ln
+    jsr print_ln
+    jsr print_ln
+
+
+;;;;;following tests all ok
+;    jsr single_inst_test
+;    a2_inst_test
+;    a3_inst_test
+;    a4_inst_test
+;    a5_inst_test
 
     ;;test start...
+    jsr addr_test
     jsr single_inst_test
     jsr a2_inst_test
     jsr a3_inst_test
     jsr a4_inst_test
     jsr a5_inst_test
+    jsr status_test
     jsr ppu_test
 
 .endproc
@@ -72,13 +88,36 @@ test_failure:
     jsr print_ln
 
 test_done:
+
+;;;set image attribute
+	lda	#$23
+	sta	$2006
+	lda	#$c1
+	sta	$2006
+;;attr=11011000
+	lda	#$d8
+	sta	$2007
+
+    ;;init scroll point.
+    lda #$00
+    sta $2005
+
+    lda #$00
+    sta $2005
+
+    ;;set vs_cnt init value.
+    lda #60
+    sta vs_cnt
+
     ;;show bg...
 	lda	#$1e
 	sta	$2001
+	sta	ppu_stat2
 
     ;;;enable nmi
 	lda	#$80
 	sta	$2000
+	sta	ppu_stat1
 
     ;;done...
     ;;infinite loop.
@@ -87,8 +126,1142 @@ mainloop:
 
 
 nmi_test:
+    jsr update_counter
+    jsr update_scroll
+
     rti
 
+.proc update_counter
+    dec vs_cnt
+    bne @cnt_done
+
+    ;;;stop display first
+	lda ppu_stat2
+	and #$e7
+	sta $2001
+	sta ppu_stat2
+
+    ;;reset counter
+    lda #60
+    sta vs_cnt
+
+    lda disp_cnt
+    beq @case_zero
+@case_one:
+    dec disp_cnt
+    ;;acc has the value to display.
+    lda #'1'
+    jmp @do_disp
+@case_zero:
+    inc disp_cnt
+    lda #'2'
+@do_disp:
+
+    ;;update display
+    ;; clear previous
+    ldx vram_current
+    stx $2006
+    ldx vram_current + 1
+    stx $2006
+    ldx #'3'
+    stx $2007
+
+    ;; display new char.
+    ldx vram_current
+    stx $2006
+    inc vram_current + 1
+    ldx vram_current + 1
+    stx $2006
+
+    sta $2007
+
+	;;load from ppu status
+	lda ppu_stat2
+:	ora #$18
+	;;enable display again.
+	sta $2001
+	sta ppu_stat2
+
+@cnt_done:
+
+    rts
+.endproc
+
+.proc update_scroll
+    lda #$00
+    sta $2005
+    sta scroll_x
+
+    ldx scroll_y
+    inx
+    cpx #240
+    bne :+
+    ldx #0
+:
+    ldx #$00
+    stx $2005
+    stx scroll_y
+
+    rts
+.endproc
+
+.proc status_test
+    lda ad_status_test
+    sta $00
+    lda ad_status_test+1
+    sta $01
+    jsr print_ln
+
+
+;;bit7	N	ネガティブ	Aのbit7が1の時にセット
+;;bit6	V	オーバーフロー	演算結果がオーバーフローを起こした時にセット
+;;bit5	R	予約済み	常にセットされている
+;;bit4	B	ブレークモード	BRK発生時にセット、IRQ発生時にクリア
+;;bit3	D	デシマルモード	0:デフォルト、1:BCDモード (ファミコンでは未実装)
+;;bit2	I	IRQ禁止	0:IRQ許可、1:IRQ禁止
+;;bit1	Z	ゼロ	演算結果が0の時にセット
+;;bit0	C	キャリー	キャリー発生時にセット
+
+    ;;save status
+    php
+
+;;LDA
+;;メモリからAにロードします。[N:0:0:0:0:0:Z:0]
+    ;;set status
+    lda #$00
+    pha
+    plp
+
+    lda #$ea
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$a0
+    beq :+
+    jsr test_failure
+:
+    ;;set status
+    lda #$00
+    pha
+    plp
+
+    lda #$00
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$22
+    beq :+
+    jsr test_failure
+:
+
+;;LDX
+;;メモリからXにロードします。[N:0:0:0:0:0:Z:0]
+    ;;set status
+    lda #00
+    pha
+    plp
+
+    ldx #$a4
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$a0
+    beq :+
+    jsr test_failure
+:
+
+    lda #00
+    pha
+    plp
+
+    ldx #$00
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$22
+    beq :+
+    jsr test_failure
+:
+
+;;LDY
+;;メモリからYにロードします。[N:0:0:0:0:0:Z:0]
+    ;;set status
+    lda #00
+    pha
+    plp
+
+    ldy #$2b
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$20
+    beq :+
+    jsr test_failure
+:
+
+    ;;set status
+    lda #00
+    pha
+    plp
+
+    ldy #$bb
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$a0
+    beq :+
+    jsr test_failure
+:
+
+    ;;set status
+    lda #00
+    pha
+    plp
+
+    ldy #$00
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$22
+    beq :+
+    jsr test_failure
+:
+
+;;STA
+;;Aからメモリにストアします。[0:0:0:0:0:0:0:0]
+
+    lda #$fb
+
+    ;;set status
+    lda #$c3
+;;c3 is...1100 0011 = NV00 00ZC
+    pha
+    plp
+
+;;sta test
+    sta $501
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$e3
+    beq :+
+    jsr test_failure
+:
+
+
+;;STX
+;;Xからメモリにストアします。[0:0:0:0:0:0:0:0]
+    ldx #$fb
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    stx $50f
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$e3
+    beq :+
+    jsr test_failure
+:
+
+
+;;STY
+;;Yからメモリにストアします。[0:0:0:0:0:0:0:0]
+    ldy #$00
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    sty $510
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$e3
+    beq :+
+    jsr test_failure
+:
+
+;;TAX
+;;AをXへコピーします。[N:0:0:0:0:0:Z:0]
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    tax
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$e1
+    beq :+
+    jsr test_failure
+:
+
+    ;;set status
+    lda #$00
+    pha
+    plp
+
+    tax
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$22
+    beq :+
+    jsr test_failure
+:
+
+
+;;TAY
+;;AをYへコピーします。[N:0:0:0:0:0:Z:0]
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    tay
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$e1
+    beq :+
+    jsr test_failure
+:
+
+    cpy #$c3
+    beq :+
+    jsr test_failure
+:
+
+    ;;set status
+    lda #$00
+    pha
+    plp
+
+    tay
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$22
+    beq :+
+    jsr test_failure
+:
+:
+    cpy #$00
+    beq :+
+    jsr test_failure
+:
+
+;;TSX
+;;SをXへコピーします。[N:0:0:0:0:0:Z:0]
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    ;;;now sp = 0xfX place...
+    tsx
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$e1
+    beq :+
+    jsr test_failure
+:
+
+    ;;save sp
+    tsx
+    txa
+    tay     ;; now y has the old sp
+    
+    lda #$0
+    tax
+    txs
+    
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    tsx
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$63
+    beq :+
+    jsr test_failure
+:
+    cpx #$00
+    beq :+
+    jsr test_failure
+:
+
+    ;;restore sp
+    tya
+    tax
+    txs
+
+
+;;TXA
+;;XをAへコピーします。[N:0:0:0:0:0:Z:0]
+    ldx #$59
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    txa
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$61
+    beq :+
+    jsr test_failure
+:
+
+
+    ldx #$ac
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    txa
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$e1
+    beq :+
+    jsr test_failure
+:
+
+    ldx #$00
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    txa
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$63
+    beq :+
+    jsr test_failure
+:
+
+
+;;TXS
+;;XをSへコピーします。[N:0:0:0:0:0:Z:0]
+
+    ;;save sp
+    tsx
+    txa
+    tay     ;; now y has the old sp
+    
+
+    ldx #$0
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    txs ; x > s = 0
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$63
+    beq :+
+
+    ;;;;this is emulator's bug!!!! txs must set n and z bit, but emulator doesn't set...
+;    jsr test_failure
+:
+
+    ldx #$9a
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    txs ; x > s = 9a
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$e1
+    beq :+
+
+    ;;;;this is emulator's bug!!!! txs must set n and z bit, but emulator doesn't set...
+;    jsr test_failure
+:
+
+    ;;restore sp
+    tya
+    tax
+    txs
+
+
+;;
+;;TYA
+;;YをAへコピーします。[N:0:0:0:0:0:Z:0]
+
+    ldy #$0
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    tya ; y > a = 0
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$63
+    beq :+
+
+    jsr test_failure
+:
+
+    ldy #$b5
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    tya ; y > a = b5
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$e1
+    beq :+
+
+    jsr test_failure
+:
+
+
+;;ADC
+;;(A + メモリ + キャリーフラグ) を演算して結果をAへ返します。[N:V:0:0:0:0:Z:C]
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    ;;;n flag test
+    ldy #$c0
+    sty $50     ;;@50=c0
+    clc
+    lda #$30
+    adc $50     ;;0+30+c0=f0
+
+    php
+    tax         ;;x=f0
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$a0
+    beq :+
+    jsr test_failure
+:
+    cpx #$f0
+    beq :+
+    jsr test_failure
+:
+
+    ;;;c flag test
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    ldy #$ee
+    sty $0550     ;;@0550=ee
+    sec
+    lda #$ad
+    adc $0550     ;;ad+ee+1=19c
+
+    php
+    tax         ;;x=9c
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$a1
+    beq :+
+    jsr test_failure
+:
+    cpx #$9c
+    beq :+
+    jsr test_failure
+:
+
+    ;;;z flag test
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    ldy #$ee
+    sty $0551     ;;@0551=ee
+    sec
+    lda #$11
+    adc $0550     ;;11+ee+1=0
+
+    php
+    tax         ;;x=0
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$23
+    beq :+
+    jsr test_failure
+:
+    cpx #$0
+    beq :+
+    jsr test_failure
+:
+
+    ;;;v flag test
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    ldy #75
+    sty $0552     ;;@0551=75
+    sec
+    lda #100
+    adc $0552     ;;75+100+1=176
+
+    php
+    tax         ;;x=176
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$e0
+    beq :+
+    jsr test_failure
+:
+    cpx #176
+    beq :+
+    jsr test_failure
+:
+
+;;AND
+;;Aとメモリを論理AND演算して結果をAへ返します。[N:0:0:0:0:0:Z:0]
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    ldy #$8e
+    sty $e4     ;;@e4=c0
+
+    lda #$b3
+    ldx #$30
+    and $b4,x     ;;b3 & 8e=82
+
+    php
+    tax         ;;x=82
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$e1
+    beq :+
+    jsr test_failure
+:
+    cpx #$82
+    beq :+
+    jsr test_failure
+:
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    ldy #$7e
+    sty $04e4     ;;@04e4=7e
+
+    lda #$81
+    ldx #$30
+    and $04b4,x     ;;81 & 7e=0
+
+    php
+    tax         ;;x=0
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$63
+    beq :+
+    jsr test_failure
+:
+    cpx #$0
+    beq :+
+    jsr test_failure
+:
+
+;;ASL
+;;Aまたはメモリを左へシフトします。[N:0:0:0:0:0:Z:C]
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    ;;c bit test
+    lda #$b3
+    asl         ;; b3 << 1 = 166
+
+    php
+    tax         ;;x=66
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$61
+    beq :+
+    jsr test_failure
+:
+    cpx #$66
+    beq :+
+    jsr test_failure
+:
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    ;;n bit test
+    lda #$61
+    sta $7b
+    ldx #$ce
+    asl $ad,x       ;;61 << 1 = c2
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$e0
+    beq :+
+    jsr test_failure
+:
+    ldy $ad,x
+    cpy #$c2
+    beq :+
+    jsr test_failure
+:
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    ;;z bit test
+    lda #$80
+    sta $e5
+    asl $e5       ;;80 << 1 = 0
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$63
+    beq :+
+    jsr test_failure
+:
+    ldy $e5
+    cpy #$0
+    beq :+
+    jsr test_failure
+:
+
+;;BIT
+;;Aとメモリをビット比較演算します。[N:V:0:0:0:0:Z:0]
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    ;;z bit test
+    lda #$0
+    sta $e5
+    lda #$01
+    bit $e5
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$23
+    beq :+
+    jsr test_failure
+:
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    ;;n/v bit test
+    lda #$4a
+    sta $0440
+    lda #$01
+    bit $0440
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$63
+    beq :+
+    jsr test_failure
+:
+
+
+;;CMP
+;;Aとメモリを比較演算します。[N:0:0:0:0:0:Z:C]
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    ;;c bit test
+    lda #$91
+    sta $04e5   ;;@04e5 = 91
+    lda #$e5    ;; e5 - 91 = 54
+    ldy #$f2
+    cmp $03f3, y
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$61        ;;c is set when acc >= mem.
+    beq :+
+    jsr test_failure
+:
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    ;;z/c bit test
+    ldx #$e5
+    stx $04e5   ;;@04e5 = 91
+    lda #$e5
+    ldy #$f2
+    cmp $03f3, y
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$63        ;;c is set when acc >= mem.
+    beq :+
+    jsr test_failure
+:
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    ;;n bit test
+    ldx #$7e
+    stx $05d7   ;;@05d7 = 7e
+
+    lda #$e5
+    sta $10
+    lda #$04
+    sta $11
+    ldy #$f2    ;;04e5+f2=05d7
+    lda #$45    ;;45-7e=c7
+    cmp ($10), y
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$e0        ;;c is set when acc >= mem.
+    beq :+
+    jsr test_failure
+:
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;merge failure...
+;;;;;;;;;;;;;;;;;;;made duplicated tests....
+
+;;TXS
+;;XをSへコピーします。[N:0:0:0:0:0:Z:0]
+
+    tsx
+    stx $50     ;;sp is stored @0x50
+    
+    ldx #$d9
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    txs
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$e1        ;;;emulator bug!!! status reg is not reflected....
+    beq :+
+;    jsr test_failure
+:
+
+    ldx #$00
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    txs
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$63        ;;;emulator bug!!! status reg is not reflected....
+    beq :+
+;    jsr test_failure
+:
+
+    ldx $50
+    txs     ;;sp is restored
+
+
+;;TYA
+;;YをAへコピーします。[N:0:0:0:0:0:Z:0]
+
+    ldy #$00
+    lda #$0b
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    tya
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$63
+    beq :+
+    jsr test_failure
+:
+    tya
+    cmp #0
+    beq :+
+    jsr test_failure
+:
+
+    ldy #$b0
+    lda #$00
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    tya
+
+    php
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$e1
+    beq :+
+    jsr test_failure
+:
+    tya
+    cmp #$b0
+    beq :+
+    jsr test_failure
+:
+
+;;ADC
+;;(A + メモリ + キャリーフラグ) を演算して結果をAへ返します。[N:V:0:0:0:0:Z:C]
+
+    lda #$76
+    sta $72
+    lda #$05
+    sta $73     ;;;@72=0576
+
+    lda #$91
+    sta $0576     ;;;@0576=91
+
+    ldx #$a3
+
+    ;;set status
+    lda #$c3
+    pha
+    plp
+
+    ;;91+99+1=12b
+    lda #$99
+    adc ($cf, x)        ;;cf+a3=72
+
+    php
+    tax     ;;x=2b
+    pla
+    and #$ef        ;;mask off brk bit...
+    cmp #$61
+    beq :+
+    jsr test_failure
+:
+    cpx #$2b
+    beq :+
+    jsr test_failure
+:
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;ok until above....
+;;;;more tests with various addr mode and status bit combination...
+
+
+
+;;CPX
+;;Xとメモリを比較演算します。[N:0:0:0:0:0:Z:C]
+;;
+;;CPY
+;;Yとメモリを比較演算します。[N:0:0:0:0:0:Z:C]
+;;
+;;DEC
+;;メモリをデクリメントします。[N:0:0:0:0:0:Z:0]
+;;
+;;DEX
+;;Xをデクリメントします。[N:0:0:0:0:0:Z:0]
+;;
+;;DEY
+;;Yをデクリメントします。[N:0:0:0:0:0:Z:0]
+;;
+;;EOR
+;;Aとメモリを論理XOR演算して結果をAへ返します。[N:0:0:0:0:0:Z:0]
+;;
+;;INC
+;;メモリをインクリメントします。[N:0:0:0:0:0:Z:0]
+;;
+;;INX
+;;Xをインクリメントします。[N:0:0:0:0:0:Z:0]
+;;
+;;INY
+;;Yをインクリメントします。[N:0:0:0:0:0:Z:0]
+;;
+;;LSR
+;;Aまたはメモリを右へシフトします。[N:0:0:0:0:0:Z:C]
+;;
+;;ORA
+;;Aとメモリを論理OR演算して結果をAへ返します。[N:0:0:0:0:0:Z:0]
+;;
+;;ROL
+;;Aまたはメモリを左へローテートします。[N:0:0:0:0:0:Z:C]
+;;
+;;ROR
+;;Aまたはメモリを右へローテートします。[N:0:0:0:0:0:Z:C]
+;;
+;;SBC
+;;(A - メモリ - キャリーフラグの反転) を演算して結果をAへ返します。[N:V:0:0:0:0:Z:C]
+;;
+;;PHA
+;;Aをスタックにプッシュダウンします。[0:0:0:0:0:0:0:0]
+;;
+;;PHP
+;;Pをスタックにプッシュダウンします。[0:0:0:0:0:0:0:0]
+;;
+;;PLA
+;;スタックからAにポップアップします。[N:0:0:0:0:0:Z:0]
+;;
+;;PLP
+;;スタックからPにポップアップします。[N:V:R:B:D:I:Z:C]
+;;
+;;JMP
+;;アドレスへジャンプします。[0:0:0:0:0:0:0:0]
+;;
+;;JSR
+;;サブルーチンを呼び出します。[0:0:0:0:0:0:0:0]
+;;
+;;RTS
+;;サブルーチンから復帰します。[0:0:0:0:0:0:0:0]
+;;
+;;RTI
+;;割り込みルーチンから復帰します。[N:V:R:B:D:I:Z:C]
+;;
+;;BCC
+;;キャリーフラグがクリアされている時にブランチします。[0:0:0:0:0:0:0:0]
+;;
+;;BCS
+;;キャリーフラグがセットされている時にブランチします。[0:0:0:0:0:0:0:0]
+;;
+;;BEQ
+;;ゼロフラグがセットされている時にブランチします。[0:0:0:0:0:0:0:0]
+;;
+;;BMI
+;;ネガティブフラグがセットされている時にブランチします。[0:0:0:0:0:0:0:0]
+;;
+;;BNE
+;;ゼロフラグがクリアされている時にブランチします。[0:0:0:0:0:0:0:0]
+;;
+;;BPL
+;;ネガティブフラグがクリアされている時にブランチします。[0:0:0:0:0:0:0:0]
+;;
+;;BVC
+;;オーバーフローフラグがクリアされている時にブランチします。[0:0:0:0:0:0:0:0]
+;;
+;;BVS
+;;オーバーフローフラグがセットされている時にブランチします。[0:0:0:0:0:0:0:0]
+;;
+;;CLC
+;;キャリーフラグをクリアします。[0:0:0:0:0:0:0:C]
+;;
+;;CLD
+;;BCDモードから通常モードに戻ります。ファミコンでは実装されていません。[0:0:0:0:D:0:0:0]
+;;
+;;
+;;BCDモードから通常モードに戻ります。ファミコンでは実装されていません。[0:0:0:0:D:0:0:0]
+;;
+;;CLI
+;;IRQ割り込みを許可します。[0:0:0:0:0:I:0:0]
+;;
+;;CLV
+;;オーバーフローフラグをクリアします。[0:V:0:0:0:0:0:0]
+;;
+;;SEC
+;;キャリーフラグをセットします。[0:0:0:0:0:0:0:C]
+;;
+;;SED
+;;BCDモードに設定します。ファミコンでは実装されていません。[0:0:0:0:D:0:0:0]
+;;
+;;SEI
+;;IRQ割り込みを禁止します。[0:0:0:0:0:I:0:0]
+
+
+    ;;restore status
+    plp
+
+    rts
+.endproc
 
 .proc ppu_test
     jsr check_ppu
@@ -157,7 +1330,7 @@ nmi_test:
 
     lda #$00
     ldx #00
-    beq @fwd
+    beq @fwd            ;;<<<ok!!!!
     ;;forward page crossing branch
 @bwd:
     jmp @fwd
@@ -331,14 +1504,14 @@ nmi_test:
     ldx #$fd
 
     ;;zp, abs, absx, zpx
-    asl $6b         ;@6b=39 > 72
+    asl $6b         ;@6b=39 > 72            <<ok...
     lda $6b
     cmp #$72
     beq :+
     jsr test_failure
 :
 
-    dec $04cc       ;@4cc=a1 > a0
+    dec $04cc       ;@4cc=a1 > a0           <<ok????
     lda $04cc
     cmp #$a0
     beq :+
@@ -352,7 +1525,7 @@ nmi_test:
     jsr test_failure
 :
 
-    inc $02, x      ;@ff=9f > a0
+    inc $02, x      ;@ff=9f > a0            <<ok....
     lda $ff
     cmp #$a0
     beq :+
@@ -427,6 +1600,38 @@ nmi_test:
     jsr test_failure
 :
 
+    ;;(indir, x) tests.
+    lda #$f1
+    sta $b0
+    lda #$05
+    sta $b1     ;;;@b0=05f1
+
+    ldx #$7c
+    lda #$61
+    sta ($34, x)
+    
+    lda $05f1
+    cmp #$61
+    beq :+
+    jsr test_failure
+:
+
+    lda #$aa
+    sta $20
+    lda #$04
+    sta $21     ;;;@20=04aa
+
+    ldy #$ec
+    sty $04aa
+
+    ldx #$1b
+    lda ($05, x)
+    
+    cmp #$ec
+    beq :+
+    jsr test_failure
+:
+
     rts
 .endproc
 
@@ -480,17 +1685,15 @@ nmi_test:
     jsr test_failure
 :
 
-    ;;a.2.4 indirect,x is not implemented...
-
     ;;abs,x/y test...
     ldx #$17
     ldy #$a1
     lda #$2f
     sta $359        ;;@359=2f
     lda #$90
-    sta $0190, y    ;;@231=90
+    sta $0190, y    ;;@231=90                          << ok!!!
     txa
-    ora $0190, y    ;;@231(page cross), 90 | 17 = 97
+    ora $0190, y    ;;@231(page cross), 90 | 17 = 97   << ok!
     sec
     sbc $0342, x    ;;@359, 97-2f=68
     tay
@@ -518,20 +1721,117 @@ nmi_test:
 
     ;;(ind),y test...
     lda #$38
-    sta $90
+    sta $90         ;@90=38
     lda #$08
-    sta $91
+    sta $91         ;@91=08, @0838+ca=0902
     lda #$d9
     sta $0902       ;@0902=d9
-    lda #0a
+    lda #$0a
     ldy #$ca
     clc
-    adc ($90),y      ;@0902, 0a+d9=e3
+    adc ($90),y      ;@0902, 0a+d9=e3               << ok!!!
     cmp #$e3
     beq :+
     jsr test_failure
 :
     
+    ;;a.2.4 indirect,x
+    lda #$33
+    sta $c0
+    lda #$04
+    sta $c1     ;;;@c0=0433
+
+    lda #$d0
+    sta $0433     ;;;@0433=d0
+
+    ldx #$6b
+    lda #$22
+    sec
+    adc ($55, x)        ;;d0+22+1=f3
+    cmp #$f3
+    beq :+
+    jsr test_failure
+:
+
+    lda #$34
+    sta $c1
+    lda #$04
+    sta $c2     ;;;@c1=0434
+
+    lda #$f5
+    sta $0434     ;;;@0434=1f
+
+    inx
+    lda #$1f
+    and ($55, x)        ;;1f & f5 = 15
+    cmp #$15
+    beq :+
+    jsr test_failure
+:
+
+    lda #$35
+    sta $c2
+    lda #$04
+    sta $c3     ;;;@c2=0435
+
+    ldy #$75
+    sty $0435     ;;;@0434=11
+
+    inx
+    lda #$75
+    cmp ($55, x)        ;;11 ? 1f
+    beq :+
+    jsr test_failure
+:
+
+    lda #$36
+    sta $c3
+    lda #$04
+    sta $c4     ;;;@c3=0436
+
+    lda #$88
+    sta $0436     ;;;@0436=88
+
+    inx
+    lda #$c1
+    eor ($55, x)        ;;c1 ^ 88 = 49
+    cmp #$49
+    beq :+
+    jsr test_failure
+:
+
+    lda #$37
+    sta $c4
+    lda #$04
+    sta $c5     ;;;@c4=0437
+
+    lda #$2e
+    sta $0437     ;;;@0437=2e
+
+    inx
+    lda #$91
+    ora ($55, x)        ;;91 | 2e = bf
+    cmp #$bf
+    beq :+
+    jsr test_failure
+:
+
+    lda #$38
+    sta $c5
+    lda #$04
+    sta $c6     ;;;@c5=0438
+
+    lda #$7f
+    sta $0438     ;;;@0438=7f
+
+    inx
+    lda #$6a
+    clc
+    sbc ($55, x)        ;;6a - 7f - 1= bf
+    cmp #$ea
+    beq :+
+    jsr test_failure
+:
 
     rts
 
@@ -544,6 +1844,8 @@ nmi_test:
     lda ad_single_test+1
     sta $01
     jsr print_ln
+
+    ;;cld/sed(bcd mode) not supported...
 
     ;;asl test
     lda #$80
@@ -924,20 +2226,6 @@ nmi_test:
     sta vram_current + 1
 @vpos_done:
 
-    ;;scroll 1 line
-    lda scroll_x
-    sta $2005
-
-    lda scroll_y
-    clc
-    adc #8
-    cmp #240
-    bne @scr_done
-    lda #$0
-@scr_done:
-    sta scroll_y
-    sta $2005
-
     rts
 .endproc
 
@@ -958,7 +2246,9 @@ nmi_test:
     ;ppu register initialize.
 	lda	#$00
 	sta	$2000
+	sta ppu_stat1
 	sta	$2001
+	sta ppu_stat2
 
     ;;load palette.
 	lda	#$3f
@@ -996,16 +2286,27 @@ nmi_test:
     lda use_ppu
     beq @ppu_skip
 
-;;vram pos start from the bottom line.
-    lda #$23
+;;vram pos start from the top left.
+;;(pos 0,0 is sprite hit point.)
+    lda #$20
     sta vram_current
-    lda #$a0
+    lda #$01
     sta vram_current + 1
 
     lda #$00
     sta scroll_x
-    lda #232
+    lda #$00
     sta scroll_y
+
+    lda #$00
+    sta ppu_stat1
+    lda #$00
+    sta ppu_stat2
+
+    lda #$00
+    sta vs_cnt
+    lda #$00
+    sta disp_cnt
 @ppu_skip:
 
     rts
@@ -1013,10 +2314,6 @@ nmi_test:
 .endproc
 
 
-
-;;;read only global datas
-use_ppu:
-    .byte   $01
 
 ;;;;string datas
 ad_start_msg:
@@ -1035,6 +2332,18 @@ ad_test_failed_msg:
     .addr   :+
 :
     .byte   "test failed!!!"
+    .byte   $00
+
+ad_addr_test:
+    .addr   :+
+:
+    .byte   "address test..."
+    .byte   $00
+
+ad_status_test:
+    .addr   :+
+:
+    .byte   "status test..."
     .byte   $00
 
 ad_ppu_test:
@@ -1073,6 +2382,349 @@ ad_single_test:
     .byte   "single byte inst test..."
     .byte   $00
 
+;;;read only global datas
+use_ppu:
+    .byte   $01
+
+
+;;;;address fixed test code..
+.segment "SEG_5K"
+.proc addr_test
+    jmp @jmp_test1
+    .byte   "*************"
+    .byte   "0**"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "***********"
+
+@jmp_ret1:
+    nop
+    ;;page cross at jmp cycle #0
+    jmp @jmp_test2
+
+    .byte   "**************"
+    .byte   "1***************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "*************"
+
+@jmp_ret2:
+    ;;page cross at the jmp cycle #2
+    nop
+    jmp @jmp_test3
+    .byte   "***************"
+    .byte   "2***********"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+
+@jmp_ret3:
+    ;;page cross at the jmp cycle #1
+    nop
+    jmp @jmp_test4
+    .byte   "3***********"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+
+    ;;a1 instruction
+    ;;page cross at cycle #0
+@jmp_ret4:
+    ldx #$5f
+    nop
+    inx
+    cpx #$60
+    beq :+
+    jsr test_failure
+:
+
+    jmp @jmp_test5
+    .byte   "******"
+    .byte   "4***************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "***************"
+@jmp_ret5:
+    ;;a1 instruction
+    ;;page cross at cycle #0
+    nop
+    inx
+    cpx #$61
+    beq :+
+    jsr test_failure
+:
+
+    jmp @jmp_test6
+    .byte   "*****"
+    .byte   "5***********"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+@jmp_ret6:
+    ;;a2 instruction
+    ;;page cross at cycle #0
+    sec
+    lda #$3b
+    nop
+    adc #$9b        ;;;3b+9b+1=d7
+    cmp #$d7
+    beq :+
+    jsr test_failure
+:
+    jmp @jmp_test7
+    .byte   "****"
+    .byte   "6**********"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+@jmp_ret7:
+    ;;a2 instruction
+    ;;page cross at cycle #1
+    sec
+    lda #$77
+    nop
+    ora #$f0        ;;;3b+9b+1=d7
+    cmp #$f7
+    beq :+
+    jsr test_failure
+:
+    jmp @jmp_test8
+    .byte   "*****"
+    .byte   "7***"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+@jmp_ret8:
+    ;;a2 instruction
+    ;;page cross at cycle #2
+    sec
+    lda #$c1
+    sta $0620       ;;@0620=c1
+    lda #$91
+    nop
+    sbc $0620        ;;;91-c1=d0
+    cmp #$d0
+    beq :+
+    jsr test_failure
+:
+
+    ;;jmp indirect instruction
+    ;;page cross at cycle #0
+    jmp @jmp_test9
+    .byte   "******"
+    .byte   "8*********"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+@jmp_test10_addr:
+    .addr   @jmp_test10
+    
+@jmp_ret9:
+    nop
+    jmp (@jmp_test10_addr)
+@jmp_ret10:
+
+
+    ;;jmp indirect instruction
+    ;;page cross at cycle #2
+    jmp @jmp_test11
+    .byte   "*************"
+    .byte   "9**********"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+@jmp_test12_addr:
+    .addr   @jmp_test12
+    
+@jmp_ret11:
+    nop
+    jmp (@jmp_test12_addr)
+@jmp_ret12:
+
+    ;;jmp indirect instruction
+    ;;page cross at cycle #1
+    jmp @jmp_test13
+    .byte   "************"
+    .byte   "10**********"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+    .byte   "****************"
+@jmp_test14_addr:
+    .addr   @jmp_test14
+    
+@jmp_ret13:
+    nop
+    jmp (@jmp_test14_addr)
+@jmp_ret14:
+
+
+
+
+    jmp @jmp_test_done
+
+@jmp_test1:
+    jmp @jmp_ret1
+@jmp_test2:
+    jmp @jmp_ret2
+@jmp_test3:
+    jmp @jmp_ret3
+@jmp_test4:
+    jmp @jmp_ret4
+@jmp_test5:
+    jmp @jmp_ret5
+@jmp_test6:
+    jmp @jmp_ret6
+@jmp_test7:
+    jmp @jmp_ret7
+@jmp_test8:
+    jmp @jmp_ret8
+@jmp_test9:
+    jmp @jmp_ret9
+@jmp_test10:
+    jmp @jmp_ret10
+@jmp_test11:
+    jmp @jmp_ret11
+@jmp_test12:
+    jmp @jmp_ret12
+@jmp_test13:
+    jmp @jmp_ret13
+@jmp_test14:
+    jmp @jmp_ret14
+
+@jmp_test_done:
+    lda ad_addr_test
+    sta $00
+    lda ad_addr_test+1
+    sta $01
+    jsr print_ln
+
+    rts
+.endproc
+
+
 ;;;;r/w global variables.
 .segment "BSS"
 vram_current:
@@ -1083,8 +2735,19 @@ scroll_x:
 scroll_y:
     .byte   $00
 
+;;ppu status reg val @2000
+ppu_stat1:
+    .byte   $00
+;;ppu status reg val @2001
+ppu_stat2:
+    .byte   $00
+vs_cnt:
+    .byte   $00
+disp_cnt:
+    .byte   $00
+
 ;;;for DE1 internal memory constraints.
-.segment "VECINFO_4k"
+.segment "VECINFO_8k"
 	.word	nmi_test
 	.word	Reset
 	.word	$0000

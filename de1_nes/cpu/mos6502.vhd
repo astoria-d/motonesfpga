@@ -10,7 +10,6 @@ entity mos6502 is
     signal dbg_int_d_bus    : out std_logic_vector(7 downto 0);
     signal dbg_exec_cycle   : out std_logic_vector (5 downto 0);
     signal dbg_ea_carry     : out std_logic;
-    signal dbg_wait_a58_branch_next     : out std_logic;
 
 --    signal dbg_index_bus    : out std_logic_vector(7 downto 0);
 --    signal dbg_acc_bus      : out std_logic_vector(7 downto 0);
@@ -46,7 +45,6 @@ component decoder
     generic (dsize : integer := 8);
     port (  
     --signal dbg_ea_carry     : out std_logic;
-    signal dbg_wait_a58_branch_next     : out std_logic;
 
             set_clk         : in std_logic;
             trig_clk        : in std_logic;
@@ -390,7 +388,6 @@ begin
     dec_inst : decoder generic map (dsize) 
             port map(
     --dbg_ea_carry     ,
-    dbg_wait_a58_branch_next     ,
             
                     set_clk, 
                     trigger_clk, 

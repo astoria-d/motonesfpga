@@ -23,7 +23,6 @@ architecture stimulus of testbench_motones_sim is
     signal dbg_int_d_bus    : out std_logic_vector(7 downto 0);
     signal dbg_exec_cycle   : out std_logic_vector (5 downto 0);
     signal dbg_ea_carry     : out std_logic;
-    signal dbg_wait_a58_branch_next     : out std_logic;
 --    signal dbg_index_bus    : out std_logic_vector(7 downto 0);
 --    signal dbg_acc_bus      : out std_logic_vector(7 downto 0);
     signal dbg_status       : out std_logic_vector(7 downto 0);
@@ -43,6 +42,7 @@ architecture stimulus of testbench_motones_sim is
     signal dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y : out std_logic_vector (7 downto 0);
     signal dbg_disp_nt, dbg_disp_attr : out std_logic_vector (7 downto 0);
     signal dbg_disp_ptn_h, dbg_disp_ptn_l : out std_logic_vector (15 downto 0);
+    signal dummy_nmi  : in std_logic;
     
     
 --NES instance
@@ -60,6 +60,7 @@ architecture stimulus of testbench_motones_sim is
 
     signal base_clk         : std_logic;
     signal reset_input      : std_logic;
+    signal nmi_input      : std_logic;
 
     signal h_sync_n    : std_logic;
     signal v_sync_n    : std_logic;
@@ -90,7 +91,6 @@ architecture stimulus of testbench_motones_sim is
     signal dbg_int_d_bus  : std_logic_vector(7 downto 0);
     signal dbg_exec_cycle   : std_logic_vector (5 downto 0);
     signal dbg_ea_carry     : std_logic;
-    signal dbg_wait_a58_branch_next     : std_logic;
 --    signal dbg_index_bus    : std_logic_vector(7 downto 0);
 --    signal dbg_acc_bus      : std_logic_vector(7 downto 0);
     signal dbg_status       : std_logic_vector(7 downto 0);
@@ -125,7 +125,6 @@ dbg_instruction,
 dbg_int_d_bus,
 dbg_exec_cycle   ,
 dbg_ea_carry     ,
-dbg_wait_a58_branch_next     ,
 --dbg_index_bus    ,
 --dbg_acc_bus      ,
 dbg_status       ,
@@ -146,7 +145,7 @@ dbg_disp_nt, dbg_disp_attr ,
 dbg_disp_ptn_h, dbg_disp_ptn_l ,
 --dbg_ppu_addr_we_n,
 --dbg_ppu_clk_cnt          ,
-
+nmi_input,
     
     base_clk, reset_input, joypad1, joypad2, 
             h_sync_n, v_sync_n, r, g, b);
@@ -171,6 +170,25 @@ dbg_disp_ptn_h, dbg_disp_ptn_l ,
         wait for base_clock_time / 2;
         base_clk <= '0';
         wait for base_clock_time / 2;
+    end process;
+
+    --- initiate nmi.
+    nmi_p: process
+    constant nmi_wait     : time := 100 us;
+    constant vblank_time     : time := 60 us;
+    variable wait_cnt : integer := 0;
+    begin
+
+        if (wait_cnt = 0) then
+            nmi_input <= '1';
+            wait for powerup_time + reset_time + nmi_wait;
+            wait_cnt := wait_cnt + 1;
+        else
+            nmi_input <= '0';
+            wait for vblank_time ;
+            nmi_input <= '1';
+            wait for vblank_time / 4;
+        end if;
     end process;
 
 end stimulus;
