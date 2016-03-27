@@ -240,6 +240,7 @@ begin
         end if;
     end process;
 
+    ---emulated ppu clock adjustment.
     emu_ppu_clk <=  emu_ppu_clk1 when vga_x < conv_std_logic_vector(765, 10) else
                     emu_ppu_clk1 when vga_x > conv_std_logic_vector(798, 10) else
                     vga_clk;
@@ -248,8 +249,8 @@ begin
         port map (
         dbg_vga_clk                      ,
         dbg_nes_x                        ,
-        dbg_disp_nt, dbg_disp_attr      ,
-        dbg_disp_ptn_h, dbg_disp_ptn_l  ,
+        dbg_disp_nt, dbg_disp_attr       ,
+        dbg_disp_ptn_h, dbg_disp_ptn_l   ,
         dbg_plt_ce_rn_wn                 ,
         dbg_plt_addr                    ,
         dbg_plt_data                    ,
@@ -440,14 +441,11 @@ constant X_SIZE       : integer := 9;
 constant dsize        : integer := 8;
 constant asize        : integer := 14;
 constant HSCAN_MAX    : integer := 341;
---constant HSCAN_MAX    : integer := 321;
 constant VSCAN_MAX    : integer := 262;
 constant HSCAN        : integer := 257;
 constant VSCAN        : integer := 240;
 constant HSCAN_NEXT_START    : integer := 320;
 constant HSCAN_NEXT_EXTRA    : integer := 336;
---constant HSCAN_NEXT_START    : integer := 300;
---constant HSCAN_NEXT_EXTRA    : integer := 316;
 
 
 constant PPUBNA    : integer := 1;  --base name address
@@ -995,9 +993,6 @@ begin
     if (ppu_mask(PPUSBG) = '1' and dot_output = false and 
             (disp_ptn_h(0) or disp_ptn_l(0)) = '1') then
         dot_output := true;
---        d_print("output_rgb");
---        d_print("pl_addr:" & conv_hex8(pl_addr));
---        d_print("pl_index:" & conv_hex8(pl_index));
     end if;
 
     --if or if not bg/sprite is shown, output color anyway 
@@ -1006,9 +1001,6 @@ begin
     b <= nes_color_palette(pl_index) (11 downto 8);
     g <= nes_color_palette(pl_index) (7 downto 4);
     r <= nes_color_palette(pl_index) (3 downto 0);
---    b <= nes_color_palette(1) (11 downto 8);
---    g <= nes_color_palette(2) (7 downto 4);
---    r <= nes_color_palette(3) (3 downto 0);
 end;
 procedure stop_rgb is
 begin
