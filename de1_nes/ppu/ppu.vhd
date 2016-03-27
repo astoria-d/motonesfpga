@@ -56,7 +56,7 @@ end ppu;
 
 architecture rtl of ppu is
 
-component ppu_render
+component vga_ppu_render
     port (  
     signal dbg_vga_clk                      : out std_logic;
     signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
@@ -72,24 +72,26 @@ component ppu_render
     signal dbg_s_oam_ce_rn_wn               : out std_logic_vector (2 downto 0);
     signal dbg_s_oam_addr                   : out std_logic_vector (4 downto 0);
     signal dbg_s_oam_data                   : out std_logic_vector (7 downto 0);
-    
-    
-            ppu_clk     : in std_logic;
+
             vga_clk     : in std_logic;
             mem_clk     : in std_logic;
             rst_n       : in std_logic;
+
+            --vram i/f
             rd_n        : out std_logic;
             wr_n        : out std_logic;
             ale         : out std_logic;
-            vram_ad     : inout std_logic_vector (7 downto 0);
+            vram_ad     : inout  std_logic_vector (7 downto 0);
             vram_a      : out std_logic_vector (13 downto 8);
 
+            --vga output
             h_sync_n    : out std_logic;
             v_sync_n    : out std_logic;
             r           : out std_logic_vector (3 downto 0);
             g           : out std_logic_vector (3 downto 0);
             b           : out std_logic_vector (3 downto 0);
 
+            --upper ppu i/f
             ppu_ctrl        : in std_logic_vector (7 downto 0);
             ppu_mask        : in std_logic_vector (7 downto 0);
             read_status     : in std_logic;
@@ -97,6 +99,7 @@ component ppu_render
             ppu_scroll_x    : in std_logic_vector (7 downto 0);
             ppu_scroll_y    : in std_logic_vector (7 downto 0);
 
+            --ppu internal ram access
             r_nw            : in std_logic;
             oam_bus_ce_n    : in std_logic;
             plt_bus_ce_n    : in std_logic;
@@ -105,6 +108,7 @@ component ppu_render
             v_bus_busy_n    : out std_logic
     );
 end component;
+
 
 component d_flip_flop
     generic (
@@ -215,7 +219,7 @@ begin
 
 
 
-    render_inst : ppu_render port map (
+    render_inst : vga_ppu_render port map (
     dbg_vga_clk                      ,
     dbg_nes_x                        ,
     dbg_vga_x                        ,
@@ -230,7 +234,7 @@ begin
     dbg_s_oam_addr                  ,
     dbg_s_oam_data                  ,
     
-            ppu_clk, vga_clk, mem_clk, rst_n,
+            vga_clk, mem_clk, rst_n,
             rd_n, wr_n, ale, vram_ad, vram_a,
             h_sync_n, v_sync_n, r, g, b, 
             ppu_ctrl, ppu_mask, read_status, ppu_status, ppu_scroll_x, ppu_scroll_y,

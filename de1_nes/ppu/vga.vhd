@@ -11,7 +11,7 @@ use ieee.std_logic_arith.conv_std_logic_vector;
 use ieee.std_logic_unsigned.all;
 use work.motonesfpga_common.all;
 
-entity vga_ctl is 
+entity vga_ppu_render is 
     port (  
     signal dbg_vga_clk                      : out std_logic;
     signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
@@ -62,9 +62,9 @@ entity vga_ctl is
             oam_plt_data    : inout std_logic_vector (7 downto 0);
             v_bus_busy_n    : out std_logic
     );
-end vga_ctl;
+end vga_ppu_render;
 
-architecture rtl of vga_ctl is
+architecture rtl of vga_ppu_render is
 
 component counter_register
     generic (
@@ -80,7 +80,7 @@ component counter_register
     );
 end component;
 
-component ppu_vga_render
+component ppu_render
     port (  
     signal dbg_vga_clk                      : out std_logic;
     signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
@@ -240,7 +240,7 @@ begin
     end process;
 
     emu_ppu_clk_n <= not emu_ppu_clk;
-    vga_render_inst : ppu_vga_render
+    ppu_render_inst : ppu_render
         port map (
         dbg_vga_clk                      ,
         dbg_nes_x                        ,
@@ -299,7 +299,7 @@ use ieee.std_logic_arith.conv_std_logic_vector;
 use ieee.std_logic_unsigned.all;
 use work.motonesfpga_common.all;
 
-entity ppu_vga_render is 
+entity ppu_render is 
     port (  
     signal dbg_vga_clk                      : out std_logic;
     signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
@@ -346,9 +346,9 @@ entity ppu_vga_render is
             oam_plt_data    : inout std_logic_vector (7 downto 0);
             v_bus_busy_n    : out std_logic
     );
-end ppu_vga_render;
+end ppu_render;
 
-architecture rtl of ppu_vga_render is
+architecture rtl of ppu_render is
 
 component counter_register
     generic (
