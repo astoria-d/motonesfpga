@@ -213,29 +213,53 @@ end;
                         io_out(16#2007#, 16#45#);
 
                     elsif (nt_step_cnt = 5 * cpu_io_multi) then
-                        --set vram addr 21d1
-                        io_out(16#2006#, 16#21#);
+                        io_out(16#2006#, 16#20#);
                     elsif (nt_step_cnt = 6 * cpu_io_multi) then
-                        io_out(16#2006#, 16#E6#);
+                        io_out(16#2006#, 16#60#);
+
                     elsif (nt_step_cnt = 7 * cpu_io_multi) then
-                        --msg=DEE TEST !!!
-                        io_out(16#2007#, 16#44#);
+                        io_out(16#2007#, 48);
                     elsif (nt_step_cnt = 8 * cpu_io_multi) then
-                        io_out(16#2007#, 16#45#);
+                        io_out(16#2007#, 49);
                     elsif (nt_step_cnt = 9 * cpu_io_multi) then
-                        io_out(16#2007#, 16#45#);
+                        io_out(16#2007#, 50);
                     elsif (nt_step_cnt = 10 * cpu_io_multi) then
-                        io_out(16#2007#, 16#00#);
+                        io_out(16#2007#, 51);
                     elsif (nt_step_cnt = 11 * cpu_io_multi) then
-                        io_out(16#2007#, 16#54#);
+                        io_out(16#2007#, 52);
                     elsif (nt_step_cnt = 12 * cpu_io_multi) then
-                        io_out(16#2007#, 16#45#);
+                        io_out(16#2007#, 53);
                     elsif (nt_step_cnt = 13 * cpu_io_multi) then
-                        io_out(16#2007#, 16#53#);
+                        io_out(16#2007#, 54);
                     elsif (nt_step_cnt = 14 * cpu_io_multi) then
-                        io_out(16#2007#, 16#54#);
+                        io_out(16#2007#, 55);
                     elsif (nt_step_cnt = 15 * cpu_io_multi) then
-                        io_out(16#2007#, 16#21#);
+                        io_out(16#2007#, 56);
+
+--                    elsif (nt_step_cnt = 5 * cpu_io_multi) then
+--                        --set vram addr 21d1
+--                        io_out(16#2006#, 16#21#);
+--                    elsif (nt_step_cnt = 6 * cpu_io_multi) then
+--                        io_out(16#2006#, 16#E6#);
+--                    elsif (nt_step_cnt = 7 * cpu_io_multi) then
+--                        --msg=DEE TEST !!!
+--                        io_out(16#2007#, 16#44#);
+--                    elsif (nt_step_cnt = 8 * cpu_io_multi) then
+--                        io_out(16#2007#, 16#45#);
+--                    elsif (nt_step_cnt = 9 * cpu_io_multi) then
+--                        io_out(16#2007#, 16#45#);
+--                    elsif (nt_step_cnt = 10 * cpu_io_multi) then
+--                        io_out(16#2007#, 16#00#);
+--                    elsif (nt_step_cnt = 11 * cpu_io_multi) then
+--                        io_out(16#2007#, 16#54#);
+--                    elsif (nt_step_cnt = 12 * cpu_io_multi) then
+--                        io_out(16#2007#, 16#45#);
+--                    elsif (nt_step_cnt = 13 * cpu_io_multi) then
+--                        io_out(16#2007#, 16#53#);
+--                    elsif (nt_step_cnt = 14 * cpu_io_multi) then
+--                        io_out(16#2007#, 16#54#);
+--                    elsif (nt_step_cnt = 15 * cpu_io_multi) then
+--                        io_out(16#2007#, 16#21#);
 
                     elsif (nt_step_cnt = 16 * cpu_io_multi) then
                         --set vram addr 23c1 (attribute)
@@ -284,14 +308,14 @@ end;
                         io_out(16#2007#, 16#0e#);
                     elsif (nt_step_cnt = 35 * cpu_io_multi) then
                         io_out(16#2007#, 16#0f#);
-                    elsif (nt_step_cnt = 36 * cpu_io_multi) then
-                        io_out(16#2007#, 16#01#);
 
-                    elsif (nt_step_cnt = 37 * cpu_io_multi) then
+                    elsif (nt_step_cnt = 36 * cpu_io_multi) then
                         io_out(16#2006#, 16#20#);
-                    elsif (nt_step_cnt = 38 * cpu_io_multi) then
+                    elsif (nt_step_cnt = 37 * cpu_io_multi) then
                         io_out(16#2006#, 16#40#);
                     
+                    elsif (nt_step_cnt = 38 * cpu_io_multi) then
+                        io_out(16#2007#, 16#10#);
                     elsif (nt_step_cnt = 39 * cpu_io_multi) then
                         io_out(16#2007#, 16#11#);
                     elsif (nt_step_cnt = 40 * cpu_io_multi) then
@@ -322,13 +346,11 @@ end;
                         io_out(16#2007#, 16#1e#);
                     elsif (nt_step_cnt = 53 * cpu_io_multi) then
                         io_out(16#2007#, 16#1f#);
-                    elsif (nt_step_cnt = 54 * cpu_io_multi) then
-                        io_out(16#2007#, 16#11#);
 
 
                     else
                         io_brk;
-                        if (nt_step_cnt > 54 * cpu_io_multi) then
+                        if (nt_step_cnt > 56 * cpu_io_multi) then
                             global_step_cnt := global_step_cnt + 1;
                         end if;
                     end if;

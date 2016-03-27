@@ -112,6 +112,32 @@
 	lda	#$45
 	sta	$2007
 
+
+	lda	#$20
+	sta	$2006
+	lda	#$60
+	sta	$2006
+
+	lda	#48
+	sta	$2007
+	lda	#49
+	sta	$2007
+	lda	#50
+	sta	$2007
+	lda	#51
+	sta	$2007
+	lda	#52
+	sta	$2007
+	lda	#53
+	sta	$2007
+	lda	#54
+	sta	$2007
+	lda	#55
+	sta	$2007
+	lda	#56
+
+
+
 	lda	#$21
 	sta	$2006
 	lda	#$e6
@@ -159,6 +185,8 @@
 	lda	#$40
 	sta	$2006
 
+	lda	#$10
+	sta	$2007
 	lda	#$11
 	sta	$2007
 	lda	#$12
@@ -247,11 +275,11 @@
     lda #45
     sta $2004
 
-;    ;;init scroll point.
-;    lda #$00
-;    sta $2005
-;    lda #$00
-;    sta $2005
+    ;;init scroll point.
+    lda #$00
+    sta $2005
+    lda #248
+    sta $2005
 
     ;;show bg...
 	lda	#$1e
