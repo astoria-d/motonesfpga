@@ -52,7 +52,7 @@ begin
     variable init_done : std_logic;
     variable global_step_cnt : integer;
     variable cpu_cnt : integer;
-    constant cpu_io_multi : integer := 4; --io happens every 4 cpu cycle.
+    constant cpu_io_multi : integer := 3; --io happens every 4 cpu cycle.
 
 procedure io_out (ad: in integer; dt : in integer) is
 begin

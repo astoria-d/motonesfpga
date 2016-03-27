@@ -219,7 +219,7 @@ begin
 
 
 
-    render_inst : vga_ppu_render port map (
+    vga_render_inst : vga_ppu_render port map (
     dbg_vga_clk                      ,
     dbg_nes_x                        ,
     dbg_vga_x                        ,
