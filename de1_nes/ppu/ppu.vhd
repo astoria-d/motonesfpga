@@ -24,6 +24,7 @@ entity ppu is
     signal dbg_s_oam_ce_rn_wn               : out std_logic_vector (2 downto 0);
     signal dbg_s_oam_addr                   : out std_logic_vector (4 downto 0);
     signal dbg_s_oam_data                   : out std_logic_vector (7 downto 0);
+    signal dbg_emu_ppu_clk                  : out std_logic;
 
     signal dbg_ppu_addr_we_n                : out std_logic;
     signal dbg_ppu_clk_cnt                  : out std_logic_vector(1 downto 0);
@@ -72,6 +73,7 @@ component vga_ppu_render
     signal dbg_s_oam_ce_rn_wn               : out std_logic_vector (2 downto 0);
     signal dbg_s_oam_addr                   : out std_logic_vector (4 downto 0);
     signal dbg_s_oam_data                   : out std_logic_vector (7 downto 0);
+    signal dbg_emu_ppu_clk                  : out std_logic;
 
             vga_clk     : in std_logic;
             mem_clk     : in std_logic;
@@ -233,6 +235,7 @@ begin
     dbg_s_oam_ce_rn_wn              ,
     dbg_s_oam_addr                  ,
     dbg_s_oam_data                  ,
+    dbg_emu_ppu_clk                 ,
     
             vga_clk, mem_clk, rst_n,
             rd_n, wr_n, ale, vram_ad, vram_a,

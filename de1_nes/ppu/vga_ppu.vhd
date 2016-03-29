@@ -27,6 +27,7 @@ entity vga_ppu_render is
     signal dbg_s_oam_ce_rn_wn               : out std_logic_vector (2 downto 0);
     signal dbg_s_oam_addr                   : out std_logic_vector (4 downto 0);
     signal dbg_s_oam_data                   : out std_logic_vector (7 downto 0);
+    signal dbg_emu_ppu_clk                  : out std_logic;
 
             vga_clk     : in std_logic;
             mem_clk     : in std_logic;
@@ -162,7 +163,8 @@ signal nes_y        : std_logic_vector (8 downto 0);
 
 begin
     dbg_vga_x <= vga_x;
-
+    dbg_vga_clk <= vga_clk;
+    
     cnt_clk <= not vga_clk;
     
     --vga position counter
@@ -247,7 +249,7 @@ begin
     emu_ppu_clk_n <= not emu_ppu_clk;
     ppu_render_inst : ppu_render
         port map (
-        dbg_vga_clk                      ,
+        dbg_emu_ppu_clk                      ,
         dbg_nes_x                        ,
         dbg_disp_nt, dbg_disp_attr       ,
         dbg_disp_ptn_h, dbg_disp_ptn_l   ,
