@@ -146,7 +146,6 @@ signal y_res_n      : std_logic;
 signal y_en_n       : std_logic;
 signal cnt_clk      : std_logic;
 
-signal emu_ppu_clk1      : std_logic;
 signal emu_ppu_clk      : std_logic;
 signal emu_ppu_clk_n    : std_logic;
 signal count5_res_n     : std_logic;
@@ -220,10 +219,10 @@ begin
     nes_x_inst : counter_register generic map (9, 1)
             port map (emu_ppu_clk , x_res_n, '0', '1', (others => '0'), nes_x);
     nes_y <= vga_y(9 downto 1);
-    emu_clk_p : process (rst_n, vga_clk)
+
+    res_p : process (rst_n, vga_clk)
     begin
         if (rst_n = '0') then
-            emu_ppu_clk1 <= '0';
             count5_res_n <= '0';
         elsif (rising_edge(vga_clk)) then
             if (vga_x = conv_std_logic_vector(VGA_W_MAX, 10)) then
@@ -233,19 +232,27 @@ begin
             else
                 count5_res_n <= '1';
             end if;
+        end if;
+    end process;
 
-            if (count5 = "001" or count5 = "011") then
-                emu_ppu_clk1 <= '0';
+    emu_clk_p : process (rst_n, mem_clk)
+    begin
+        if (rst_n = '0') then
+            emu_ppu_clk <= '0';
+        elsif (rising_edge(mem_clk)) then
+            if (vga_x < conv_std_logic_vector(765, 10) ) then
+                if (count5 = "001" or count5 = "011") then
+                    emu_ppu_clk <= '0';
+                else
+                    emu_ppu_clk <= '1';
+                end if;
             else
-                emu_ppu_clk1 <= '1';
+                emu_ppu_clk <= not emu_ppu_clk;
             end if;
         end if;
     end process;
 
     ---emulated ppu clock adjustment.
-    emu_ppu_clk <=  emu_ppu_clk1 when vga_x < conv_std_logic_vector(765, 10) else
-                    emu_ppu_clk1 when vga_x > conv_std_logic_vector(798, 10) else
-                    vga_clk;
     emu_ppu_clk_n <= not emu_ppu_clk;
     ppu_render_inst : ppu_render
         port map (
