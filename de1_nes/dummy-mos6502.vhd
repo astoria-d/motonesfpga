@@ -347,7 +347,6 @@ end;
                     elsif (nt_step_cnt = 53 * cpu_io_multi) then
                         io_out(16#2007#, 16#1f#);
 
-
                     else
                         io_brk;
                         if (nt_step_cnt > 56 * cpu_io_multi) then
@@ -424,18 +423,24 @@ end;
 
                 elsif (global_step_cnt = 4) then
                     --final step = enable ppu.
-                    if (enable_ppu_step_cnt = 0) then
+                    if (enable_ppu_step_cnt = 0 * cpu_io_multi) then
+                        --scroll reg set x.
+                        io_out(16#2005#, 0);
+                    elsif (enable_ppu_step_cnt = 1 * cpu_io_multi) then
+                        --scroll reg set y.
+                        io_out(16#2005#, 247);
+                    elsif (enable_ppu_step_cnt = 2 * cpu_io_multi) then
                         --show bg
                         --PPUMASK=1e (show bg and sprite)
                         --PPUMASK=0e (show bg only)
                         io_out(16#2001#, 16#1e#);
-                    elsif (enable_ppu_step_cnt = 1 * cpu_io_multi) then
+                    elsif (enable_ppu_step_cnt = 3 * cpu_io_multi) then
                         --enable nmi
                         --PPUCTRL=80
                         io_out(16#2000#, 16#80#);
                     else
                         io_brk;
-                        if (enable_ppu_step_cnt > 2 * cpu_io_multi) then
+                        if (enable_ppu_step_cnt > 4 * cpu_io_multi) then
                             global_step_cnt := global_step_cnt + 1;
                         end if;
                     end if;

@@ -16,6 +16,8 @@ entity vga_ppu_render is
     signal dbg_vga_clk                      : out std_logic;
     signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
     signal dbg_vga_x                        : out std_logic_vector (9 downto 0);
+    signal dbg_nes_y                        : out std_logic_vector (8 downto 0);
+    signal dbg_vga_y                        : out std_logic_vector (9 downto 0);
     signal dbg_disp_nt, dbg_disp_attr       : out std_logic_vector (7 downto 0);
     signal dbg_disp_ptn_h, dbg_disp_ptn_l   : out std_logic_vector (15 downto 0);
     signal dbg_plt_ce_rn_wn                 : out std_logic_vector (2 downto 0);
@@ -85,6 +87,7 @@ component ppu_render
     port (  
     signal dbg_ppu_clk                      : out std_logic;
     signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
+    signal dbg_nes_y                        : out std_logic_vector (8 downto 0);
     signal dbg_disp_nt, dbg_disp_attr       : out std_logic_vector (7 downto 0);
     signal dbg_disp_ptn_h, dbg_disp_ptn_l   : out std_logic_vector (15 downto 0);
     signal dbg_plt_ce_rn_wn                 : out std_logic_vector (2 downto 0);
@@ -162,6 +165,7 @@ signal nes_y        : std_logic_vector (8 downto 0);
 
 begin
     dbg_vga_x <= vga_x;
+    dbg_vga_y <= vga_y;
     dbg_vga_clk <= vga_clk;
     
     cnt_clk <= not vga_clk;
@@ -258,6 +262,7 @@ begin
         port map (
         dbg_emu_ppu_clk                      ,
         dbg_nes_x                        ,
+        dbg_nes_y                        ,
         dbg_disp_nt, dbg_disp_attr       ,
         dbg_disp_ptn_h, dbg_disp_ptn_l   ,
         dbg_plt_ce_rn_wn                 ,
@@ -317,6 +322,7 @@ entity ppu_render is
     port (  
     signal dbg_ppu_clk                      : out std_logic;
     signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
+    signal dbg_nes_y                        : out std_logic_vector (8 downto 0);
     signal dbg_disp_nt, dbg_disp_attr       : out std_logic_vector (7 downto 0);
     signal dbg_disp_ptn_h, dbg_disp_ptn_l   : out std_logic_vector (15 downto 0);
     signal dbg_plt_ce_rn_wn                 : out std_logic_vector (2 downto 0);
@@ -661,6 +667,7 @@ signal spr_ptn_in       : std_logic_vector (dsize - 1 downto 0);
 begin
     dbg_ppu_clk <= ppu_clk;
     dbg_nes_x <= cur_x;
+    dbg_nes_y <= cur_y;
     dbg_disp_nt <= disp_nt;
     dbg_disp_attr <= disp_attr;
     dbg_disp_ptn_h <= disp_ptn_h;

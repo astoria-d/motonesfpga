@@ -147,6 +147,8 @@ architecture rtl of de1_nes is
         signal dbg_vga_clk                      : out std_logic;
         signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
         signal dbg_vga_x                        : out std_logic_vector (9 downto 0);
+        signal dbg_nes_y                        : out std_logic_vector (8 downto 0);
+        signal dbg_vga_y                        : out std_logic_vector (9 downto 0);
         signal dbg_disp_nt, dbg_disp_attr       : out std_logic_vector (7 downto 0);
         signal dbg_disp_ptn_h, dbg_disp_ptn_l   : out std_logic_vector (15 downto 0);
         signal dbg_plt_ce_rn_wn                 : out std_logic_vector (2 downto 0);
@@ -288,6 +290,8 @@ architecture rtl of de1_nes is
     signal dbg_ppu_addr_dummy               : std_logic_vector (13 downto 0);
     signal dbg_nes_x                        : std_logic_vector (8 downto 0);
     signal dbg_vga_x                        : std_logic_vector (9 downto 0);
+    signal dbg_nes_y                        : std_logic_vector (8 downto 0);
+    signal dbg_vga_y                        : std_logic_vector (9 downto 0);
     signal dbg_plt_ce_rn_wn                 : std_logic_vector (2 downto 0);
     signal dbg_plt_addr                     : std_logic_vector (4 downto 0);
     signal dbg_plt_data                     : std_logic_vector (7 downto 0);
@@ -308,6 +312,7 @@ architecture rtl of de1_nes is
     signal dbg_int_d_bus_dummy    : std_logic_vector(7 downto 0);
     signal dbg_exec_cycle_dummy   : std_logic_vector (5 downto 0);
     signal dbg_ea_carry_dummy     : std_logic;
+    signal dbg_status_dummy       : std_logic_vector(7 downto 0);
 
 begin
 
@@ -326,7 +331,7 @@ begin
     dbg_ea_carry_dummy,
  --   dbg_index_bus,
  --   dbg_acc_bus,
-    dbg_status,
+    dbg_status_dummy,
     dbg_pcl, dbg_pch, dbg_sp, dbg_x, dbg_y, dbg_acc,
     dbg_dec_oe_n,
     dbg_dec_val,
@@ -358,6 +363,10 @@ begin
     dbg_exec_cycle(0) <= dbg_nes_x(8);
     dbg_instruction <= dbg_nes_x(7 downto 0);
     dbg_exec_cycle(3) <= dbg_emu_ppu_clk;
+
+    dbg_exec_cycle(4) <= dbg_nes_y(8);
+    dbg_status <= dbg_nes_y(7 downto 0);
+
 
     dbg_ppu_scrl_x(0) <= ale;
     dbg_ppu_scrl_x(1) <= rd_n;
@@ -395,6 +404,8 @@ begin
         dbg_vga_clk                      ,
         dbg_nes_x                        ,
         dbg_vga_x                        ,
+        dbg_nes_y                        ,
+        dbg_vga_y                        ,
         dbg_disp_nt, dbg_disp_attr                          ,
         dbg_disp_ptn_h_dummy, dbg_disp_ptn_l_dummy                      ,
         dbg_plt_ce_rn_wn                 ,
