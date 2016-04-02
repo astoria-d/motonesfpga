@@ -151,8 +151,8 @@ signal cnt_clk      : std_logic;
 
 signal emu_ppu_clk      : std_logic;
 signal emu_ppu_clk_n    : std_logic;
-signal count5_res_n     : std_logic;
-signal count5           : std_logic_vector(2 downto 0);
+signal count11_res_n     : std_logic;
+signal count11           : std_logic_vector(3 downto 0);
 signal nes_x        : std_logic_vector (8 downto 0);
 signal nes_y        : std_logic_vector (8 downto 0);
 
@@ -218,8 +218,8 @@ begin
     end process;
 
     --emulate ppu clock that is synchronized with vga clock
-    count5_inst : counter_register generic map (3, 1)
-            port map (cnt_clk, count5_res_n, '0', '1', (others => '0'), count5);
+    count11_inst : counter_register generic map (4, 1)
+            port map (cnt_clk, count11_res_n, '0', '1', (others => '0'), count11);
     nes_x_inst : counter_register generic map (9, 1)
             port map (emu_ppu_clk , x_res_n, '0', '1', (others => '0'), nes_x);
     nes_y <= vga_y(9 downto 1);
@@ -227,14 +227,14 @@ begin
     res_p : process (rst_n, vga_clk)
     begin
         if (rst_n = '0') then
-            count5_res_n <= '0';
+            count11_res_n <= '0';
         elsif (rising_edge(vga_clk)) then
             if (vga_x = conv_std_logic_vector(VGA_W_MAX, 10)) then
-                count5_res_n <= '0';
-            elsif (count5 = "100") then
-                count5_res_n <= '0';
+                count11_res_n <= '0';
+            elsif (count11 = "1011") then
+                count11_res_n <= '0';
             else
-                count5_res_n <= '1';
+                count11_res_n <= '1';
             end if;
         end if;
     end process;
@@ -244,14 +244,20 @@ begin
         if (rst_n = '0') then
             emu_ppu_clk <= '0';
         elsif (rising_edge(mem_clk)) then
-            if (vga_x < conv_std_logic_vector(765, 10) ) then
-                if (count5 = "001" or count5 = "011") then
+            if (vga_x < conv_std_logic_vector(680, 10) or 
+                vga_x > conv_std_logic_vector(760, 10) ) then
+                if (count11 = "0001" or count11 = "0011" or count11 = "0101" or count11 = "0111"
+                    or count11 = "1010" or count11 = "1100") then
                     emu_ppu_clk <= '0';
                 else
                     emu_ppu_clk <= '1';
                 end if;
             else
-                emu_ppu_clk <= not emu_ppu_clk;
+                if (count11(0) = '1') then
+                    emu_ppu_clk <= '0';
+                else
+                    emu_ppu_clk <= '1';
+                end if;
             end if;
         end if;
     end process;
@@ -275,7 +281,7 @@ begin
         dbg_s_oam_addr                  ,
         dbg_s_oam_data                  ,
         
-                emu_ppu_clk_n ,
+                emu_ppu_clk ,
                 mem_clk     ,
                 rst_n       ,
                 rd_n        ,

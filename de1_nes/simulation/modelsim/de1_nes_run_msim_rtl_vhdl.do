@@ -116,5 +116,6 @@ view signals
 run 2 us
 wave zoom full
 
-run 65 us
+run 2 us
+#run 65 us
 
