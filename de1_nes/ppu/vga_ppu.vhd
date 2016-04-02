@@ -244,12 +244,15 @@ begin
         if (rst_n = '0') then
             emu_ppu_clk <= '0';
         elsif (rising_edge(mem_clk)) then
-            if (vga_x < conv_std_logic_vector(765, 10) ) then
+            if (vga_x < conv_std_logic_vector(764, 10) ) then
                 if (count5 = "001" or count5 = "011") then
                     emu_ppu_clk <= '0';
                 else
                     emu_ppu_clk <= '1';
                 end if;
+            elsif (vga_x > conv_std_logic_vector(796, 10) and 
+                    vga_x < conv_std_logic_vector(798, 10) ) then
+                emu_ppu_clk <= '0';
             else
                 emu_ppu_clk <= not emu_ppu_clk;
             end if;
