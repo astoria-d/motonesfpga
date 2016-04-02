@@ -428,7 +428,7 @@ end;
                         io_out(16#2005#, 0);
                     elsif (enable_ppu_step_cnt = 1 * cpu_io_multi) then
                         --scroll reg set y.
-                        io_out(16#2005#, 247);
+                        io_out(16#2005#, 0);
                     elsif (enable_ppu_step_cnt = 2 * cpu_io_multi) then
                         --show bg
                         --PPUMASK=1e (show bg and sprite)
