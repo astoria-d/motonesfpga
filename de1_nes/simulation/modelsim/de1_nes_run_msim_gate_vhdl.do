@@ -63,24 +63,29 @@ add wave -label ppu_data -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu
 
 
 add wave -divider vga_pos
-add wave -label emu_ppu_clk           sim:/testbench_motones_sim/sim_board/dbg_exec_cycle(3)
 add wave -label vga_x           -radix decimal -unsigned  {sim:/testbench_motones_sim/sim_board/dbg_exec_cycle(2 downto 1) & sim:/testbench_motones_sim/sim_board/dbg_int_d_bus (7 downto 0)}
-add wave -label nes_x           -radix decimal -unsigned  {sim:/testbench_motones_sim/sim_board/dbg_exec_cycle(0) & sim:/testbench_motones_sim/sim_board/dbg_instruction (7 downto 0)}
 add wave -label nes_y           -radix decimal -unsigned  {sim:/testbench_motones_sim/sim_board/dbg_exec_cycle(4) & sim:/testbench_motones_sim/sim_board/dbg_status (7 downto 0)}
 
+add wave -label emu_ppu_clk           sim:/testbench_motones_sim/sim_board/dbg_exec_cycle(3)
+add wave -label nes_x           -radix decimal -unsigned  {sim:/testbench_motones_sim/sim_board/dbg_exec_cycle(0) & sim:/testbench_motones_sim/sim_board/dbg_instruction (7 downto 0)}
 add wave -label dbg_disp_nt     -radix hex sim:/testbench_motones_sim/sim_board/dbg_disp_nt
 add wave -label dbg_disp_attr   -radix hex sim:/testbench_motones_sim/sim_board/dbg_disp_attr
-#add wave -label dbg_disp_ptn_h  -radix hex sim:/testbench_motones_sim/sim_board/dbg_disp_ptn_h
-#add wave -label dbg_disp_ptn_l  -radix hex sim:/testbench_motones_sim/sim_board/dbg_disp_ptn_l
+add wave -label dbg_disp_ptn_h  -radix hex sim:/testbench_motones_sim/sim_board/dbg_disp_ptn_h
+add wave -label dbg_disp_ptn_l  -radix hex sim:/testbench_motones_sim/sim_board/dbg_disp_ptn_l
 
-###add wave -divider vram
-###add wave -label ale sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x(0)
-###add wave -label rd_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x(1)
-###add wave -label wr_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x(2)
-###add wave -label nt0_ce_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x(3)
-###
-###add wave  -radix hex -label v_addr sim:/testbench_motones_sim/sim_board/dbg_disp_ptn_l
-###add wave  -radix hex -label vram_ad sim:/testbench_motones_sim/sim_board/dbg_vram_ad
+add wave -divider vram
+
+
+add wave  -label ppu_clk_cnt -radix decimal -unsigned  {sim:/testbench_motones_sim/sim_board/dbg_sp(7 downto 6)}
+
+add wave -label ale sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x(0)
+add wave -label rd_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x(1)
+add wave -label wr_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x(2)
+add wave -label nt0_ce_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x(3)
+###add wave  -radix hex -label vram_addr {sim:/testbench_motones_sim/sim_board/dbg_vram_a(13 downto 8) & sim:/testbench_motones_sim/sim_board/dbg_vram_ad(7 downto 0)}
+add wave  -radix hex -label v_addr {sim:/testbench_motones_sim/sim_board/dbg_sp(5 downto 0) & sim:/testbench_motones_sim/sim_board/dbg_x(7 downto 0)}
+add wave  -radix hex -label vram_ad sim:/testbench_motones_sim/sim_board/dbg_vram_ad
+
 ###
 ###
 ###add wave -label plt_ce_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_y(5)
@@ -102,14 +107,16 @@ add wave -label dbg_disp_attr   -radix hex sim:/testbench_motones_sim/sim_board/
 view structure
 view signals
 #run -all
-run 8 us
+run 1 us
 wave zoom full
 
 #wave zoom range 3339700 ps 5138320 ps
 
-run 100 us
+run 54 us
 
-run 66390721 ps
+run 77 us
+
+run 10 us
 
 ##wave addcursor 907923400 ps
 

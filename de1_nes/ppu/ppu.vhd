@@ -305,7 +305,7 @@ begin
     plt_data_out_inst : d_flip_flop generic map(dsize)
             port map (ppu_clk_n, rst_n, '1', ppu_data_we_n, oam_plt_data, plt_data_out);
 
-    reg_set_p : process (rst_n, ppu_clk)
+    reg_set_p : process (rst_n, ce_n, r_nw, cpu_addr)
     begin
 
         if (rst_n = '0') then
@@ -318,74 +318,71 @@ begin
             ppu_scroll_cnt_ce_n  <= '1';
             read_status <= '0';
             read_data_n <= '1';
+        elsif (rst_n = '1' and ce_n = '0') then
 
-        elsif (rising_edge(ppu_clk)) then
-            if(ce_n = '0') then
+            --register set.
+            if(cpu_addr = PPUCTRL) then
+                ppu_ctrl_we_n <= '0';
+            else
+                ppu_ctrl_we_n <= '1';
+            end if;
 
-                --register set.
-                if(cpu_addr = PPUCTRL and ppu_clk_cnt = "01") then
-                    ppu_ctrl_we_n <= '0';
-                else
-                    ppu_ctrl_we_n <= '1';
-                end if;
+            if(cpu_addr = PPUMASK) then
+                ppu_mask_we_n <= '0';
+            else
+                ppu_mask_we_n <= '1';
+            end if;
 
-                if(cpu_addr = PPUMASK and ppu_clk_cnt = "01") then
-                    ppu_mask_we_n <= '0';
-                else
-                    ppu_mask_we_n <= '1';
-                end if;
-
-                if(cpu_addr = PPUSTATUS and r_nw = '1' and ppu_clk_cnt = "01") then
-                    --notify reading status
-                    read_status <= '1';
-                else
-                    read_status <= '0';
-                end if;
-
-                if(cpu_addr = OAMADDR and ppu_clk_cnt = "01") then
-                    oam_addr_we_n <= '0';
-                else
-                    oam_addr_we_n <= '1';
-                end if;
-
-                if(cpu_addr = OAMDATA and ppu_clk_cnt = "01") then
-                    oam_data_we_n <= '0';
-                else
-                    oam_data_we_n <= '1';
-                end if;
-
-                if(cpu_addr = PPUSCROLL and ppu_clk_cnt = "01") then
-                    ppu_scroll_cnt_ce_n <= '0';
-                    if (ppu_scroll_cnt(0) = '0') then
-                        ppu_scroll_x_we_n <= '0';
-                        ppu_scroll_y_we_n <= '1';
-                    else
-                        ppu_scroll_y_we_n <= '0';
-                        ppu_scroll_x_we_n <= '1';
-                    end if;
-                else
-                    ppu_scroll_x_we_n <= '1';
-                    ppu_scroll_y_we_n <= '1';
-                    ppu_scroll_cnt_ce_n <= '1';
-                end if;
-
-                if (cpu_addr = PPUDATA and r_nw = '1' and ppu_clk_cnt = "01") then
-                    read_data_n <= '0';
-                else
-                    read_data_n <= '1';
-                end if;
-            else --if(ce_n = '0') then
-                ppu_ctrl_we_n    <= '1';
-                ppu_mask_we_n    <= '1';
-                oam_addr_we_n    <= '1';
-                oam_data_we_n    <= '1';
-                ppu_scroll_x_we_n    <= '1';
-                ppu_scroll_y_we_n    <= '1';
-                ppu_scroll_cnt_ce_n  <= '1';
+            if(cpu_addr = PPUSTATUS and r_nw = '1') then
+                --notify reading status
+                read_status <= '1';
+            else
                 read_status <= '0';
+            end if;
+
+            if(cpu_addr = OAMADDR) then
+                oam_addr_we_n <= '0';
+            else
+                oam_addr_we_n <= '1';
+            end if;
+
+            if(cpu_addr = OAMDATA) then
+                oam_data_we_n <= '0';
+            else
+                oam_data_we_n <= '1';
+            end if;
+
+            if(cpu_addr = PPUSCROLL) then
+                ppu_scroll_cnt_ce_n <= '0';
+                if (ppu_scroll_cnt(0) = '0') then
+                    ppu_scroll_x_we_n <= '0';
+                    ppu_scroll_y_we_n <= '1';
+                else
+                    ppu_scroll_y_we_n <= '0';
+                    ppu_scroll_x_we_n <= '1';
+                end if;
+            else
+                ppu_scroll_x_we_n <= '1';
+                ppu_scroll_y_we_n <= '1';
+                ppu_scroll_cnt_ce_n <= '1';
+            end if;
+
+            if (cpu_addr = PPUDATA and r_nw = '1') then
+                read_data_n <= '0';
+            else
                 read_data_n <= '1';
-            end if; --if(ce_n = '0') then
-        end if; --if (rst_n = '0') 
+            end if;
+        else
+            ppu_ctrl_we_n    <= '1';
+            ppu_mask_we_n    <= '1';
+            oam_addr_we_n    <= '1';
+            oam_data_we_n    <= '1';
+            ppu_scroll_x_we_n    <= '1';
+            ppu_scroll_y_we_n    <= '1';
+            ppu_scroll_cnt_ce_n  <= '1';
+            read_status <= '0';
+            read_data_n <= '1';
+        end if; --if (rst_n = '1' and ce_n = '0') 
 
     end process;
 
@@ -408,7 +405,7 @@ begin
     end process;
     
     --cpu and ppu clock timing adjustment...
-    clk_cnt_set_p : process (rst_n, ppu_clk)
+    clk_cnt_set_p : process (rst_n, ce_n, r_nw, cpu_addr, ppu_clk)
     begin
         if (rst_n = '0') then
             ppu_latch_rst_n <= '0';
@@ -425,193 +422,203 @@ begin
             vram_ad <= (others => 'Z');
             vram_a <= (others => 'Z');
             cpu_d <= (others => 'Z');
-        elsif (rising_edge(ppu_clk)) then
-            if (ce_n = '0') then
+        elsif (rst_n = '1' and ce_n = '0') then
 
-                --start counter.
+            --start counter.
+            if (ppu_clk'event and ppu_clk = '0') then
                 if (read_status = '1') then
                     --reading status resets ppu_addr/scroll cnt.
                     ppu_latch_rst_n <= '0';
                 else
                     ppu_latch_rst_n <= '1';
                 end if;
+                --d_print("clk event");
+            end if;
 
-                --oam data set
-                if (cpu_addr = OAMDATA and ppu_clk_cnt = "01") then
-                    oam_bus_ce_n <= '0';
-                    oam_addr_ce_n <= '0';
+            --oam data set
+            if (cpu_addr = OAMDATA and ppu_clk_cnt = "00") then
+                oam_bus_ce_n <= '0';
+                oam_addr_ce_n <= '0';
+            else
+                oam_bus_ce_n <= '1';
+                oam_addr_ce_n <= '1';
+            end if; --if (cpu_addr = OAMDATA and ppu_clk_cnt = "00") then
+
+            if (cpu_addr = PPUADDR and ppu_clk_cnt = "00") then
+                ppu_addr_cnt_ce_n <= '0';
+                if (ppu_addr_cnt(0) = '0') then
+                    --load addr high
+                    ale <= '0';
                 else
-                    oam_bus_ce_n <= '1';
-                    oam_addr_ce_n <= '1';
-                end if; --if (cpu_addr = OAMDATA and ppu_clk_cnt = "00") then
-
-                if (cpu_addr = PPUADDR and ppu_clk_cnt = "01") then
-                    ppu_addr_cnt_ce_n <= '0';
-                    if (ppu_addr_cnt(0) = '0') then
-                        --load addr high
-                        ale <= '0';
-                    else
-                        --load addr low and output vram/plt bus.
-                        --if address is 3fxx, set palette table.
-                        if (ppu_addr(13 downto 8) = "111111") then
-                            ale <= '0';
-                        else
-                            ale <= '1';
-                        end if;
-                    end if;
-                elsif (cpu_addr = PPUDATA and ppu_clk_cnt = "01") then
-                    ppu_addr_cnt_ce_n <= '1';
-                    --for burst write.
+                    --load addr low and output vram/plt bus.
+                    --if address is 3fxx, set palette table.
                     if (ppu_addr(13 downto 8) = "111111") then
                         ale <= '0';
                     else
                         ale <= '1';
                     end if;
-                else
-                    ppu_addr_cnt_ce_n <= '1';
+                end if;
+            elsif (cpu_addr = PPUDATA and ppu_clk_cnt = "01") then
+                ppu_addr_cnt_ce_n <= '1';
+                --for burst write.
+                if (ppu_addr(13 downto 8) = "111111") then
                     ale <= '0';
-                end if; --if (cpu_addr = PPUADDR and ppu_clk_cnt = "00") then
+                else
+                    ale <= '1';
+                end if;
+            else
+                ppu_addr_cnt_ce_n <= '1';
+                ale <= '0';
+            end if; --if (cpu_addr = PPUADDR and ppu_clk_cnt = "00") then
 
-                if (cpu_addr = PPUADDR and ppu_clk_cnt = "10") then
-                    ppu_addr_we_n <= '0';
-                elsif (cpu_addr = PPUDATA and ppu_clk_cnt = "11") then
-                    ppu_addr_we_n <= '1';
+            if (cpu_addr = PPUADDR and ppu_clk_cnt = "01") then
+                ppu_addr_we_n <= '0';
+            elsif (cpu_addr = PPUDATA and ppu_clk_cnt = "10") then
+                ppu_addr_we_n <= '1';
+            else
+                ppu_addr_we_n    <= '1';
+            end if; --if (cpu_addr = PPUADDR and ppu_clk_cnt = "01") then
+            
+            if (cpu_addr = PPUDATA and ppu_clk_cnt = "00") then
+                ppu_data_we_n <= '0';
+                if (ppu_addr(13 downto 8) = "111111") then
+                    --case palette tbl.
+                    plt_bus_ce_n <= '0';
+                    rd_n <= '1';
+                    wr_n <= '1';
                 else
-                    ppu_addr_we_n    <= '1';
-                end if; --if (cpu_addr = PPUADDR and ppu_clk_cnt = "01") then
-                
-                if (cpu_addr = PPUDATA and ppu_clk_cnt = "10") then
-                    ppu_data_we_n <= '0';
-                    if (ppu_addr(13 downto 8) = "111111") then
-                        --case palette tbl.
-                        plt_bus_ce_n <= '0';
-                        rd_n <= '1';
-                        wr_n <= '1';
-                    else
-                        plt_bus_ce_n <= '1';
-                        rd_n <= not r_nw;
-                        wr_n <= r_nw;
-                    end if;
-                else
-                    ppu_data_we_n <= '1';
                     plt_bus_ce_n <= '1';
-                    rd_n <= 'Z';
-                    wr_n <= 'Z';
-                end if; --if (cpu_addr = PPUDATA and ppu_clk_cnt = "00") then
+                    rd_n <= not r_nw;
+                    wr_n <= r_nw;
+                end if;
+            else
+                ppu_data_we_n <= '1';
+                plt_bus_ce_n <= '1';
+                rd_n <= 'Z';
+                wr_n <= 'Z';
+            end if; --if (cpu_addr = PPUDATA and ppu_clk_cnt = "00") then
 
-                --oam_plt_addr output...
-                if (cpu_addr = OAMDATA and ppu_clk_cnt = "01") then
-                    oam_plt_addr <= oam_addr;
-                elsif (cpu_addr = PPUADDR and ppu_clk_cnt = "01") then
-                    if (ppu_addr_cnt(0) = '1' and ppu_addr(13 downto 8) = "111111") then
-                        oam_plt_addr <= cpu_d;
-                    else
-                        oam_plt_addr <= (others => 'Z');
-                    end if;
-                elsif (cpu_addr = PPUDATA and ppu_clk_cnt = "10") then
-                    if (ppu_addr(13 downto 8) = "111111") then
-                        oam_plt_addr <= ppu_addr(7 downto 0);
-                    else
-                        oam_plt_addr <= (others => 'Z');
-                    end if;
+            --oam_plt_addr output...
+            if (cpu_addr = OAMDATA and ppu_clk_cnt = "00") then
+                oam_plt_addr <= oam_addr;
+            elsif (cpu_addr = PPUADDR and ppu_clk_cnt = "00") then
+                if (ppu_addr_cnt(0) = '1' and ppu_addr(13 downto 8) = "111111") then
+                    oam_plt_addr <= cpu_d;
                 else
                     oam_plt_addr <= (others => 'Z');
-                end if; --if (cpu_addr = OAMDATA and ppu_clk_cnt = "00") then
+                end if;
+            elsif (cpu_addr = PPUDATA and ppu_clk_cnt = "01") then
+                if (ppu_addr(13 downto 8) = "111111") then
+                    oam_plt_addr <= ppu_addr(7 downto 0);
+                else
+                    oam_plt_addr <= (others => 'Z');
+                end if;
+            else
+                oam_plt_addr <= (others => 'Z');
+            end if; --if (cpu_addr = OAMDATA and ppu_clk_cnt = "00") then
 
-                --oam_plt_data output...
-                if (cpu_addr = OAMDATA and ppu_clk_cnt = "01") then
+            --oam_plt_data output...
+            if (cpu_addr = OAMDATA and ppu_clk_cnt = "00") then
+                if (r_nw = '0') then
+                    oam_plt_data <= cpu_d;
+                else
+                    oam_plt_data <= (others => 'Z');
+                end if;
+            elsif (cpu_addr = PPUDATA and ppu_clk_cnt = "00") then
+                if (ppu_addr(13 downto 8) = "111111") then
                     if (r_nw = '0') then
                         oam_plt_data <= cpu_d;
                     else
                         oam_plt_data <= (others => 'Z');
                     end if;
-                elsif (cpu_addr = PPUDATA and ppu_clk_cnt = "01") then
-                    if (ppu_addr(13 downto 8) = "111111") then
-                        if (r_nw = '0') then
-                            oam_plt_data <= cpu_d;
-                        else
-                            oam_plt_data <= (others => 'Z');
-                        end if;
-                    else
-                        oam_plt_data <= (others => 'Z');
-                    end if;
                 else
                     oam_plt_data <= (others => 'Z');
-                end if; --if (cpu_addr = OAMDATA and ppu_clk_cnt = "00") then
+                end if;
+            else
+                oam_plt_data <= (others => 'Z');
+            end if; --if (cpu_addr = OAMDATA and ppu_clk_cnt = "00") then
 
-                --cpu_d data set
-                if (cpu_addr = OAMDATA and r_nw = '1') then
-                    if (ppu_clk_cnt = "00") then
+            --cpu_d data set
+            if (cpu_addr = OAMDATA and r_nw = '1') then
+                if (ppu_clk_cnt = "00") then
+                    cpu_d <= oam_plt_data;
+                else
+                    cpu_d <= oam_data;
+                end if;
+            elsif (cpu_addr = PPUDATA and r_nw = '1' and ppu_clk_cnt = "00") then
+                if (ppu_clk_cnt = "00") then
+                    if (ppu_addr(13 downto 8) = "111111") then
                         cpu_d <= oam_plt_data;
                     else
-                        cpu_d <= oam_data;
+                        cpu_d <= ppu_data_out;
                     end if;
-                elsif (cpu_addr = PPUDATA and r_nw = '1' and ppu_clk_cnt = "01") then
-                    if (ppu_clk_cnt = "00") then
-                        if (ppu_addr(13 downto 8) = "111111") then
-                            cpu_d <= oam_plt_data;
-                        else
-                            cpu_d <= ppu_data_out;
-                        end if;
-                    else
-                        if (ppu_addr(13 downto 8) = "111111") then
-                            cpu_d <= plt_data_out;
-                        else
-                            cpu_d <= ppu_data_out;
-                        end if;
-                    end if;
-                elsif (cpu_addr = PPUSTATUS and r_nw = '1') then
-                    cpu_d <= ppu_stat_out;
                 else
-                    cpu_d <= (others => 'Z');
-                end if; --if (cpu_addr = OAMDATA and ppu_clk_cnt = "01") then
+                    if (ppu_addr(13 downto 8) = "111111") then
+                        cpu_d <= plt_data_out;
+                    else
+                        cpu_d <= ppu_data_out;
+                    end if;
+                end if;
+            elsif (cpu_addr = PPUSTATUS and r_nw = '1') then
+                cpu_d <= ppu_stat_out;
+            else
+                cpu_d <= (others => 'Z');
+            end if; --if (cpu_addr = OAMDATA and ppu_clk_cnt = "00") then
 
-                --vram_a/vram_ad data set
-                if (cpu_addr = PPUDATA and ppu_clk_cnt = "01") then
-                    if (ppu_addr(13 downto 8) = "111111") then
-                        vram_a <= (others => 'Z');
-                        vram_ad <= (others => 'Z');
-                    else
-                        vram_a <= ppu_addr(13 downto 8);
-                        vram_ad <= ppu_addr(7 downto 0);
-                    end if;
-                elsif (cpu_addr = PPUDATA and ppu_clk_cnt = "10") then
-                    vram_a <= ppu_addr(13 downto 8);
-                    if (ppu_addr(13 downto 8) = "111111") then
-                        vram_ad <= (others => 'Z');
-                    else
-                        if (r_nw = '0') then
-                            vram_ad <= cpu_d;
-                        else
-                            vram_ad <= (others => 'Z');
-                        end if;
-                    end if;
-                else
+
+            --vram_a/vram_ad data set
+            if (cpu_addr = PPUADDR and ppu_clk_cnt = "00" and ppu_addr_cnt(0) = '1') then
+                if (ppu_addr(13 downto 8) = "111111") then
                     vram_a <= (others => 'Z');
                     vram_ad <= (others => 'Z');
-                end if; --if (cpu_addr = PPUADDR and ppu_clk_cnt = "00") then
-
-            else --if (ce_n = '0') then
-                ppu_addr_we_n    <= '1';
-                ppu_data_we_n    <= '1';
-                plt_bus_ce_n <= '1';
-                oam_bus_ce_n     <= '1';
-                oam_addr_ce_n <= '1';
-                ppu_addr_cnt_ce_n    <= '1';
-                ppu_latch_rst_n <= '1';
-
-                rd_n <= 'Z';
-                wr_n <= 'Z';
-                if ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1' then
-                    ale <= 'Z';
                 else
-                    ale <= '0';
+                    vram_a <= ppu_addr(13 downto 8);
+                    vram_ad <= cpu_d;
                 end if;
-                oam_plt_data <= (others => 'Z');
-                vram_ad <= (others => 'Z');
+            elsif (cpu_addr = PPUDATA and ppu_clk_cnt = "01") then
+                if (ppu_addr(13 downto 8) = "111111") then
+                    vram_a <= (others => 'Z');
+                    vram_ad <= (others => 'Z');
+                else
+                    vram_a <= ppu_addr(13 downto 8);
+                    vram_ad <= ppu_addr(7 downto 0);
+                end if;
+            elsif (cpu_addr = PPUDATA and ppu_clk_cnt = "00") then
+                vram_a <= ppu_addr(13 downto 8);
+                if (ppu_addr(13 downto 8) = "111111") then
+                    vram_ad <= (others => 'Z');
+                else
+                    if (r_nw = '0') then
+                        vram_ad <= cpu_d;
+                    else
+                        vram_ad <= (others => 'Z');
+                    end if;
+                end if;
+            else
                 vram_a <= (others => 'Z');
-                cpu_d <= (others => 'Z');
-            end if; --if (ce_n = '0') then
+                vram_ad <= (others => 'Z');
+            end if; --if (cpu_addr = PPUADDR and ppu_clk_cnt = "00") then
+
+        else
+            ppu_addr_we_n    <= '1';
+            ppu_data_we_n    <= '1';
+            plt_bus_ce_n <= '1';
+            oam_bus_ce_n     <= '1';
+            oam_addr_ce_n <= '1';
+            ppu_addr_cnt_ce_n    <= '1';
+            ppu_latch_rst_n <= '1';
+
+            rd_n <= 'Z';
+            wr_n <= 'Z';
+            if ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1' then
+                ale <= 'Z';
+            else
+                ale <= '0';
+            end if;
+            oam_plt_data <= (others => 'Z');
+            vram_ad <= (others => 'Z');
+            vram_a <= (others => 'Z');
+            cpu_d <= (others => 'Z');
         end if; --if (rst_n = '0') then
     end process;
 

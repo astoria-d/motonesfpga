@@ -313,6 +313,7 @@ architecture rtl of de1_nes is
     signal dbg_exec_cycle_dummy   : std_logic_vector (5 downto 0);
     signal dbg_ea_carry_dummy     : std_logic;
     signal dbg_status_dummy       : std_logic_vector(7 downto 0);
+    signal dbg_sp_dummy, dbg_x_dummy, dbg_y_dummy, dbg_acc_dummy       : std_logic_vector(7 downto 0);
 
 begin
 
@@ -332,7 +333,7 @@ begin
  --   dbg_index_bus,
  --   dbg_acc_bus,
     dbg_status_dummy,
-    dbg_pcl, dbg_pch, dbg_sp, dbg_x, dbg_y, dbg_acc,
+    dbg_pcl, dbg_pch, dbg_sp_dummy, dbg_x_dummy, dbg_y, dbg_acc,
     dbg_dec_oe_n,
     dbg_dec_val,
     dbg_int_dbus,
@@ -387,8 +388,12 @@ begin
     dbg_addr <= addr;
     dbg_d_io <= d_io;
     dbg_vram_ad  <= vram_ad ;
-    dbg_disp_ptn_l <= "00" & v_addr ;
-    dbg_disp_ptn_h <= "000" & dbg_plt_addr & dbg_plt_data;
+    dbg_vram_a  <= vram_a ;
+
+    dbg_sp(7 downto 6) <= dbg_ppu_clk_cnt;
+    dbg_sp(5 downto 0) <= v_addr (13 downto 8);
+    dbg_x <= v_addr (7 downto 0);
+
     dbg_nmi <= nmi_n;
 --    nmi_n <= dummy_nmi;
 --    dbg_ppu_ctrl <= dbg_pcl;
@@ -407,7 +412,7 @@ begin
         dbg_nes_y                        ,
         dbg_vga_y                        ,
         dbg_disp_nt, dbg_disp_attr                          ,
-        dbg_disp_ptn_h_dummy, dbg_disp_ptn_l_dummy                      ,
+        dbg_disp_ptn_h, dbg_disp_ptn_l     ,
         dbg_plt_ce_rn_wn                 ,
         dbg_plt_addr                     ,
         dbg_plt_data                     ,
