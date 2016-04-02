@@ -458,6 +458,8 @@ begin
     v_addr (13 downto 8) <= vram_a;
 
     --transparent d-latch
+    --ale=1 >> addr latch
+    --ale=0 >> addr output.
 	ale_n <= not ale;
 	vram_latch : ls373 generic map (data_size)
                 port map(vga_clk, ale_n, ale, vram_ad, v_addr(7 downto 0));
