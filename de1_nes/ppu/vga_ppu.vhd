@@ -696,7 +696,7 @@ begin
                 cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) and
                 (cur_x <= conv_std_logic_vector(HSCAN, X_SIZE) or
                 cur_x > conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE)) else
-           spr_io_cnt(0) when ppu_mask(PPUSSP) = '1' and
+           not spr_io_cnt(0) when ppu_mask(PPUSSP) = '1' and
                 (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                 cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) and
                 (cur_x > conv_std_logic_vector(256, X_SIZE) and 
@@ -708,7 +708,7 @@ begin
                 cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) and
                 (cur_x <= conv_std_logic_vector(HSCAN, X_SIZE) or
                 cur_x > conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE)) else
-           spr_io_cnt(0) when ppu_mask(PPUSSP) = '1' and
+           not spr_io_cnt(0) when ppu_mask(PPUSSP) = '1' and
                 (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                 cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) and
                 (cur_x > conv_std_logic_vector(256, X_SIZE) and 
@@ -723,7 +723,7 @@ begin
                 cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) and
                 (cur_x <= conv_std_logic_vector(HSCAN, X_SIZE) or
                 cur_x > conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE)) else
-           not spr_io_cnt(0) when ppu_mask(PPUSSP) = '1' and
+           spr_io_cnt(0) when ppu_mask(PPUSSP) = '1' and
                 (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                 cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) and
                 (cur_x > conv_std_logic_vector(256, X_SIZE) and 

@@ -349,7 +349,7 @@ end;
 
                     else
                         io_brk;
-                        if (nt_step_cnt > 8 * cpu_io_multi) then
+                        if (nt_step_cnt > 53 * cpu_io_multi) then
                             global_step_cnt := global_step_cnt + 1;
                         end if;
                     end if;
@@ -363,13 +363,13 @@ end;
                         io_out(16#2003#, 16#00#);
                     elsif (spr_step_cnt = 1 * cpu_io_multi) then
                         --set sprite data: y=02
-                        io_out(16#2004#, 16#02#);
+                        io_out(16#2004#, 16#13#);
                     elsif (spr_step_cnt = 2 * cpu_io_multi) then
                         --tile=0x4d (ascii 'M')
                         io_out(16#2004#, 16#4d#);
                     elsif (spr_step_cnt = 3 * cpu_io_multi) then
                         --set sprite attr=03 (palette 03)
-                        io_out(16#2004#, 16#03#);
+                        io_out(16#2004#, 16#01#);
                     elsif (spr_step_cnt = 4 * cpu_io_multi) then
                         --set sprite data: x=100
                         io_out(16#2004#, 16#64#);
@@ -415,7 +415,7 @@ end;
 
                     else
                         io_brk;
-                        if (spr_step_cnt > 0 * cpu_io_multi) then
+                        if (spr_step_cnt > 17 * cpu_io_multi) then
                             global_step_cnt := global_step_cnt + 1;
                         end if;
                     end if;

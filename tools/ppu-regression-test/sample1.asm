@@ -236,12 +236,12 @@
     sta $2003
 
     ;;sprite data: y=02
-    lda #$02
+    lda #3
     sta $2004
     ;;tile=0x4d (ascii 'M')
     lda #$4d
     sta $2004
-    lda #$03
+    lda #$01
     sta $2004
     ;x=100
     lda #$64
