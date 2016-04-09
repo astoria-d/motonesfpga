@@ -43,7 +43,7 @@ entity de1_nes is
     signal dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y : out std_logic_vector (7 downto 0);
     signal dbg_disp_nt, dbg_disp_attr : out std_logic_vector (7 downto 0);
     signal dbg_disp_ptn_h, dbg_disp_ptn_l : out std_logic_vector (15 downto 0);
-    signal dummy_nmi  : in std_logic;
+    signal dbg_nmi  : out std_logic;
     
     
 --NES instance
@@ -144,8 +144,11 @@ architecture rtl of de1_nes is
         signal dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y : out std_logic_vector (7 downto 0);
 
         signal dbg_ppu_clk                      : out std_logic;
+        signal dbg_vga_clk                      : out std_logic;
         signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
         signal dbg_vga_x                        : out std_logic_vector (9 downto 0);
+        signal dbg_nes_y                        : out std_logic_vector (8 downto 0);
+        signal dbg_vga_y                        : out std_logic_vector (9 downto 0);
         signal dbg_disp_nt, dbg_disp_attr       : out std_logic_vector (7 downto 0);
         signal dbg_disp_ptn_h, dbg_disp_ptn_l   : out std_logic_vector (15 downto 0);
         signal dbg_plt_ce_rn_wn                 : out std_logic_vector (2 downto 0);
@@ -157,6 +160,7 @@ architecture rtl of de1_nes is
         signal dbg_s_oam_ce_rn_wn               : out std_logic_vector (2 downto 0);
         signal dbg_s_oam_addr                   : out std_logic_vector (4 downto 0);
         signal dbg_s_oam_data                   : out std_logic_vector (7 downto 0);
+        signal dbg_emu_ppu_clk                  : out std_logic;
 
         signal dbg_ppu_addr_we_n                : out std_logic;
         signal dbg_ppu_clk_cnt                  : out std_logic_vector(1 downto 0);
@@ -280,11 +284,14 @@ architecture rtl of de1_nes is
     signal dbg_stat_we_n    : std_logic;
     signal dbg_idl_h, dbg_idl_l, dbg_dbb_r, dbg_dbb_w    : std_logic_vector (7 downto 0);
 
+    signal dbg_vga_clk                      : std_logic;
     signal dbg_ppu_addr_we_n                : std_logic;
     signal dbg_ppu_clk_cnt                  : std_logic_vector(1 downto 0);
     signal dbg_ppu_addr_dummy               : std_logic_vector (13 downto 0);
     signal dbg_nes_x                        : std_logic_vector (8 downto 0);
     signal dbg_vga_x                        : std_logic_vector (9 downto 0);
+    signal dbg_nes_y                        : std_logic_vector (8 downto 0);
+    signal dbg_vga_y                        : std_logic_vector (9 downto 0);
     signal dbg_plt_ce_rn_wn                 : std_logic_vector (2 downto 0);
     signal dbg_plt_addr                     : std_logic_vector (4 downto 0);
     signal dbg_plt_data                     : std_logic_vector (7 downto 0);
@@ -294,11 +301,19 @@ architecture rtl of de1_nes is
     signal dbg_s_oam_ce_rn_wn               : std_logic_vector (2 downto 0);
     signal dbg_s_oam_addr                   : std_logic_vector (4 downto 0);
     signal dbg_s_oam_data                   : std_logic_vector (7 downto 0);
+    signal dbg_emu_ppu_clk                  : std_logic;
     signal dbg_ppu_data_dummy               : std_logic_vector (7 downto 0);
     signal dbg_ppu_status_dummy             : std_logic_vector (7 downto 0);
     signal dbg_ppu_scrl_x_dummy             : std_logic_vector (7 downto 0);
     signal dbg_ppu_scrl_y_dummy             : std_logic_vector (7 downto 0);
     signal dbg_disp_ptn_h_dummy, dbg_disp_ptn_l_dummy   : std_logic_vector (15 downto 0);
+
+    signal dbg_instruction_dummy  : std_logic_vector(7 downto 0);
+    signal dbg_int_d_bus_dummy    : std_logic_vector(7 downto 0);
+    signal dbg_exec_cycle_dummy   : std_logic_vector (5 downto 0);
+    signal dbg_ea_carry_dummy     : std_logic;
+    signal dbg_status_dummy       : std_logic_vector(7 downto 0);
+    signal dbg_sp_dummy, dbg_x_dummy, dbg_y_dummy, dbg_acc_dummy       : std_logic_vector(7 downto 0);
 
 begin
 
@@ -311,14 +326,14 @@ begin
     --mos 6502 cpu instance
     cpu_inst : mos6502 generic map (data_size, addr_size) 
         port map (
-    dbg_instruction,
-    dbg_int_d_bus,
-    dbg_exec_cycle,
-    dbg_ea_carry,
+    dbg_instruction_dummy,
+    dbg_int_d_bus_dummy,
+    dbg_exec_cycle_dummy,
+    dbg_ea_carry_dummy,
  --   dbg_index_bus,
  --   dbg_acc_bus,
-    dbg_status,
-    dbg_pcl, dbg_pch, dbg_sp, dbg_x, dbg_y, dbg_acc,
+    dbg_status_dummy,
+    dbg_pcl, dbg_pch, dbg_sp_dummy, dbg_x_dummy, dbg_y, dbg_acc,
     dbg_dec_oe_n,
     dbg_dec_val,
     dbg_int_dbus,
@@ -344,7 +359,16 @@ begin
     prg_ram_inst : ram generic map (ram_2k, data_size)
             port map (mem_clk, ram_ce_n, ram_oe_n, R_nW, addr(ram_2k - 1 downto 0), d_io);
 
---    dbg_ppu_addr <= "00000" & dbg_nes_x;
+    dbg_exec_cycle(2 downto 1) <= dbg_vga_x(9 downto 8);
+    dbg_int_d_bus <= dbg_vga_x(7 downto 0);
+    dbg_exec_cycle(0) <= dbg_nes_x(8);
+    dbg_instruction <= dbg_nes_x(7 downto 0);
+    dbg_exec_cycle(3) <= dbg_emu_ppu_clk;
+
+    dbg_exec_cycle(4) <= dbg_nes_y(8);
+    dbg_status <= dbg_nes_y(7 downto 0);
+
+
     dbg_ppu_scrl_x(0) <= ale;
     dbg_ppu_scrl_x(1) <= rd_n;
     dbg_ppu_scrl_x(2) <= wr_n;
@@ -364,8 +388,13 @@ begin
     dbg_addr <= addr;
     dbg_d_io <= d_io;
     dbg_vram_ad  <= vram_ad ;
-    dbg_disp_ptn_l <= "00" & v_addr ;
-    dbg_disp_ptn_h <= "000" & dbg_plt_addr & dbg_plt_data;
+    dbg_vram_a  <= vram_a ;
+
+    dbg_sp(7 downto 6) <= dbg_ppu_clk_cnt;
+    dbg_sp(5 downto 0) <= v_addr (13 downto 8);
+    dbg_x <= v_addr (7 downto 0);
+
+    dbg_nmi <= nmi_n;
 --    nmi_n <= dummy_nmi;
 --    dbg_ppu_ctrl <= dbg_pcl;
 --    dbg_ppu_mask <= dbg_pch;
@@ -377,10 +406,13 @@ begin
         dbg_ppu_data, dbg_ppu_scrl_x_dummy, dbg_ppu_scrl_y_dummy        ,
 
         dbg_ppu_clk                      ,
+        dbg_vga_clk                      ,
         dbg_nes_x                        ,
         dbg_vga_x                        ,
+        dbg_nes_y                        ,
+        dbg_vga_y                        ,
         dbg_disp_nt, dbg_disp_attr                          ,
-        dbg_disp_ptn_h_dummy, dbg_disp_ptn_l_dummy                      ,
+        dbg_disp_ptn_h, dbg_disp_ptn_l     ,
         dbg_plt_ce_rn_wn                 ,
         dbg_plt_addr                     ,
         dbg_plt_data                     ,
@@ -390,6 +422,7 @@ begin
         dbg_s_oam_ce_rn_wn              ,
         dbg_s_oam_addr                  ,
         dbg_s_oam_data                  ,
+        dbg_emu_ppu_clk                 ,
         dbg_ppu_addr_we_n                                   ,
         dbg_ppu_clk_cnt                                     ,
 
@@ -425,6 +458,8 @@ begin
     v_addr (13 downto 8) <= vram_a;
 
     --transparent d-latch
+    --ale=1 >> addr latch
+    --ale=0 >> addr output.
 	ale_n <= not ale;
 	vram_latch : ls373 generic map (data_size)
                 port map(vga_clk, ale_n, ale, vram_ad, v_addr(7 downto 0));

@@ -11,11 +11,13 @@ use ieee.std_logic_arith.conv_std_logic_vector;
 use ieee.std_logic_unsigned.all;
 use work.motonesfpga_common.all;
 
-entity vga_ctl is 
+entity vga_ppu_render is 
     port (  
     signal dbg_vga_clk                      : out std_logic;
     signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
     signal dbg_vga_x                        : out std_logic_vector (9 downto 0);
+    signal dbg_nes_y                        : out std_logic_vector (8 downto 0);
+    signal dbg_vga_y                        : out std_logic_vector (9 downto 0);
     signal dbg_disp_nt, dbg_disp_attr       : out std_logic_vector (7 downto 0);
     signal dbg_disp_ptn_h, dbg_disp_ptn_l   : out std_logic_vector (15 downto 0);
     signal dbg_plt_ce_rn_wn                 : out std_logic_vector (2 downto 0);
@@ -27,6 +29,7 @@ entity vga_ctl is
     signal dbg_s_oam_ce_rn_wn               : out std_logic_vector (2 downto 0);
     signal dbg_s_oam_addr                   : out std_logic_vector (4 downto 0);
     signal dbg_s_oam_data                   : out std_logic_vector (7 downto 0);
+    signal dbg_emu_ppu_clk                  : out std_logic;
 
             vga_clk     : in std_logic;
             mem_clk     : in std_logic;
@@ -62,9 +65,9 @@ entity vga_ctl is
             oam_plt_data    : inout std_logic_vector (7 downto 0);
             v_bus_busy_n    : out std_logic
     );
-end vga_ctl;
+end vga_ppu_render;
 
-architecture rtl of vga_ctl is
+architecture rtl of vga_ppu_render is
 
 component counter_register
     generic (
@@ -80,10 +83,11 @@ component counter_register
     );
 end component;
 
-component ppu_vga_render
+component ppu_render
     port (  
-    signal dbg_vga_clk                      : out std_logic;
+    signal dbg_ppu_clk                      : out std_logic;
     signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
+    signal dbg_nes_y                        : out std_logic_vector (8 downto 0);
     signal dbg_disp_nt, dbg_disp_attr       : out std_logic_vector (7 downto 0);
     signal dbg_disp_ptn_h, dbg_disp_ptn_l   : out std_logic_vector (15 downto 0);
     signal dbg_plt_ce_rn_wn                 : out std_logic_vector (2 downto 0);
@@ -96,7 +100,7 @@ component ppu_vga_render
     signal dbg_s_oam_addr                   : out std_logic_vector (4 downto 0);
     signal dbg_s_oam_data                   : out std_logic_vector (7 downto 0);
     
-            vga_clk     : in std_logic;
+            ppu_clk     : in std_logic;
             mem_clk     : in std_logic;
             rst_n       : in std_logic;
             rd_n        : out std_logic;
@@ -147,8 +151,8 @@ signal cnt_clk      : std_logic;
 
 signal emu_ppu_clk      : std_logic;
 signal emu_ppu_clk_n    : std_logic;
-signal count5_res_n     : std_logic;
-signal count5           : std_logic_vector(2 downto 0);
+signal count11_res_n     : std_logic;
+signal count11           : std_logic_vector(3 downto 0);
 signal nes_x        : std_logic_vector (8 downto 0);
 signal nes_y        : std_logic_vector (8 downto 0);
 
@@ -161,7 +165,9 @@ signal nes_y        : std_logic_vector (8 downto 0);
 
 begin
     dbg_vga_x <= vga_x;
-
+    dbg_vga_y <= vga_y;
+    dbg_vga_clk <= vga_clk;
+    
     cnt_clk <= not vga_clk;
     
     --vga position counter
@@ -212,40 +218,59 @@ begin
     end process;
 
     --emulate ppu clock that is synchronized with vga clock
-    count5_inst : counter_register generic map (3, 1)
-            port map (cnt_clk, count5_res_n, '0', '1', (others => '0'), count5);
+    count11_inst : counter_register generic map (4, 1)
+            port map (cnt_clk, count11_res_n, '0', '1', (others => '0'), count11);
     nes_x_inst : counter_register generic map (9, 1)
             port map (emu_ppu_clk , x_res_n, '0', '1', (others => '0'), nes_x);
     nes_y <= vga_y(9 downto 1);
-    emu_clk_p : process (rst_n, vga_clk)
+
+    res_p : process (rst_n, vga_clk)
     begin
         if (rst_n = '0') then
-            emu_ppu_clk <= '0';
-            count5_res_n <= '0';
+            count11_res_n <= '0';
         elsif (rising_edge(vga_clk)) then
             if (vga_x = conv_std_logic_vector(VGA_W_MAX, 10)) then
-                count5_res_n <= '0';
-            elsif (count5 = "100") then
-                count5_res_n <= '0';
+                count11_res_n <= '0';
+            elsif (count11 = "1011") then
+                count11_res_n <= '0';
             else
-                count5_res_n <= '1';
-            end if;
-
-            if (count5 = "001" or count5 = "011") then
-                emu_ppu_clk <= '0';
-            else
-                emu_ppu_clk <= '1';
+                count11_res_n <= '1';
             end if;
         end if;
     end process;
 
+    emu_clk_p : process (rst_n, mem_clk)
+    begin
+        if (rst_n = '0') then
+            emu_ppu_clk <= '0';
+        elsif (rising_edge(mem_clk)) then
+            if (vga_x < conv_std_logic_vector(680, 10) or 
+                vga_x > conv_std_logic_vector(760, 10) ) then
+                if (count11 = "0001" or count11 = "0011" or count11 = "0101" or count11 = "0111"
+                    or count11 = "1010" or count11 = "1100") then
+                    emu_ppu_clk <= '0';
+                else
+                    emu_ppu_clk <= '1';
+                end if;
+            else
+                if (count11(0) = '1') then
+                    emu_ppu_clk <= '0';
+                else
+                    emu_ppu_clk <= '1';
+                end if;
+            end if;
+        end if;
+    end process;
+
+    ---emulated ppu clock adjustment.
     emu_ppu_clk_n <= not emu_ppu_clk;
-    vga_render_inst : ppu_vga_render
+    ppu_render_inst : ppu_render
         port map (
-        dbg_vga_clk                      ,
+        dbg_emu_ppu_clk                      ,
         dbg_nes_x                        ,
-        dbg_disp_nt, dbg_disp_attr      ,
-        dbg_disp_ptn_h, dbg_disp_ptn_l  ,
+        dbg_nes_y                        ,
+        dbg_disp_nt, dbg_disp_attr       ,
+        dbg_disp_ptn_h, dbg_disp_ptn_l   ,
         dbg_plt_ce_rn_wn                 ,
         dbg_plt_addr                    ,
         dbg_plt_data                    ,
@@ -256,7 +281,7 @@ begin
         dbg_s_oam_addr                  ,
         dbg_s_oam_data                  ,
         
-                emu_ppu_clk_n ,
+                emu_ppu_clk ,
                 mem_clk     ,
                 rst_n       ,
                 rd_n        ,
@@ -299,10 +324,11 @@ use ieee.std_logic_arith.conv_std_logic_vector;
 use ieee.std_logic_unsigned.all;
 use work.motonesfpga_common.all;
 
-entity ppu_vga_render is 
+entity ppu_render is 
     port (  
-    signal dbg_vga_clk                      : out std_logic;
+    signal dbg_ppu_clk                      : out std_logic;
     signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
+    signal dbg_nes_y                        : out std_logic_vector (8 downto 0);
     signal dbg_disp_nt, dbg_disp_attr       : out std_logic_vector (7 downto 0);
     signal dbg_disp_ptn_h, dbg_disp_ptn_l   : out std_logic_vector (15 downto 0);
     signal dbg_plt_ce_rn_wn                 : out std_logic_vector (2 downto 0);
@@ -315,7 +341,7 @@ entity ppu_vga_render is
     signal dbg_s_oam_addr                   : out std_logic_vector (4 downto 0);
     signal dbg_s_oam_data                   : out std_logic_vector (7 downto 0);
     
-            vga_clk     : in std_logic;
+            ppu_clk     : in std_logic;
             mem_clk     : in std_logic;
             rst_n       : in std_logic;
 
@@ -346,9 +372,9 @@ entity ppu_vga_render is
             oam_plt_data    : inout std_logic_vector (7 downto 0);
             v_bus_busy_n    : out std_logic
     );
-end ppu_vga_render;
+end ppu_render;
 
-architecture rtl of ppu_vga_render is
+architecture rtl of ppu_render is
 
 component counter_register
     generic (
@@ -435,15 +461,12 @@ end component;
 constant X_SIZE       : integer := 9;
 constant dsize        : integer := 8;
 constant asize        : integer := 14;
---constant HSCAN_MAX    : integer := 341;
-constant HSCAN_MAX    : integer := 321;
+constant HSCAN_MAX    : integer := 341;
 constant VSCAN_MAX    : integer := 262;
 constant HSCAN        : integer := 257;
 constant VSCAN        : integer := 240;
---constant HSCAN_NEXT_START    : integer := 320;
---constant HSCAN_NEXT_EXTRA    : integer := 336;
-constant HSCAN_NEXT_START    : integer := 300;
-constant HSCAN_NEXT_EXTRA    : integer := 316;
+constant HSCAN_NEXT_START    : integer := 320;
+constant HSCAN_NEXT_EXTRA    : integer := 336;
 
 
 constant PPUBNA    : integer := 1;  --base name address
@@ -540,7 +563,7 @@ constant nes_color_palette : nes_color_array := (
         conv_std_logic_vector(16#000#, 12)
         );
 
-signal vga_clk_n        : std_logic;
+signal ppu_clk_n        : std_logic;
 
 --timing adjust
 signal bg_io_cnt        : std_logic_vector(0 downto 0);
@@ -648,8 +671,9 @@ signal spr_ptn_in       : std_logic_vector (dsize - 1 downto 0);
 
 
 begin
-    dbg_vga_clk <= vga_clk;
+    dbg_ppu_clk <= ppu_clk;
     dbg_nes_x <= cur_x;
+    dbg_nes_y <= cur_y;
     dbg_disp_nt <= disp_nt;
     dbg_disp_attr <= disp_attr;
     dbg_disp_ptn_h <= disp_ptn_h;
@@ -665,14 +689,14 @@ begin
     dbg_s_oam_data                   <= p_oam_data;
 
 
-    vga_clk_n <= not vga_clk;
+    ppu_clk_n <= not ppu_clk;
 
     ale <= bg_io_cnt(0) when ppu_mask(PPUSBG) = '1' and
                 (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                 cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) and
                 (cur_x <= conv_std_logic_vector(HSCAN, X_SIZE) or
                 cur_x > conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE)) else
-           spr_io_cnt(0) when ppu_mask(PPUSSP) = '1' and
+           not spr_io_cnt(0) when ppu_mask(PPUSSP) = '1' and
                 (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                 cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) and
                 (cur_x > conv_std_logic_vector(256, X_SIZE) and 
@@ -684,7 +708,7 @@ begin
                 cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) and
                 (cur_x <= conv_std_logic_vector(HSCAN, X_SIZE) or
                 cur_x > conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE)) else
-           spr_io_cnt(0) when ppu_mask(PPUSSP) = '1' and
+           not spr_io_cnt(0) when ppu_mask(PPUSSP) = '1' and
                 (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                 cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) and
                 (cur_x > conv_std_logic_vector(256, X_SIZE) and 
@@ -699,7 +723,7 @@ begin
                 cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) and
                 (cur_x <= conv_std_logic_vector(HSCAN, X_SIZE) or
                 cur_x > conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE)) else
-           not spr_io_cnt(0) when ppu_mask(PPUSSP) = '1' and
+           spr_io_cnt(0) when ppu_mask(PPUSSP) = '1' and
                 (cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                 cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE)) and
                 (cur_x > conv_std_logic_vector(256, X_SIZE) and 
@@ -712,9 +736,9 @@ begin
     v_bus_busy_n <= ah_oe_n;
 
     bg_io_cnt_inst : counter_register generic map (1, 1)
-            port map (vga_clk, bg_cnt_res_n, '0', '1', (others => '0'), bg_io_cnt);
+            port map (ppu_clk, bg_cnt_res_n, '0', '1', (others => '0'), bg_io_cnt);
     spr_io_cnt_inst : counter_register generic map (1, 1)
-            port map (vga_clk, cnt_x_res_n, '0', '1', (others => '0'), spr_io_cnt);
+            port map (ppu_clk, cnt_x_res_n, '0', '1', (others => '0'), spr_io_cnt);
 
     ---bg prefetch x pos is 16 + scroll cycle ahead of current pos.
     prf_x <= cur_x + ppu_scroll_x + "000010000" 
@@ -731,13 +755,13 @@ begin
              "000000000"; 
 
     nt_inst : d_flip_flop generic map(dsize)
-            port map (vga_clk_n, rst_n, '1', nt_we_n, vram_ad, disp_nt);
+            port map (ppu_clk_n, rst_n, '1', nt_we_n, vram_ad, disp_nt);
 
     at_inst : d_flip_flop generic map(dsize)
-            port map (vga_clk_n, rst_n, '1', attr_we_n, vram_ad, attr_val);
+            port map (ppu_clk_n, rst_n, '1', attr_we_n, vram_ad, attr_val);
 
     disp_at_inst : shift_register generic map(dsize, 2)
-            port map (vga_clk_n, rst_n, attr_ce_n, disp_attr_we_n, attr_val, disp_attr);
+            port map (ppu_clk_n, rst_n, attr_ce_n, disp_attr_we_n, attr_val, disp_attr);
 
     --chr rom data's bit is stored in opposite direction.
     --reverse bit when loading...
@@ -748,14 +772,14 @@ begin
                 disp_ptn_h (dsize downto 1);
 
     ptn_l_inst : d_flip_flop generic map(dsize)
-            port map (vga_clk_n, rst_n, '1', ptn_l_we_n, ptn_l_in, ptn_l_val);
+            port map (ppu_clk_n, rst_n, '1', ptn_l_we_n, ptn_l_in, ptn_l_val);
 
     disp_ptn_l_in <= ptn_l_val & disp_ptn_l (dsize downto 1);
     disp_ptn_l_inst : shift_register generic map(dsize * 2, 1)
-            port map (vga_clk_n, rst_n, '0', ptn_h_we_n, disp_ptn_l_in, disp_ptn_l);
+            port map (ppu_clk_n, rst_n, '0', ptn_h_we_n, disp_ptn_l_in, disp_ptn_l);
 
     ptn_h_inst : shift_register generic map(dsize * 2, 1)
-            port map (vga_clk_n, rst_n, '0', ptn_h_we_n, ptn_h_in, disp_ptn_h);
+            port map (ppu_clk_n, rst_n, '0', ptn_h_we_n, ptn_h_in, disp_ptn_h);
 
     --vram i/o
     vram_io_buf : tri_state_buffer generic map (dsize)
@@ -767,7 +791,7 @@ begin
     ---palette ram
     r_n <= not r_nw;
 
-    plt_ram_ce_n_in <= vga_clk when plt_bus_ce_n = '0' and r_nw = '0' else 
+    plt_ram_ce_n_in <= ppu_clk when plt_bus_ce_n = '0' and r_nw = '0' else 
                     '0' when plt_bus_ce_n = '0' and r_nw = '1' else
                     '0' when ppu_mask(PPUSBG) = '1' and 
                             (cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) and 
@@ -852,7 +876,7 @@ begin
             port map (mem_clk, plt_ram_ce_n, plt_r_n, plt_w_n, plt_addr, plt_data);
 
     ---primary oam
-    p_oam_ram_ce_n_in <= vga_clk when oam_bus_ce_n = '0' and r_nw = '0' else
+    p_oam_ram_ce_n_in <= ppu_clk when oam_bus_ce_n = '0' and r_nw = '0' else
                     '0' when oam_bus_ce_n = '0' and r_nw = '1' else
                     '0' when ppu_mask(PPUSSP) = '1' and
                              cur_x > conv_std_logic_vector(64, X_SIZE) and
@@ -887,17 +911,17 @@ begin
 
     ---secondary oam
     p_oam_cnt_inst : counter_register generic map (dsize, 4)
-            port map (vga_clk_n, p_oam_cnt_res_n, p_oam_cnt_ce_n, '1', (others => '0'), p_oam_cnt);
+            port map (ppu_clk_n, p_oam_cnt_res_n, p_oam_cnt_ce_n, '1', (others => '0'), p_oam_cnt);
     s_oam_cnt_inst : counter_register generic map (5, 1)
-            port map (vga_clk_n, p_oam_cnt_res_n, s_oam_cnt_ce_n, '1', (others => '0'), s_oam_cnt);
+            port map (ppu_clk_n, p_oam_cnt_res_n, s_oam_cnt_ce_n, '1', (others => '0'), s_oam_cnt);
     s_oam_addr_cpy_inst : counter_register generic map (5, 1)
-            port map (vga_clk_n, p_oam_cnt_res_n, s_oam_addr_cpy_ce_n, 
+            port map (ppu_clk_n, p_oam_cnt_res_n, s_oam_addr_cpy_ce_n, 
                     '1', (others => '0'), s_oam_addr_cpy);
 
-    s_oam_ram_ce_n_in <= vga_clk when ppu_mask(PPUSSP) = '1' and cur_x(0) = '1' and
+    s_oam_ram_ce_n_in <= ppu_clk when ppu_mask(PPUSSP) = '1' and cur_x(0) = '1' and
                                 cur_x > "000000001" and
                                 cur_x <= conv_std_logic_vector(64, X_SIZE) else
-                      vga_clk when ppu_mask(PPUSSP) = '1' and cur_x(0) = '1' and
+                      ppu_clk when ppu_mask(PPUSSP) = '1' and cur_x(0) = '1' and
                                 cur_x > conv_std_logic_vector(64, X_SIZE) and
                                 cur_x <= conv_std_logic_vector(256, X_SIZE) and
                                 p_oam_cnt_wrap_n = '1' else
@@ -913,9 +937,9 @@ begin
             port map (mem_clk, s_oam_ram_ce_n, s_oam_r_n, s_oam_w_n, s_oam_addr, s_oam_data);
 
     spr_y_inst : d_flip_flop generic map(dsize)
-            port map (vga_clk_n, p_oam_cnt_res_n, '1', spr_y_we_n, s_oam_data, spr_y_tmp);
+            port map (ppu_clk_n, p_oam_cnt_res_n, '1', spr_y_we_n, s_oam_data, spr_y_tmp);
     spr_tile_inst : d_flip_flop generic map(dsize)
-            port map (vga_clk_n, p_oam_cnt_res_n, '1', spr_tile_we_n, s_oam_data, spr_tile_tmp);
+            port map (ppu_clk_n, p_oam_cnt_res_n, '1', spr_tile_we_n, s_oam_data, spr_tile_tmp);
 
 
    --reverse bit when NOT SPRHFL is set (.nes file format bit endian).
@@ -925,24 +949,24 @@ begin
     --array instances...
     spr_inst : for i in 0 to 7 generate
         spr_x_inst : counter_register generic map(dsize, 16#ff#)
-                port map (vga_clk_n, rst_n, spr_x_ce_n(i), spr_x_we_n(i), s_oam_data, spr_x_cnt(i));
+                port map (ppu_clk_n, rst_n, spr_x_ce_n(i), spr_x_we_n(i), s_oam_data, spr_x_cnt(i));
 
         spr_attr_inst : d_flip_flop generic map(dsize)
-                port map (vga_clk_n, rst_n, '1', spr_attr_we_n(i), s_oam_data, spr_attr(i));
+                port map (ppu_clk_n, rst_n, '1', spr_attr_we_n(i), s_oam_data, spr_attr(i));
 
         spr_ptn_l_inst : shift_register generic map(dsize, 1)
-                port map (vga_clk_n, rst_n, spr_ptn_ce_n(i), spr_ptn_l_we_n(i), spr_ptn_in, spr_ptn_l(i));
+                port map (ppu_clk_n, rst_n, spr_ptn_ce_n(i), spr_ptn_l_we_n(i), spr_ptn_in, spr_ptn_l(i));
 
         spr_ptn_h_inst : shift_register generic map(dsize, 1)
-                port map (vga_clk_n, rst_n, spr_ptn_ce_n(i), spr_ptn_h_we_n(i), spr_ptn_in, spr_ptn_h(i));
+                port map (ppu_clk_n, rst_n, spr_ptn_ce_n(i), spr_ptn_h_we_n(i), spr_ptn_in, spr_ptn_h(i));
     end generate;
 
-    pos_p : process (rst_n, vga_clk)
+    pos_p : process (rst_n, ppu_clk)
     begin
         if (rst_n = '0') then
             cnt_x_res_n <= '0';
             bg_cnt_res_n <= '0';
-        elsif (vga_clk'event and vga_clk = '0') then
+        elsif (ppu_clk'event and ppu_clk = '0') then
             if (cur_x = conv_std_logic_vector(HSCAN_MAX - 1, X_SIZE)) then
                 --x pos reset.
                 cnt_x_res_n <= '0';
@@ -960,7 +984,7 @@ begin
         end if; --if (rst_n = '0') then
     end process;
 
-    clk_p : process (rst_n, vga_clk, read_status)
+    clk_p : process (rst_n, ppu_clk, read_status)
 
 procedure output_rgb is
 variable pl_addr : integer;
@@ -991,9 +1015,6 @@ begin
     if (ppu_mask(PPUSBG) = '1' and dot_output = false and 
             (disp_ptn_h(0) or disp_ptn_l(0)) = '1') then
         dot_output := true;
---        d_print("output_rgb");
---        d_print("pl_addr:" & conv_hex8(pl_addr));
---        d_print("pl_index:" & conv_hex8(pl_index));
     end if;
 
     --if or if not bg/sprite is shown, output color anyway 
@@ -1002,9 +1023,6 @@ begin
     b <= nes_color_palette(pl_index) (11 downto 8);
     g <= nes_color_palette(pl_index) (7 downto 4);
     r <= nes_color_palette(pl_index) (3 downto 0);
---    b <= nes_color_palette(1) (11 downto 8);
---    g <= nes_color_palette(2) (7 downto 4);
---    r <= nes_color_palette(3) (3 downto 0);
 end;
 procedure stop_rgb is
 begin
@@ -1021,7 +1039,7 @@ end;
             stop_rgb;
         else
 
-            if (vga_clk'event and vga_clk = '1') then
+            if (ppu_clk'event and ppu_clk = '1') then
 
                 --fetch bg pattern and display.
                 if (ppu_mask(PPUSBG) = '1' and 
@@ -1106,6 +1124,13 @@ end;
                          ptn_h_we_n <= '1';
                     end if;
 
+                else
+                    nt_we_n <= '1';
+                    attr_we_n <= '1';
+                    disp_attr_we_n <= '1';
+                    attr_ce_n <= '1';
+                    ptn_l_we_n <= '1';
+                    ptn_h_we_n <= '1';
                 end if;--if (ppu_mask(PPUSBG) = '1') and
 
                 --fetch sprite and display.
