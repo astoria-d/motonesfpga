@@ -275,6 +275,45 @@
     lda #45
     sta $2004
 
+    ;;dma test data.
+    ldy #$00
+    ldx #$41
+    stx $00
+    ldx #$00
+dma_set:
+    ;;y pos
+    txa
+    sta $0200, y
+    iny
+    ;;tile index
+    lda $00
+    cmp #$5b
+    bne inc_tile
+    lda #$41
+    sta $00
+inc_tile:
+    inc $00
+    sta $0200, y
+    iny
+    ;;attribute
+    lda #$01
+    sta $0200, y
+    iny
+    ;;x pos
+    txa
+    adc #$03
+    tax
+    rol
+    sta $0200, y
+    iny
+    bne dma_set
+
+    ;;dma start.
+    lda #$02
+    sta $4014
+
+
+
     ;;init scroll point.
     lda #$00
     sta $2005
@@ -289,44 +328,6 @@
 	lda	#$80
 	sta	$2000
 
-;;;    ;;dma test data.
-;;;    ldy #$00
-;;;    ldx #$41
-;;;    stx $00
-;;;    ldx #$00
-;;;dma_set:
-;;;    ;;y pos
-;;;    txa
-;;;    sta $0200, y
-;;;    iny
-;;;    ;;tile index
-;;;    lda $00
-;;;    cmp #$5b
-;;;    bne inc_tile
-;;;    lda #$41
-;;;    sta $00
-;;;inc_tile:
-;;;    inc $00
-;;;    sta $0200, y
-;;;    iny
-;;;    ;;attribute
-;;;    lda #$01
-;;;    sta $0200, y
-;;;    iny
-;;;    ;;x pos
-;;;    txa
-;;;    adc #$03
-;;;    tax
-;;;    rol
-;;;    sta $0200, y
-;;;    iny
-;;;    bne dma_set
-;;;
-;;;    ;;dma start.
-;;;    lda #$02
-;;;    sta $4014
-
-
     ;;done...
     ;;infinite loop.
 mainloop:
@@ -337,8 +338,33 @@ mainloop:
 nmi_test:
 ;    jsr set_scroll
 ;    jsr set_bg_col
+    jsr set_dma
 
     rti
+
+set_dma:
+    ldy #0
+
+y_loop:
+    lda $0200, y
+
+    clc
+    adc #$1
+    sta $0200, y
+
+    iny
+    iny
+    iny
+    iny
+
+    bne y_loop
+
+    ;;dma start.
+    lda #$02
+    sta $4014
+
+    rts
+
 
 ;;;for DE1 internal memory constraints.
 .segment "VECINFO_4k"
