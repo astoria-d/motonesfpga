@@ -48,11 +48,13 @@ begin
     use ieee.std_logic_arith.conv_std_logic_vector;
 
     variable init_step_cnt, plt_step_cnt, 
-            nt_step_cnt, spr_step_cnt, enable_ppu_step_cnt : integer;
+            nt_step_cnt, spr_step_cnt, dma_step_cnt, enable_ppu_step_cnt : integer;
     variable init_done : std_logic;
     variable global_step_cnt : integer;
     variable cpu_cnt : integer;
     constant cpu_io_multi : integer := 3; --io happens every 4 cpu cycle.
+    variable i, j : integer;
+    variable ch : integer := 16#41# ;
 
 procedure io_out (ad: in integer; dt : in integer) is
 begin
@@ -349,7 +351,7 @@ end;
 
                     else
                         io_brk;
-                        if (nt_step_cnt > 53 * cpu_io_multi) then
+                        if (nt_step_cnt > 4 * cpu_io_multi) then
                             global_step_cnt := global_step_cnt + 1;
                         end if;
                     end if;
@@ -415,13 +417,53 @@ end;
 
                     else
                         io_brk;
-                        if (spr_step_cnt > 17 * cpu_io_multi) then
+                        if (spr_step_cnt > 4 * cpu_io_multi) then
                             global_step_cnt := global_step_cnt + 1;
                         end if;
                     end if;
                     spr_step_cnt := spr_step_cnt + 1;
 
                 elsif (global_step_cnt = 4) then
+                    --step3 = dma set.
+                    for i in 0 to 64 loop
+                        j := i * 4;
+                        if (ch = 16#5b#) then
+                            ch := 16#41#;
+                        else
+                            ch := 16#41# + i;
+                        end if;
+
+                        if (i < 64) then
+                            if    (dma_step_cnt = (0 + j) * cpu_io_multi) then
+                                io_out(16#0200# + dma_step_cnt, i);
+                            elsif (dma_step_cnt = (1 + j) * cpu_io_multi) then
+                                io_out(16#0201# + dma_step_cnt, ch);
+                            elsif (dma_step_cnt = (2 + j) * cpu_io_multi) then
+                                io_out(16#0202# + dma_step_cnt, 16#01#);
+                            elsif (dma_step_cnt = (3 + j) * cpu_io_multi) then
+                                io_out(16#0203# + dma_step_cnt, j);
+                            else
+                                io_brk;
+                                if (dma_step_cnt > 17 * cpu_io_multi) then
+                                    global_step_cnt := global_step_cnt + 1;
+                                end if;
+                            end if;
+                        else
+                            if    (dma_step_cnt = (0 + j) * cpu_io_multi) then
+                                --start dma
+                                io_out(16#4014#, 16#02#);
+                            else
+                                io_brk;
+                                if (dma_step_cnt > 17 * cpu_io_multi) then
+                                    global_step_cnt := global_step_cnt + 1;
+                                end if;
+                            end if;
+                        end if;
+                    end loop;
+                    
+                    dma_step_cnt := dma_step_cnt + 1;
+
+                elsif (global_step_cnt = 5) then
                     --final step = enable ppu.
                     if (enable_ppu_step_cnt = 0 * cpu_io_multi) then
                         --scroll reg set x.
