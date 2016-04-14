@@ -82,6 +82,7 @@ end;
             plt_step_cnt := 0;
             nt_step_cnt := 0;
             spr_step_cnt := 0;
+            dma_step_cnt := 0;
             enable_ppu_step_cnt := 0;
             cpu_cnt := 0;
 
@@ -434,29 +435,29 @@ end;
                         end if;
 
                         if (i < 64) then
+                            --set dma value on the ram.
                             if    (dma_step_cnt = (0 + j) * cpu_io_multi) then
-                                io_out(16#0200# + dma_step_cnt, i);
+                                io_out(16#0200# + j, i);
                             elsif (dma_step_cnt = (1 + j) * cpu_io_multi) then
-                                io_out(16#0201# + dma_step_cnt, ch);
+                                io_out(16#0201# + j, ch);
                             elsif (dma_step_cnt = (2 + j) * cpu_io_multi) then
-                                io_out(16#0202# + dma_step_cnt, 16#01#);
+                                io_out(16#0202# + j, 16#01#);
                             elsif (dma_step_cnt = (3 + j) * cpu_io_multi) then
-                                io_out(16#0203# + dma_step_cnt, j);
-                            else
+                                io_out(16#0203# + j, j);
+                            elsif (dma_step_cnt = (0 + j) * cpu_io_multi + 1) or
+                                    (dma_step_cnt = (1 + j) * cpu_io_multi + 1) or
+                                    (dma_step_cnt = (2 + j) * cpu_io_multi + 1) or
+                                    (dma_step_cnt = (3 + j) * cpu_io_multi + 1) then
                                 io_brk;
-                                if (dma_step_cnt > 17 * cpu_io_multi) then
-                                    global_step_cnt := global_step_cnt + 1;
-                                end if;
                             end if;
                         else
                             if    (dma_step_cnt = (0 + j) * cpu_io_multi) then
                                 --start dma
                                 io_out(16#4014#, 16#02#);
-                            else
+                            elsif (dma_step_cnt = (0 + j) * cpu_io_multi + 1) then
                                 io_brk;
-                                if (dma_step_cnt > 17 * cpu_io_multi) then
-                                    global_step_cnt := global_step_cnt + 1;
-                                end if;
+                            elsif (dma_step_cnt = (0 + j) * cpu_io_multi + 2) then
+                                global_step_cnt := global_step_cnt + 1;
                             end if;
                         end if;
                     end loop;
