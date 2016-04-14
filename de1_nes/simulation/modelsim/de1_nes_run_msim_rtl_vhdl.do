@@ -22,7 +22,7 @@ vcom -93 -work work {../../ppu/vga_ppu.vhd}
 vcom -93 -work work {../../ppu/ppu.vhd}
 vcom -93 -work work {../../dummy-mos6502.vhd}
 
-#vcom -93 -work work {../../apu/apu.vhd}
+vcom -93 -work work {../../apu/apu.vhd}
 #vcom -93 -work work {../../mem/prg_rom.vhd}
 #vcom -93 -work work {../../cpu/cpu_registers.vhd}
 #vcom -93 -work work {../../cpu/mos6502.vhd}
@@ -36,6 +36,7 @@ vsim -t 1ps -L lpm -L altera -L altera_mf -L sgate -L cycloneii -L rtl_work -L w
 ##add wave sim:/testbench_motones_sim/sim_board/ppu_clk
 
 add wave -label rst_n sim:/testbench_motones_sim/sim_board/rst_n;
+add wave -label rdy sim:/testbench_motones_sim/sim_board/rdy
 add wave -label r_nw sim:/testbench_motones_sim/sim_board/r_nw;
 add wave -label cpu_clk sim:/testbench_motones_sim/sim_board/cpu_clk
 add wave -label nmi_n sim:/testbench_motones_sim/sim_board/nmi_n
@@ -55,6 +56,10 @@ add wave -label d_io -radix hex sim:/testbench_motones_sim/sim_board/d_io
 
 
 ##add wave -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/status_reg
+
+add wave -divider apu
+
+
 
 add wave -divider ppu
 
@@ -116,6 +121,6 @@ view signals
 run 10 us
 wave zoom full
 
-run 70 us
+run 440 us
 #run 65 us
 

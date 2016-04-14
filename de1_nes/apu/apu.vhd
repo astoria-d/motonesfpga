@@ -132,61 +132,62 @@ begin
         if (rst_n = '0') then
             dma_next_status <= DMA_ST_IDLE;
             dma_end_n <= '1';
-            rdy <= '1';
             dma_process_n <= '1';
             cpu_addr <= (others => 'Z');
             cpu_d <= (others => 'Z');
             r_nw <= 'Z';
-        else
-            if (clk'event and clk = '0') then
+        elsif (rising_edge(clk)) then
+            if (dma_status = DMA_ST_IDLE) then
                 if (dma_start_n = '0') then
-                    --pull rdy pin down to stop cpu bus accessing.
-                    rdy <= '0';
+                    dma_status_we_n <= '0';
+                    dma_next_status <= DMA_ST_SETUP;
                 end if;
-                if (dma_end_n = '0') then
-                    --pull rdy pin up to re-enable cpu bus accessing.
-                    rdy <= '1';
-                end if;
-            end if;
-
-            if (clk'event and clk = '1') then
-                if (dma_status = DMA_ST_IDLE) then
-                    if (dma_start_n = '0') then
-                        dma_status_we_n <= '0';
-                        dma_next_status <= DMA_ST_SETUP;
-                    end if;
-                    dma_process_n <= '1';
+                dma_process_n <= '1';
+                dma_end_n <= '1';
+                cpu_addr <= (others => 'Z');
+                cpu_d <= (others => 'Z');
+                r_nw <= 'Z';
+            elsif (dma_status = DMA_ST_SETUP) then
+                cpu_addr <= OAMADDR;
+                cpu_d <= (others => '0');
+                r_nw <= '0';
+                dma_next_status <= DMA_ST_PROCESS;
+            elsif (dma_status = DMA_ST_PROCESS) then
+                if (dma_addr(dsize - 1 downto 0) = "11111111" and dma_cnt_ce_n(0) = '1') then
+                    dma_status_we_n <= '0';
+                    dma_next_status <= DMA_ST_IDLE;
+                    dma_end_n <= '0';
+                else
+                    dma_status_we_n <= '1';
+                    dma_process_n <= '0';
                     dma_end_n <= '1';
-                    cpu_addr <= (others => 'Z');
-                    cpu_d <= (others => 'Z');
-                    r_nw <= 'Z';
-                elsif (dma_status = DMA_ST_SETUP) then
-                    cpu_addr <= OAMADDR;
-                    cpu_d <= (others => '0');
-                    r_nw <= '0';
-                    dma_next_status <= DMA_ST_PROCESS;
-                elsif (dma_status = DMA_ST_PROCESS) then
-                    if (dma_addr(dsize - 1 downto 0) = "11111111" and dma_cnt_ce_n(0) = '1') then
-                        dma_status_we_n <= '0';
-                        dma_next_status <= DMA_ST_IDLE;
-                        dma_end_n <= '0';
-                    else
-                        dma_status_we_n <= '1';
-                        dma_process_n <= '0';
-                        dma_end_n <= '1';
-                    end if;
+                end if;
 
-                    if (dma_cnt_ce_n(0) = '0') then
-                        r_nw <= '1';
-                        cpu_addr <= dma_addr;
-                        cpu_d <= (others => 'Z');
-                    elsif (dma_cnt_ce_n(0) = '1') then
-                        r_nw <= '0';
-                        cpu_addr <= OAMDATA;
-                        cpu_d <= oam_data;
-                    end if;
-                end if;--if (dma_status = DMA_ST_IDLE) then
-            end if;--if (clk'event and clk = '1') then
+                if (dma_cnt_ce_n(0) = '0') then
+                    r_nw <= '1';
+                    cpu_addr <= dma_addr;
+                    cpu_d <= (others => 'Z');
+                elsif (dma_cnt_ce_n(0) = '1') then
+                    r_nw <= '0';
+                    cpu_addr <= OAMDATA;
+                    cpu_d <= oam_data;
+                end if;
+            end if;--if (dma_status = DMA_ST_IDLE) then
+        end if;--if (rst_n = '0') then
+    end process;
+
+    rdy_p : process (rst_n, clk_n)
+    begin
+        if (rst_n = '0') then
+            rdy <= '1';
+        elsif (rising_edge(clk_n)) then
+            if (dma_start_n = '0') then
+                --pull rdy pin down to stop cpu bus accessing.
+                rdy <= '0';
+            elsif (dma_end_n = '0') then
+                --pull rdy pin up to re-enable cpu bus accessing.
+                rdy <= '1';
+            end if;
         end if;
     end process;
 

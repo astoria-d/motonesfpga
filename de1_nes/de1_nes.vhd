@@ -341,7 +341,7 @@ begin
     dbg_stat_we_n    ,
     dbg_idl_h, dbg_idl_l, dbg_dbb_r, dbg_dbb_w,
 
-                cpu_clk, '1', --rdy, -----for testing...
+                cpu_clk, rdy,
                 rst_n, irq_n, nmi_n, dbe, r_nw, 
                 phi1, phi2, addr, d_io);
 
