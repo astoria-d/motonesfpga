@@ -474,9 +474,9 @@ begin
     vram_nt1 : ram generic map (vram_1k, data_size)
             port map (mem_clk, nt1_ce_n, rd_n, wr_n, v_addr(vram_1k - 1 downto 0), vram_ad);
 
---    --APU/DMA instance
---    apu_inst : apu
---        port map (cpu_clk, apu_ce_n, rst_n, r_nw, addr, d_io, rdy);
+    --APU/DMA instance
+    apu_inst : apu
+        port map (cpu_clk, apu_ce_n, rst_n, r_nw, addr, d_io, rdy);
 
 end rtl;
 
