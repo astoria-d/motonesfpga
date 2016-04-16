@@ -110,13 +110,13 @@ set_location_assignment PIN_M5 -to dram_udqm
 set_location_assignment PIN_R8 -to dram_we_n
 
 #project files
-set_global_assignment -name VHDL_FILE apu/apu.vhd
 set_global_assignment -name VHDL_FILE address_decoder.vhd
 set_global_assignment -name VHDL_FILE motonesfpga_common.vhd
 set_global_assignment -name VHDL_FILE clock/clock_divider.vhd
 set_global_assignment -name VHDL_FILE mem/prg_rom.vhd
 set_global_assignment -name VHDL_FILE mem/chr_rom.vhd
 set_global_assignment -name VHDL_FILE mem/ram.vhd
+set_global_assignment -name VHDL_FILE apu/apu.vhd
 set_global_assignment -name VHDL_FILE ppu/ppu_registers.vhd
 set_global_assignment -name VHDL_FILE ppu/vga_ppu.vhd
 set_global_assignment -name VHDL_FILE ppu/ppu.vhd

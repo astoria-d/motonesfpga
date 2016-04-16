@@ -59,6 +59,9 @@
     jsr status_test
     jsr ppu_test
 
+    ;;this function doesn't work.. must investigate!!!!
+;    jsr dma_test
+
 .endproc
 
 
@@ -123,6 +126,55 @@ test_done:
     ;;infinite loop.
 mainloop:
 	jmp	mainloop
+
+
+.proc dma_test
+    ;;dma test data.
+    ldy #$00
+    ldx #$41
+    stx $00
+    ldx #$00
+dma_set:
+    ;;y pos
+    txa
+    sta $0200, y
+    iny
+    ;;tile index
+    lda $00
+    cmp #$5b
+    bne inc_tile
+    lda #$41
+    sta $00
+inc_tile:
+    inc $00
+    sta $0200, y
+    iny
+    ;;attribute
+    lda #$01
+    sta $0200, y
+    iny
+    ;;x pos
+    txa
+    adc #$03
+    tax
+    rol
+    sta $0200, y
+    iny
+    bne dma_set
+
+    ;;dma start.
+    lda #$02
+    sta $4014
+
+    jsr check_ppu
+    lda ad_dma_test
+    sta $00
+    lda ad_dma_test+1
+    sta $01
+    jsr print_ln
+
+    rts
+.endproc
 
 
 nmi_test:
@@ -2344,6 +2396,12 @@ ad_status_test:
     .addr   :+
 :
     .byte   "status test..."
+    .byte   $00
+
+ad_dma_test:
+    .addr   :+
+:
+    .byte   "dma test..."
     .byte   $00
 
 ad_ppu_test:

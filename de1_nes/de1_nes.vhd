@@ -341,7 +341,7 @@ begin
     dbg_stat_we_n    ,
     dbg_idl_h, dbg_idl_l, dbg_dbb_r, dbg_dbb_w,
 
-                cpu_clk, '1', --rdy, -----for testing...
+                cpu_clk, rdy,
                 rst_n, irq_n, nmi_n, dbe, r_nw, 
                 phi1, phi2, addr, d_io);
 
@@ -474,9 +474,9 @@ begin
     vram_nt1 : ram generic map (vram_1k, data_size)
             port map (mem_clk, nt1_ce_n, rd_n, wr_n, v_addr(vram_1k - 1 downto 0), vram_ad);
 
---    --APU/DMA instance
---    apu_inst : apu
---        port map (cpu_clk, apu_ce_n, rst_n, r_nw, addr, d_io, rdy);
+    --APU/DMA instance
+    apu_inst : apu
+        port map (cpu_clk, apu_ce_n, rst_n, r_nw, addr, d_io, rdy);
 
 end rtl;
 

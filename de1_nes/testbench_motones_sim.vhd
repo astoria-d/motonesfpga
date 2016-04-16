@@ -42,7 +42,7 @@ architecture stimulus of testbench_motones_sim is
     signal dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y : out std_logic_vector (7 downto 0);
     signal dbg_disp_nt, dbg_disp_attr : out std_logic_vector (7 downto 0);
     signal dbg_disp_ptn_h, dbg_disp_ptn_l : out std_logic_vector (15 downto 0);
-    signal dummy_nmi  : in std_logic;
+    signal dbg_nmi  : out std_logic;
     
     
 --NES instance
@@ -61,6 +61,7 @@ architecture stimulus of testbench_motones_sim is
     signal base_clk         : std_logic;
     signal reset_input      : std_logic;
     signal nmi_input      : std_logic;
+    signal dbg_nmi      : std_logic;
 
     signal h_sync_n    : std_logic;
     signal v_sync_n    : std_logic;
@@ -145,7 +146,7 @@ dbg_disp_nt, dbg_disp_attr ,
 dbg_disp_ptn_h, dbg_disp_ptn_l ,
 --dbg_ppu_addr_we_n,
 --dbg_ppu_clk_cnt          ,
-nmi_input,
+dbg_nmi,
     
     base_clk, reset_input, joypad1, joypad2, 
             h_sync_n, v_sync_n, r, g, b);
