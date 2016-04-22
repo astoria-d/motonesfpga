@@ -30,35 +30,36 @@
     jsr init_global
     jsr init_ppu
 
-    lda ad_start_msg
-    sta $00
-    lda ad_start_msg+1
-    sta $01
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-
-
-;;;;;following tests all ok
+;    lda ad_start_msg
+;    sta $00
+;    lda ad_start_msg+1
+;    sta $01
+;    jsr print_ln
+;    jsr print_ln
+;    jsr print_ln
+;    jsr print_ln
+;    jsr print_ln
+;    jsr print_ln
+;
+;
+;;;;;;following tests all ok
+;;    jsr single_inst_test
+;;    a2_inst_test
+;;    a3_inst_test
+;;    a4_inst_test
+;;    a5_inst_test
+;
+;    ;;test start...
+;    jsr addr_test
 ;    jsr single_inst_test
-;    a2_inst_test
-;    a3_inst_test
-;    a4_inst_test
-;    a5_inst_test
-
-    ;;test start...
-    jsr addr_test
-    jsr single_inst_test
-    jsr a2_inst_test
-    jsr a3_inst_test
-    jsr a4_inst_test
-    jsr a5_inst_test
-    jsr status_test
+;    jsr a2_inst_test
+;    jsr a3_inst_test
+;    jsr a4_inst_test
+;    jsr a5_inst_test
+;    jsr status_test
     jsr ppu_test
 
+    jsr index_inst_test
     ;;this function doesn't work.. must investigate!!!!
 ;    jsr dma_test
 
@@ -128,6 +129,280 @@ mainloop:
 	jmp	mainloop
 
 
+
+.proc index_inst_test
+    ldx #$12
+    ldy #$e5
+    
+    ;;a2 abs, x
+    ;;a2 (ind, x)
+    ;;a2 (ind), y
+    ;;a3 abs, x
+    ;;a3 (ind, x)
+    ;;a3 (ind), y
+    ;;a4 abs, y
+    ;;branch
+
+
+    ;;;a2 inst...
+    
+    ;;no page crossing
+    lda #$55
+    ;;0466+12=478
+    sta $0478
+
+    lda #$c3
+    clc
+    adc $0466, x
+    ;;c3+55=118
+    cmp #$18
+    beq :+
+    jsr test_failure
+:
+
+    ;;page crossing
+    lda #$55
+    ;;0466+e5=54b
+    sta $054b
+
+    lda #$f1
+    clc
+    adc $0466, y
+    ;;f1+55=146
+    cmp #$46
+    beq :+
+    jsr test_failure
+:
+
+    ;;no page crossing
+    lda #$55
+    sta $051c
+    ;@051c=55
+
+    lda #$1c
+    sta $66
+    lda #$05
+    sta $67
+    ;;(66)=051c
+    
+    lda #$c3
+    sec
+    ;;54+12=66
+    sbc ($54, x)
+    ;;c3-55=6e
+    cmp #$6e
+    beq :+
+    jsr test_failure
+:
+
+    ;;page crossing
+    lda #$55
+    sta $0422
+    ;@0422=55
+
+    lda #$22
+    sta $0a
+    lda #$04
+    sta $0b
+    ;;(0a)=0422
+    
+    lda #$c3
+    ;;f8+12=10a
+    ora ($f8, x)
+    ;;c3 | 55=d7
+    cmp #$d7
+    beq :+
+    jsr test_failure
+:
+
+
+    ;;no page crossing
+    lda #$55
+    sta $059e
+    ;@059e=55
+
+    lda #$8c
+    sta $54
+    lda #$05
+    sta $55
+    ;;(54)=058c
+    
+    ldy #$12
+    lda #$c3
+    ;;058c+12=59e
+    and ($54), y
+    ;;c3 & 55=41
+    cmp #$41
+    beq :+
+    jsr test_failure
+:
+
+    ;;page crossing
+    lda #$66
+    sta $0671
+    ;@0671=55
+
+    lda #$8c
+    sta $54
+    lda #$05
+    sta $55
+    ;;(54)=058c
+    
+    ldy #$e5
+    lda #$c3
+    ;;058c+e5=0671
+    eor ($54), y
+    ;;c3 ^ 66 = a5
+    cmp #$a5
+    beq :+
+    jsr test_failure
+:
+
+
+    ;;;;a3 inst...
+    ;;no page crossing
+    lda #$15
+    sta $0355, x
+    ;;0355+12=0367
+    ;;@0367=15
+
+    ;;c3+55=118
+    cmp $0367
+    beq :+
+    jsr test_failure
+:
+
+    ;;page crossing
+    lda #$67
+    sta $0355, y
+    ;;0355+e5=043a
+    ;;@043a=67
+
+    ;;c3+55=118
+    cpx $043a
+    bne :+
+    jsr test_failure
+:
+    cmp $043a
+    beq :+
+    jsr test_failure
+:
+
+
+    ;;no page crossing
+    lda #$ff
+    sta $a2
+    lda #$04
+    sta $a3
+    ;;(a2)=04ff
+
+    ;;90+12=a2
+    lda #$88
+    sta ($90, x)
+
+    lda $04ff
+    cmp #$e5
+    bne :+
+    jsr test_failure
+:
+    cmp #$88
+    beq :+
+    jsr test_failure
+:
+
+    ;;page crossing
+    lda #$ff
+    sta $ff
+    lda #$05
+    sta $00
+    ;;(ff)=05ff
+
+    ;;ed+12=ff
+    lda #$d1
+    sta ($ed, x)
+
+    lda $05ff
+    cmp #$e5
+    bne :+
+    jsr test_failure
+:
+    cmp #$d1
+    beq :+
+    jsr test_failure
+:
+
+
+    ;;no page crossing
+    lda #$f1
+    sta $ff
+    lda #$05
+    sta $00
+    ;;(ff)=05f1
+    
+    ldy #$03
+    lda #$a5
+    ;;05f1+3=05f4
+    sta ($ff), y
+
+
+    lda $05f4
+
+    cmp #$a5
+    beq :+
+    jsr test_failure
+:
+
+    ;;page crossing
+    lda #$ff
+    sta $ff
+    lda #$06
+    sta $00
+    ;;(ff)=06ff
+    
+    ldy #$12
+    lda #$dd
+    ;;06ff+12=711
+    sta ($ff), y
+
+
+    lda $0711
+
+    cmp #$dd
+    beq :+
+    jsr test_failure
+:
+
+
+    ;;a4 inst....
+    ;;no page crossing
+    lda #$55
+    sta $0478
+
+    ;;0466+12=478
+    sec
+    ror $0466, x
+
+    lda $0478
+
+    cmp #$aa
+    beq :+
+    jsr test_failure
+:
+
+
+
+
+
+    jsr check_ppu
+    lda ad_index_inst_test
+    sta $00
+    lda ad_index_inst_test+1
+    sta $01
+    jsr print_ln
+
+    rts
+.endproc
+
 .proc dma_test
     ;;dma test data.
     ldy #$00
@@ -140,31 +415,31 @@ dma_set:
     sta $0200, y
     iny
     ;;tile index
-    lda $00
-    cmp #$5b
-    bne inc_tile
-    lda #$41
-    sta $00
-inc_tile:
-    inc $00
-    sta $0200, y
-    iny
-    ;;attribute
-    lda #$01
-    sta $0200, y
-    iny
-    ;;x pos
-    txa
-    adc #$03
-    tax
-    rol
-    sta $0200, y
-    iny
-    bne dma_set
-
-    ;;dma start.
-    lda #$02
-    sta $4014
+;    lda $00
+;    cmp #$5b
+;    bne inc_tile
+;    lda #$41
+;    sta $00
+;inc_tile:
+;    inc $00
+;    sta $0200, y
+;    iny
+;    ;;attribute
+;    lda #$01
+;    sta $0200, y
+;    iny
+;    ;;x pos
+;    txa
+;    adc #$03
+;    tax
+;    rol
+;    sta $0200, y
+;    iny
+;    bne dma_set
+;
+;    ;;dma start.
+;    lda #$02
+;    sta $4014
 
     jsr check_ppu
     lda ad_dma_test
@@ -2396,6 +2671,13 @@ ad_status_test:
     .addr   :+
 :
     .byte   "status test..."
+    .byte   $00
+
+
+ad_index_inst_test:
+    .addr   :+
+:
+    .byte   "index addressing test..."
     .byte   $00
 
 ad_dma_test:
