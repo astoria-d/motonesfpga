@@ -52,8 +52,7 @@
     jsr ppu_test
 
     jsr pg_border_test
-    ;;this function doesn't work.. must investigate!!!!
-;    jsr dma_test
+    jsr dma_test
 
 .endproc
 
@@ -441,31 +440,31 @@ dma_set:
     sta $0200, y
     iny
     ;;tile index
-;    lda $00
-;    cmp #$5b
-;    bne inc_tile
-;    lda #$41
-;    sta $00
-;inc_tile:
-;    inc $00
-;    sta $0200, y
-;    iny
-;    ;;attribute
-;    lda #$01
-;    sta $0200, y
-;    iny
-;    ;;x pos
-;    txa
-;    adc #$03
-;    tax
-;    rol
-;    sta $0200, y
-;    iny
-;    bne dma_set
-;
-;    ;;dma start.
-;    lda #$02
-;    sta $4014
+    lda $00
+    cmp #$5b
+    bne inc_tile
+    lda #$41
+    sta $00
+inc_tile:
+    inc $00
+    sta $0200, y
+    iny
+    ;;attribute
+    lda #$01
+    sta $0200, y
+    iny
+    ;;x pos
+    txa
+    adc #$03
+    tax
+    rol
+    sta $0200, y
+    iny
+    bne dma_set
+
+    ;;dma start.
+    lda #$02
+    sta $4014
 
     jsr check_ppu
     lda ad_dma_test
@@ -478,9 +477,34 @@ dma_set:
 .endproc
 
 
+.proc set_dma
+    ldy #0
+
+y_loop:
+    lda $0200, y
+
+    clc
+    adc #$1
+    sta $0200, y
+
+    iny
+    iny
+    iny
+    iny
+
+    bne y_loop
+
+    ;;dma start.
+    lda #$02
+    sta $4014
+
+    rts
+.endproc
+
 nmi_test:
     jsr update_counter
     jsr update_scroll
+    jsr set_dma
 
     rti
 
