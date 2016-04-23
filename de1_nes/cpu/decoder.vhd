@@ -145,6 +145,7 @@ signal wk_acc_cmd         : std_logic_vector(3 downto 0);
 signal wk_x_cmd           : std_logic_vector(3 downto 0);
 signal wk_y_cmd           : std_logic_vector(3 downto 0);
 signal wk_stat_alu_we_n   : std_logic;
+signal old_ea_carry       : std_logic;
 
 begin
 
@@ -152,6 +153,9 @@ begin
     pch_inc_input <= not exec_cycle(5);
     pch_inc_reg : d_flip_flop_bit 
             port map(set_clk, '1', '1', '0', pch_inc_input, pch_inc_n);
+
+    old_ea_carry_reg : d_flip_flop_bit 
+            port map(set_clk, '1', '1', '0', ea_carry, old_ea_carry);
 
     --acc,x,y next cycle is changed when it goes page across.
     --The conditional branch instructions all have the form xxy10000
@@ -718,7 +722,11 @@ begin
         end if;
         wk_next_cycle <= T4;
     elsif exec_cycle = T4 then
-        pg_next_n <= '0';
+        if (ea_carry = '1') then
+            pg_next_n <= '0';
+        else
+            pg_next_n <= '1';
+        end if;
         abs_latch_out;
         if (is_x = true) then
             ea_x_out;
@@ -770,7 +778,11 @@ begin
         --page handling.
         back_oe(wk_y_cmd, '1');
         indir_y_n <= '0';
-        pg_next_n <= '0';
+        if (old_ea_carry = '1') then
+            pg_next_n <= '0';
+        else
+            pg_next_n <= '1';
+        end if;
         r_nw <= '0';
         wk_next_cycle <= T0;
     end if;
@@ -949,7 +961,11 @@ begin
     elsif exec_cycle = T4 then
         abs_latch_out;
         ea_x_out;
-        pg_next_n <= '0';
+        if (ea_carry = '1') then
+            pg_next_n <= '0';
+        else
+            pg_next_n <= '1';
+        end if;
 
         --keep data in the alu reg.
         arith_en_n <= '0';

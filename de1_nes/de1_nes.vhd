@@ -326,10 +326,10 @@ begin
     --mos 6502 cpu instance
     cpu_inst : mos6502 generic map (data_size, addr_size) 
         port map (
-    dbg_instruction_dummy,
-    dbg_int_d_bus_dummy,
-    dbg_exec_cycle_dummy,
-    dbg_ea_carry_dummy,
+    dbg_instruction,
+    dbg_int_d_bus,
+    dbg_exec_cycle,
+    dbg_ea_carry,
  --   dbg_index_bus,
  --   dbg_acc_bus,
     dbg_status_dummy,
@@ -359,14 +359,14 @@ begin
     prg_ram_inst : ram generic map (ram_2k, data_size)
             port map (mem_clk, ram_ce_n, ram_oe_n, R_nW, addr(ram_2k - 1 downto 0), d_io);
 
-    dbg_exec_cycle(2 downto 1) <= dbg_vga_x(9 downto 8);
-    dbg_int_d_bus <= dbg_vga_x(7 downto 0);
-    dbg_exec_cycle(0) <= dbg_nes_x(8);
-    dbg_instruction <= dbg_nes_x(7 downto 0);
-    dbg_exec_cycle(3) <= dbg_emu_ppu_clk;
-
-    dbg_exec_cycle(4) <= dbg_nes_y(8);
-    dbg_status <= dbg_nes_y(7 downto 0);
+--    dbg_exec_cycle(2 downto 1) <= dbg_vga_x(9 downto 8);
+--    dbg_int_d_bus <= dbg_vga_x(7 downto 0);
+--    dbg_exec_cycle(0) <= dbg_nes_x(8);
+--    dbg_instruction <= dbg_nes_x(7 downto 0);
+--    dbg_exec_cycle(3) <= dbg_emu_ppu_clk;
+--
+--    dbg_exec_cycle(4) <= dbg_nes_y(8);
+--    dbg_status <= dbg_nes_y(7 downto 0);
 
 
     dbg_ppu_scrl_x(0) <= ale;

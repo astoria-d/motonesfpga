@@ -30,36 +30,28 @@
     jsr init_global
     jsr init_ppu
 
-;    lda ad_start_msg
-;    sta $00
-;    lda ad_start_msg+1
-;    sta $01
-;    jsr print_ln
-;    jsr print_ln
-;    jsr print_ln
-;    jsr print_ln
-;    jsr print_ln
-;    jsr print_ln
-;
-;
-;;;;;;following tests all ok
-;;    jsr single_inst_test
-;;    a2_inst_test
-;;    a3_inst_test
-;;    a4_inst_test
-;;    a5_inst_test
-;
-;    ;;test start...
-;    jsr addr_test
-;    jsr single_inst_test
-;    jsr a2_inst_test
-;    jsr a3_inst_test
-;    jsr a4_inst_test
-;    jsr a5_inst_test
-;    jsr status_test
+    lda ad_start_msg
+    sta $00
+    lda ad_start_msg+1
+    sta $01
+    jsr print_ln
+    jsr print_ln
+    jsr print_ln
+    jsr print_ln
+    jsr print_ln
+    jsr print_ln
+
+    ;;test start...
+    jsr addr_test
+    jsr single_inst_test
+    jsr a2_inst_test
+    jsr a3_inst_test
+    jsr a4_inst_test
+    jsr a5_inst_test
+    jsr status_test
     jsr ppu_test
 
-    jsr index_inst_test
+    jsr pg_border_test
     ;;this function doesn't work.. must investigate!!!!
 ;    jsr dma_test
 
@@ -130,7 +122,7 @@ mainloop:
 
 
 
-.proc index_inst_test
+.proc pg_border_test
     ldx #$12
     ldy #$e5
     
@@ -389,14 +381,48 @@ mainloop:
     jsr test_failure
 :
 
+    ;;page crossing
+    ldx #$e5
+    lda #$a5
+    sta $0476
+
+    ;;0391+e5=476
+    sec
+    rol $0391, x
+
+    lda $0476
+
+    cmp #$4b
+    beq :+
+    jsr test_failure
+:
 
 
+    ;;branch test...
+    jmp @br_start
+
+@br_back:
+    lda #$02
+    cmp #$03
+    bne @br_fwd
+
+    ;;branch across the page border.
+.repeat 116
+    .byte   $00
+.endrepeat
+
+@br_start:
+    lda #$01
+    cmp #$01
+    beq @br_back
+
+@br_fwd:
 
 
     jsr check_ppu
-    lda ad_index_inst_test
+    lda ad_pg_border_test
     sta $00
-    lda ad_index_inst_test+1
+    lda ad_pg_border_test+1
     sta $01
     jsr print_ln
 
@@ -2674,10 +2700,10 @@ ad_status_test:
     .byte   $00
 
 
-ad_index_inst_test:
+ad_pg_border_test:
     .addr   :+
 :
-    .byte   "index addressing test..."
+    .byte   "page border crossing test..."
     .byte   $00
 
 ad_dma_test:

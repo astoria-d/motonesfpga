@@ -458,7 +458,7 @@ end procedure;
             ---save BAH.
             ah_buf_we_n <= '0';
             ah_reg_in <= int_d_bus;
-        elsif (exec_cycle = T5) then
+        elsif (exec_cycle = T5 or exec_cycle = T0) then
             ah_buf_we_n <= '1';
 
             --output ah/al reg.
@@ -499,6 +499,8 @@ end procedure;
             ea_carry <= addr_c;
 
         elsif (exec_cycle = T4) then
+            ah_buf_we_n <= '1';
+
             ---add y reg.
             a_sel <= ADDR_ADC;
 
@@ -521,11 +523,17 @@ end procedure;
             al_buf_we_n <= '1';
             tmp_buf_we_n <= '1';
             ea_carry <= '0';
-            a_sel <= ADDR_INC;
-            addr1 <= tmp_reg;
-            ---next page.
-            abh <= addr_out;
-            abl <= al_reg;
+
+            if (pg_next_n = '0') then
+                a_sel <= ADDR_INC;
+                addr1 <= tmp_reg;
+                ---next page.
+                abh <= addr_out;
+                abl <= al_reg;
+            else
+                abh <= tmp_reg;
+                abl <= al_reg;
+            end if;
         else
             al_buf_we_n <= '1';
             ah_buf_we_n <= '1';
