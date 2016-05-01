@@ -519,7 +519,7 @@ end procedure;
             al_reg_in <= addr_out;
             tmp_buf_we_n <= '0';
             tmp_reg_in <= ah_reg;
-        elsif (exec_cycle = T5) then
+        elsif (exec_cycle = T5 or exec_cycle = T0) then
             al_buf_we_n <= '1';
             tmp_buf_we_n <= '1';
             ea_carry <= '0';
