@@ -103,8 +103,7 @@ wave zoom full
 
 #wave zoom range 3339700 ps 5138320 ps
 
-run 214 us
-
+run 138 us
 
 ##wave addcursor 907923400 ps
 

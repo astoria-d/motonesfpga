@@ -323,6 +323,9 @@ begin
     clock_inst : clock_divider port map 
         (base_clk, rst_n, cpu_clk, ppu_clk, mem_clk, vga_clk);
 
+    addr_dec_inst : address_decoder generic map (addr_size, data_size) 
+        port map (phi2, mem_clk, r_nw, addr, rom_ce_n, ram_ce_n, ppu_ce_n, apu_ce_n);
+
     --mos 6502 cpu instance
     cpu_inst : mos6502 generic map (data_size, addr_size) 
         port map (
@@ -344,9 +347,6 @@ begin
                 cpu_clk, rdy,
                 rst_n, irq_n, nmi_n, dbe, r_nw, 
                 phi1, phi2, addr, d_io);
-
-    addr_dec_inst : address_decoder generic map (addr_size, data_size) 
-        port map (phi2, mem_clk, r_nw, addr, rom_ce_n, ram_ce_n, ppu_ce_n, apu_ce_n);
 
     --main ROM/RAM instance
 --    prg_rom_inst : prg_rom generic map (rom_32k, data_size)
