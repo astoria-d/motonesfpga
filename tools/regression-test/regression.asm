@@ -120,6 +120,105 @@ mainloop:
 	jmp	mainloop
 
 
+.proc sprite_test
+    jsr check_ppu
+    lda ad_sprite_test
+    sta $00
+    lda ad_sprite_test+1
+    sta $01
+    jsr print_ln
+
+
+;;set sprite addr=08 (third sprite)
+	lda	#$08
+	sta	$2003
+;;set sprite data: y=20
+	lda	#20
+	sta	$2004
+;;tile=0x4d (ascii 'M')
+	lda	#$4d
+	sta	$2004
+;;set sprite attr=03 (palette 03)
+	lda	#$03
+	sta	$2004
+;;set sprite data: x=100
+	lda	#$64
+	sta	$2004
+
+    rts
+.endproc
+
+.proc simple_dma_test
+    jsr check_ppu
+    lda ad_simple_dma_test
+    sta $00
+    lda ad_simple_dma_test+1
+    sta $01
+    jsr print_ln
+
+;;set sprite addr=0C (forth sprite)
+;;set sprite data: y=80
+	lda	#80
+	sta	$040C
+;;tile=0x4d (ascii 'd')
+	lda	#$64
+	sta	$040D
+;;set sprite attr=03 (palette 03)
+	lda	#$03
+	sta	$040E
+;;set sprite data: x=100
+	lda	#$64
+	sta	$040F
+
+    ;;more sprite...
+	lda	#90
+	sta	$0410
+	lda	#$64
+	sta	$0411
+	lda	#$03
+	sta	$0412
+	lda	#50
+	sta	$0413
+
+	lda	#100
+	sta	$0420
+	lda	#$65
+	sta	$0421
+	lda	#$03
+	sta	$0422
+	lda	#200
+	sta	$0423
+
+	lda	#30
+	sta	$0430
+	lda	#$44
+	sta	$0431
+	lda	#$03
+	sta	$0432
+	lda	#200
+	sta	$0433
+
+    ;;dma start.
+    lda #$04
+    sta $4014
+
+    rts
+.endproc
+
+
+.proc ppu_test
+    jsr check_ppu
+    lda ad_ppu_test
+    sta $00
+    lda ad_ppu_test+1
+    sta $01
+    jsr print_ln
+
+    jsr sprite_test
+    jsr simple_dma_test
+    rts
+.endproc
+
 
 .proc pg_border_test
     ldx #$12
@@ -437,7 +536,7 @@ mainloop:
 dma_set:
     ;;y pos
     txa
-    sta $0200, y
+    sta $0400, y
     iny
     ;;tile index
     lda $00
@@ -447,23 +546,23 @@ dma_set:
     sta $00
 inc_tile:
     inc $00
-    sta $0200, y
+    sta $0400, y
     iny
     ;;attribute
     lda #$01
-    sta $0200, y
+    sta $0400, y
     iny
     ;;x pos
     txa
     adc #$03
     tax
     rol
-    sta $0200, y
+    sta $0400, y
     iny
     bne dma_set
 
     ;;dma start.
-    lda #$02
+    lda #$04
     sta $4014
 
     jsr check_ppu
@@ -481,11 +580,11 @@ inc_tile:
     ldy #0
 
 y_loop:
-    lda $0200, y
+    lda $0400, y
 
     clc
     adc #$1
-    sta $0200, y
+    sta $0400, y
 
     iny
     iny
@@ -495,7 +594,7 @@ y_loop:
     bne y_loop
 
     ;;dma start.
-    lda #$02
+    lda #$04
     sta $4014
 
     rts
@@ -1640,18 +1739,6 @@ nmi_test:
     rts
 .endproc
 
-.proc ppu_test
-    jsr check_ppu
-    lda ad_ppu_test
-    sta $00
-    lda ad_ppu_test+1
-    sta $01
-    jsr print_ln
-
-    rts
-.endproc
-
-
 ;;a5 instructions:
 ;;bcc   brk     php
 ;;bcs   bvc     pla
@@ -2691,6 +2778,7 @@ nmi_test:
 .endproc
 
 
+;;;read only global datas
 
 ;;;;string datas
 ad_start_msg:
@@ -2736,6 +2824,18 @@ ad_dma_test:
     .byte   "dma test..."
     .byte   $00
 
+ad_sprite_test:
+    .addr   :+
+:
+    .byte   "sprite test..."
+    .byte   $00
+
+ad_simple_dma_test:
+    .addr   :+
+:
+    .byte   "simple sprite test (dma)..."
+    .byte   $00
+
 ad_ppu_test:
     .addr   :+
 :
@@ -2771,10 +2871,6 @@ ad_single_test:
 :
     .byte   "single byte inst test..."
     .byte   $00
-
-;;;read only global datas
-use_ppu:
-    .byte   $01
 
 
 ;;;;address fixed test code..
@@ -3114,6 +3210,9 @@ use_ppu:
     rts
 .endproc
 
+;;ppu test flag.
+use_ppu:
+    .byte   $01
 
 ;;;;r/w global variables.
 .segment "BSS"
