@@ -40,59 +40,64 @@ add wave -label ea_carry   -radix decimal -unsigned  sim:/testbench_motones_sim/
 
 
 
-add wave -divider regs
-
+#add wave -divider regs
+#
 #add wave -label pcl  -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_ctrl
 #add wave -label pch  -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_mask
-
-add wave -label acc    -radix hex sim:/testbench_motones_sim/sim_board/dbg_acc
-add wave -label sp     -radix hex sim:/testbench_motones_sim/sim_board/dbg_sp
-add wave -label x      -radix hex sim:/testbench_motones_sim/sim_board/dbg_x
-add wave -label y      -radix hex sim:/testbench_motones_sim/sim_board/dbg_y
-add wave -label status -radix hex sim:/testbench_motones_sim/sim_board/dbg_status
-
-
-#add wave -divider ppu
-#add wave -label ppu_clk    sim:/testbench_motones_sim/sim_board/dbg_ppu_clk
-#add wave -label ppu_ce_n          sim:/testbench_motones_sim/sim_board/dbg_ppu_ce_n
-#add wave -label ppu_ctrl  -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_ctrl
-#add wave -label ppu_mask  -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_mask
-##add wave -label ppu_status   -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_status
-#add wave -label ppu_addr -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_addr
-#add wave -label ppu_data -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_data
+#
+#add wave -label acc    -radix hex sim:/testbench_motones_sim/sim_board/dbg_acc
+#add wave -label sp     -radix hex sim:/testbench_motones_sim/sim_board/dbg_sp
+#add wave -label x      -radix hex sim:/testbench_motones_sim/sim_board/dbg_x
+#add wave -label y      -radix hex sim:/testbench_motones_sim/sim_board/dbg_y
+#add wave -label status -radix hex sim:/testbench_motones_sim/sim_board/dbg_status
 
 
-###add wave -divider vga_pos
-####add wave -label nes_x           -radix decimal -unsigned  sim:/testbench_motones_sim/sim_board/dbg_ppu_addr
-###add wave -label dbg_disp_nt     -radix hex sim:/testbench_motones_sim/sim_board/dbg_disp_nt
-###add wave -label dbg_disp_attr   -radix hex sim:/testbench_motones_sim/sim_board/dbg_disp_attr
-####add wave -label dbg_disp_ptn_h  -radix hex sim:/testbench_motones_sim/sim_board/dbg_disp_ptn_h
-####add wave -label dbg_disp_ptn_l  -radix hex sim:/testbench_motones_sim/sim_board/dbg_disp_ptn_l
-###
-###add wave -divider vram
-###add wave -label ale sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x(0)
-###add wave -label rd_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x(1)
-###add wave -label wr_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x(2)
-###add wave -label nt0_ce_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x(3)
-###
-###add wave  -radix hex -label v_addr sim:/testbench_motones_sim/sim_board/dbg_disp_ptn_l
-###add wave  -radix hex -label vram_ad sim:/testbench_motones_sim/sim_board/dbg_vram_ad
-###
-###
-###add wave -label plt_ce_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_y(5)
-###add wave -label plt_r_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_y(4)
-###add wave -label plt_w_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_y(3)
-###add wave  -radix hex -label plt_addr {sim:/testbench_motones_sim/sim_board/dbg_disp_ptn_h(12 downto 8)}
-###add wave  -radix hex -label plt_data {sim:/testbench_motones_sim/sim_board/dbg_disp_ptn_h(7 downto 0)}
-###
-###
-###
-###add wave -divider vga_out
-###add wave -label h_sync_n    sim:/testbench_motones_sim/sim_board/v_sync_n
-###add wave -label v_sync_n    sim:/testbench_motones_sim/sim_board/h_sync_n
-###add wave -label r           -radix hex sim:/testbench_motones_sim/sim_board/r
-###add wave -label g           -radix hex sim:/testbench_motones_sim/sim_board/g
-###add wave -label b           -radix hex sim:/testbench_motones_sim/sim_board/b
+add wave -divider ppu
+add wave -label ppu_clk    sim:/testbench_motones_sim/sim_board/dbg_ppu_clk
+add wave -label ppu_ce_n          sim:/testbench_motones_sim/sim_board/dbg_ppu_ce_n
+add wave -label ppu_ctrl  -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_ctrl
+add wave -label ppu_mask  -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_mask
+add wave -label ppu_status   -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_status
+add wave -label ppu_addr -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_addr
+add wave -label ppu_data -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_data
+
+
+#add wave -divider vga_pos
+##add wave -label nes_x           -radix decimal -unsigned  sim:/testbench_motones_sim/sim_board/dbg_ppu_addr
+#add wave -label dbg_disp_nt     -radix hex sim:/testbench_motones_sim/sim_board/dbg_disp_nt
+#add wave -label dbg_disp_attr   -radix hex sim:/testbench_motones_sim/sim_board/dbg_disp_attr
+##add wave -label dbg_disp_ptn_h  -radix hex sim:/testbench_motones_sim/sim_board/dbg_disp_ptn_h
+##add wave -label dbg_disp_ptn_l  -radix hex sim:/testbench_motones_sim/sim_board/dbg_disp_ptn_l
+#
+add wave -divider vram
+#add wave -label ale sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x(0)
+#add wave -label rd_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x(1)
+#add wave -label wr_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x(2)
+#add wave -label nt0_ce_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x(3)
+
+add wave  -radix hex -label v_addr {sim:/testbench_motones_sim/sim_board/dbg_sp(5 downto 0)}
+add wave  -radix hex -label vram_ad sim:/testbench_motones_sim/sim_board/dbg_vram_ad
+
+#add wave -label plt_ce_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_y(5)
+#add wave -label plt_r_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_y(4)
+#add wave -label plt_w_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_y(3)
+add wave -label oam_ce_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_y(2)
+add wave -label oam_r_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_y(1)
+add wave -label oam_w_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_y(0)
+#add wave  -radix hex -label plt_addr {sim:/testbench_motones_sim/sim_board/dbg_disp_ptn_h(12 downto 8)}
+#add wave  -radix hex -label plt_data {sim:/testbench_motones_sim/sim_board/dbg_disp_ptn_h(7 downto 0)}
+
+
+add wave -divider oam
+add wave  -radix hex -label p_oam_addr {sim:/testbench_motones_sim/sim_board/dbg_disp_ptn_l (7 downto 0)}
+add wave  -radix hex -label p_oam_data {sim:/testbench_motones_sim/sim_board/dbg_disp_ptn_l (15 downto 8)}
+
+#add wave -divider vga_out
+#add wave -label h_sync_n    sim:/testbench_motones_sim/sim_board/v_sync_n
+#add wave -label v_sync_n    sim:/testbench_motones_sim/sim_board/h_sync_n
+#add wave -label r           -radix hex sim:/testbench_motones_sim/sim_board/r
+#add wave -label g           -radix hex sim:/testbench_motones_sim/sim_board/g
+#add wave -label b           -radix hex sim:/testbench_motones_sim/sim_board/b
 
 
 view structure

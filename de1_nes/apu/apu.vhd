@@ -149,7 +149,7 @@ begin
                 r_nw <= 'Z';
             elsif (dma_status = DMA_ST_SETUP) then
                 cpu_addr <= OAMADDR;
-                cpu_d <= dma_addr(dsize * 2 - 1 downto dsize);
+                cpu_d <= (others => '0');
                 r_nw <= '0';
                 dma_next_status <= DMA_ST_PROCESS;
             elsif (dma_status = DMA_ST_PROCESS) then

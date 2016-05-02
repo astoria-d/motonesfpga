@@ -379,8 +379,8 @@ begin
     dbg_ppu_scrl_x(7) <= addr(15);
     dbg_ppu_scrl_y(2 downto 0) <= dbg_p_oam_ce_rn_wn(2 downto 0);
     dbg_ppu_scrl_y(5 downto 3) <= dbg_plt_ce_rn_wn(2 downto 0);
---    dbg_disp_ptn_l (7 downto 0) <= dbg_p_oam_addr;
---    dbg_disp_ptn_l (15 downto 8) <= dbg_p_oam_data;
+    dbg_disp_ptn_l (7 downto 0) <= dbg_p_oam_addr;
+    dbg_disp_ptn_l (15 downto 8) <= dbg_p_oam_data;
 
     dbg_cpu_clk <= cpu_clk;
     dbg_mem_clk <= mem_clk;
@@ -412,7 +412,7 @@ begin
         dbg_nes_y                        ,
         dbg_vga_y                        ,
         dbg_disp_nt, dbg_disp_attr                          ,
-        dbg_disp_ptn_h, dbg_disp_ptn_l     ,
+        dbg_disp_ptn_h, dbg_disp_ptn_l_dummy     ,
         dbg_plt_ce_rn_wn                 ,
         dbg_plt_addr                     ,
         dbg_plt_data                     ,

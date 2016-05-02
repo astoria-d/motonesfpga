@@ -159,47 +159,47 @@ mainloop:
 ;;set sprite addr=0C (forth sprite)
 ;;set sprite data: y=80
 	lda	#80
-	sta	$040C
+	sta	$020C
 ;;tile=0x4d (ascii 'd')
 	lda	#$64
-	sta	$040D
+	sta	$020D
 ;;set sprite attr=03 (palette 03)
 	lda	#$03
-	sta	$040E
+	sta	$020E
 ;;set sprite data: x=100
 	lda	#$64
-	sta	$040F
+	sta	$020F
 
     ;;more sprite...
 	lda	#90
-	sta	$0410
+	sta	$0210
 	lda	#$64
-	sta	$0411
+	sta	$0211
 	lda	#$03
-	sta	$0412
+	sta	$0212
 	lda	#50
-	sta	$0413
+	sta	$0213
 
 	lda	#100
-	sta	$0420
+	sta	$0220
 	lda	#$65
-	sta	$0421
+	sta	$0221
 	lda	#$03
-	sta	$0422
+	sta	$0222
 	lda	#200
-	sta	$0423
+	sta	$0223
 
 	lda	#30
-	sta	$0430
+	sta	$0230
 	lda	#$44
-	sta	$0431
+	sta	$0231
 	lda	#$03
-	sta	$0432
+	sta	$0232
 	lda	#200
-	sta	$0433
+	sta	$0233
 
     ;;dma start.
-    lda #$04
+    lda #$02
     sta $4014
 
     rts
@@ -528,6 +528,11 @@ mainloop:
 .endproc
 
 .proc dma_test
+    lda full_dma_test
+    bne :+
+    rts
+:
+
     ;;dma test data.
     ldy #$00
     ldx #$41
@@ -536,7 +541,7 @@ mainloop:
 dma_set:
     ;;y pos
     txa
-    sta $0400, y
+    sta $0200, y
     iny
     ;;tile index
     lda $00
@@ -546,23 +551,23 @@ dma_set:
     sta $00
 inc_tile:
     inc $00
-    sta $0400, y
+    sta $0200, y
     iny
     ;;attribute
     lda #$01
-    sta $0400, y
+    sta $0200, y
     iny
     ;;x pos
     txa
     adc #$03
     tax
     rol
-    sta $0400, y
+    sta $0200, y
     iny
     bne dma_set
 
     ;;dma start.
-    lda #$04
+    lda #$02
     sta $4014
 
     jsr check_ppu
@@ -576,15 +581,20 @@ inc_tile:
 .endproc
 
 
-.proc set_dma
+.proc update_dma
+    lda full_dma_test
+    bne :+
+    rts
+:
+
     ldy #0
 
 y_loop:
-    lda $0400, y
+    lda $0200, y
 
     clc
     adc #$1
-    sta $0400, y
+    sta $0200, y
 
     iny
     iny
@@ -594,7 +604,7 @@ y_loop:
     bne y_loop
 
     ;;dma start.
-    lda #$04
+    lda #$02
     sta $4014
 
     rts
@@ -603,7 +613,7 @@ y_loop:
 nmi_test:
     jsr update_counter
     jsr update_scroll
-    jsr set_dma
+    jsr update_dma
 
     rti
 
@@ -3212,6 +3222,9 @@ ad_single_test:
 
 ;;ppu test flag.
 use_ppu:
+    .byte   $01
+
+full_dma_test:
     .byte   $01
 
 ;;;;r/w global variables.

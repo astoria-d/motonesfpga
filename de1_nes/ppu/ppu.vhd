@@ -405,7 +405,7 @@ begin
     end process;
     
     --cpu and ppu clock timing adjustment...
-    clk_cnt_set_p : process (rst_n, ce_n, r_nw, cpu_addr, ppu_clk)
+    clk_cnt_set_p : process (rst_n, ce_n, r_nw, cpu_addr, ppu_clk, cpu_d, ppu_clk_cnt, ppu_addr_cnt)
     begin
         if (rst_n = '0') then
             ppu_latch_rst_n <= '0';
