@@ -369,16 +369,16 @@ begin
 --    dbg_status <= dbg_nes_y(7 downto 0);
 
 
-    dbg_ppu_scrl_x(0) <= ale;
-    dbg_ppu_scrl_x(1) <= rd_n;
-    dbg_ppu_scrl_x(2) <= wr_n;
-    dbg_ppu_scrl_x(3) <= nt0_ce_n;
-    dbg_ppu_scrl_x(4) <= vga_clk;
-    dbg_ppu_scrl_x(5) <= rom_ce_n;
-    dbg_ppu_scrl_x(6) <= ram_ce_n;
-    dbg_ppu_scrl_x(7) <= addr(15);
-    dbg_ppu_scrl_y(2 downto 0) <= dbg_p_oam_ce_rn_wn(2 downto 0);
-    dbg_ppu_scrl_y(5 downto 3) <= dbg_plt_ce_rn_wn(2 downto 0);
+--    dbg_ppu_scrl_x(0) <= ale;
+--    dbg_ppu_scrl_x(1) <= rd_n;
+--    dbg_ppu_scrl_x(2) <= wr_n;
+--    dbg_ppu_scrl_x(3) <= nt0_ce_n;
+--    dbg_ppu_scrl_x(4) <= vga_clk;
+--    dbg_ppu_scrl_x(5) <= rom_ce_n;
+--    dbg_ppu_scrl_x(6) <= ram_ce_n;
+--    dbg_ppu_scrl_x(7) <= addr(15);
+--    dbg_ppu_scrl_y(2 downto 0) <= dbg_p_oam_ce_rn_wn(2 downto 0);
+--    dbg_ppu_scrl_y(5 downto 3) <= dbg_plt_ce_rn_wn(2 downto 0);
     dbg_disp_ptn_l (7 downto 0) <= dbg_p_oam_addr;
     dbg_disp_ptn_l (15 downto 8) <= dbg_p_oam_data;
 
@@ -403,7 +403,7 @@ begin
         dbg_ppu_ce_n                                        ,
         dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status          ,
         dbg_ppu_addr                                        ,
-        dbg_ppu_data, dbg_ppu_scrl_x_dummy, dbg_ppu_scrl_y_dummy        ,
+        dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y        ,
 
         dbg_ppu_clk                      ,
         dbg_vga_clk                      ,

@@ -469,7 +469,7 @@ end;
                         --step4 = scroll test.
                         if (scl_step_cnt = 0) then
                             --x scroll pos=40
-                            io_out(16#2005#, 140);
+                            io_out(16#2005#, 40);
                         elsif (scl_step_cnt = 1 * cpu_io_multi) then
                             --y scroll pos=3
                             io_out(16#2005#, 3);

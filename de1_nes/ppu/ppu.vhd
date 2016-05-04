@@ -313,21 +313,19 @@ begin
             ppu_mask_we_n    <= '1';
             oam_addr_we_n    <= '1';
             oam_data_we_n    <= '1';
-            ppu_scroll_x_we_n    <= '1';
-            ppu_scroll_y_we_n    <= '1';
             ppu_scroll_cnt_ce_n  <= '1';
             read_status <= '0';
             read_data_n <= '1';
         elsif (rst_n = '1' and ce_n = '0') then
 
             --register set.
-            if(cpu_addr = PPUCTRL) then
+            if(cpu_addr = PPUCTRL and r_nw = '0') then
                 ppu_ctrl_we_n <= '0';
             else
                 ppu_ctrl_we_n <= '1';
             end if;
 
-            if(cpu_addr = PPUMASK) then
+            if(cpu_addr = PPUMASK and r_nw = '0') then
                 ppu_mask_we_n <= '0';
             else
                 ppu_mask_we_n <= '1';
@@ -340,30 +338,21 @@ begin
                 read_status <= '0';
             end if;
 
-            if(cpu_addr = OAMADDR) then
+            if(cpu_addr = OAMADDR and r_nw = '0') then
                 oam_addr_we_n <= '0';
             else
                 oam_addr_we_n <= '1';
             end if;
 
-            if(cpu_addr = OAMDATA) then
+            if(cpu_addr = OAMDATA and r_nw = '0') then
                 oam_data_we_n <= '0';
             else
                 oam_data_we_n <= '1';
             end if;
 
-            if(cpu_addr = PPUSCROLL) then
+            if(cpu_addr = PPUSCROLL and r_nw = '0') then
                 ppu_scroll_cnt_ce_n <= '0';
-                if (ppu_scroll_cnt(0) = '0') then
-                    ppu_scroll_x_we_n <= '0';
-                    ppu_scroll_y_we_n <= '1';
-                else
-                    ppu_scroll_y_we_n <= '0';
-                    ppu_scroll_x_we_n <= '1';
-                end if;
             else
-                ppu_scroll_x_we_n <= '1';
-                ppu_scroll_y_we_n <= '1';
                 ppu_scroll_cnt_ce_n <= '1';
             end if;
 
@@ -377,8 +366,6 @@ begin
             ppu_mask_we_n    <= '1';
             oam_addr_we_n    <= '1';
             oam_data_we_n    <= '1';
-            ppu_scroll_x_we_n    <= '1';
-            ppu_scroll_y_we_n    <= '1';
             ppu_scroll_cnt_ce_n  <= '1';
             read_status <= '0';
             read_data_n <= '1';
@@ -387,6 +374,28 @@ begin
     end process;
 
     ppu_clk_cnt_res_n <= not ce_n;
+
+    --scroll reg...
+    scl_reg_p : process (rst_n, ppu_clk)
+    begin
+        if (rst_n = '0') then
+            ppu_scroll_x_we_n <= '1';
+            ppu_scroll_y_we_n <= '1';
+        elsif (rising_edge(ppu_clk)) then
+            if (ppu_scroll_cnt_ce_n = '0' and ppu_clk_cnt = "01" and r_nw = '0') then
+                if (ppu_scroll_cnt(0) = '1') then
+                    ppu_scroll_x_we_n <= '0';
+                    ppu_scroll_y_we_n <= '1';
+                else
+                    ppu_scroll_y_we_n <= '0';
+                    ppu_scroll_x_we_n <= '1';
+                end if;
+            else
+                ppu_scroll_x_we_n <= '1';
+                ppu_scroll_y_we_n <= '1';
+            end if;
+        end if;
+    end process;
 
     --cpu nmi generation...
     clk_nmi_p : process (rst_n, ppu_clk)

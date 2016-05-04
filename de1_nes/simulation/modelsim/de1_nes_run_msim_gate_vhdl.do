@@ -60,6 +60,8 @@ add wave -label ppu_mask  -radix hex sim:/testbench_motones_sim/sim_board/dbg_pp
 add wave -label ppu_status   -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_status
 add wave -label ppu_addr -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_addr
 add wave -label ppu_data -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_data
+add wave -label ppu_scrl_x -radix decimal -unsigned  sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x
+add wave -label ppu_scrl_y -radix decimal -unsigned  sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_y
 
 
 #add wave -divider vga_pos
@@ -81,9 +83,9 @@ add wave  -radix hex -label vram_ad sim:/testbench_motones_sim/sim_board/dbg_vra
 #add wave -label plt_ce_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_y(5)
 #add wave -label plt_r_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_y(4)
 #add wave -label plt_w_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_y(3)
-add wave -label oam_ce_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_y(2)
-add wave -label oam_r_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_y(1)
-add wave -label oam_w_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_y(0)
+#add wave -label oam_ce_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_y(2)
+#add wave -label oam_r_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_y(1)
+#add wave -label oam_w_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_y(0)
 #add wave  -radix hex -label plt_addr {sim:/testbench_motones_sim/sim_board/dbg_disp_ptn_h(12 downto 8)}
 #add wave  -radix hex -label plt_data {sim:/testbench_motones_sim/sim_board/dbg_disp_ptn_h(7 downto 0)}
 
@@ -108,7 +110,7 @@ wave zoom full
 
 #wave zoom range 3339700 ps 5138320 ps
 
-run 138 us
+#run 138 us
 
 ##wave addcursor 907923400 ps
 
