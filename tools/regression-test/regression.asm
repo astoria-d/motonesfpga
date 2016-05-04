@@ -554,7 +554,7 @@ inc_tile:
     sta $0200, y
     iny
     ;;attribute
-    lda #$01
+    lda #$03
     sta $0200, y
     iny
     ;;x pos
@@ -590,15 +590,15 @@ inc_tile:
     ldy #0
 
 y_loop:
-    lda $0200, y
+    iny
+    iny
+    iny
 
+    lda $0200, y
     clc
     adc #$1
     sta $0200, y
 
-    iny
-    iny
-    iny
     iny
 
     bne y_loop
@@ -684,7 +684,7 @@ nmi_test:
     bne :+
     ldx #0
 :
-    ldx #$00
+;    ldx #$00
     stx $2005
     stx scroll_y
 
