@@ -48,7 +48,8 @@ begin
     use ieee.std_logic_arith.conv_std_logic_vector;
 
     variable init_step_cnt, plt_step_cnt, 
-            nt_step_cnt, spr_step_cnt, dma_step_cnt, enable_ppu_step_cnt : integer;
+            nt_step_cnt, spr_step_cnt, dma_step_cnt, scl_step_cnt, 
+            enable_ppu_step_cnt : integer;
     variable init_done : std_logic;
     variable global_step_cnt : integer;
     constant cpu_io_multi : integer := 3; --io happens every 4 cpu cycle.
@@ -82,6 +83,7 @@ end;
             nt_step_cnt := 0;
             spr_step_cnt := 0;
             dma_step_cnt := 0;
+            scl_step_cnt := 0;
             enable_ppu_step_cnt := 0;
 
         elsif (rising_edge(input_clk)) then
@@ -417,7 +419,7 @@ end;
                         else
                             io_brk;
                             if (spr_step_cnt > 4 * cpu_io_multi) then
-                                global_step_cnt := global_step_cnt + 1;
+                                global_step_cnt := global_step_cnt + 2;
                             end if;
                         end if;
                         spr_step_cnt := spr_step_cnt + 1;
@@ -464,25 +466,36 @@ end;
                         dma_step_cnt := dma_step_cnt + 1;
 
                     elsif (global_step_cnt = 5) then
+                        --step4 = scroll test.
+                        if (scl_step_cnt = 0) then
+                            --x scroll pos=40
+                            io_out(16#2005#, 140);
+                        elsif (scl_step_cnt = 1 * cpu_io_multi) then
+                            --y scroll pos=3
+                            io_out(16#2005#, 3);
+
+                        else
+                            io_brk;
+                            if (scl_step_cnt > 1 * cpu_io_multi) then
+                                global_step_cnt := global_step_cnt + 1;
+                            end if;
+                        end if;
+                        scl_step_cnt := scl_step_cnt + 1;
+
+                    elsif (global_step_cnt = 6) then
                         --final step = enable ppu.
                         if (enable_ppu_step_cnt = 0 * cpu_io_multi) then
-                            --scroll reg set x.
-                            io_out(16#2005#, 0);
-                        elsif (enable_ppu_step_cnt = 1 * cpu_io_multi) then
-                            --scroll reg set y.
-                            io_out(16#2005#, 0);
-                        elsif (enable_ppu_step_cnt = 2 * cpu_io_multi) then
                             --show bg
                             --PPUMASK=1e (show bg and sprite)
                             --PPUMASK=0e (show bg only)
                             io_out(16#2001#, 16#1e#);
-                        elsif (enable_ppu_step_cnt = 3 * cpu_io_multi) then
+                        elsif (enable_ppu_step_cnt = 1 * cpu_io_multi) then
                             --enable nmi
                             --PPUCTRL=80
                             io_out(16#2000#, 16#80#);
                         else
                             io_brk;
-                            if (enable_ppu_step_cnt > 4 * cpu_io_multi) then
+                            if (enable_ppu_step_cnt > 1 * cpu_io_multi) then
                                 global_step_cnt := global_step_cnt + 1;
                             end if;
                         end if;

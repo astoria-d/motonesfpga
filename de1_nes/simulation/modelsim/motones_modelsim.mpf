@@ -401,7 +401,7 @@ ConcurrentFileLimit = 40
 ; Specify whether or not a WLF file should be deleted when the
 ; simulation ends.  A value of 1 will cause the WLF file to be deleted.
 ; The default is 0 (do not delete WLF file when simulation ends).
-; WLFDeleteOnQuit = 1
+WLFDeleteOnQuit = 1
 
 ; Automatic SDF compilation
 ; Disables automatic compilation of SDF files in flows that support it.
