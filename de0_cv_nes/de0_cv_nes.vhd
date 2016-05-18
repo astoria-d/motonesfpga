@@ -309,6 +309,22 @@ architecture rtl of de0_cv_nes is
     signal dbg_status_dummy       : std_logic_vector(7 downto 0);
     signal dbg_sp_dummy, dbg_x_dummy, dbg_y_dummy, dbg_acc_dummy       : std_logic_vector(7 downto 0);
 
+
+    component counter_register 
+        generic (
+            dsize       : integer := 8;
+            inc         : integer := 1
+        );
+        port (  clk         : in std_logic;
+                rst_n       : in std_logic;
+                ce_n        : in std_logic;
+                we_n        : in std_logic;
+                d           : in std_logic_vector(dsize - 1 downto 0);
+                q           : out std_logic_vector(dsize - 1 downto 0)
+        );
+    end component;
+    signal loop24 : std_logic_vector (23 downto 0);
+
 begin
 
 --    irq_n <= '0';
@@ -471,6 +487,13 @@ begin
 --    --APU/DMA instance
 --    apu_inst : apu
 --        port map (cpu_clk, apu_ce_n, rst_n, r_nw, addr, d_io, rdy);
+
+
+    led_test : counter_register generic map (24) port map 
+        (base_clk, rst_n, '0', '1', (others=>'0'), loop24);
+    dbg_cpu_clk <= loop24(23);
+    dbg_ppu_clk <= loop24(22);
+    dbg_mem_clk <= loop24(21);
 
 end rtl;
 
