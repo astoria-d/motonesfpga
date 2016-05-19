@@ -357,11 +357,8 @@ begin
                 phi1, phi2, addr, d_io);
 
     --main ROM/RAM instance
---    prg_rom_inst : prg_rom generic map (rom_32k, data_size)
---            port map (mem_clk, rom_ce_n, addr(rom_32k - 1 downto 0), d_io);
-
-    prg_rom_inst : prg_rom generic map (rom_8k, data_size)
-            port map (mem_clk, rom_ce_n, addr(rom_8k - 1 downto 0), d_io);
+    prg_rom_inst : prg_rom generic map (rom_32k, data_size)
+            port map (mem_clk, rom_ce_n, addr(rom_32k - 1 downto 0), d_io);
 
     ram_oe_n <= not R_nW;
     prg_ram_inst : ram generic map (ram_2k, data_size)

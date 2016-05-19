@@ -1,5 +1,6 @@
 *.bak
 *.qws
+*.rpt
 output_files/*
 db/*
 incremental_db/*
@@ -10,9 +11,12 @@ simulation/modelsim/rtl_work/*
 simulation/modelsim/*.do.bak*
 simulation/modelsim/msim_transcript
 simulation/modelsim/*.vho
+simulation/modelsim/*.mti
 simulation/modelsim/*.xrf
 simulation/modelsim/*.sdo*
 simulation/modelsim/*.sft
+simulation/modelsim/*.mif
+simulation/modelsim/*.hex
 simulation/modelsim/vsim.wlf
 simulation/modelsim/work/*
 simulation/modelsim/transcript
