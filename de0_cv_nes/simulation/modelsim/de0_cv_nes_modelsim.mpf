@@ -3,7 +3,7 @@ others = $MODEL_TECH/../modelsim.ini
 
 ; Altera specific primitive library mappings 
 
-work = work
+work = gate_work
 [vcom]
 ; Turn on VHDL-1993 as the default. Normally is off.
 ; VHDL93 = 1
@@ -97,7 +97,7 @@ Resolution = ps
 UserTimeUnit = default
 
 ; Default run length
-RunLength = 100
+RunLength = 100 ps
 
 ; Maximum iterations that can be run without advancing simulation time
 IterationLimit = 5000
@@ -113,7 +113,7 @@ IterationLimit = 5000
 
 ; Stop the simulator after an assertion message
 ; 0 = Note  1 = Warning  2 = Error  3 = Failure  4 = Fatal
-BreakOnAssertion = 3
+BreakOnAssertion = 4
 
 ; Assertion Message Format
 ; %S - Severity Level 
@@ -196,6 +196,7 @@ ConcurrentFileLimit = 40
 
 ; List of dynamically loaded objects for Verilog PLI applications
 ; Veriuser = veriuser.sl
+DelayFileOpen = 1
 [Project]
 ; Warning -- Do not edit the project properties directly.
 ;            Property names are dynamic in nature and property

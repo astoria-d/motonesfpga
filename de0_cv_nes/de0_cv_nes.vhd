@@ -16,26 +16,22 @@ entity de0_cv_nes is
     signal dbg_r_nw     : out std_logic;
     signal dbg_addr     : out std_logic_vector( 16 - 1 downto 0);
     signal dbg_d_io     : out std_logic_vector( 8 - 1 downto 0);
-    signal dbg_vram_ad  : out std_logic_vector (7 downto 0);
-    signal dbg_vram_a   : out std_logic_vector (13 downto 8);
 
 ---monitor inside cpu
     signal dbg_instruction  : out std_logic_vector(7 downto 0);
-    signal dbg_int_d_bus    : out std_logic_vector(7 downto 0);
     signal dbg_exec_cycle   : out std_logic_vector (5 downto 0);
     signal dbg_ea_carry     : out std_logic;
     signal dbg_status       : out std_logic_vector(7 downto 0);
-    signal dbg_sp, dbg_x, dbg_y, dbg_acc       : out std_logic_vector(7 downto 0);
-    signal dbg_dec_oe_n    : out std_logic;
 
 --ppu debug pins
     signal dbg_ppu_ce_n    : out std_logic;
     signal dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status : out std_logic_vector (7 downto 0);
     signal dbg_ppu_addr : out std_logic_vector (13 downto 0);
     signal dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y : out std_logic_vector (7 downto 0);
-    signal dbg_disp_nt, dbg_disp_attr : out std_logic_vector (7 downto 0);
     signal dbg_nmi  : out std_logic;
-    
+
+--logic analyzer reference clock
+    signal dbg_base_clk: out std_logic;
     
 --NES instance
         base_clk 	: in std_logic;
@@ -269,6 +265,13 @@ architecture rtl of de0_cv_nes is
 
     signal ale_n       : std_logic;
 
+    signal dbg_int_d_bus                    : std_logic_vector(7 downto 0);
+    signal dbg_sp, dbg_x, dbg_y, dbg_acc    : std_logic_vector(7 downto 0);
+    signal dbg_dec_oe_n                     : std_logic;
+    signal dbg_disp_nt, dbg_disp_attr       : std_logic_vector (7 downto 0);
+    signal dbg_vram_ad                      : std_logic_vector (7 downto 0);
+    signal dbg_vram_a                       : std_logic_vector (13 downto 8);
+
     signal dbg_disp_ptn_h, dbg_disp_ptn_l : std_logic_vector (15 downto 0);
     signal dbg_pcl, dbg_pch : std_logic_vector(7 downto 0);
     signal dbg_stat_we_n    : std_logic;
@@ -364,6 +367,7 @@ begin
     prg_ram_inst : ram generic map (ram_2k, data_size)
             port map (mem_clk, ram_ce_n, ram_oe_n, R_nW, addr(ram_2k - 1 downto 0), d_io);
 
+    dbg_base_clk <= base_clk;
 --    dbg_exec_cycle(2 downto 1) <= dbg_vga_x(9 downto 8);
 --    dbg_int_d_bus <= dbg_vga_x(7 downto 0);
 --    dbg_exec_cycle(0) <= dbg_nes_x(8);
