@@ -367,7 +367,7 @@ begin
     prg_ram_inst : ram generic map (ram_2k, data_size)
             port map (mem_clk, ram_ce_n, ram_oe_n, R_nW, addr(ram_2k - 1 downto 0), d_io);
 
-    dbg_base_clk <= base_clk;
+    dbg_base_clk <= ppu_clk;
 --    dbg_exec_cycle(2 downto 1) <= dbg_vga_x(9 downto 8);
 --    dbg_int_d_bus <= dbg_vga_x(7 downto 0);
 --    dbg_exec_cycle(0) <= dbg_nes_x(8);

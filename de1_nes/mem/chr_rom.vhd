@@ -80,7 +80,7 @@ attribute ram_init_file of p_rom : signal is "sample1-chr.hex";
 begin
     
     --nt_v_mirror <= vmirror;
-    nt_v_mirror <= '1';
+    nt_v_mirror <= '0';
 
     p : process (clk)
     begin
