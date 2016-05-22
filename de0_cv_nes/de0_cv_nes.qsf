@@ -237,7 +237,7 @@ set_location_assignment PIN_AA20 -to dbg_ppu_scrl_y[4]
 set_location_assignment PIN_AA22 -to dbg_ppu_scrl_y[5]
 set_location_assignment PIN_AB5 -to dbg_ppu_scrl_y[6]
 set_location_assignment PIN_AB8 -to dbg_ppu_scrl_y[7]
-set_location_assignment PIN_AB12 -to dbg_nmi
+set_location_assignment PIN_AB15 -to dbg_nmi
 
 ##reserved....
 ###set_location_assignment PIN_AB15 -to 
