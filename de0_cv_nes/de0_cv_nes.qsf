@@ -83,6 +83,9 @@ set_location_assignment PIN_G8 -to v_sync_n
 #button pin
 set_location_assignment PIN_P22 -to rst_n
 
+#nt_v_mirror
+set_location_assignment PIN_AB12 -to nt_v_mirror
+
 ##LED test
 #set_location_assignment PIN_AA2 -to dbg_cpu_clk
 #set_location_assignment PIN_AA1 -to dbg_ppu_clk

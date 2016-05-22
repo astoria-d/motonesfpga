@@ -12,8 +12,7 @@ entity chr_rom is
             clk             : in std_logic;
             ce_n            : in std_logic;     --active low.
             addr            : in std_logic_vector (abus_size - 1 downto 0);
-            data            : out std_logic_vector (dbus_size - 1 downto 0);
-            nt_v_mirror     : out std_logic
+            data            : out std_logic_vector (dbus_size - 1 downto 0)
         );
 end chr_rom;
 
@@ -49,25 +48,6 @@ function rom_fill return rom_array is
         return ret;
     end rom_fill;
 
-function vmirror return std_logic is 
-    type binary_file is file of character;
-    FILE nes_file : binary_file OPEN read_mode IS "rom-file.nes" ;
-    variable read_data : character;
-    variable i : integer;
-    variable ret : std_logic_vector(7 downto 0);
-    begin
-        --read NES cardridge header part
-        for i in 0 to 15 loop
-            read(nes_file, read_data);
-            if (i = 6) then
-                ret :=
-                    conv_std_logic_vector(character'pos(read_data), 8);
-            end if;
-        end loop;
-        d_print("nes header read ok.");
-        return ret(0);
-    end vmirror;
-
 --for GHDL environment
 --itinialize with the rom_fill function.
 --signal p_rom : rom_array := rom_fill;
@@ -79,9 +59,6 @@ attribute ram_init_file of p_rom : signal is "sample1-chr.hex";
 
 begin
     
-    --nt_v_mirror <= vmirror;
-    nt_v_mirror <= '0';
-
     p : process (clk)
     begin
     if (rising_edge(clk)) then
