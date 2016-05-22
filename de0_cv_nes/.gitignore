@@ -1,6 +1,8 @@
 *.bak
+*.echo
 *.qws
 *.rpt
+hc_output/*
 output_files/*
 db/*
 incremental_db/*
@@ -27,3 +29,4 @@ undo_redo.txt
 *.work
 serv_req_info.txt
 *_dump.txt
+*_auto_stripped.stp
