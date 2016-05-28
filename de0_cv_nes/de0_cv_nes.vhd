@@ -324,6 +324,7 @@ architecture rtl of de0_cv_nes is
         );
     end component;
     signal loop24 : std_logic_vector (23 downto 0);
+    signal clock_counter : std_logic_vector (63 downto 0);
 
 begin
 
@@ -486,6 +487,8 @@ begin
     apu_inst : apu
         port map (cpu_clk, apu_ce_n, rst_n, r_nw, addr, d_io, rdy);
 
+    clock_counter_inst : counter_register generic map (64) port map 
+        (cpu_clk, rst_n, '0', '1', (others=>'0'), clock_counter);
 
 --    led_test : counter_register generic map (24) port map 
 --        (base_clk, rst_n, '0', '1', (others=>'0'), loop24);
