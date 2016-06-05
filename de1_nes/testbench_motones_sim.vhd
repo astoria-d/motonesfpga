@@ -195,6 +195,6 @@ dbg_nmi,
     end process;
 
     --set chr rom mirror setting.
-    nt_v_mirror <= '0';
+    nt_v_mirror <= '1';
 end stimulus;
 

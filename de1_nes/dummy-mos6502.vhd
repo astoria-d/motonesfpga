@@ -526,6 +526,7 @@ end;
                                 nmi_oam_x := nmi_oam_x + 1;
                                 --bug!!! scroll reg doesn't work....
                                 --nmi_scl_y := nmi_scl_y + 1;
+                                nmi_scl_y := 80;
                                 io_brk;
                                 if (nmi_step_cnt > 3 * cpu_io_multi) then
                                     global_step_cnt := global_step_cnt + 1;

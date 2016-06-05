@@ -688,7 +688,7 @@ nmi_test:
     bne :+
     ldx #0
 :
-;    ldx #$00
+    ldx #80
     stx $2005
     stx scroll_y
 
