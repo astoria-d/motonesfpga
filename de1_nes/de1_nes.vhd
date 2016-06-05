@@ -44,8 +44,7 @@ entity de1_nes is
     signal dbg_disp_nt, dbg_disp_attr : out std_logic_vector (7 downto 0);
     signal dbg_disp_ptn_h, dbg_disp_ptn_l : out std_logic_vector (15 downto 0);
     signal dbg_nmi  : out std_logic;
-    
-    
+
 --NES instance
         base_clk 	: in std_logic;
         rst_n     	: in std_logic;
@@ -55,7 +54,8 @@ entity de1_nes is
         v_sync_n    : out std_logic;
         r           : out std_logic_vector(3 downto 0);
         g           : out std_logic_vector(3 downto 0);
-        b           : out std_logic_vector(3 downto 0)
+        b           : out std_logic_vector(3 downto 0);
+        nt_v_mirror : in std_logic
          );
 end de1_nes;
 
@@ -211,8 +211,7 @@ architecture rtl of de1_nes is
                 clk             : in std_logic;
                 ce_n            : in std_logic;     --active low.
                 addr            : in std_logic_vector (abus_size - 1 downto 0);
-                data            : out std_logic_vector (dbus_size - 1 downto 0);
-                nt_v_mirror     : out std_logic
+                data            : out std_logic_vector (dbus_size - 1 downto 0)
         );
     end component;
 
@@ -271,7 +270,6 @@ architecture rtl of de1_nes is
     signal vram_ad  : std_logic_vector (7 downto 0);
     signal vram_a   : std_logic_vector (13 downto 8);
     signal v_addr   : std_logic_vector (13 downto 0);
-    signal nt_v_mirror  : std_logic;
     signal pt_ce_n  : std_logic;
     signal nt0_ce_n : std_logic;
     signal nt1_ce_n : std_logic;
@@ -465,7 +463,7 @@ begin
                 port map(vga_clk, ale_n, ale, vram_ad, v_addr(7 downto 0));
 
     vchr_rom : chr_rom generic map (chr_rom_8k, data_size)
-            port map (mem_clk, pt_ce_n, v_addr(chr_rom_8k - 1 downto 0), vram_ad, nt_v_mirror);
+            port map (mem_clk, pt_ce_n, v_addr(chr_rom_8k - 1 downto 0), vram_ad);
 
     --name table/attr table
     vram_nt0 : ram generic map (vram_1k, data_size)

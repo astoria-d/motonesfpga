@@ -670,6 +670,10 @@ nmi_test:
 
 @cnt_done:
 
+    lda #50
+	sta $2005
+    lda #200
+	sta $2005
     rts
 .endproc
 
