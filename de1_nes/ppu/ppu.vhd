@@ -144,6 +144,17 @@ component counter_register
     );
 end component;
 
+component d_flip_flop_bit
+    port (  
+            clk     : in std_logic;
+            res_n   : in std_logic;
+            set_n   : in std_logic;
+            we_n    : in std_logic;
+            d       : in std_logic;
+            q       : out std_logic
+        );
+end component;
+
 constant dsize     : integer := 8;
 
 constant PPUCTRL   : std_logic_vector(2 downto 0) := "000";
@@ -207,6 +218,7 @@ signal plt_bus_ce_n     : std_logic;
 signal oam_plt_addr     : std_logic_vector (dsize - 1 downto 0);
 signal oam_plt_data     : std_logic_vector (dsize - 1 downto 0);
 signal plt_data_out     : std_logic_vector (dsize - 1 downto 0);
+signal ST_VBL_old       : std_logic;
 
 begin
 
@@ -304,6 +316,10 @@ begin
 
     plt_data_out_inst : d_flip_flop generic map(dsize)
             port map (ppu_clk_n, rst_n, '1', ppu_data_we_n, oam_plt_data, plt_data_out);
+
+    ST_VBL_old_inst : d_flip_flop_bit
+            port map (ppu_clk_n, rst_n, '1', '0', ppu_status(ST_VBL), ST_VBL_old);
+
 
     reg_set_p : process (rst_n, ce_n, r_nw, cpu_addr)
     begin
@@ -404,8 +420,12 @@ begin
             vblank_n <= '1';
         elsif (rising_edge(ppu_clk)) then
             if (ppu_status(ST_VBL) = '1' and ppu_ctrl(PPUNEN) = '1') then
-                --start vblank.
-                vblank_n <= '0';
+                --nmi takes place only when ST_VBL arises...
+                --doesn't work....
+--                if (ST_VBL_old = '0') then
+                    --start vblank.
+                    vblank_n <= '0';
+--                end if;
             else
                 --clear flag.
                 vblank_n <= '1';

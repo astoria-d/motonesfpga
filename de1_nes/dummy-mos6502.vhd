@@ -49,12 +49,14 @@ begin
 
     variable init_step_cnt, plt_step_cnt, 
             nt_step_cnt, spr_step_cnt, dma_step_cnt, scl_step_cnt, 
-            enable_ppu_step_cnt : integer;
+            enable_ppu_step_cnt, nmi_step_cnt : integer;
     variable init_done : std_logic;
     variable global_step_cnt : integer;
     constant cpu_io_multi : integer := 3; --io happens every 4 cpu cycle.
     variable i, j : integer;
     variable ch : integer := 16#41# ;
+    variable nmi_oam_x : integer range 0 to 255;
+    variable nmi_scl_y : integer range 0 to 255;
 
 procedure io_out (ad: in integer; dt : in integer) is
 begin
@@ -85,6 +87,9 @@ end;
             dma_step_cnt := 0;
             scl_step_cnt := 0;
             enable_ppu_step_cnt := 0;
+            nmi_step_cnt := 0;
+            nmi_oam_x := 0;
+            nmi_scl_y := 0;
 
         elsif (rising_edge(input_clk)) then
 
@@ -469,10 +474,10 @@ end;
                         --step4 = scroll test.
                         if (scl_step_cnt = 0) then
                             --x scroll pos=40
-                            io_out(16#2005#, 40);
+                            io_out(16#2005#, 0);
                         elsif (scl_step_cnt = 1 * cpu_io_multi) then
                             --y scroll pos=3
-                            io_out(16#2005#, 3);
+                            io_out(16#2005#, 0);
 
                         else
                             io_brk;
@@ -501,6 +506,39 @@ end;
                         end if;
                         enable_ppu_step_cnt := enable_ppu_step_cnt + 1;
 
+                    elsif (global_step_cnt = 7) then
+                        ----nmi tests.....
+                        if (nmi_n = '0') then
+
+                            if (nmi_step_cnt = 0 * cpu_io_multi) then
+                                --set sprite addr=00 (first sprite)
+                                io_out(16#2003#, 16#03#);
+                            elsif (nmi_step_cnt = 1 * cpu_io_multi) then
+                                --set sprite data: x=100
+                                io_out(16#2004#, nmi_oam_x);
+                            elsif (nmi_step_cnt = 2 * cpu_io_multi) then
+                                --scroll x=0
+                                io_out(16#2005#, 0);
+                            elsif (nmi_step_cnt = 3 * cpu_io_multi) then
+                                --scroll y++
+                                io_out(16#2005#, nmi_scl_y);
+                            else
+                                nmi_oam_x := nmi_oam_x + 1;
+                                --bug!!! scroll reg doesn't work....
+                                --nmi_scl_y := nmi_scl_y + 1;
+                                io_brk;
+                                if (nmi_step_cnt > 3 * cpu_io_multi) then
+                                    global_step_cnt := global_step_cnt + 1;
+                                end if;
+                            end if;
+                            nmi_step_cnt := nmi_step_cnt + 1;
+                        end if;
+                    elsif (global_step_cnt = 8) then
+                        ----back to nmi tests.....
+                        if (nmi_n = '1') then
+                            nmi_step_cnt := 0;
+                            global_step_cnt := global_step_cnt - 1;
+                        end if;
                     else
                         io_brk;
                         init_done := '1';
