@@ -14,18 +14,23 @@ vmap work rtl_work
 vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/de1_nes/address_decoder.vhd}
 vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/de1_nes/motonesfpga_common.vhd}
 vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/de1_nes/clock/clock_divider.vhd}
-vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/de1_nes/mem/prg_rom.vhd}
-vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/de1_nes/mem/chr_rom.vhd}
 vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/de1_nes/mem/ram.vhd}
 vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/de1_nes/apu/apu.vhd}
-vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/de1_nes/ppu/ppu_registers.vhd}
+
+#ppu block...
+vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/de1_nes/mem/chr_rom.vhd}
 vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/de1_nes/ppu/ppu.vhd}
+vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/de1_nes/ppu/ppu_registers.vhd}
 vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/de1_nes/ppu/vga_ppu.vhd}
-#vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/de1_nes/cpu/cpu_registers.vhd}
-#vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/de1_nes/cpu/alu.vhd}
-#vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/de1_nes/cpu/decoder.vhd}
-#vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/de1_nes/cpu/mos6502.vhd}
-vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/de1_nes/dummy-mos6502.vhd}
+
+#cpu block...
+vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/de1_nes/mem/prg_rom.vhd}
+vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/de1_nes/cpu/alu.vhd}
+vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/de1_nes/cpu/cpu_registers.vhd}
+vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/de1_nes/cpu/decoder.vhd}
+vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/de1_nes/cpu/mos6502.vhd}
+
+#vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/de1_nes/dummy-mos6502.vhd}
 vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/de1_nes/de1_nes.vhd}
 
 vcom -93 -work work {D:/daisuke/nes/repo/motonesfpga/de1_nes/testbench_motones_sim.vhd}
@@ -40,16 +45,16 @@ add wave -label cpu_clk sim:/testbench_motones_sim/sim_board/cpu_clk
 add wave -label addr -radix hex sim:/testbench_motones_sim/sim_board/addr
 add wave -label d_io -radix hex sim:/testbench_motones_sim/sim_board/d_io
 
-#add wave -label instruction -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/instruction
-#add wave -label int_d_bus -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/int_d_bus
-#add wave -label exec_cycle -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/exec_cycle
-#
-#add wave -divider regs
-#add wave -label acc -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/acc/q
-#add wave -label status_val -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/status_register/status_val
-#add wave -label sp -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/sp/q
-#add wave -label x -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/x/q
-#add wave -label y -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/y/q
+add wave -label instruction -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/instruction
+add wave -label int_d_bus -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/int_d_bus
+add wave -label exec_cycle -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/exec_cycle
+
+add wave -divider regs
+add wave -label acc -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/acc/q
+add wave -label status_val -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/status_register/status_val
+add wave -label sp -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/sp/q
+add wave -label x -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/x/q
+add wave -label y -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/y/q
 
 
 ##add wave -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/status_reg

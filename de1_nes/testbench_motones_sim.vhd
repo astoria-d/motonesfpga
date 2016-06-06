@@ -54,7 +54,8 @@ architecture stimulus of testbench_motones_sim is
         v_sync_n    : out std_logic;
         r           : out std_logic_vector(3 downto 0);
         g           : out std_logic_vector(3 downto 0);
-        b           : out std_logic_vector(3 downto 0)
+        b           : out std_logic_vector(3 downto 0);
+        nt_v_mirror : in std_logic
          );
     end component;
 
@@ -70,6 +71,7 @@ architecture stimulus of testbench_motones_sim is
     signal b           : std_logic_vector(3 downto 0);
     signal joypad1     : std_logic_vector(7 downto 0);
     signal joypad2     : std_logic_vector(7 downto 0);
+    signal nt_v_mirror : std_logic;
 
     constant powerup_time   : time := 2 us;
     constant reset_time     : time := 890 ns;
@@ -149,7 +151,7 @@ dbg_disp_ptn_h, dbg_disp_ptn_l ,
 dbg_nmi,
     
     base_clk, reset_input, joypad1, joypad2, 
-            h_sync_n, v_sync_n, r, g, b);
+            h_sync_n, v_sync_n, r, g, b, nt_v_mirror);
 
     --- input reset.
     reset_p: process
@@ -192,5 +194,7 @@ dbg_nmi,
         end if;
     end process;
 
+    --set chr rom mirror setting.
+    nt_v_mirror <= '1';
 end stimulus;
 

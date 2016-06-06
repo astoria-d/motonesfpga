@@ -670,6 +670,10 @@ nmi_test:
 
 @cnt_done:
 
+    lda #50
+	sta $2005
+    lda #200
+	sta $2005
     rts
 .endproc
 
@@ -684,7 +688,7 @@ nmi_test:
     bne :+
     ldx #0
 :
-;    ldx #$00
+    ldx #80
     stx $2005
     stx scroll_y
 
