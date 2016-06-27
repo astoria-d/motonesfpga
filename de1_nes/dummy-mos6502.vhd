@@ -222,38 +222,47 @@ end;
 
 
                         elsif (nt_step_cnt = 5 * cpu_io_multi) then
-                            --set vram addr 23c1 (attribute)
-                            io_out(16#2006#, 16#23#);
-                        elsif (nt_step_cnt = 6 * cpu_io_multi) then
-                            io_out(16#2006#, 16#c1#);
-                        elsif (nt_step_cnt = 7 * cpu_io_multi) then
-                                    --attr=11011000
-                            io_out(16#2007#, 16#d8#);
-
-
-                        elsif (nt_step_cnt = 8 * cpu_io_multi) then
                             io_out(16#2006#, 16#20#);
-                        elsif (nt_step_cnt = 9 * cpu_io_multi) then
-                            io_out(16#2006#, 16#60#);
-
-                        elsif (nt_step_cnt = 10 * cpu_io_multi) then
-                            io_out(16#2007#, 48);
-                        elsif (nt_step_cnt = 11 * cpu_io_multi) then
-                            io_out(16#2007#, 49);
-                        elsif (nt_step_cnt = 12 * cpu_io_multi) then
-                            io_out(16#2007#, 50);
-                        elsif (nt_step_cnt = 13 * cpu_io_multi) then
-                            io_out(16#2007#, 51);
-                        elsif (nt_step_cnt = 14 * cpu_io_multi) then
-                            io_out(16#2007#, 52);
-                        elsif (nt_step_cnt = 15 * cpu_io_multi) then
-                            io_out(16#2007#, 53);
-                        elsif (nt_step_cnt = 16 * cpu_io_multi) then
-                            io_out(16#2007#, 54);
-                        elsif (nt_step_cnt = 17 * cpu_io_multi) then
-                            io_out(16#2007#, 55);
-                        elsif (nt_step_cnt = 18 * cpu_io_multi) then
-                            io_out(16#2007#, 56);
+                        elsif (nt_step_cnt = 6 * cpu_io_multi) then
+                            io_out(16#2006#, 16#2a#);
+                        elsif (nt_step_cnt = 7 * cpu_io_multi) then
+                            io_out(16#2007#, 16#44#);
+                        elsif (nt_step_cnt = 8 * cpu_io_multi) then
+                            io_out(16#2007#, 16#44#);
+                            
+--                        elsif (nt_step_cnt = 5 * cpu_io_multi) then
+--                            --set vram addr 23c1 (attribute)
+--                            io_out(16#2006#, 16#23#);
+--                        elsif (nt_step_cnt = 6 * cpu_io_multi) then
+--                            io_out(16#2006#, 16#c1#);
+--                        elsif (nt_step_cnt = 7 * cpu_io_multi) then
+--                                    --attr=11011000
+--                            io_out(16#2007#, 16#d8#);
+--
+--
+--                        elsif (nt_step_cnt = 8 * cpu_io_multi) then
+--                            io_out(16#2006#, 16#20#);
+--                        elsif (nt_step_cnt = 9 * cpu_io_multi) then
+--                            io_out(16#2006#, 16#60#);
+--
+--                        elsif (nt_step_cnt = 10 * cpu_io_multi) then
+--                            io_out(16#2007#, 48);
+--                        elsif (nt_step_cnt = 11 * cpu_io_multi) then
+--                            io_out(16#2007#, 49);
+--                        elsif (nt_step_cnt = 12 * cpu_io_multi) then
+--                            io_out(16#2007#, 50);
+--                        elsif (nt_step_cnt = 13 * cpu_io_multi) then
+--                            io_out(16#2007#, 51);
+--                        elsif (nt_step_cnt = 14 * cpu_io_multi) then
+--                            io_out(16#2007#, 52);
+--                        elsif (nt_step_cnt = 15 * cpu_io_multi) then
+--                            io_out(16#2007#, 53);
+--                        elsif (nt_step_cnt = 16 * cpu_io_multi) then
+--                            io_out(16#2007#, 54);
+--                        elsif (nt_step_cnt = 17 * cpu_io_multi) then
+--                            io_out(16#2007#, 55);
+--                        elsif (nt_step_cnt = 18 * cpu_io_multi) then
+--                            io_out(16#2007#, 56);
 
     --                    elsif (nt_step_cnt = 5 * cpu_io_multi) then
     --                        --set vram addr 21d1
@@ -357,7 +366,7 @@ end;
 
                         else
                             io_brk;
-                            if (nt_step_cnt > 4 * cpu_io_multi) then
+                            if (nt_step_cnt > 7 * cpu_io_multi) then
                                 global_step_cnt := global_step_cnt + 1;
                             end if;
                         end if;
@@ -524,9 +533,10 @@ end;
                                 io_out(16#2005#, nmi_scl_y);
                             else
                                 nmi_oam_x := nmi_oam_x + 1;
-                                --bug!!! scroll reg doesn't work....
-                                --nmi_scl_y := nmi_scl_y + 1;
-                                nmi_scl_y := 80;
+                                if (nmi_step_cnt mod 30 = 0) then
+                                    nmi_scl_y := nmi_scl_y + 1;
+                                end if;
+                                --nmi_scl_y := 75;
                                 io_brk;
                                 if (nmi_step_cnt > 3 * cpu_io_multi) then
                                     global_step_cnt := global_step_cnt + 1;
