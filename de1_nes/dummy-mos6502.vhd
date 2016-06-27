@@ -533,7 +533,7 @@ end;
                                 io_out(16#2005#, nmi_scl_y);
                             else
                                 nmi_oam_x := nmi_oam_x + 1;
-                                if (nmi_step_cnt mod 30 = 0) then
+                                if (nmi_step_cnt mod 10 = 0) then
                                     nmi_scl_y := nmi_scl_y + 1;
                                 end if;
                                 --nmi_scl_y := 75;
