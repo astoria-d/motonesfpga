@@ -89,7 +89,7 @@ end;
             enable_ppu_step_cnt := 0;
             nmi_step_cnt := 0;
             nmi_oam_x := 0;
-            nmi_scl_y := 0;
+            nmi_scl_y := 200;
 
         elsif (rising_edge(input_clk)) then
 
@@ -486,7 +486,7 @@ end;
                             io_out(16#2005#, 0);
                         elsif (scl_step_cnt = 1 * cpu_io_multi) then
                             --y scroll pos=3
-                            io_out(16#2005#, 0);
+                            io_out(16#2005#, nmi_scl_y);
 
                         else
                             io_brk;
@@ -534,9 +534,9 @@ end;
                             else
                                 nmi_oam_x := nmi_oam_x + 1;
                                 if (nmi_step_cnt mod 10 = 0) then
-                                    nmi_scl_y := nmi_scl_y + 1;
+                                    --nmi_scl_y := nmi_scl_y + 1;
+                                    --nmi_scl_y := 24;
                                 end if;
-                                --nmi_scl_y := 75;
                                 io_brk;
                                 if (nmi_step_cnt > 3 * cpu_io_multi) then
                                     global_step_cnt := global_step_cnt + 1;
