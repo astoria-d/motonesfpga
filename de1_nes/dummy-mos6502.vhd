@@ -227,8 +227,21 @@ end;
                             io_out(16#2006#, 16#2a#);
                         elsif (nt_step_cnt = 7 * cpu_io_multi) then
                             io_out(16#2007#, 16#44#);
+
                         elsif (nt_step_cnt = 8 * cpu_io_multi) then
-                            io_out(16#2007#, 16#44#);
+                            io_out(16#2006#, 16#2d#);
+                        elsif (nt_step_cnt = 9 * cpu_io_multi) then
+                            io_out(16#2006#, 16#54#);
+                        elsif (nt_step_cnt = 10 * cpu_io_multi) then
+                            io_out(16#2007#, 16#6d#);
+                        elsif (nt_step_cnt = 10 * cpu_io_multi) then
+                            io_out(16#2007#, 16#6f#);
+                        elsif (nt_step_cnt = 10 * cpu_io_multi) then
+                            io_out(16#2007#, 16#74#);
+                        elsif (nt_step_cnt = 11 * cpu_io_multi) then
+                            io_out(16#2007#, 16#6f#);
+                        elsif (nt_step_cnt = 12 * cpu_io_multi) then
+                            io_out(16#2007#, 16#00#);
                             
 --                        elsif (nt_step_cnt = 5 * cpu_io_multi) then
 --                            --set vram addr 23c1 (attribute)
@@ -366,7 +379,7 @@ end;
 
                         else
                             io_brk;
-                            if (nt_step_cnt > 7 * cpu_io_multi) then
+                            if (nt_step_cnt > 12 * cpu_io_multi) then
                                 global_step_cnt := global_step_cnt + 1;
                             end if;
                         end if;
@@ -527,15 +540,14 @@ end;
                                 io_out(16#2004#, nmi_oam_x);
                             elsif (nmi_step_cnt = 2 * cpu_io_multi) then
                                 --scroll x=0
-                                io_out(16#2005#, 0);
+                                io_out(16#2005#, nmi_scl_y);
                             elsif (nmi_step_cnt = 3 * cpu_io_multi) then
                                 --scroll y++
                                 io_out(16#2005#, nmi_scl_y);
                             else
                                 nmi_oam_x := nmi_oam_x + 1;
                                 if (nmi_step_cnt mod 10 = 0) then
-                                    --nmi_scl_y := nmi_scl_y + 1;
-                                    --nmi_scl_y := 24;
+                                    nmi_scl_y := nmi_scl_y + 1;
                                 end if;
                                 io_brk;
                                 if (nmi_step_cnt > 3 * cpu_io_multi) then

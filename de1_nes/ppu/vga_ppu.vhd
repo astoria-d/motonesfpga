@@ -749,11 +749,9 @@ begin
 
     prf_y <= cur_y + ppu_scroll_y
                     when cur_x < conv_std_logic_vector(HSCAN, X_SIZE) and
-                         cur_y + ppu_scroll_y <
-                            conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE) else
+                         cur_y < conv_std_logic_vector(VSCAN, X_SIZE) else
              cur_y + ppu_scroll_y + "000000001" 
-                    when cur_y + ppu_scroll_y <
-                            conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE) else
+                    when cur_y < conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE) else
              "000000000"; 
 
     nt_inst : d_flip_flop generic map(dsize)
