@@ -102,6 +102,10 @@ add wave -label prf_x -radix decimal -unsigned sim:/testbench_motones_sim/sim_bo
 add wave -label cur_y -radix decimal -unsigned sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/ppu_render_inst/cur_y
 add wave -label prf_y -radix decimal -unsigned sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/ppu_render_inst/prf_y
 
+add wave -label disp_nt -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/ppu_render_inst/disp_nt
+add wave -label disp_attr -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/ppu_render_inst/disp_attr
+add wave -label attr_val -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/ppu_render_inst/attr_val
+
 
 #add wave -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/nes_r \
 #sim:/testbench_motones_sim/sim_board/ppu_inst/nes_g \
