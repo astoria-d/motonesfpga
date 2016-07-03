@@ -14,6 +14,22 @@
 .segment "STARTUP"
 .proc	Reset
 
+;;; de1 env decoder bug test
+;;;LDA   $8182, y
+;;;STA   $2007
+;;;INY   
+;;;DEX   
+;;;;;BPL   #-10
+;;;LDA   $8182, y
+;;;STA   $2007
+;;;INY   
+;;;DEX   
+;;;;;BPL   #-10
+;;;LDA   #$3d
+;;;STA   $0302               ;;;>>>invalid store address!!!! @ 907,921,200 ps
+
+
+
 
 ; interrupt off, initialize sp.
 	sei
@@ -26,299 +42,165 @@
 	sta	$2001
 
 
-    ;;bg palette
 	lda	#$3f
 	sta	$2006
 	lda	#$00
 	sta	$2006
 
-	lda	#$11
+    ;;load palette.
+	ldx	#$00
+	ldy	#$20
+copypal:
+	lda	palettes, x
 	sta	$2007
-	lda	#$01
-	sta	$2007
-	lda	#$03
-	sta	$2007
-	lda	#$13
-	sta	$2007
+	inx
+	dey
+	bne	copypal
 
-	lda	#$0f
-	sta	$2007
-	lda	#$04
-	sta	$2007
-	lda	#$14
-	sta	$2007
-	lda	#$24
-	sta	$2007
+	lda	#$20
+	sta	$2006
+	lda	#$ab
+	sta	$2006
+	ldx	#$00
+	ldy	#$0d
 
-	lda	#$0f
+    ;;load name table.
+copymap:
+	lda	string, x
 	sta	$2007
-	lda	#$08
-	sta	$2007
-	lda	#$18
-	sta	$2007
-	lda	#$28
-	sta	$2007
+	inx
+	dey
+	bne	copymap
 
-	lda	#$05
-	sta	$2007
-	lda	#$0c
-	sta	$2007
-	lda	#$1c
-	sta	$2007
-	lda	#$2c
-	sta	$2007
-
-    ;;sprite..
+    ;;scroll reg set.
 	lda	#$00
-	sta	$2007
-	lda	#$24
-	sta	$2007
-	lda	#$1b
-	sta	$2007
-	lda	#$11
-	sta	$2007
+	sta	$2005
+	sta	$2005
 
-	lda	#$00
-	sta	$2007
-	lda	#$32
-	sta	$2007
-	lda	#$16
-	sta	$2007
-	lda	#$20
-	sta	$2007
+;;;;----------------------
+    ;;load name tbl.
+    ldy #$00
+    ldx #$40    ;;name table entry cnt.
 
-	lda	#$00
-	sta	$2007
-	lda	#$26
-	sta	$2007
-	lda	#$01
-	sta	$2007
-	lda	#$31
-	sta	$2007
+    lda #$20
+    sta $2006
+    lda #$c0
+    sta $2006
 
+nt_st:
+    lda nt1, y
+    sta $2007
+    iny
+    dex
+    bpl nt_st
 
+    ;;load attr tbl.
+    ldy #$00
+    ldx #$08    ;;attribute entry cnt
 
-    ;;name table set.
-	lda	#$20
-	sta	$2006
-	lda	#$06
-	sta	$2006
+    lda #$23
+    sta $2006
+    lda #$c8
+    sta $2006
 
-;;0x44, 45, 45 = DEE
-	lda	#$44
-	sta	$2007
-	lda	#$45
-	sta	$2007
-	lda	#$45
-	sta	$2007
+at_st:
+    lda at1, y
+    sta $2007
+    iny
+    dex
+    bpl at_st
 
+    ;;set universal bg color.
+    lda #$3d
+    sta $0302
+    jsr set_bg_col
 
-	lda	#$20
-	sta	$2006
-	lda	#$60
-	sta	$2006
+    ;;set scroll reg.
+    ;;lda #$a6
+    lda #$05
+    sta $0300
+    lda #00
+    sta $0301
+    jsr set_scroll
 
-	lda	#48
-	sta	$2007
-	lda	#49
-	sta	$2007
-	lda	#50
-	sta	$2007
-	lda	#51
-	sta	$2007
-	lda	#52
-	sta	$2007
-	lda	#53
-	sta	$2007
-	lda	#54
-	sta	$2007
-	lda	#55
-	sta	$2007
-	lda	#56
+    ;;set next page name table
+    ldy #$00
+    ldx #$0b
 
+    lda #$24
+    sta $2006
+    lda #$c0
+    sta $2006
 
+nt2_st:
+    lda nt2, y
+    sta $2007
+    iny
+    dex
+    bpl nt2_st
 
-	lda	#$21
-	sta	$2006
-	lda	#$e6
-	sta	$2006
+    ;;next page attr.
+    lda #$27
+    sta $2006
+    lda #$d0
+    sta $2006
 
-;;test pattern
-	lda	#$20
-	sta	$2006
-	lda	#$20
-	sta	$2006
+    lda #$e4
+    sta $2007
 
-	lda	#$01
-	sta	$2007
-	lda	#$02
-	sta	$2007
-	lda	#$03
-	sta	$2007
-	lda	#$04
-	sta	$2007
-	lda	#$05
-	sta	$2007
-	lda	#$06
-	sta	$2007
-	lda	#$07
-	sta	$2007
-	lda	#$08
-	sta	$2007
-	lda	#$09
-	sta	$2007
-	lda	#$0a
-	sta	$2007
-	lda	#$0b
-	sta	$2007
-	lda	#$0c
-	sta	$2007
-	lda	#$0d
-	sta	$2007
-	lda	#$0e
-	sta	$2007
-	lda	#$0f
-	sta	$2007
-
-	lda	#$20
-	sta	$2006
-	lda	#$40
-	sta	$2006
-
-	lda	#$10
-	sta	$2007
-	lda	#$11
-	sta	$2007
-	lda	#$12
-	sta	$2007
-	lda	#$13
-	sta	$2007
-	lda	#$14
-	sta	$2007
-	lda	#$15
-	sta	$2007
-	lda	#$16
-	sta	$2007
-	lda	#$17
-	sta	$2007
-	lda	#$18
-	sta	$2007
-	lda	#$19
-	sta	$2007
-	lda	#$1a
-	sta	$2007
-	lda	#$1b
-	sta	$2007
-	lda	#$1c
-	sta	$2007
-	lda	#$1d
-	sta	$2007
-	lda	#$1e
-	sta	$2007
-	lda	#$1f
-	sta	$2007
-
-
-;;attr
-	lda	#$23
-	sta	$2006
-	lda	#$c1
-	sta	$2006
-
-;;--attr=11011000
-	lda	#$d8
-	sta	$2007
-
-
+;;---------------------
 ;;;set sprite
     ;;sprite addr=00
     lda #$00
     sta $2003
-
-    ;;sprite data: y=02
-    lda #3
+    ;;sprite data: y=60
+    lda #$3c
     sta $2004
     ;;tile=0x4d (ascii 'M')
     lda #$4d
     sta $2004
-    lda #$01
-    sta $2004
-    ;x=100
-    lda #$64
-    sta $2004
-
-    lda #$32
-    sta $2004
-    lda #$4f
-    sta $2004
-    lda #$01
-    sta $2004
-    lda #$1e
-    sta $2004
-
-    lda #60
-    sta $2004
-    lda #$50
-    sta $2004
-    lda #$01
-    sta $2004
-    lda #$21
-    sta $2004
-
-
-    lda #$3d
-    sta $2004
-    lda #$51
-    sta $2004
-    lda #$02
-    sta $2004
-    lda #45
-    sta $2004
-
-    ;;dma test data.
-    ldy #$00
-    ldx #$41
-    stx $00
-    ldx #$00
-dma_set:
-    ;;y pos
-    txa
-    sta $0200, y
-    iny
-    ;;tile index
-    lda $00
-    cmp #$5b
-    bne inc_tile
-    lda #$41
-    sta $00
-inc_tile:
-    inc $00
-    sta $0200, y
-    iny
-    ;;attribute
-    lda #$01
-    sta $0200, y
-    iny
-    ;;x pos
-    txa
-    adc #$03
-    tax
-    rol
-    sta $0200, y
-    iny
-    bne dma_set
-
-    ;;dma start.
-    lda #$02
-    sta $4014
-
-
-
-    ;;init scroll point.
     lda #$00
-    sta $2005
-    lda #248
-    sta $2005
+    sta $2004
+    ;x=39
+    lda #$27
+    sta $2004
+
+;;;    ;;dma test data.
+;;;    ldy #$00
+;;;    ldx #$41
+;;;    stx $00
+;;;    ldx #$00
+;;;dma_set:
+;;;    ;;y pos
+;;;    txa
+;;;    sta $0200, y
+;;;    iny
+;;;    ;;tile index
+;;;    lda $00
+;;;    cmp #$5b
+;;;    bne inc_tile
+;;;    lda #$41
+;;;    sta $00
+;;;inc_tile:
+;;;    inc $00
+;;;    sta $0200, y
+;;;    iny
+;;;    ;;attribute
+;;;    lda #$01
+;;;    sta $0200, y
+;;;    iny
+;;;    ;;x pos
+;;;    txa
+;;;    adc #$03
+;;;    tax
+;;;    rol
+;;;    sta $0200, y
+;;;    iny
+;;;    bne dma_set
+;;;
+;;;    ;;dma start.
+;;;    lda #$02
+;;;    sta $4014
 
     ;;show bg...
 	lda	#$1e
@@ -331,40 +213,114 @@ inc_tile:
     ;;done...
     ;;infinite loop.
 mainloop:
+
+    ;;read ppu status reg while displaying
+    ;;vram read test
+    ldx #$0a
+l1:
+    nop
+    dex
+    bne l1
+
+    ldx #$0a
+read_status:
+    lda $2002
+    dex
+    bne read_status
+
 	jmp	mainloop
 .endproc
 
 
 nmi_test:
-;    jsr set_scroll
-;    jsr set_bg_col
-    jsr set_dma
+    jsr set_scroll
+    jsr set_bg_col
 
     rti
 
-set_dma:
-    ldy #0
-
-y_loop:
-    lda $0200, y
-
+add_nl:
     clc
-    adc #$1
-    sta $0200, y
+    txa
+    pha
 
-    iny
-    iny
-    iny
-    iny
+    lda $01
+    sta $2006
 
-    bne y_loop
+    lda $00
+    adc #$20
+    sta $00
+    sta $2006
 
-    ;;dma start.
-    lda #$02
-    sta $4014
+    bcc no_carry
+    lda $01
+    adc #$00
+    sta $01
+    sta $2006
+    lda $00
+    sta $2006
+no_carry:
 
+    pla
+    tax
     rts
 
+set_scroll:
+    lda $0300
+    sta $2005
+    clc
+    adc #$05
+    sta $0300
+    lda $0301
+    sta $2005
+    clc
+    adc #04
+;;    sta $0301
+    rts
+
+set_bg_col:
+    lda #$3f
+    sta $2006
+    lda #$10
+    sta $2006
+    lda $0302
+    sta $2007
+    cmp #$30
+    bne bg_dec
+    lda #$3d
+    sta $0302
+    jmp bg_done
+bg_dec:
+    dec $0302
+bg_done:
+    rts
+
+nt1:
+	.byte	$41, $42, $43, $44, $45, $46, $47, $48, $49, $4a, $4b, $4c, $4d, $4e, $4f, $50
+	.byte	$61, $62, $63, $64, $65, $66, $67, $68, $69, $6a, $6b, $6c, $6d, $6e, $6f, $70
+	.byte	$80, $81, $82, $83, $84, $85, $86, $87, $88, $89, $8a, $8b, $8c, $8d, $8e, $8f
+	.byte	$90, $91, $92, $93, $94, $95, $96, $97, $98, $99, $9a, $9b, $9c, $9d, $9e, $9f
+nt2:
+	.byte	$6b, $6a, $69, $68, $67, $66, $65, $64, $63, $62, $61
+	.byte	$30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $3a
+
+at1:
+	.byte	$1b, $e4, $a5, $5a
+	.byte	$e4, $1b, $5a, $a5
+
+palettes:
+;;;bg palette
+	.byte	$0f, $00, $10, $20
+	.byte	$0f, $04, $14, $24
+	.byte	$0f, $08, $18, $28
+	.byte	$0f, $0c, $1c, $2c
+;;;spr palette
+	.byte	$0f, $00, $10, $20
+	.byte	$0f, $06, $16, $26
+	.byte	$0f, $08, $18, $28
+	.byte	$0f, $0a, $1a, $2a
+
+string:
+	.byte	"test2!"
 
 ;;;for DE1 internal memory constraints.
 .segment "VECINFO_4k"

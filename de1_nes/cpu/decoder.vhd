@@ -145,6 +145,7 @@ signal wk_acc_cmd         : std_logic_vector(3 downto 0);
 signal wk_x_cmd           : std_logic_vector(3 downto 0);
 signal wk_y_cmd           : std_logic_vector(3 downto 0);
 signal wk_stat_alu_we_n   : std_logic;
+signal ea_carry_reg       : std_logic;
 
 begin
 
@@ -152,6 +153,9 @@ begin
     pch_inc_input <= not exec_cycle(5);
     pch_inc_reg : d_flip_flop_bit 
             port map(set_clk, '1', '1', '0', pch_inc_input, pch_inc_n);
+
+    ea_carry_inst: d_flip_flop_bit 
+            port map(trig_clk, '1', '1', '0', ea_carry, ea_carry_reg);
 
     --acc,x,y next cycle is changed when it goes page across.
     --The conditional branch instructions all have the form xxy10000
@@ -511,7 +515,7 @@ begin
 
         wk_next_cycle <= T0;
         d_print("absx step 1");
-    elsif (exec_cycle = T0 and ea_carry = '1') then
+    elsif (exec_cycle = T0 and ea_carry_reg = '1') then
         --case page boundary crossed.
         --redo inst.
         d_print("absx 5 (page boudary crossed.)");
@@ -718,7 +722,11 @@ begin
         end if;
         wk_next_cycle <= T4;
     elsif exec_cycle = T4 then
-        pg_next_n <= '0';
+        if (ea_carry_reg = '1') then
+            pg_next_n <= '0';
+        else
+            pg_next_n <= '1';
+        end if;
         abs_latch_out;
         if (is_x = true) then
             ea_x_out;
@@ -770,7 +778,13 @@ begin
         --page handling.
         back_oe(wk_y_cmd, '1');
         indir_y_n <= '0';
-        pg_next_n <= '0';
+        
+        --ea_carry reg is suspicious. timing is not garanteed...
+        if (ea_carry_reg = '1') then
+            pg_next_n <= '0';
+        else
+            pg_next_n <= '1';
+        end if;
         r_nw <= '0';
         wk_next_cycle <= T0;
     end if;
@@ -949,7 +963,11 @@ begin
     elsif exec_cycle = T4 then
         abs_latch_out;
         ea_x_out;
-        pg_next_n <= '0';
+        if (ea_carry_reg = '1') then
+            pg_next_n <= '0';
+        else
+            pg_next_n <= '1';
+        end if;
 
         --keep data in the alu reg.
         arith_en_n <= '0';
@@ -1097,7 +1115,7 @@ end  procedure;
                 --case dma is runnting.
                 disable_pins;
                 inst_we_n <= '1';
-                ad_oe_n <= '0';
+                ad_oe_n <= '1';
                 dl_al_oe_n <= '1';
                 pcl_inc_n <= '1';
                 pcl_cmd <= "1111";

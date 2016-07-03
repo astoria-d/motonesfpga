@@ -20,9 +20,9 @@ echo "processing...."
 dd if=$in_file of=$out_file1 bs=16 skip=1 count=2048 2> /dev/null
 dd if=$in_file of=$out_file2 bs=16 skip=2049 2> /dev/null
 #4k img creation
-dd if=$in_name-prg.bin of=$in_name-prg-8k.bin bs=512 count=16
+dd if=sample1-prg.bin of=sample1-prg-4k.bin bs=512 count=8
 
-bin2hex $in_name-prg-8k.bin sample1-prg.hex
-bin2hex $in_name-chr.bin sample1-chr.hex
+bin2hex sample1-prg-4k.bin sample1-prg.hex
+bin2hex sample1-chr.bin sample1-chr.hex
 
 echo "done."

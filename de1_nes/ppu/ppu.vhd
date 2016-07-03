@@ -144,6 +144,17 @@ component counter_register
     );
 end component;
 
+component d_flip_flop_bit
+    port (  
+            clk     : in std_logic;
+            res_n   : in std_logic;
+            set_n   : in std_logic;
+            we_n    : in std_logic;
+            d       : in std_logic;
+            q       : out std_logic
+        );
+end component;
+
 constant dsize     : integer := 8;
 
 constant PPUCTRL   : std_logic_vector(2 downto 0) := "000";
@@ -207,6 +218,7 @@ signal plt_bus_ce_n     : std_logic;
 signal oam_plt_addr     : std_logic_vector (dsize - 1 downto 0);
 signal oam_plt_data     : std_logic_vector (dsize - 1 downto 0);
 signal plt_data_out     : std_logic_vector (dsize - 1 downto 0);
+signal ST_VBL_old       : std_logic;
 
 begin
 
@@ -305,6 +317,10 @@ begin
     plt_data_out_inst : d_flip_flop generic map(dsize)
             port map (ppu_clk_n, rst_n, '1', ppu_data_we_n, oam_plt_data, plt_data_out);
 
+    ST_VBL_old_inst : d_flip_flop_bit
+            port map (ppu_clk_n, rst_n, '1', '0', ppu_status(ST_VBL), ST_VBL_old);
+
+
     reg_set_p : process (rst_n, ce_n, r_nw, cpu_addr)
     begin
 
@@ -313,21 +329,19 @@ begin
             ppu_mask_we_n    <= '1';
             oam_addr_we_n    <= '1';
             oam_data_we_n    <= '1';
-            ppu_scroll_x_we_n    <= '1';
-            ppu_scroll_y_we_n    <= '1';
             ppu_scroll_cnt_ce_n  <= '1';
             read_status <= '0';
             read_data_n <= '1';
         elsif (rst_n = '1' and ce_n = '0') then
 
             --register set.
-            if(cpu_addr = PPUCTRL) then
+            if(cpu_addr = PPUCTRL and r_nw = '0') then
                 ppu_ctrl_we_n <= '0';
             else
                 ppu_ctrl_we_n <= '1';
             end if;
 
-            if(cpu_addr = PPUMASK) then
+            if(cpu_addr = PPUMASK and r_nw = '0') then
                 ppu_mask_we_n <= '0';
             else
                 ppu_mask_we_n <= '1';
@@ -340,30 +354,21 @@ begin
                 read_status <= '0';
             end if;
 
-            if(cpu_addr = OAMADDR) then
+            if(cpu_addr = OAMADDR and r_nw = '0') then
                 oam_addr_we_n <= '0';
             else
                 oam_addr_we_n <= '1';
             end if;
 
-            if(cpu_addr = OAMDATA) then
+            if(cpu_addr = OAMDATA and r_nw = '0') then
                 oam_data_we_n <= '0';
             else
                 oam_data_we_n <= '1';
             end if;
 
-            if(cpu_addr = PPUSCROLL) then
+            if(cpu_addr = PPUSCROLL and r_nw = '0') then
                 ppu_scroll_cnt_ce_n <= '0';
-                if (ppu_scroll_cnt(0) = '0') then
-                    ppu_scroll_x_we_n <= '0';
-                    ppu_scroll_y_we_n <= '1';
-                else
-                    ppu_scroll_y_we_n <= '0';
-                    ppu_scroll_x_we_n <= '1';
-                end if;
             else
-                ppu_scroll_x_we_n <= '1';
-                ppu_scroll_y_we_n <= '1';
                 ppu_scroll_cnt_ce_n <= '1';
             end if;
 
@@ -377,8 +382,6 @@ begin
             ppu_mask_we_n    <= '1';
             oam_addr_we_n    <= '1';
             oam_data_we_n    <= '1';
-            ppu_scroll_x_we_n    <= '1';
-            ppu_scroll_y_we_n    <= '1';
             ppu_scroll_cnt_ce_n  <= '1';
             read_status <= '0';
             read_data_n <= '1';
@@ -388,6 +391,28 @@ begin
 
     ppu_clk_cnt_res_n <= not ce_n;
 
+    --scroll reg...
+    scl_reg_p : process (rst_n, ppu_clk)
+    begin
+        if (rst_n = '0') then
+            ppu_scroll_x_we_n <= '1';
+            ppu_scroll_y_we_n <= '1';
+        elsif (rising_edge(ppu_clk)) then
+            if (ppu_scroll_cnt_ce_n = '0' and ppu_clk_cnt = "01" and r_nw = '0') then
+                if (ppu_scroll_cnt(0) = '1') then
+                    ppu_scroll_x_we_n <= '0';
+                    ppu_scroll_y_we_n <= '1';
+                else
+                    ppu_scroll_y_we_n <= '0';
+                    ppu_scroll_x_we_n <= '1';
+                end if;
+            else
+                ppu_scroll_x_we_n <= '1';
+                ppu_scroll_y_we_n <= '1';
+            end if;
+        end if;
+    end process;
+
     --cpu nmi generation...
     clk_nmi_p : process (rst_n, ppu_clk)
     begin
@@ -395,8 +420,12 @@ begin
             vblank_n <= '1';
         elsif (rising_edge(ppu_clk)) then
             if (ppu_status(ST_VBL) = '1' and ppu_ctrl(PPUNEN) = '1') then
-                --start vblank.
-                vblank_n <= '0';
+                --nmi takes place only when ST_VBL arises...
+                --doesn't work....
+--                if (ST_VBL_old = '0') then
+                    --start vblank.
+                    vblank_n <= '0';
+--                end if;
             else
                 --clear flag.
                 vblank_n <= '1';
@@ -405,7 +434,7 @@ begin
     end process;
     
     --cpu and ppu clock timing adjustment...
-    clk_cnt_set_p : process (rst_n, ce_n, r_nw, cpu_addr, ppu_clk)
+    clk_cnt_set_p : process (rst_n, ce_n, r_nw, cpu_addr, ppu_clk, cpu_d, ppu_clk_cnt, ppu_addr_cnt)
     begin
         if (rst_n = '0') then
             ppu_latch_rst_n <= '0';

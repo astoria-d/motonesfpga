@@ -48,12 +48,15 @@ begin
     use ieee.std_logic_arith.conv_std_logic_vector;
 
     variable init_step_cnt, plt_step_cnt, 
-            nt_step_cnt, spr_step_cnt, dma_step_cnt, enable_ppu_step_cnt : integer;
+            nt_step_cnt, spr_step_cnt, dma_step_cnt, scl_step_cnt, 
+            enable_ppu_step_cnt, nmi_step_cnt : integer;
     variable init_done : std_logic;
     variable global_step_cnt : integer;
     constant cpu_io_multi : integer := 3; --io happens every 4 cpu cycle.
     variable i, j : integer;
     variable ch : integer := 16#41# ;
+    variable nmi_oam_x : integer range 0 to 255;
+    variable nmi_scl_y : integer range 0 to 255;
 
 procedure io_out (ad: in integer; dt : in integer) is
 begin
@@ -82,7 +85,11 @@ end;
             nt_step_cnt := 0;
             spr_step_cnt := 0;
             dma_step_cnt := 0;
+            scl_step_cnt := 0;
             enable_ppu_step_cnt := 0;
+            nmi_step_cnt := 0;
+            nmi_oam_x := 0;
+            nmi_scl_y := 200;
 
         elsif (rising_edge(input_clk)) then
 
@@ -203,7 +210,7 @@ end;
                             --set vram addr 2005 (first row, 6th col)
                             io_out(16#2006#, 16#20#);
                         elsif (nt_step_cnt = 1 * cpu_io_multi) then
-                            io_out(16#2006#, 16#06#);
+                            io_out(16#2006#, 16#3b#);
                         elsif (nt_step_cnt = 2 * cpu_io_multi) then
                             --set name tbl data
                             --0x44, 45, 45 = DEE
@@ -215,142 +222,38 @@ end;
 
 
                         elsif (nt_step_cnt = 5 * cpu_io_multi) then
-                            --set vram addr 23c1 (attribute)
-                            io_out(16#2006#, 16#23#);
+                            io_out(16#2006#, 16#20#);
                         elsif (nt_step_cnt = 6 * cpu_io_multi) then
-                            io_out(16#2006#, 16#c1#);
+                            io_out(16#2006#, 16#2a#);
                         elsif (nt_step_cnt = 7 * cpu_io_multi) then
-                                    --attr=11011000
-                            io_out(16#2007#, 16#d8#);
-
+                            io_out(16#2007#, 16#44#);
 
                         elsif (nt_step_cnt = 8 * cpu_io_multi) then
-                            io_out(16#2006#, 16#20#);
+                            io_out(16#2006#, 16#24#);
                         elsif (nt_step_cnt = 9 * cpu_io_multi) then
-                            io_out(16#2006#, 16#60#);
-
+                            io_out(16#2006#, 16#43#);
                         elsif (nt_step_cnt = 10 * cpu_io_multi) then
-                            io_out(16#2007#, 48);
+                            io_out(16#2007#, 16#6d#);
                         elsif (nt_step_cnt = 11 * cpu_io_multi) then
-                            io_out(16#2007#, 49);
+                            io_out(16#2007#, 16#6f#);
                         elsif (nt_step_cnt = 12 * cpu_io_multi) then
-                            io_out(16#2007#, 50);
+                            io_out(16#2007#, 16#74#);
                         elsif (nt_step_cnt = 13 * cpu_io_multi) then
-                            io_out(16#2007#, 51);
+                            io_out(16#2007#, 16#6f#);
+                            
                         elsif (nt_step_cnt = 14 * cpu_io_multi) then
-                            io_out(16#2007#, 52);
+                            io_out(16#2006#, 16#2e#);
                         elsif (nt_step_cnt = 15 * cpu_io_multi) then
-                            io_out(16#2007#, 53);
+                            io_out(16#2006#, 16#93#);
                         elsif (nt_step_cnt = 16 * cpu_io_multi) then
-                            io_out(16#2007#, 54);
+                            io_out(16#2007#, 16#59#);
+
                         elsif (nt_step_cnt = 17 * cpu_io_multi) then
-                            io_out(16#2007#, 55);
-                        elsif (nt_step_cnt = 18 * cpu_io_multi) then
-                            io_out(16#2007#, 56);
-
-    --                    elsif (nt_step_cnt = 5 * cpu_io_multi) then
-    --                        --set vram addr 21d1
-    --                        io_out(16#2006#, 16#21#);
-    --                    elsif (nt_step_cnt = 6 * cpu_io_multi) then
-    --                        io_out(16#2006#, 16#E6#);
-    --                    elsif (nt_step_cnt = 7 * cpu_io_multi) then
-    --                        --msg=DEE TEST !!!
-    --                        io_out(16#2007#, 16#44#);
-    --                    elsif (nt_step_cnt = 8 * cpu_io_multi) then
-    --                        io_out(16#2007#, 16#45#);
-    --                    elsif (nt_step_cnt = 9 * cpu_io_multi) then
-    --                        io_out(16#2007#, 16#45#);
-    --                    elsif (nt_step_cnt = 10 * cpu_io_multi) then
-    --                        io_out(16#2007#, 16#00#);
-    --                    elsif (nt_step_cnt = 11 * cpu_io_multi) then
-    --                        io_out(16#2007#, 16#54#);
-    --                    elsif (nt_step_cnt = 12 * cpu_io_multi) then
-    --                        io_out(16#2007#, 16#45#);
-    --                    elsif (nt_step_cnt = 13 * cpu_io_multi) then
-    --                        io_out(16#2007#, 16#53#);
-    --                    elsif (nt_step_cnt = 14 * cpu_io_multi) then
-    --                        io_out(16#2007#, 16#54#);
-    --                    elsif (nt_step_cnt = 15 * cpu_io_multi) then
-    --                        io_out(16#2007#, 16#21#);
-
-                        --display test pattern
-                        elsif (nt_step_cnt = 19 * cpu_io_multi) then
-                            io_out(16#2006#, 16#20#);
-                        elsif (nt_step_cnt = 20 * cpu_io_multi) then
-                            io_out(16#2006#, 16#20#);
-                        
-                        elsif (nt_step_cnt = 21 * cpu_io_multi) then
-                            io_out(16#2007#, 16#01#);
-                        elsif (nt_step_cnt = 22 * cpu_io_multi) then
-                            io_out(16#2007#, 16#02#);
-                        elsif (nt_step_cnt = 23 * cpu_io_multi) then
-                            io_out(16#2007#, 16#03#);
-                        elsif (nt_step_cnt = 24 * cpu_io_multi) then
-                            io_out(16#2007#, 16#04#);
-                        elsif (nt_step_cnt = 25 * cpu_io_multi) then
-                            io_out(16#2007#, 16#05#);
-                        elsif (nt_step_cnt = 26 * cpu_io_multi) then
-                            io_out(16#2007#, 16#06#);
-                        elsif (nt_step_cnt = 27 * cpu_io_multi) then
-                            io_out(16#2007#, 16#07#);
-                        elsif (nt_step_cnt = 28 * cpu_io_multi) then
-                            io_out(16#2007#, 16#08#);
-                        elsif (nt_step_cnt = 29 * cpu_io_multi) then
-                            io_out(16#2007#, 16#09#);
-                        elsif (nt_step_cnt = 30 * cpu_io_multi) then
-                            io_out(16#2007#, 16#0a#);
-                        elsif (nt_step_cnt = 31 * cpu_io_multi) then
-                            io_out(16#2007#, 16#0b#);
-                        elsif (nt_step_cnt = 32 * cpu_io_multi) then
-                            io_out(16#2007#, 16#0c#);
-                        elsif (nt_step_cnt = 33 * cpu_io_multi) then
-                            io_out(16#2007#, 16#0d#);
-                        elsif (nt_step_cnt = 34 * cpu_io_multi) then
-                            io_out(16#2007#, 16#0e#);
-                        elsif (nt_step_cnt = 35 * cpu_io_multi) then
-                            io_out(16#2007#, 16#0f#);
-
-                        elsif (nt_step_cnt = 36 * cpu_io_multi) then
-                            io_out(16#2006#, 16#20#);
-                        elsif (nt_step_cnt = 37 * cpu_io_multi) then
-                            io_out(16#2006#, 16#40#);
-                        
-                        elsif (nt_step_cnt = 38 * cpu_io_multi) then
-                            io_out(16#2007#, 16#10#);
-                        elsif (nt_step_cnt = 39 * cpu_io_multi) then
-                            io_out(16#2007#, 16#11#);
-                        elsif (nt_step_cnt = 40 * cpu_io_multi) then
-                            io_out(16#2007#, 16#12#);
-                        elsif (nt_step_cnt = 41 * cpu_io_multi) then
-                            io_out(16#2007#, 16#13#);
-                        elsif (nt_step_cnt = 42 * cpu_io_multi) then
-                            io_out(16#2007#, 16#14#);
-                        elsif (nt_step_cnt = 43 * cpu_io_multi) then
-                            io_out(16#2007#, 16#15#);
-                        elsif (nt_step_cnt = 44 * cpu_io_multi) then
-                            io_out(16#2007#, 16#16#);
-                        elsif (nt_step_cnt = 45 * cpu_io_multi) then
-                            io_out(16#2007#, 16#17#);
-                        elsif (nt_step_cnt = 46 * cpu_io_multi) then
-                            io_out(16#2007#, 16#18#);
-                        elsif (nt_step_cnt = 47 * cpu_io_multi) then
-                            io_out(16#2007#, 16#19#);
-                        elsif (nt_step_cnt = 48 * cpu_io_multi) then
-                            io_out(16#2007#, 16#1a#);
-                        elsif (nt_step_cnt = 49 * cpu_io_multi) then
-                            io_out(16#2007#, 16#1b#);
-                        elsif (nt_step_cnt = 50 * cpu_io_multi) then
-                            io_out(16#2007#, 16#1c#);
-                        elsif (nt_step_cnt = 51 * cpu_io_multi) then
-                            io_out(16#2007#, 16#1d#);
-                        elsif (nt_step_cnt = 52 * cpu_io_multi) then
-                            io_out(16#2007#, 16#1e#);
-                        elsif (nt_step_cnt = 53 * cpu_io_multi) then
-                            io_out(16#2007#, 16#1f#);
+                            io_out(16#2007#, 16#00#);
 
                         else
                             io_brk;
-                            if (nt_step_cnt > 4 * cpu_io_multi) then
+                            if (nt_step_cnt > 17 * cpu_io_multi) then
                                 global_step_cnt := global_step_cnt + 1;
                             end if;
                         end if;
@@ -417,7 +320,7 @@ end;
                         else
                             io_brk;
                             if (spr_step_cnt > 4 * cpu_io_multi) then
-                                global_step_cnt := global_step_cnt + 1;
+                                global_step_cnt := global_step_cnt + 2;
                             end if;
                         end if;
                         spr_step_cnt := spr_step_cnt + 1;
@@ -464,30 +367,75 @@ end;
                         dma_step_cnt := dma_step_cnt + 1;
 
                     elsif (global_step_cnt = 5) then
+                        --step4 = scroll test.
+                        if (scl_step_cnt = 0) then
+                            --x scroll pos=123
+                            io_out(16#2005#, 123);
+                        elsif (scl_step_cnt = 1 * cpu_io_multi) then
+                            --y scroll pos=100
+                            io_out(16#2005#, 100);
+
+                        else
+                            io_brk;
+                            if (scl_step_cnt > 1 * cpu_io_multi) then
+                                global_step_cnt := global_step_cnt + 1;
+                            end if;
+                        end if;
+                        scl_step_cnt := scl_step_cnt + 1;
+
+                    elsif (global_step_cnt = 6) then
                         --final step = enable ppu.
                         if (enable_ppu_step_cnt = 0 * cpu_io_multi) then
-                            --scroll reg set x.
-                            io_out(16#2005#, 0);
-                        elsif (enable_ppu_step_cnt = 1 * cpu_io_multi) then
-                            --scroll reg set y.
-                            io_out(16#2005#, 0);
-                        elsif (enable_ppu_step_cnt = 2 * cpu_io_multi) then
                             --show bg
                             --PPUMASK=1e (show bg and sprite)
                             --PPUMASK=0e (show bg only)
                             io_out(16#2001#, 16#1e#);
-                        elsif (enable_ppu_step_cnt = 3 * cpu_io_multi) then
+                        elsif (enable_ppu_step_cnt = 1 * cpu_io_multi) then
                             --enable nmi
                             --PPUCTRL=80
                             io_out(16#2000#, 16#80#);
                         else
                             io_brk;
-                            if (enable_ppu_step_cnt > 4 * cpu_io_multi) then
+                            if (enable_ppu_step_cnt > 1 * cpu_io_multi) then
                                 global_step_cnt := global_step_cnt + 1;
                             end if;
                         end if;
                         enable_ppu_step_cnt := enable_ppu_step_cnt + 1;
 
+                    elsif (global_step_cnt = 7) then
+                        ----nmi tests.....
+                        if (nmi_n = '0') then
+
+                            if (nmi_step_cnt = 0 * cpu_io_multi) then
+                                --set sprite addr=00 (first sprite)
+                                io_out(16#2003#, 16#03#);
+                            elsif (nmi_step_cnt = 1 * cpu_io_multi) then
+                                --set sprite data: x=100
+                                io_out(16#2004#, nmi_oam_x);
+                            elsif (nmi_step_cnt = 2 * cpu_io_multi) then
+                                --scroll x=0
+--                                io_out(16#2005#, nmi_scl_y);
+                            elsif (nmi_step_cnt = 3 * cpu_io_multi) then
+                                --scroll y++
+--                                io_out(16#2005#, nmi_scl_y);
+                            else
+                                nmi_oam_x := nmi_oam_x + 1;
+                                if (nmi_step_cnt mod 10 = 0) then
+                                    nmi_scl_y := nmi_scl_y + 1;
+                                end if;
+                                io_brk;
+                                if (nmi_step_cnt > 3 * cpu_io_multi) then
+                                    global_step_cnt := global_step_cnt + 1;
+                                end if;
+                            end if;
+                            nmi_step_cnt := nmi_step_cnt + 1;
+                        end if;
+                    elsif (global_step_cnt = 8) then
+                        ----back to nmi tests.....
+                        if (nmi_n = '1') then
+                            nmi_step_cnt := 0;
+                            global_step_cnt := global_step_cnt - 1;
+                        end if;
                     else
                         io_brk;
                         init_done := '1';

@@ -143,68 +143,46 @@ begin
     main_p : process (clk, v_addr, v_data, wr_n)
     begin
         if (v_addr(13) = '1') then
-            ---name tbl
-            if ((v_addr(12) and v_addr(11) and v_addr(10) 
-                        and v_addr(9) and v_addr(8)) = '0') then
-                if (nt_v_mirror = '1') then
-                    --bit 10 is the name table selector.
-                    if (v_addr(10) = '0') then
-                        --name table 0 enable.
-                        nt1_ce_n_in <= '1';
-                        if (wr_n = '0') then
-                            --write
-                            nt0_ce_n_in <= not clk;
-                        elsif (rd_n = '0') then 
-                            --read
-                            nt0_ce_n_in <= '0';
-                        else
-                            nt0_ce_n_in <= '1';
-                        end if;
-                    else
-                        --name table 1 enable.
-                        nt0_ce_n_in <= '1';
-                        if (wr_n = '0') then
-                            --write
-                            nt1_ce_n_in <= clk;
-                        elsif (rd_n = '0') then 
-                            --read
-                            nt1_ce_n_in <= '0';
-                        else
-                            nt1_ce_n_in <= '1';
-                        end if;
-                    end if;
-                else
-                    --horizontal mirror.
-                    --bit 11 is the name table selector.
-                    if (v_addr(11) = '0') then
-                        --name table 0 enable.
-                        nt1_ce_n_in <= '1';
-                        if (wr_n = '0') then
-                            --write
-                            nt0_ce_n_in <= clk;
-                        elsif (rd_n = '0') then 
-                            --read
-                            nt0_ce_n_in <= '0';
-                        else
-                            nt0_ce_n_in <= '1';
-                        end if;
-                    else
-                        --name table 1 enable.
-                        nt0_ce_n_in <= '1';
-                        if (wr_n = '0') then
-                            --write
-                            nt1_ce_n_in <= clk;
-                        elsif (rd_n = '0') then 
-                            --read
-                            nt1_ce_n_in <= '0';
-                        else
-                            nt1_ce_n_in <= '1';
-                        end if;
-                    end if;
-                end if; --if (nt_v_mirror = '1') then
-            else
+            if (v_addr(13 downto 8) = "111111") then
+                --palette ram
                 nt0_ce_n_in <= '1';
                 nt1_ce_n_in <= '1';
+            else
+                ---name tbl
+                if (((v_addr(11) or v_addr(10)) = '0') 
+                    or (nt_v_mirror = '1' and v_addr(11) = '1' and v_addr(10) = '0')
+                    or (nt_v_mirror = '0' and v_addr(11) = '0' and v_addr(10) = '1')
+                    ) then
+                    --name table 0 enable.
+                    nt1_ce_n_in <= '1';
+                    if (wr_n = '0') then
+                        --write
+                        nt0_ce_n_in <= not clk;
+                    elsif (rd_n = '0') then 
+                        --read
+                        nt0_ce_n_in <= '0';
+                    else
+                        nt0_ce_n_in <= '1';
+                    end if;
+                elsif (((v_addr(11) and v_addr(10)) = '1') 
+                    or (nt_v_mirror = '1' and v_addr(11) = '0' and v_addr(10) = '1')
+                    or (nt_v_mirror = '0' and v_addr(11) = '1' and v_addr(10) = '0')
+                    ) then
+                    --name table 1 enable.
+                    nt0_ce_n_in <= '1';
+                    if (wr_n = '0') then
+                        --write
+                        nt1_ce_n_in <= clk;
+                    elsif (rd_n = '0') then 
+                        --read
+                        nt1_ce_n_in <= '0';
+                    else
+                        nt1_ce_n_in <= '1';
+                    end if;
+                else
+                    nt0_ce_n_in <= '1';
+                    nt1_ce_n_in <= '1';
+                end if;
             end if;
         else
             nt0_ce_n_in <= '1';

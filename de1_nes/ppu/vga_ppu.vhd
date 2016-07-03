@@ -669,6 +669,8 @@ signal spr_y_tmp        : std_logic_vector (dsize - 1 downto 0);
 signal spr_tile_tmp     : std_logic_vector (dsize - 1 downto 0);
 signal spr_ptn_in       : std_logic_vector (dsize - 1 downto 0);
 
+signal sprite0_evaluated    : std_logic;
+signal sprite0_displayed    : std_logic;
 
 begin
     dbg_ppu_clk <= ppu_clk;
@@ -747,11 +749,9 @@ begin
 
     prf_y <= cur_y + ppu_scroll_y
                     when cur_x < conv_std_logic_vector(HSCAN, X_SIZE) and
-                         cur_y + ppu_scroll_y <
-                            conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE) else
+                         cur_y < conv_std_logic_vector(VSCAN, X_SIZE) else
              cur_y + ppu_scroll_y + "000000001" 
-                    when cur_y + ppu_scroll_y <
-                            conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE) else
+                    when cur_y < conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE) else
              "000000000"; 
 
     nt_inst : d_flip_flop generic map(dsize)
@@ -984,51 +984,51 @@ begin
         end if; --if (rst_n = '0') then
     end process;
 
-    clk_p : process (rst_n, ppu_clk, read_status)
+    clk_p : process (rst_n, ppu_clk)
 
 procedure output_rgb is
 variable pl_addr : integer;
 variable pl_index : integer;
-variable dot_output : boolean;
 begin
-    dot_output := false;
-
-    --first show sprite.
-    if (ppu_mask(PPUSSP) = '1') then
-        for i in 0 to 7 loop
-            if (spr_x_cnt(i) = "00000000") then
-                if ((spr_ptn_h(i)(0) or spr_ptn_l(i)(0)) = '1') then
-                    dot_output := true;
-                    exit;
-                end if;
-            end if;
-        end loop;
+    if (rst_n = '0') then
+        b <= (others => '0');
+        g <= (others => '0');
+        r <= (others => '0');
+    else
+        if ((cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
+            (cur_y < conv_std_logic_vector(VSCAN, X_SIZE))) then
+            --if or if not bg/sprite is shown, output color anyway 
+            --sinse universal bg color is included..
+            pl_index := conv_integer(plt_data(5 downto 0));
+            b <= nes_color_palette(pl_index) (11 downto 8);
+            g <= nes_color_palette(pl_index) (7 downto 4);
+            r <= nes_color_palette(pl_index) (3 downto 0);
+        else
+            b <= (others => '0');
+            g <= (others => '0');
+            r <= (others => '0');
+        end if;
     end if;
-
-    if (dot_output = true and ppu_mask(PPUSBG) = '1' and 
-            (disp_ptn_h(0) or disp_ptn_l(0)) = '1') then
-        --raise sprite 0 hit.
-        ppu_status(ST_SP0) <= '1';
-    end if;
-
-    --first color in the palette is transparent color.
-    if (ppu_mask(PPUSBG) = '1' and dot_output = false and 
-            (disp_ptn_h(0) or disp_ptn_l(0)) = '1') then
-        dot_output := true;
-    end if;
-
-    --if or if not bg/sprite is shown, output color anyway 
-    --sinse universal bg color is included..
-    pl_index := conv_integer(plt_data(5 downto 0));
-    b <= nes_color_palette(pl_index) (11 downto 8);
-    g <= nes_color_palette(pl_index) (7 downto 4);
-    r <= nes_color_palette(pl_index) (3 downto 0);
 end;
-procedure stop_rgb is
+
+procedure set_sp0_hit is
 begin
-    b <= (others => '0');
-    g <= (others => '0');
-    r <= (others => '0');
+    if (rst_n = '0') then
+        ppu_status(ST_SP0) <= '0';
+    else
+        if ((cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
+            (cur_y < conv_std_logic_vector(VSCAN, X_SIZE))) then
+            if (sprite0_displayed = '1' 
+                and (ppu_mask(PPUSSP) = '1' and (spr_x_cnt(0) & (spr_ptn_h(0)(0) or spr_ptn_l(0)(0)) = "000000001"))
+                and (ppu_mask(PPUSBG) = '1' and ((disp_ptn_h(0) or disp_ptn_l(0)) = '1'))
+                    ) then
+                --raise sprite 0 hit.
+                ppu_status(ST_SP0) <= '1';
+            end if;
+        else
+            ppu_status(ST_SP0) <= '0';
+        end if;
+    end if;
 end;
 
     begin
@@ -1036,7 +1036,6 @@ end;
             nt_we_n <= '1';
             ppu_status <= (others => '0');
             s_oam_data <= (others => 'Z');
-            stop_rgb;
         else
 
             if (ppu_clk'event and ppu_clk = '1') then
@@ -1201,6 +1200,11 @@ end;
                                     s_oam_cnt_ce_n <= '0';
                                     --copy remaining oam entry.
                                     p_oam_cnt_ce_n <= '1';
+                                    
+                                    --check sprite 0 is used.
+                                    if (p_oam_cnt = "00000000") then
+                                        sprite0_evaluated <= '1';
+                                    end if;
                                 else
                                     --goto next entry
                                     p_oam_cnt_ce_n <= '0';
@@ -1310,6 +1314,11 @@ end;
                         else
                             spr_ptn_h_we_n(conv_integer(s_oam_addr_cpy(4 downto 2) - "001")) <= '1';
                         end if;
+                        
+                        --check sprite 0 is used in the next line.
+                        if (sprite0_evaluated = '1') then
+                            sprite0_displayed <= '1';
+                        end if;
 
                     elsif (cur_x > conv_std_logic_vector(320, X_SIZE)) then
                         --clear last write enable.
@@ -1335,29 +1344,29 @@ end;
                         spr_x_ce_n <= "11111111";
                         spr_ptn_ce_n <= "11111111";
                     end if; --if ((cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) 
-                end if; --if (ppu_mask(PPUSSP) = '1') then
+                else
+                    --sprite evaluation are cleared during the blank line.
+                    sprite0_evaluated <= '0';
+                    sprite0_displayed <= '0';
+                end if; --if (ppu_mask(PPUSSP) = '1') 
+                        --(cur_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+                        --cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE))) then
+                
 
                 --output visible area only.
-                if ((cur_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
-                    (cur_y < conv_std_logic_vector(VSCAN, X_SIZE))) then
-                    --output image.
-                    output_rgb;
-                else
-                    stop_rgb;
-                end if;
+                output_rgb;
 
                 --flag operation
-                if ((cur_x = conv_std_logic_vector(1, X_SIZE)) and
-                    (cur_y = conv_std_logic_vector(VSCAN + 1, X_SIZE))) then
+                --TODO: sprite overflow is not inplemented!
+                ppu_status(ST_SOF) <= '0';
+                set_sp0_hit;
+
+                if ((cur_y > conv_std_logic_vector(VSCAN, X_SIZE))) then
                     --vblank start
                     ppu_status(ST_VBL) <= '1';
-                elsif ((cur_x = conv_std_logic_vector(1, X_SIZE)) and
-                    (cur_y = conv_std_logic_vector(VSCAN_MAX - 1, X_SIZE))) then
-                    ppu_status(ST_SP0) <= '0';
+                else
                     --vblank end
                     ppu_status(ST_VBL) <= '0';
-                    --TODO: sprite overflow is not inplemented!
-                    ppu_status(ST_SOF) <= '0';
                 end if;
             end if; --if (clk'event and clk = '1') then
 

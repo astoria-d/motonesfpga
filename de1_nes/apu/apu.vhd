@@ -63,16 +63,17 @@ signal dma_addr         : std_logic_vector (dsize * 2 - 1 downto 0);
 signal dma_cnt_ce_n     : std_logic_vector(0 downto 0);
 signal dma_cnt_ce       : std_logic;
 signal dma_start_n      : std_logic;
+signal dma_write_we_n   : std_logic;
 signal dma_end_n        : std_logic;
 signal dma_process_n    : std_logic;
 signal dma_rst_n        : std_logic;
-signal dma_status_we_n  : std_logic;
 signal dma_status       : std_logic_vector(1 downto 0);
 signal dma_next_status  : std_logic_vector(1 downto 0);
 
 constant DMA_ST_IDLE    : std_logic_vector(1 downto 0) := "00";
 constant DMA_ST_SETUP   : std_logic_vector(1 downto 0) := "01";
 constant DMA_ST_PROCESS : std_logic_vector(1 downto 0) := "10";
+constant DMA_ST_COMPLETE : std_logic_vector(1 downto 0) := "11";
 
 begin
 
@@ -88,42 +89,40 @@ begin
             port map (clk, dma_rst_n, dma_cnt_ce, '1', (others => '0'), 
                                                 dma_addr(dsize - 1 downto 0));
     dma_h_inst : d_flip_flop generic map(dsize)
-            port map (clk_n, '1', '1', dma_start_n, cpu_d, 
+            port map (clk_n, '1', '1', dma_write_we_n, cpu_d, 
                                                 dma_addr(dsize * 2 - 1 downto dsize));
 
     dma_status_inst : d_flip_flop generic map(2)
-            port map (clk_n, rst_n, '1', dma_status_we_n, dma_next_status, dma_status);
+            port map (clk_n, rst_n, '1', '0', dma_next_status, dma_status);
 
     dma_val_inst : d_flip_flop generic map(dsize)
             port map (clk_n, rst_n, '1', dma_process_n, cpu_d, oam_data);
 
-    --apu register access process
-    reg_set_p : process (rst_n, ce_n, r_nw, cpu_addr, cpu_d)
+    dma_write_we_n <= '0'
+            when (ce_n = '0' and r_nw = '0'and cpu_addr(4 downto 0) = OAM_DMA) else
+                '1';
+
+    --dma start process
+    reg_set_p : process (rst_n, clk_n)
     begin
-        if (rst_n = '1' and ce_n = '0') then
-            if (r_nw = '0') then
-                --apu write
-                cpu_d <= (others => 'Z');
-                if (cpu_addr(4 downto 0) = OAM_DMA) then
-                    dma_start_n <= '0';
-                else
-                    dma_start_n <= '1';
-                end if;
-            elsif (r_nw = '1') then
-                --apu read
-                if (cpu_addr(4 downto 0) = OAM_JP1) then
-                    cpu_d <= (others => '0');
-                elsif (cpu_addr(4 downto 0) = OAM_JP2) then
-                    cpu_d <= (others => '0');
-                else
-                    --return dummy zero vale.
-                    cpu_d <= (others => '0');
-                end if;
-            end if;
-        else
-            cpu_d <= (others => 'Z');
+        if (rst_n = '0') then
             dma_start_n <= '1';
-        end if; --if (rst_n = '1' and ce_n = '0') 
+            rdy <= '1';
+        elsif (rising_edge(clk_n)) then
+            if (ce_n = '0' and r_nw = '0' and cpu_addr(4 downto 0) = OAM_DMA) then
+                dma_start_n <= '0';
+            else
+                dma_start_n <= '1';
+            end if; --if (ce_n = '0') 
+
+            if (ce_n = '0' and r_nw = '0' and cpu_addr(4 downto 0) = OAM_DMA) then
+                --pull rdy pin down to stop cpu bus accessing.
+                rdy <= '0';
+            elsif (dma_end_n = '0') then
+                --pull rdy pin up to re-enable cpu bus accessing.
+                rdy <= '1';
+            end if; --if (ce_n = '0') 
+        end if; --if (rst_n = '0') then
     end process;
 
     --dma operation process
@@ -139,11 +138,12 @@ begin
         elsif (rising_edge(clk)) then
             if (dma_status = DMA_ST_IDLE) then
                 if (dma_start_n = '0') then
-                    dma_status_we_n <= '0';
                     dma_next_status <= DMA_ST_SETUP;
+                else
+                    dma_next_status <= DMA_ST_IDLE;
                 end if;
-                dma_process_n <= '1';
                 dma_end_n <= '1';
+                dma_process_n <= '1';
                 cpu_addr <= (others => 'Z');
                 cpu_d <= (others => 'Z');
                 r_nw <= 'Z';
@@ -154,13 +154,10 @@ begin
                 dma_next_status <= DMA_ST_PROCESS;
             elsif (dma_status = DMA_ST_PROCESS) then
                 if (dma_addr(dsize - 1 downto 0) = "11111111" and dma_cnt_ce_n(0) = '1') then
-                    dma_status_we_n <= '0';
-                    dma_next_status <= DMA_ST_IDLE;
-                    dma_end_n <= '0';
+                    dma_next_status <= DMA_ST_COMPLETE;
                 else
-                    dma_status_we_n <= '1';
+                    dma_next_status <= DMA_ST_PROCESS;
                     dma_process_n <= '0';
-                    dma_end_n <= '1';
                 end if;
 
                 if (dma_cnt_ce_n(0) = '0') then
@@ -172,24 +169,38 @@ begin
                     cpu_addr <= OAMDATA;
                     cpu_d <= oam_data;
                 end if;
+            elsif (dma_status = DMA_ST_COMPLETE) then
+                dma_next_status <= DMA_ST_IDLE;
+                dma_process_n <= '1';
+                dma_end_n <= '0';
+                r_nw <= 'Z';
+                cpu_addr <= (others => 'Z');
+                cpu_d <= (others => 'Z');
             end if;--if (dma_status = DMA_ST_IDLE) then
         end if;--if (rst_n = '0') then
     end process;
 
-    rdy_p : process (rst_n, clk_n)
-    begin
-        if (rst_n = '0') then
-            rdy <= '1';
-        elsif (rising_edge(clk_n)) then
-            if (dma_start_n = '0') then
-                --pull rdy pin down to stop cpu bus accessing.
-                rdy <= '0';
-            elsif (dma_end_n = '0') then
-                --pull rdy pin up to re-enable cpu bus accessing.
-                rdy <= '1';
-            end if;
-        end if;
-    end process;
+--    --joy pad process..
+--    jp_p : process (rst_n, clk_n)
+--    begin
+--        if (rst_n = '0') then
+--            cpu_d <= (others => 'Z');
+--        elsif (rising_edge(clk)) then
+--            if (ce_n = '0' and r_nw = '1') then
+--                --joy pad read
+--                --return dummy zero vale.
+--                if (cpu_addr(4 downto 0) = OAM_JP1) then
+--                    cpu_d <= (others => '0');
+--                elsif (cpu_addr(4 downto 0) = OAM_JP2) then
+--                    cpu_d <= (others => '0');
+--                else
+--                    cpu_d <= (others => 'Z');
+--                end if;
+--            else
+--                cpu_d <= (others => 'Z');
+--            end if; --if (ce_n = '0') 
+--        end if; --if (rst_n = '0') then
+--    end process;
 
 end rtl;
 
