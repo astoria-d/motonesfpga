@@ -96,23 +96,26 @@ add wave -label nes_x -radix decimal -unsigned sim:/testbench_motones_sim/sim_bo
 #add wave -label vga_y -radix decimal -unsigned sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/vga_y
 add wave -label nes_y -radix decimal -unsigned sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/nes_y
 
+add wave -label ale sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/ale
+add wave -label rd_n sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/rd_n
+add wave -label wr_n sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/wr_n
 
-add wave -label cur_x -radix decimal -unsigned sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/ppu_render_inst/cur_x
-add wave -label prf_x -radix decimal -unsigned sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/ppu_render_inst/prf_x
-add wave -label cur_y -radix decimal -unsigned sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/ppu_render_inst/cur_y
-add wave -label prf_y -radix decimal -unsigned sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/ppu_render_inst/prf_y
-
-add wave -label disp_nt -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/ppu_render_inst/disp_nt
-add wave -label disp_attr -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/ppu_render_inst/disp_attr
-add wave -label attr_val -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/ppu_render_inst/attr_val
+#add wave -label cur_x -radix decimal -unsigned sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/ppu_render_inst/cur_x
+#add wave -label prf_x -radix decimal -unsigned sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/ppu_render_inst/prf_x
+#add wave -label cur_y -radix decimal -unsigned sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/ppu_render_inst/cur_y
+#add wave -label prf_y -radix decimal -unsigned sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/ppu_render_inst/prf_y
+#
+#add wave -label disp_nt -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/ppu_render_inst/disp_nt
+#add wave -label disp_attr -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/ppu_render_inst/disp_attr
+#add wave -label attr_val -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/ppu_render_inst/attr_val
 
 
 #add wave -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/nes_r \
 #sim:/testbench_motones_sim/sim_board/ppu_inst/nes_g \
 #sim:/testbench_motones_sim/sim_board/ppu_inst/nes_b
 
-add wave -label h_sync_n sim:/testbench_motones_sim/sim_board/ppu_inst/h_sync_n
-add wave -label v_sync_n sim:/testbench_motones_sim/sim_board/ppu_inst/v_sync_n
+#add wave -label h_sync_n sim:/testbench_motones_sim/sim_board/ppu_inst/h_sync_n
+#add wave -label v_sync_n sim:/testbench_motones_sim/sim_board/ppu_inst/v_sync_n
 
 
 
@@ -133,7 +136,7 @@ view structure
 view signals
 
 run 8 us
-run 6000 us
+run 1000 us
 wave zoom full
 #run 10000 us
 
