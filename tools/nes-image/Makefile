@@ -1,6 +1,6 @@
-IMAGE = pacman
+#IMAGE = pacman
 #IMAGE = donkey-kong
-#IMAGE = smb
+IMAGE = smb
 
 all :
 	./dd-img.sh $(IMAGE)
