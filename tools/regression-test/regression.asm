@@ -678,9 +678,13 @@ nmi_test:
 .endproc
 
 .proc update_scroll
-    lda #$00
+    lda scroll_x
+    inc scroll_x
+    inc scroll_x
+    clc
+    adc 1
+;;    lda #$00
     sta $2005
-    sta scroll_x
 
     ldx scroll_y
     inx
@@ -688,7 +692,7 @@ nmi_test:
     bne :+
     ldx #0
 :
-    ldx #80
+;;    ldx #80
     stx $2005
     stx scroll_y
 
