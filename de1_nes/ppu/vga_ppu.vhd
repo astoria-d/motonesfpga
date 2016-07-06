@@ -713,60 +713,15 @@ begin
             port map (mem_clk, plt_ram_ce_n, plt_r_n, plt_w_n, plt_addr, plt_data);
 
     -----------------------------------------
-    ---ppu main process
+    ---sprite main process
     -----------------------------------------
-    clk_p : process (rst_n, emu_ppu_clk)
-
-procedure output_rgb is
-variable pl_addr : integer;
-variable pl_index : integer;
-begin
-    if (rst_n = '0') then
-        b <= (others => '0');
-        g <= (others => '0');
-        r <= (others => '0');
-    else
-        if ((nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
-            (nes_y < conv_std_logic_vector(VSCAN, X_SIZE))) then
-            --if or if not bg/sprite is shown, output color anyway 
-            --sinse universal bg color is included..
-            pl_index := conv_integer(plt_data(5 downto 0));
-            b <= nes_color_palette(pl_index) (11 downto 8);
-            g <= nes_color_palette(pl_index) (7 downto 4);
-            r <= nes_color_palette(pl_index) (3 downto 0);
-        else
-            b <= (others => '0');
-            g <= (others => '0');
-            r <= (others => '0');
-        end if;
-    end if;
-end;
-
-procedure set_sp0_hit is
-begin
-    if (rst_n = '0') then
-        ppu_status(ST_SP0) <= '0';
-    else
-        if ((nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
-            (nes_y < conv_std_logic_vector(VSCAN, X_SIZE))) then
-            if (sprite0_displayed = '1' 
-                and (ppu_mask(PPUSSP) = '1' and (spr_x_cnt(0) & (spr_ptn_h(0)(0) or spr_ptn_l(0)(0)) = "000000001"))
-                and (ppu_mask(PPUSBG) = '1' and ((disp_ptn_h(0) or disp_ptn_l(0)) = '1'))
-                    ) then
-                --raise sprite 0 hit.
-                ppu_status(ST_SP0) <= '1';
-            end if;
-        else
-            ppu_status(ST_SP0) <= '0';
-        end if;
-    end if;
-end;
-
+    spr_main_p : process (rst_n, emu_ppu_clk)
     begin
         if (rst_n = '0') then
             nt_we_n <= '1';
-            ppu_status <= (others => '0');
             s_oam_data <= (others => 'Z');
+            sprite0_evaluated <= '0';
+            sprite0_displayed <= '0';
         else
 
             if (rising_edge(emu_ppu_clk)) then
@@ -776,7 +731,7 @@ end;
                         (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                         nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE))) then
                     --secondary oam clear
-                    if (nes_x /= "000000000" and nes_x <= conv_std_logic_vector(64, X_SIZE)) then
+                    if (nes_x /= "000000000" and nes_x <= conv_std_logic_vector(HSCAN_OAM_EVA_START, X_SIZE)) then
                         if (nes_x(0) = '0') then
                             --write secondary oam on even cycle
                             s_oam_r_n <= '1';
@@ -791,8 +746,8 @@ end;
                         oam_ev_status <= EV_STAT_COMP;
 
                     --sprite evaluation and secondary oam copy.
-                    elsif (nes_x > conv_std_logic_vector(64, X_SIZE) and 
-                            nes_x <= conv_std_logic_vector(256, X_SIZE)) then
+                    elsif (nes_x > conv_std_logic_vector(HSCAN_OAM_EVA_START, X_SIZE) and 
+                            nes_x <= conv_std_logic_vector(HSCAN, X_SIZE)) then
                         p_oam_cnt_res_n <= '1';
 
                         --TODO: sprite evaluation is simplified!!
@@ -873,7 +828,7 @@ end;
                         spr_ptn_h_we_n <= "11111111";
 
                     --sprite pattern fetch
-                    elsif (nes_x > conv_std_logic_vector(256, X_SIZE) and 
+                    elsif (nes_x > conv_std_logic_vector(HSCAN, X_SIZE) and 
                             nes_x <= conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE)) then
 
                         s_oam_addr_cpy_n <= '0';
@@ -959,10 +914,10 @@ end;
                             sprite0_displayed <= '1';
                         end if;
 
-                    elsif (nes_x > conv_std_logic_vector(320, X_SIZE)) then
+                    elsif (nes_x > conv_std_logic_vector(HSCAN_SPR_MAX, X_SIZE)) then
                         --clear last write enable.
                         spr_ptn_h_we_n <= "11111111";
-                    end if;--if (nes_x /= "000000000" and nes_x <= conv_std_logic_vector(64, X_SIZE))
+                    end if;--if (nes_x /= "000000000" and nes_x <= conv_std_logic_vector(HSCAN_OAM_EVA_START, X_SIZE))
 
                     --display sprite.
                     if ((nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
@@ -991,7 +946,65 @@ end;
                         --(nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                         --nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE))) then
                 
+            end if; --if (rising_edge(emu_ppu_clk)) then
 
+        end if;--if (rst_n = '0') then
+    end process;
+
+
+    output_p : process (rst_n, emu_ppu_clk)
+
+procedure output_rgb is
+variable pl_addr : integer;
+variable pl_index : integer;
+begin
+    if (rst_n = '0') then
+        b <= (others => '0');
+        g <= (others => '0');
+        r <= (others => '0');
+    else
+        if ((nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
+            (nes_y < conv_std_logic_vector(VSCAN, X_SIZE))) then
+            --if or if not bg/sprite is shown, output color anyway 
+            --sinse universal bg color is included..
+            pl_index := conv_integer(plt_data(5 downto 0));
+            b <= nes_color_palette(pl_index) (11 downto 8);
+            g <= nes_color_palette(pl_index) (7 downto 4);
+            r <= nes_color_palette(pl_index) (3 downto 0);
+        else
+            b <= (others => '0');
+            g <= (others => '0');
+            r <= (others => '0');
+        end if;
+    end if;
+end;
+
+procedure set_sp0_hit is
+begin
+    if (rst_n = '0') then
+        ppu_status(ST_SP0) <= '0';
+    else
+        if ((nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
+            (nes_y < conv_std_logic_vector(VSCAN, X_SIZE))) then
+            if (sprite0_displayed = '1' 
+                and (ppu_mask(PPUSSP) = '1' and (spr_x_cnt(0) & (spr_ptn_h(0)(0) or spr_ptn_l(0)(0)) = "000000001"))
+                and (ppu_mask(PPUSBG) = '1' and ((disp_ptn_h(0) or disp_ptn_l(0)) = '1'))
+                    ) then
+                --raise sprite 0 hit.
+                ppu_status(ST_SP0) <= '1';
+            end if;
+        else
+            ppu_status(ST_SP0) <= '0';
+        end if;
+    end if;
+end;
+
+    begin
+        if (rst_n = '0') then
+            ppu_status <= (others => '0');
+        else
+
+            if (rising_edge(emu_ppu_clk)) then
                 --output visible area only.
                 output_rgb;
 
@@ -1007,17 +1020,15 @@ end;
                     --vblank end
                     ppu_status(ST_VBL) <= '0';
                 end if;
-            end if; --if (clk'event and clk = '1') then
-
+                
 --            if (read_status'event and read_status = '1') then
 --                --reading ppu status clears vblank bit.
 --                ppu_status(ST_VBL) <= '0';
 --            end if;
 
+            end if; --if (rising_edge(emu_ppu_clk)) then
         end if;--if (rst_n = '0') then
     end process;
-
-
 
 --    ---bg prefetch x pos is 16 + scroll cycle ahead of current pos.
 --    prf_x <= nes_x + ppu_scroll_x + "000010000" 
