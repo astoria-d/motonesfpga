@@ -253,7 +253,7 @@ end;
 
                         else
                             io_brk;
-                            if (nt_step_cnt > 17 * cpu_io_multi) then
+                            if (nt_step_cnt > 5 * cpu_io_multi) then
                                 global_step_cnt := global_step_cnt + 1;
                             end if;
                         end if;
