@@ -60,11 +60,12 @@ add wave -label ppu_mask  -radix hex sim:/testbench_motones_sim/sim_board/dbg_pp
 add wave -label ppu_status   -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_status
 add wave -label ppu_addr -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_addr
 add wave -label ppu_data -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_data
-add wave -label ppu_scrl_x -radix decimal -unsigned  sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x
-add wave -label ppu_scrl_y -radix decimal -unsigned  sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_y
+#add wave -label ppu_scrl_x -radix decimal -unsigned  sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x
+#add wave -label ppu_scrl_y -radix decimal -unsigned  sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_y
 
 
 add wave -divider vga_pos
+add wave -label emu_ppu_clk     sim:/testbench_motones_sim/sim_board/dbg_exec_cycle(3)
 add wave -label nes_x           -radix decimal -unsigned  {sim:/testbench_motones_sim/sim_board/dbg_exec_cycle(0) & 
                                                            sim:/testbench_motones_sim/sim_board/dbg_instruction(7 downto 0)}
 add wave -label nes_y           -radix decimal -unsigned  {sim:/testbench_motones_sim/sim_board/dbg_exec_cycle(4) & 
@@ -96,6 +97,8 @@ add wave  -radix hex -label vram_ad sim:/testbench_motones_sim/sim_board/dbg_vra
 add wave -divider oam
 add wave  -radix hex -label p_oam_addr {sim:/testbench_motones_sim/sim_board/dbg_disp_ptn_l (7 downto 0)}
 add wave  -radix hex -label p_oam_data {sim:/testbench_motones_sim/sim_board/dbg_disp_ptn_l (15 downto 8)}
+add wave  -radix hex -label s_oam_addr {sim:/testbench_motones_sim/sim_board/dbg_int_d_bus (4 downto 0)}
+add wave  -radix hex -label s_oam_data sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_y
 
 #add wave -divider vga_out
 #add wave -label h_sync_n    sim:/testbench_motones_sim/sim_board/v_sync_n
@@ -114,6 +117,7 @@ wave zoom full
 #wave zoom range 3339700 ps 5138320 ps
 
 run 100 us
+run 30 us
 
 ##wave addcursor 907923400 ps
 

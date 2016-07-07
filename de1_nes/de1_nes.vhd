@@ -328,7 +328,7 @@ begin
     cpu_inst : mos6502 generic map (data_size, addr_size) 
         port map (
     dbg_instruction_dummy,
-    dbg_int_d_bus,
+    dbg_int_d_bus_dummy,
     dbg_exec_cycle_dummy,
     dbg_ea_carry,
  --   dbg_index_bus,
@@ -362,7 +362,7 @@ begin
         dbg_ppu_ce_n                                        ,
         dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status          ,
         dbg_ppu_addr                                        ,
-        dbg_ppu_data, dbg_ppu_scrl_x_dummy, dbg_ppu_scrl_y        ,
+        dbg_ppu_data, dbg_ppu_scrl_x_dummy, dbg_ppu_scrl_y_dummy        ,
 
         dbg_ppu_clk                      ,
         dbg_vga_clk                      ,
@@ -446,10 +446,11 @@ begin
 -----------------------------------------------------------
 
 --    dbg_exec_cycle(2 downto 1) <= dbg_vga_x(9 downto 8);
---    dbg_int_d_bus <= dbg_vga_x(7 downto 0);
+    dbg_int_d_bus(4 downto 0) <= dbg_s_oam_addr(4 downto 0);
+    dbg_ppu_scrl_y <= dbg_s_oam_data;
     dbg_exec_cycle(0) <= dbg_nes_x(8);
     dbg_instruction <= dbg_nes_x(7 downto 0);
---    dbg_exec_cycle(3) <= dbg_emu_ppu_clk;
+    dbg_exec_cycle(3) <= dbg_emu_ppu_clk;
 
     dbg_exec_cycle(4) <= dbg_nes_y(8);
     dbg_status <= dbg_nes_y(7 downto 0);

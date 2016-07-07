@@ -216,7 +216,6 @@ signal nes_y        : std_logic_vector (8 downto 0);
 ------- render instance ----------------
 
 --vram i/o
-signal io_cnt           : std_logic_vector(0 downto 0);
 signal io_oe_n          : std_logic;
 signal ah_oe_n          : std_logic;
 
@@ -397,14 +396,15 @@ begin
     dbg_vga_x <= vga_x;
     dbg_vga_y <= vga_y;
     dbg_vga_clk <= vga_clk;
-    
+    dbg_emu_ppu_clk <= emu_ppu_clk;
+
     vga_clk_n <= not vga_clk;
     
     --vga position counter
     vga_x_inst : counter_register generic map (10, 1)
-            port map (vga_clk_n , x_res_n, '0', '1', (others => '0'), vga_x);
+            port map (vga_clk, x_res_n, '0', '1', (others => '0'), vga_x);
     vga_y_inst : counter_register generic map (10, 1)
-            port map (vga_clk_n, y_res_n, y_en_n, '1', (others => '0'), vga_y);
+            port map (vga_clk, y_res_n, y_en_n, '1', (others => '0'), vga_y);
     vga_out_p : process (rst_n, vga_clk)
     begin
         if (rst_n = '0') then
@@ -450,7 +450,7 @@ begin
     --nes position counter
     count1_inst : counter_register generic map (1, 1)
             port map (vga_clk , rst_n, '0', '1', (others => '0'), count1);
-    emu_ppu_clk <= count1(0);
+    emu_ppu_clk <= not count1(0);
     emu_ppu_clk_n <= count1(0);
     nes_x <= vga_x(9 downto 1);
     nes_y <= vga_y(9 downto 1);
@@ -484,16 +484,14 @@ begin
     -----------------------------------------
     ---vram access signals
     -----------------------------------------
-    io_cnt_inst : counter_register generic map (1, 1)
-            port map (emu_ppu_clk_n, rst_n, '0', '1', (others => '0'), io_cnt);
     ale <= 
-           not io_cnt(0) when (
+           nes_x(0) when (
                 ((ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
                 (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                 nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
            'Z';
     rd_n <= 
-           not io_cnt(0) when (
+           nes_x(0) when (
                 ((ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
                 (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                 nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
@@ -505,7 +503,7 @@ begin
                 nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
             'Z';
     io_oe_n <= 
-           io_cnt(0) when (
+           not nes_x(0) when (
                 ((ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
                 (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                 nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
@@ -718,10 +716,32 @@ begin
     spr_main_p : process (rst_n, emu_ppu_clk)
     begin
         if (rst_n = '0') then
-            nt_we_n <= '1';
+            s_oam_addr <= (others => 'Z');
             s_oam_data <= (others => 'Z');
+
+            s_oam_r_n <= '1';
+            s_oam_w_n <= '1';
+            p_oam_cnt_res_n <= '1';
+            p_oam_cnt_ce_n <= '1';
+            s_oam_cnt_ce_n <= '1';
+            p_oam_cnt_wrap_n <= '1';
+            oam_ev_status <= EV_STAT_COMP;
+            p_oam_addr_in <= (others => 'Z');
+
+            s_oam_addr_cpy_n <= '1';
+            spr_y_we_n <= '1';
+            spr_tile_we_n <= '1';
+            spr_x_we_n <= (others => '1');
+            spr_attr_we_n <= (others => '1');
+            spr_ptn_l_we_n <= (others => '1');
+            spr_ptn_h_we_n <= (others => '1');
+            s_oam_addr_cpy_ce_n <= '1';
+            spr_x_ce_n <= (others => '1');
+            spr_ptn_ce_n <= (others => '1');
+
             sprite0_evaluated <= '0';
             sprite0_displayed <= '0';
+
         else
 
             if (rising_edge(emu_ppu_clk)) then
@@ -731,14 +751,14 @@ begin
                         (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                         nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE))) then
                     --secondary oam clear
-                    if (nes_x /= "000000000" and nes_x <= conv_std_logic_vector(HSCAN_OAM_EVA_START, X_SIZE)) then
-                        if (nes_x(0) = '0') then
+                    if (nes_x <= conv_std_logic_vector(HSCAN_OAM_EVA_START, X_SIZE)) then
+                        if (nes_x(0) = '1') then
                             --write secondary oam on even cycle
-                            s_oam_r_n <= '1';
-                            s_oam_w_n <= '0';
                             s_oam_addr <= nes_x(5 downto 1);
-                            s_oam_data <= (others => '1');
                         end if;
+                        s_oam_r_n <= '1';
+                        s_oam_w_n <= '0';
+                        s_oam_data <= (others => '1');
                         p_oam_cnt_res_n <= '0';
                         p_oam_cnt_ce_n <= '1';
                         s_oam_cnt_ce_n <= '1';
@@ -829,7 +849,7 @@ begin
 
                     --sprite pattern fetch
                     elsif (nes_x > conv_std_logic_vector(HSCAN, X_SIZE) and 
-                            nes_x <= conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE)) then
+                            nes_x <= conv_std_logic_vector(HSCAN_SPR_MAX, X_SIZE)) then
 
                         s_oam_addr_cpy_n <= '0';
                         s_oam_r_n <= '0';
@@ -1073,6 +1093,7 @@ end;
 
 
 
+--            nt_we_n <= '1';
 
 --                --fetch bg pattern and display.
 --                if (ppu_mask(PPUSBG) = '1' and 
