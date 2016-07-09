@@ -1,0 +1,7 @@
+*.log
+*.nes
+*.sof
+*.pof
+*.hex
+*.bin
+*-work.txt
