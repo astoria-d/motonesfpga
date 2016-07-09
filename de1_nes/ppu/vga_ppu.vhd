@@ -479,7 +479,7 @@ begin
     dbg_p_oam_data                   <= p_oam_data;
     dbg_s_oam_ce_rn_wn               <= s_oam_ram_ce_n & s_oam_r_n & s_oam_w_n;
     dbg_s_oam_addr                   <= s_oam_addr;
-    dbg_s_oam_data                   <= p_oam_data;
+    dbg_s_oam_data                   <= s_oam_data;
 
     -----------------------------------------
     ---vram access signals
@@ -526,24 +526,21 @@ begin
                          (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                          nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)) and
                          nes_x > conv_std_logic_vector(HSCAN_OAM_EVA_START, X_SIZE) and 
-                         nes_x <= conv_std_logic_vector(HSCAN, X_SIZE) and
-                         p_oam_cnt_wrap_n = '1' else
+                         nes_x <= conv_std_logic_vector(HSCAN, X_SIZE) else
                     '1';
     p_oam_addr <= oam_plt_addr when oam_bus_ce_n = '0' else
                 p_oam_addr_in when ppu_mask(PPUSSP) = '1' and 
                          (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                          nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)) and
                          nes_x > conv_std_logic_vector(HSCAN_OAM_EVA_START, X_SIZE) and 
-                         nes_x <= conv_std_logic_vector(HSCAN, X_SIZE) and
-                         p_oam_cnt_wrap_n = '1' else
+                         nes_x <= conv_std_logic_vector(HSCAN, X_SIZE) else
                 (others => 'Z');
     p_oam_r_n <= not r_nw when oam_bus_ce_n = '0' else
                 '0' when ppu_mask(PPUSSP) = '1' and 
                          (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                          nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)) and
                          nes_x > conv_std_logic_vector(HSCAN_OAM_EVA_START, X_SIZE) and 
-                         nes_x <= conv_std_logic_vector(HSCAN, X_SIZE) and
-                         p_oam_cnt_wrap_n = '1' else
+                         nes_x <= conv_std_logic_vector(HSCAN, X_SIZE) else
                 '1';
     p_oam_w_n <= r_nw when oam_bus_ce_n = '0' else
                 '1';
@@ -560,22 +557,26 @@ begin
     -----------------------------------------
     ---secondary oam implementation
     -----------------------------------------
+    --primary oam copy count
     p_oam_cnt_inst : counter_register generic map (dsize, 4)
             port map (emu_ppu_clk_n, p_oam_cnt_res_n, p_oam_cnt_ce_n, '1', (others => '0'), p_oam_cnt);
+    --primary oam copy count
     s_oam_cnt_inst : counter_register generic map (5, 1)
             port map (emu_ppu_clk_n, p_oam_cnt_res_n, s_oam_cnt_ce_n, '1', (others => '0'), s_oam_cnt);
+    --secondary oam pattern index.
     s_oam_addr_cpy_inst : counter_register generic map (5, 1)
             port map (emu_ppu_clk_n, p_oam_cnt_res_n, s_oam_addr_cpy_ce_n, 
                     '1', (others => '0'), s_oam_addr_cpy);
 
     s_oam_ram_ce_n_in <= 
-                      '0' when ppu_mask(PPUSSP) = '1' and nes_x(0) = '1' and
-                                nes_x > "000000001" and
+                      --enabled on clear only.
+                      '0' when ppu_mask(PPUSSP) = '1' and nes_x(0) = '0' and
                                 nes_x <= conv_std_logic_vector(HSCAN_OAM_EVA_START, X_SIZE) else
-                      '0' when ppu_mask(PPUSSP) = '1' and nes_x(0) = '1' and
+                      --enabled on copy only.
+                      '0' when ppu_mask(PPUSSP) = '1' and nes_x(0) = '0' and
                                 nes_x > conv_std_logic_vector(HSCAN_OAM_EVA_START, X_SIZE) and
-                                nes_x <= conv_std_logic_vector(HSCAN, X_SIZE) and
-                                p_oam_cnt_wrap_n = '1' else
+                                nes_x <= conv_std_logic_vector(HSCAN, X_SIZE) else
+                      --enabled all the time for reference.
                       '0' when ppu_mask(PPUSSP) = '1' and
                                 nes_x > conv_std_logic_vector(HSCAN, X_SIZE) and
                                 nes_x <= conv_std_logic_vector(HSCAN_SPR_MAX, X_SIZE) and
@@ -587,8 +588,10 @@ begin
     secondary_oam_inst : ram generic map (5, dsize)
             port map (mem_clk, s_oam_ram_ce_n, s_oam_r_n, s_oam_w_n, s_oam_addr, s_oam_data);
 
+    --sprite y tmp val
     spr_y_inst : d_flip_flop generic map(dsize)
             port map (emu_ppu_clk_n, p_oam_cnt_res_n, '1', spr_y_we_n, s_oam_data, spr_y_tmp);
+    --sprite pattern tmp val
     spr_tile_inst : d_flip_flop generic map(dsize)
             port map (emu_ppu_clk_n, p_oam_cnt_res_n, '1', spr_tile_we_n, s_oam_data, spr_tile_tmp);
 
@@ -753,7 +756,8 @@ begin
                     --secondary oam clear
                     if (nes_x <= conv_std_logic_vector(HSCAN_OAM_EVA_START, X_SIZE)) then
                         if (nes_x(0) = '1') then
-                            --write secondary oam on even cycle
+                            --odd cycle is set address.
+                            --even cycle is write data.
                             s_oam_addr <= nes_x(5 downto 1);
                         end if;
                         s_oam_r_n <= '1';
@@ -774,7 +778,6 @@ begin
                         --not complying the original NES spec at
                         --http://wiki.nesdev.com/w/index.php/PPU_sprite_evaluation
                         --e.g., when overflow happens, it just ignore subsequent entry.
-                        --old secondary sprite entry.
                         if (p_oam_cnt = "00000000" and nes_x > conv_std_logic_vector(192, X_SIZE)) then
                             p_oam_cnt_wrap_n <= '0';
                         end if;
@@ -801,7 +804,11 @@ begin
                         else
                         --even cycle copy to secondary oam (if y is in range.)
                             s_oam_r_n <= '1';
-                            s_oam_w_n <= '0';
+                            if (p_oam_cnt_wrap_n <= '1') then
+                                s_oam_w_n <= '0';
+                            else
+                                s_oam_w_n <= '1';
+                            end if;
                             s_oam_addr <= s_oam_cnt;
                             s_oam_data <= p_oam_data;
 

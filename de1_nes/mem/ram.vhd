@@ -125,11 +125,18 @@ signal cnt_clk      : std_logic;
 signal cnt_rst_n    : std_logic;
 signal clk_cnt      : std_logic_vector(5 downto 0);
 
+--cpu clock = base clock / 24 = 2.08 MHz (480 ns / cycle)
+--ppu clock = base clock / 8
+--vga clock = base clock / 2
+--mem clock = base clock
+
 begin
 
     cnt_clk <= not clk;
-    cnt_rst_n <= not ce_n;
-
+    cnt_rst_n <= '1' when ce_n = '0' and we_n = '0' else
+                 '0';
+--counter grows at most 0 .to 23
+--counter width=6 is enough.
     counter_inst : counter_register generic map (6, 1)
             port map (cnt_clk, cnt_rst_n, '0', '1', (others => '0'), clk_cnt);
 
