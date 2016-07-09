@@ -478,8 +478,6 @@ begin
     dbg_vram_a  <= vram_a ;
 
     dbg_sp(7 downto 6) <= dbg_ppu_clk_cnt;
-    dbg_sp(5 downto 0) <= v_addr (13 downto 8);
-    dbg_x <= v_addr (7 downto 0);
 
     dbg_nmi <= nmi_n;
 --    nmi_n <= dummy_nmi;

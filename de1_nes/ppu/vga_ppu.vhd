@@ -216,7 +216,9 @@ signal nes_y        : std_logic_vector (8 downto 0);
 ------- render instance ----------------
 
 --vram i/o
-signal io_oe_n          : std_logic;
+signal io_cnt_rst_n     : std_logic;
+signal io_cnt           : std_logic_vector(0 downto 0);
+signal al_oe_n          : std_logic;
 signal ah_oe_n          : std_logic;
 
 --bg prefetch position (scroll + 16 cycle ahead of current pos)
@@ -275,7 +277,6 @@ signal s_oam_data           : std_logic_vector (dsize - 1 downto 0);
 
 signal p_oam_cnt_res_n  : std_logic;
 signal p_oam_cnt_ce_n   : std_logic;
-signal p_oam_cnt_wrap_n : std_logic;
 signal p_oam_cnt        : std_logic_vector (dsize - 1 downto 0);
 signal p_oam_addr_in    : std_logic_vector (dsize - 1 downto 0);
 signal oam_ev_status    : std_logic_vector (2 downto 0);
@@ -484,26 +485,31 @@ begin
     -----------------------------------------
     ---vram access signals
     -----------------------------------------
+    io_cnt_rst_n <= '0' when nes_x = conv_std_logic_vector(VGA_W_MAX / 2, X_SIZE) else 
+                    '1';
+    io_cnt_inst : counter_register generic map (1, 1)
+            port map (emu_ppu_clk, io_cnt_rst_n, '0', '1', (others => '0'), io_cnt);
+
     ale <= 
-           nes_x(0) when (
+           not io_cnt(0) when (
                 ((ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
                 (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                 nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
            'Z';
     rd_n <= 
-           nes_x(0) when (
+           not io_cnt(0) when (
                 ((ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
                 (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                 nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
             'Z';
     wr_n <= 
-            '0' when (
+            '1' when (
                 ((ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
                 (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                 nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
             'Z';
-    io_oe_n <= 
-           not nes_x(0) when (
+    al_oe_n <= 
+           io_cnt(0) when (
                 ((ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
                 (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                 nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
@@ -516,6 +522,14 @@ begin
             '1';
     v_bus_busy_n <= ah_oe_n;
 
+    -----------------------------------------
+    --vram i/o
+    -----------------------------------------
+    vram_io_buf : tri_state_buffer generic map (dsize)
+            port map (al_oe_n, vram_addr(dsize - 1 downto 0), vram_ad);
+
+    vram_a_buf : tri_state_buffer generic map (6)
+            port map (ah_oe_n, vram_addr(asize - 1 downto dsize), vram_a);
 
     -----------------------------------------
     ---primary oam implementation...
@@ -614,15 +628,6 @@ begin
         spr_ptn_h_inst : shift_register generic map(dsize, 1)
                 port map (emu_ppu_clk_n, rst_n, spr_ptn_ce_n(i), spr_ptn_h_we_n(i), spr_ptn_in, spr_ptn_h(i));
     end generate;
-
-    -----------------------------------------
-    --vram i/o
-    -----------------------------------------
-    vram_io_buf : tri_state_buffer generic map (dsize)
-            port map (io_oe_n, vram_addr(dsize - 1 downto 0), vram_ad);
-
-    vram_a_buf : tri_state_buffer generic map (6)
-            port map (ah_oe_n, vram_addr(asize - 1 downto dsize), vram_a);
 
     -----------------------------------------
     ---palette ram
@@ -727,7 +732,6 @@ begin
             p_oam_cnt_res_n <= '1';
             p_oam_cnt_ce_n <= '1';
             s_oam_cnt_ce_n <= '1';
-            p_oam_cnt_wrap_n <= '1';
             oam_ev_status <= EV_STAT_COMP;
             p_oam_addr_in <= (others => 'Z');
 
@@ -766,7 +770,6 @@ begin
                         p_oam_cnt_res_n <= '0';
                         p_oam_cnt_ce_n <= '1';
                         s_oam_cnt_ce_n <= '1';
-                        p_oam_cnt_wrap_n <= '1';
                         oam_ev_status <= EV_STAT_COMP;
 
                     --sprite evaluation and secondary oam copy.
@@ -774,16 +777,9 @@ begin
                             nes_x <= conv_std_logic_vector(HSCAN, X_SIZE)) then
                         p_oam_cnt_res_n <= '1';
 
-                        --TODO: sprite evaluation is simplified!!
-                        --not complying the original NES spec at
-                        --http://wiki.nesdev.com/w/index.php/PPU_sprite_evaluation
-                        --e.g., when overflow happens, it just ignore subsequent entry.
-                        if (p_oam_cnt = "00000000" and nes_x > conv_std_logic_vector(192, X_SIZE)) then
-                            p_oam_cnt_wrap_n <= '0';
-                        end if;
-
                         --odd cycle copy from primary oam
                         if (nes_x(0) = '1') then
+                            s_oam_w_n <= '1';
                             if (oam_ev_status = EV_STAT_COMP) then
                                 p_oam_addr_in <= p_oam_cnt;
                                 p_oam_cnt_ce_n <= '1';
@@ -804,44 +800,52 @@ begin
                         else
                         --even cycle copy to secondary oam (if y is in range.)
                             s_oam_r_n <= '1';
-                            if (p_oam_cnt_wrap_n <= '1') then
-                                s_oam_w_n <= '0';
-                            else
-                                s_oam_w_n <= '1';
-                            end if;
-                            s_oam_addr <= s_oam_cnt;
-                            s_oam_data <= p_oam_data;
 
-                            if (oam_ev_status = EV_STAT_COMP) then
-                                --check y range.
-                                if (nes_y < "000000110" and p_oam_data <= nes_y + "000000001") or 
-                                    (nes_y >= "000000110" and p_oam_data <= nes_y + "000000001" and 
-                                             p_oam_data >= nes_y - "000000110") then
-                                    oam_ev_status <= EV_STAT_CP1;
-                                    s_oam_cnt_ce_n <= '0';
-                                    --copy remaining oam entry.
-                                    p_oam_cnt_ce_n <= '1';
-                                    
-                                    --check sprite 0 is used.
-                                    if (p_oam_cnt = "00000000") then
-                                        sprite0_evaluated <= '1';
+                            --TODO: sprite evaluation is simplified!!
+                            --not complying the original NES spec at
+                            --http://wiki.nesdev.com/w/index.php/PPU_sprite_evaluation
+                            --e.g., when overflow happens, it just ignore subsequent entry.
+                            if (s_oam_cnt = "00000" and nes_x > conv_std_logic_vector(HSCAN_OAM_EVA_START + 2, X_SIZE)) then
+                                s_oam_cnt_ce_n <= '1';
+                                s_oam_w_n <= '1';
+                                s_oam_addr <= (others => 'Z');
+                                s_oam_data <= (others => 'Z');
+                            else
+                                s_oam_w_n <= '0';
+                                s_oam_addr <= s_oam_cnt;
+                                s_oam_data <= p_oam_data;
+
+                                if (oam_ev_status = EV_STAT_COMP) then
+                                    --check y range.
+                                    if (nes_y < "000000110" and p_oam_data <= nes_y + "000000001") or 
+                                        (nes_y >= "000000110" and p_oam_data <= nes_y + "000000001" and 
+                                                 p_oam_data >= nes_y - "000000110") then
+                                        oam_ev_status <= EV_STAT_CP1;
+                                        s_oam_cnt_ce_n <= '0';
+                                        --copy remaining oam entry.
+                                        p_oam_cnt_ce_n <= '1';
+                                        
+                                        --check sprite 0 is used.
+                                        if (p_oam_cnt = "00000000") then
+                                            sprite0_evaluated <= '1';
+                                        end if;
+                                    else
+                                        --goto next entry
+                                        p_oam_cnt_ce_n <= '0';
                                     end if;
-                                else
-                                    --goto next entry
+                                elsif (oam_ev_status = EV_STAT_CP1) then
+                                    s_oam_cnt_ce_n <= '0';
+                                    oam_ev_status <= EV_STAT_CP2;
+                                elsif (oam_ev_status = EV_STAT_CP2) then
+                                    s_oam_cnt_ce_n <= '0';
+                                    oam_ev_status <= EV_STAT_CP3;
+                                elsif (oam_ev_status = EV_STAT_CP3) then
+                                    s_oam_cnt_ce_n <= '0';
+                                elsif (oam_ev_status = EV_STAT_PRE_COMP) then
+                                    oam_ev_status <= EV_STAT_COMP;
+                                    s_oam_cnt_ce_n <= '0';
                                     p_oam_cnt_ce_n <= '0';
                                 end if;
-                            elsif (oam_ev_status = EV_STAT_CP1) then
-                                s_oam_cnt_ce_n <= '0';
-                                oam_ev_status <= EV_STAT_CP2;
-                            elsif (oam_ev_status = EV_STAT_CP2) then
-                                s_oam_cnt_ce_n <= '0';
-                                oam_ev_status <= EV_STAT_CP3;
-                            elsif (oam_ev_status = EV_STAT_CP3) then
-                                s_oam_cnt_ce_n <= '0';
-                            elsif (oam_ev_status = EV_STAT_PRE_COMP) then
-                                oam_ev_status <= EV_STAT_COMP;
-                                s_oam_cnt_ce_n <= '0';
-                                p_oam_cnt_ce_n <= '0';
                             end if;
                         end if;--if (nes_x(0) = '1') then
 
@@ -944,7 +948,7 @@ begin
                     elsif (nes_x > conv_std_logic_vector(HSCAN_SPR_MAX, X_SIZE)) then
                         --clear last write enable.
                         spr_ptn_h_we_n <= "11111111";
-                    end if;--if (nes_x /= "000000000" and nes_x <= conv_std_logic_vector(HSCAN_OAM_EVA_START, X_SIZE))
+                    end if;--if (nes_x <= conv_std_logic_vector(HSCAN_OAM_EVA_START, X_SIZE))
 
                     --display sprite.
                     if ((nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) and

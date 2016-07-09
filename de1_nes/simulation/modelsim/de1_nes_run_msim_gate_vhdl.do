@@ -81,7 +81,8 @@ add wave -label rd_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x(1)
 add wave -label wr_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x(2)
 #add wave -label nt0_ce_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x(3)
 
-add wave  -radix hex -label v_addr {sim:/testbench_motones_sim/sim_board/dbg_sp(5 downto 0)}
+add wave  -radix hex -label v_addr  {sim:/testbench_motones_sim/sim_board/dbg_vram_a(13 downto 8) & 
+                                     sim:/testbench_motones_sim/sim_board/dbg_vram_ad(7 downto 0)}
 add wave  -radix hex -label vram_ad sim:/testbench_motones_sim/sim_board/dbg_vram_ad
 
 #add wave -label plt_ce_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_y(5)
@@ -116,8 +117,8 @@ wave zoom full
 
 #wave zoom range 3339700 ps 5138320 ps
 
-run 100 us
-run 30 us
+run 850 us
+#run 30 us
 
 ##wave addcursor 907923400 ps
 

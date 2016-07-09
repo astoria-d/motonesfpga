@@ -58,6 +58,8 @@ begin
     variable nmi_oam_x : integer range 0 to 255;
     variable nmi_scl_y : integer range 0 to 255;
 
+    variable ref_cnt : integer range 0 to 120;
+
 procedure io_out (ad: in integer; dt : in integer) is
 begin
     r_nw <= '0';
@@ -90,6 +92,7 @@ end;
             nmi_step_cnt := 0;
             nmi_oam_x := 0;
             nmi_scl_y := 200;
+            ref_cnt := 0;
 
         elsif (rising_edge(input_clk)) then
 
@@ -267,7 +270,7 @@ end;
                             io_out(16#2003#, 16#00#);
                         elsif (spr_step_cnt = 1 * cpu_io_multi) then
                             --set sprite data: y=02
-                            io_out(16#2004#, 16#13#);
+                            io_out(16#2004#, 16#01#);
                         elsif (spr_step_cnt = 2 * cpu_io_multi) then
                             --tile=0x4d (ascii 'M')
                             io_out(16#2004#, 16#4d#);
@@ -419,12 +422,15 @@ end;
                                 --scroll y++
 --                                io_out(16#2005#, nmi_scl_y);
                             else
-                                nmi_oam_x := nmi_oam_x + 1;
+                                if (ref_cnt = 0) then
+                                    nmi_oam_x := nmi_oam_x + 1;
+                                end if;
                                 if (nmi_step_cnt mod 10 = 0) then
                                     nmi_scl_y := nmi_scl_y + 1;
                                 end if;
                                 io_brk;
                                 if (nmi_step_cnt > 3 * cpu_io_multi) then
+                                    ref_cnt := ref_cnt + 1;
                                     global_step_cnt := global_step_cnt + 1;
                                 end if;
                             end if;
