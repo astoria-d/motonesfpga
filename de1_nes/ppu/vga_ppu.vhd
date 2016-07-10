@@ -485,19 +485,30 @@ begin
     -----------------------------------------
     ---vram access signals
     -----------------------------------------
-    io_cnt_rst_n <= '0' when nes_x = conv_std_logic_vector(VGA_W_MAX / 2, X_SIZE) else 
-                    '1';
+    reset_p : process (rst_n, emu_ppu_clk)
+    begin
+        if (rst_n = '0') then
+            io_cnt_rst_n <= '0';
+        else
+            if (rising_edge(emu_ppu_clk)) then
+                if (nes_x >= conv_std_logic_vector(VGA_W_MAX / 2 - 1, X_SIZE)) then io_cnt_rst_n <= '0';
+                else io_cnt_rst_n <= '1';
+                end if; 
+            end if;
+        end if;
+    end process;
+
     io_cnt_inst : counter_register generic map (1, 1)
             port map (emu_ppu_clk, io_cnt_rst_n, '0', '1', (others => '0'), io_cnt);
 
     ale <= 
-           not io_cnt(0) when (
+            not io_cnt(0) when (
                 ((ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
                 (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                 nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
-           'Z';
+            'Z';
     rd_n <= 
-           not io_cnt(0) when (
+            not io_cnt(0) when (
                 ((ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
                 (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                 nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
@@ -509,7 +520,7 @@ begin
                 nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
             'Z';
     al_oe_n <= 
-           io_cnt(0) when (
+            io_cnt(0) when (
                 ((ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
                 (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                 nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
@@ -897,42 +908,14 @@ begin
                             spr_x_we_n(conv_integer(s_oam_addr_cpy(4 downto 2))) <= '1';
                         end if;
 
-                        ----fetch pattern table low byte.
-                        if (nes_x (2 downto 0) = "101" ) then
-                            if (spr_attr(conv_integer(s_oam_addr_cpy(4 downto 2)))(SPRVFL) = '0') then
-                                vram_addr <= "0" & ppu_ctrl(PPUSPA) & 
-                                            spr_tile_tmp(dsize - 1 downto 0) & "0" & 
-                                            (nes_y(2 downto 0) + "001" - spr_y_tmp(2 downto 0));
-                            else
-                                --flip sprite vertically.
-                                vram_addr <= "0" & ppu_ctrl(PPUSPA) & 
-                                            spr_tile_tmp(dsize - 1 downto 0) & "0" & 
-                                            (spr_y_tmp(2 downto 0) - nes_y(2 downto 0) - "010");
-                            end if;
-                        end if;
-
+                        --pattern tbl low vale.
                         if (nes_x (2 downto 0) = "110" ) then
                             spr_ptn_l_we_n(conv_integer(s_oam_addr_cpy(4 downto 2))) <= '0';
                         else
                             spr_ptn_l_we_n(conv_integer(s_oam_addr_cpy(4 downto 2))) <= '1';
                         end if;
 
-                        ----fetch pattern table high byte.
-                        if (nes_x (2 downto 0) = "111" ) then
-                            if (spr_attr(conv_integer(s_oam_addr_cpy(4 downto 2)))(SPRVFL) = '0') then
-                                vram_addr <= "0" & ppu_ctrl(PPUSPA) & 
-                                            spr_tile_tmp(dsize - 1 downto 0) & "0" & 
-                                            (nes_y(2 downto 0) + "001" - spr_y_tmp(2 downto 0))
-                                                + "00000000001000";
-                            else
-                                --flip sprite vertically.
-                                vram_addr <= "0" & ppu_ctrl(PPUSPA) & 
-                                            spr_tile_tmp(dsize - 1 downto 0) & "0"  & 
-                                            (spr_y_tmp(2 downto 0) - nes_y(2 downto 0) - "010")
-                                                + "00000000001000";
-                            end if;
-                        end if;
-
+                        --pattern tbl high vale.
                         if (nes_x (2 downto 0) = "000") then
                             spr_ptn_h_we_n(conv_integer(s_oam_addr_cpy(4 downto 2))) <= '0';
                             s_oam_addr_cpy_ce_n <= '0';
@@ -979,6 +962,64 @@ begin
                 
             end if; --if (rising_edge(emu_ppu_clk)) then
 
+        end if;--if (rst_n = '0') then
+    end process;
+
+    vaddr_p : process (rst_n, emu_ppu_clk)
+    begin
+        if (rst_n = '0') then
+            vram_addr <= (others => 'Z');
+        else
+            if (rising_edge(emu_ppu_clk)) then
+                --fetch sprite and display.
+                if (ppu_mask(PPUSSP) = '1' and
+                        (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+                        nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE))) then
+
+                    --sprite pattern fetch.
+                    if (nes_x > conv_std_logic_vector(HSCAN, X_SIZE) and 
+                        nes_x <= conv_std_logic_vector(HSCAN_SPR_MAX, X_SIZE)) then
+                        
+                        ----fetch pattern table low byte.
+                        if (nes_x (2 downto 0) = "101" ) then
+                            if (spr_attr(conv_integer(s_oam_addr_cpy(4 downto 2)))(SPRVFL) = '0') then
+                                vram_addr <= "0" & ppu_ctrl(PPUSPA) & 
+                                            spr_tile_tmp(dsize - 1 downto 0) & "0" & 
+                                            (nes_y(2 downto 0) + "001" - spr_y_tmp(2 downto 0));
+                            else
+                                --flip sprite vertically.
+                                vram_addr <= "0" & ppu_ctrl(PPUSPA) & 
+                                            spr_tile_tmp(dsize - 1 downto 0) & "0" & 
+                                            (spr_y_tmp(2 downto 0) - nes_y(2 downto 0) - "010");
+                            end if;
+                        
+                        ----fetch pattern table high byte.
+                        elsif (nes_x (2 downto 0) = "111" ) then
+                            if (spr_attr(conv_integer(s_oam_addr_cpy(4 downto 2)))(SPRVFL) = '0') then
+                                vram_addr <= "0" & ppu_ctrl(PPUSPA) & 
+                                            spr_tile_tmp(dsize - 1 downto 0) & "0" & 
+                                            (nes_y(2 downto 0) + "001" - spr_y_tmp(2 downto 0))
+                                                + "00000000001000";
+                            else
+                                --flip sprite vertically.
+                                vram_addr <= "0" & ppu_ctrl(PPUSPA) & 
+                                            spr_tile_tmp(dsize - 1 downto 0) & "0"  & 
+                                            (spr_y_tmp(2 downto 0) - nes_y(2 downto 0) - "010")
+                                                + "00000000001000";
+                            end if;
+                        end if;
+
+                    else
+                        vram_addr <= (others => 'Z');
+                    end if; --if (nes_x > conv_std_logic_vector(HSCAN, X_SIZE) and 
+                                --nes_x <= conv_std_logic_vector(HSCAN_SPR_MAX, X_SIZE)) then
+
+                else
+                    vram_addr <= (others => 'Z');
+                end if; --if (ppu_mask(PPUSSP) = '1') 
+                        --(nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+                        --nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE))) then
+            end if; --if (rising_edge(emu_ppu_clk)) then
         end if;--if (rst_n = '0') then
     end process;
 
