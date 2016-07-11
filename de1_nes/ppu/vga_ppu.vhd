@@ -454,7 +454,9 @@ begin
     emu_ppu_clk <= not count1(0);
     emu_ppu_clk_n <= count1(0);
     nes_x <= vga_x(9 downto 1);
-    nes_y <= vga_y(9 downto 1);
+    --debug purpose, accelarate the clock...
+    --nes_y <= vga_y(9 downto 1);
+    nes_y <= vga_y(8 downto 0);
 
 ------------------------------------------------------------------------
 ------------------------------------------------------------------------
@@ -787,41 +789,41 @@ begin
                     elsif (nes_x > conv_std_logic_vector(HSCAN_OAM_EVA_START, X_SIZE) and 
                             nes_x <= conv_std_logic_vector(HSCAN, X_SIZE)) then
                         p_oam_cnt_res_n <= '1';
+                        s_oam_r_n <= '1';
 
-                        --odd cycle copy from primary oam
-                        if (nes_x(0) = '1') then
+                        --TODO: sprite evaluation is simplified!!
+                        --not complying the original NES spec at
+                        --http://wiki.nesdev.com/w/index.php/PPU_sprite_evaluation
+                        --e.g., when overflow happens, it just ignore subsequent entry.
+                        if (s_oam_cnt = "00000" and nes_x > conv_std_logic_vector(HSCAN_OAM_EVA_START + 2, X_SIZE)) then
+                            s_oam_cnt_ce_n <= '1';
                             s_oam_w_n <= '1';
-                            if (oam_ev_status = EV_STAT_COMP) then
-                                p_oam_addr_in <= p_oam_cnt;
-                                p_oam_cnt_ce_n <= '1';
-                                s_oam_cnt_ce_n <= '1';
-                            elsif (oam_ev_status = EV_STAT_CP1) then
-                                p_oam_addr_in <= p_oam_cnt + "00000001";
-                                s_oam_cnt_ce_n <= '1';
-
-                            elsif (oam_ev_status = EV_STAT_CP2) then
-                                p_oam_addr_in <= p_oam_cnt + "00000010";
-                                s_oam_cnt_ce_n <= '1';
-
-                            elsif (oam_ev_status = EV_STAT_CP3) then
-                                oam_ev_status <= EV_STAT_PRE_COMP;
-                                p_oam_addr_in <= p_oam_cnt + "00000011";
-                                s_oam_cnt_ce_n <= '1';
-                            end if;
+                            s_oam_addr <= (others => 'Z');
+                            s_oam_data <= (others => 'Z');
                         else
-                        --even cycle copy to secondary oam (if y is in range.)
-                            s_oam_r_n <= '1';
-
-                            --TODO: sprite evaluation is simplified!!
-                            --not complying the original NES spec at
-                            --http://wiki.nesdev.com/w/index.php/PPU_sprite_evaluation
-                            --e.g., when overflow happens, it just ignore subsequent entry.
-                            if (s_oam_cnt = "00000" and nes_x > conv_std_logic_vector(HSCAN_OAM_EVA_START + 2, X_SIZE)) then
-                                s_oam_cnt_ce_n <= '1';
+                            --odd cycle copy from primary oam
+                            if (nes_x(0) = '1') then
                                 s_oam_w_n <= '1';
-                                s_oam_addr <= (others => 'Z');
-                                s_oam_data <= (others => 'Z');
+                                if (oam_ev_status = EV_STAT_COMP) then
+                                    p_oam_addr_in <= p_oam_cnt;
+                                    p_oam_cnt_ce_n <= '1';
+                                    s_oam_cnt_ce_n <= '1';
+                                elsif (oam_ev_status = EV_STAT_CP1) then
+                                    p_oam_addr_in <= p_oam_cnt + "00000001";
+                                    s_oam_cnt_ce_n <= '1';
+
+                                elsif (oam_ev_status = EV_STAT_CP2) then
+                                    p_oam_addr_in <= p_oam_cnt + "00000010";
+                                    s_oam_cnt_ce_n <= '1';
+
+                                elsif (oam_ev_status = EV_STAT_CP3) then
+                                    oam_ev_status <= EV_STAT_PRE_COMP;
+                                    p_oam_addr_in <= p_oam_cnt + "00000011";
+                                    s_oam_cnt_ce_n <= '1';
+                                end if;
                             else
+                            --even cycle copy to secondary oam (if y is in range.)
+
                                 s_oam_w_n <= '0';
                                 s_oam_addr <= s_oam_cnt;
                                 s_oam_data <= p_oam_data;
@@ -857,8 +859,8 @@ begin
                                     s_oam_cnt_ce_n <= '0';
                                     p_oam_cnt_ce_n <= '0';
                                 end if;
-                            end if;
-                        end if;--if (nes_x(0) = '1') then
+                            end if;--if (nes_x(0) = '1') then
+                        end if;--if (s_oam_cnt = "00000" and nes_x > conv_std_logic_vector(HSCAN_OAM_EVA_START + 2, X_SIZE)) then
 
                         --prepare for next step
                         s_oam_addr_cpy_n <= '1';

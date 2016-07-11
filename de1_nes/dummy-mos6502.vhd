@@ -283,7 +283,7 @@ end;
 
                         elsif (spr_step_cnt = 5 * cpu_io_multi) then
                             --set sprite data: y=50
-                            io_out(16#2004#, 16#32#);
+                            io_out(16#2004#, 8);
                         elsif (spr_step_cnt = 6 * cpu_io_multi) then
                             --tile=0x4d (ascii 'O')
                             io_out(16#2004#, 16#4f#);
@@ -322,7 +322,7 @@ end;
 
                         else
                             io_brk;
-                            if (spr_step_cnt > 4 * cpu_io_multi) then
+                            if (spr_step_cnt > 8 * cpu_io_multi) then
                                 global_step_cnt := global_step_cnt + 2;
                             end if;
                         end if;
