@@ -277,12 +277,12 @@ signal s_oam_data           : std_logic_vector (dsize - 1 downto 0);
 
 signal p_oam_cnt_res_n  : std_logic;
 signal p_oam_cnt_ce_n   : std_logic;
-signal p_oam_cnt        : std_logic_vector (dsize - 1 downto 0);
+signal p_oam_cnt        : std_logic_vector (dsize downto 0);
 signal p_oam_addr_in    : std_logic_vector (dsize - 1 downto 0);
 signal oam_ev_status    : std_logic_vector (2 downto 0);
 
 signal s_oam_cnt_ce_n   : std_logic;
-signal s_oam_cnt        : std_logic_vector (4 downto 0);
+signal s_oam_cnt        : std_logic_vector (5 downto 0);
 
 --oam evaluation status
 constant EV_STAT_COMP       : std_logic_vector (2 downto 0) := "000";
@@ -455,8 +455,8 @@ begin
     emu_ppu_clk_n <= count1(0);
     nes_x <= vga_x(9 downto 1);
     --debug purpose, accelarate the clock...
-    --nes_y <= vga_y(9 downto 1);
-    nes_y <= vga_y(8 downto 0);
+    nes_y <= vga_y(9 downto 1);
+    --nes_y <= vga_y(8 downto 0);
 
 ------------------------------------------------------------------------
 ------------------------------------------------------------------------
@@ -585,10 +585,10 @@ begin
     ---secondary oam implementation
     -----------------------------------------
     --primary oam copy count
-    p_oam_cnt_inst : counter_register generic map (dsize, 4)
+    p_oam_cnt_inst : counter_register generic map (dsize + 1, 4)
             port map (emu_ppu_clk_n, p_oam_cnt_res_n, p_oam_cnt_ce_n, '1', (others => '0'), p_oam_cnt);
     --primary oam copy count
-    s_oam_cnt_inst : counter_register generic map (5, 1)
+    s_oam_cnt_inst : counter_register generic map (6, 1)
             port map (emu_ppu_clk_n, p_oam_cnt_res_n, s_oam_cnt_ce_n, '1', (others => '0'), s_oam_cnt);
     --secondary oam pattern index.
     s_oam_addr_cpy_inst : counter_register generic map (5, 1)
@@ -766,7 +766,6 @@ begin
 
             if (rising_edge(emu_ppu_clk)) then
 
-                --fetch sprite and display.
                 if (ppu_mask(PPUSSP) = '1' and
                         (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                         nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE))) then
@@ -795,7 +794,7 @@ begin
                         --not complying the original NES spec at
                         --http://wiki.nesdev.com/w/index.php/PPU_sprite_evaluation
                         --e.g., when overflow happens, it just ignore subsequent entry.
-                        if (s_oam_cnt = "00000" and nes_x > conv_std_logic_vector(HSCAN_OAM_EVA_START + 2, X_SIZE)) then
+                        if (s_oam_cnt(5) = '1' or p_oam_cnt(8) = '1') then
                             s_oam_cnt_ce_n <= '1';
                             s_oam_w_n <= '1';
                             s_oam_addr <= (others => 'Z');
@@ -805,27 +804,27 @@ begin
                             if (nes_x(0) = '1') then
                                 s_oam_w_n <= '1';
                                 if (oam_ev_status = EV_STAT_COMP) then
-                                    p_oam_addr_in <= p_oam_cnt;
+                                    p_oam_addr_in <= p_oam_cnt(7 downto 0);
                                     p_oam_cnt_ce_n <= '1';
                                     s_oam_cnt_ce_n <= '1';
                                 elsif (oam_ev_status = EV_STAT_CP1) then
-                                    p_oam_addr_in <= p_oam_cnt + "00000001";
+                                    p_oam_addr_in <= p_oam_cnt(7 downto 0) + "00000001";
                                     s_oam_cnt_ce_n <= '1';
 
                                 elsif (oam_ev_status = EV_STAT_CP2) then
-                                    p_oam_addr_in <= p_oam_cnt + "00000010";
+                                    p_oam_addr_in <= p_oam_cnt(7 downto 0) + "00000010";
                                     s_oam_cnt_ce_n <= '1';
 
                                 elsif (oam_ev_status = EV_STAT_CP3) then
                                     oam_ev_status <= EV_STAT_PRE_COMP;
-                                    p_oam_addr_in <= p_oam_cnt + "00000011";
+                                    p_oam_addr_in <= p_oam_cnt(7 downto 0) + "00000011";
                                     s_oam_cnt_ce_n <= '1';
                                 end if;
                             else
                             --even cycle copy to secondary oam (if y is in range.)
 
                                 s_oam_w_n <= '0';
-                                s_oam_addr <= s_oam_cnt;
+                                s_oam_addr <= s_oam_cnt(4 downto 0);
                                 s_oam_data <= p_oam_data;
 
                                 if (oam_ev_status = EV_STAT_COMP) then
@@ -839,7 +838,7 @@ begin
                                         p_oam_cnt_ce_n <= '1';
                                         
                                         --check sprite 0 is used.
-                                        if (p_oam_cnt = "00000000") then
+                                        if (p_oam_cnt(7 downto 0) = "00000000") then
                                             sprite0_evaluated <= '1';
                                         end if;
                                     else
@@ -860,7 +859,7 @@ begin
                                     p_oam_cnt_ce_n <= '0';
                                 end if;
                             end if;--if (nes_x(0) = '1') then
-                        end if;--if (s_oam_cnt = "00000" and nes_x > conv_std_logic_vector(HSCAN_OAM_EVA_START + 2, X_SIZE)) then
+                        end if;--(s_oam_cnt(5) = '1' or p_oam_cnt(8) = '') then
 
                         --prepare for next step
                         s_oam_addr_cpy_n <= '1';
@@ -873,7 +872,7 @@ begin
 
                     --sprite pattern fetch
                     elsif (nes_x > conv_std_logic_vector(HSCAN, X_SIZE) and 
-                            nes_x <= conv_std_logic_vector(HSCAN_SPR_MAX, X_SIZE)) then
+                            nes_x < conv_std_logic_vector(HSCAN_SPR_MAX, X_SIZE)) then
 
                         s_oam_addr_cpy_n <= '0';
                         s_oam_r_n <= '0';
