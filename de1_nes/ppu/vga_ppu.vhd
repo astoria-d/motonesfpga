@@ -492,7 +492,7 @@ begin
         if (rst_n = '0') then
             io_cnt_rst_n <= '0';
         else
-            if (rising_edge(emu_ppu_clk)) then
+            if (falling_edge(emu_ppu_clk)) then
                 if (nes_x >= conv_std_logic_vector(VGA_W_MAX / 2 - 1, X_SIZE)) then io_cnt_rst_n <= '0';
                 else io_cnt_rst_n <= '1';
                 end if; 
