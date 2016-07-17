@@ -202,7 +202,7 @@ end;
                         else
                             io_brk;
                             if (plt_step_cnt > 30 * cpu_io_multi) then
-                                global_step_cnt := global_step_cnt + 3;
+                                global_step_cnt := global_step_cnt + 1;
                             end if;
                         end if;
                         plt_step_cnt := plt_step_cnt + 1;
