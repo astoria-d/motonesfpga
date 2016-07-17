@@ -151,7 +151,7 @@ mainloop:
 .endproc
 
 .proc simple_dma_test
-    jsr check_ppu
+;    jsr check_ppu
     lda ad_simple_dma_test
     sta $00
     lda ad_simple_dma_test+1
