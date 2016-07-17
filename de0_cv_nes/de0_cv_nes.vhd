@@ -57,11 +57,14 @@ architecture rtl of de0_cv_nes is
     signal dbg_int_d_bus  : out std_logic_vector(7 downto 0);
     signal dbg_exec_cycle      : out std_logic_vector (5 downto 0);
     signal dbg_ea_carry     : out std_logic;
+--    signal dbg_index_bus    : out std_logic_vector(7 downto 0);
+--    signal dbg_acc_bus      : out std_logic_vector(7 downto 0);
     signal dbg_status       : out std_logic_vector(7 downto 0);
     signal dbg_pcl, dbg_pch, dbg_sp, dbg_x, dbg_y, dbg_acc       : out std_logic_vector(7 downto 0);
     signal dbg_dec_oe_n    : out std_logic;
     signal dbg_dec_val     : out std_logic_vector (7 downto 0);
     signal dbg_int_dbus    : out std_logic_vector (7 downto 0);
+--    signal dbg_status_val    : out std_logic_vector (7 downto 0);
     signal dbg_stat_we_n    : out std_logic;
     signal dbg_idl_h, dbg_idl_l, dbg_dbb_r, dbg_dbb_w    : out std_logic_vector (7 downto 0);
     
@@ -341,11 +344,14 @@ begin
     dbg_int_d_bus,
     dbg_exec_cycle,
     dbg_ea_carry,
+ --   dbg_index_bus,
+ --   dbg_acc_bus,
     dbg_status_dummy,
     dbg_pcl, dbg_pch, dbg_sp_dummy, dbg_x_dummy, dbg_y, dbg_acc,
     dbg_dec_oe_n,
     dbg_dec_val,
     dbg_int_dbus,
+--    dbg_status_val    ,
     dbg_stat_we_n    ,
     dbg_idl_h, dbg_idl_l, dbg_dbb_r, dbg_dbb_w,
 
@@ -361,7 +367,46 @@ begin
     prg_ram_inst : ram generic map (ram_2k, data_size)
             port map (mem_clk, ram_ce_n, ram_oe_n, R_nW, addr(ram_2k - 1 downto 0), d_io);
 
+    dbg_base_clk <= ppu_clk;
+--    dbg_exec_cycle(2 downto 1) <= dbg_vga_x(9 downto 8);
+--    dbg_int_d_bus <= dbg_vga_x(7 downto 0);
+--    dbg_exec_cycle(0) <= dbg_nes_x(8);
+--    dbg_instruction <= dbg_nes_x(7 downto 0);
+--    dbg_exec_cycle(3) <= dbg_emu_ppu_clk;
+--
+--    dbg_exec_cycle(4) <= dbg_nes_y(8);
+--    dbg_status <= dbg_nes_y(7 downto 0);
 
+
+--    dbg_ppu_scrl_x(0) <= ale;
+--    dbg_ppu_scrl_x(1) <= rd_n;
+--    dbg_ppu_scrl_x(2) <= wr_n;
+--    dbg_ppu_scrl_x(3) <= nt0_ce_n;
+--    dbg_ppu_scrl_x(4) <= vga_clk;
+--    dbg_ppu_scrl_x(5) <= rom_ce_n;
+--    dbg_ppu_scrl_x(6) <= ram_ce_n;
+--    dbg_ppu_scrl_x(7) <= addr(15);
+--    dbg_ppu_scrl_y(2 downto 0) <= dbg_p_oam_ce_rn_wn(2 downto 0);
+--    dbg_ppu_scrl_y(5 downto 3) <= dbg_plt_ce_rn_wn(2 downto 0);
+    dbg_disp_ptn_l (7 downto 0) <= dbg_p_oam_addr;
+    dbg_disp_ptn_l (15 downto 8) <= dbg_p_oam_data;
+
+    dbg_cpu_clk <= cpu_clk;
+    dbg_mem_clk <= mem_clk;
+    dbg_r_nw <= r_nw;
+    dbg_addr <= addr;
+    dbg_d_io <= d_io;
+    dbg_vram_ad  <= vram_ad ;
+    dbg_vram_a  <= vram_a ;
+
+    dbg_sp(7 downto 6) <= dbg_ppu_clk_cnt;
+    dbg_sp(5 downto 0) <= v_addr (13 downto 8);
+    dbg_x <= v_addr (7 downto 0);
+
+    dbg_nmi <= nmi_n;
+--    nmi_n <= dummy_nmi;
+--    dbg_ppu_ctrl <= dbg_pcl;
+--    dbg_ppu_mask <= dbg_pch;
     --nes ppu instance
     ppu_inst: ppu port map (  
         dbg_ppu_ce_n                                        ,
@@ -445,48 +490,11 @@ begin
     clock_counter_inst : counter_register generic map (64) port map 
         (cpu_clk, rst_n, '0', '1', (others=>'0'), clock_counter);
 
-
-
-
-
-    ---------------------------
-    ---------------------------
-    --debug pins....
-    ---------------------------
-    ---------------------------
-    ---------------------------
-    ---------------------------
-
 --    led_test : counter_register generic map (24) port map 
 --        (base_clk, rst_n, '0', '1', (others=>'0'), loop24);
 --    dbg_cpu_clk <= loop24(23);
 --    dbg_ppu_clk <= loop24(22);
 --    dbg_mem_clk <= loop24(21);
-
-
-    dbg_base_clk <= ppu_clk;
-
-    dbg_nmi <= nmi_n;
-    dbg_cpu_clk <= cpu_clk;
-    dbg_mem_clk <= mem_clk;
-
-    dbg_r_nw <= r_nw;
-    dbg_addr <= addr;
-    dbg_d_io <= d_io;
-
-    dbg_vram_ad  <= vram_ad ;
-    dbg_vram_a  <= vram_a ;
-    dbg_x <= v_addr (7 downto 0);
-
-    dbg_sp(7 downto 6) <= dbg_ppu_clk_cnt;
-    dbg_sp(5 downto 0) <= v_addr (13 downto 8);
-
-    dbg_disp_ptn_l (7 downto 0) <= dbg_p_oam_addr;
-    dbg_disp_ptn_l (15 downto 8) <= dbg_p_oam_data;
---    nmi_n <= dummy_nmi;
---    dbg_ppu_ctrl <= dbg_pcl;
---    dbg_ppu_mask <= dbg_pch;
-
 
 end rtl;
 
