@@ -202,7 +202,7 @@ end;
                         else
                             io_brk;
                             if (plt_step_cnt > 30 * cpu_io_multi) then
-                                global_step_cnt := global_step_cnt + 1;
+                                global_step_cnt := global_step_cnt + 3;
                             end if;
                         end if;
                         plt_step_cnt := plt_step_cnt + 1;
@@ -338,7 +338,8 @@ end;
                                 ch := 16#41# + i;
                             end if;
 
-                            if (i < 64) then
+                            --if (i < 64) then
+                            if (i < 10) then
                                 --set dma value on the ram.
                                 if    (dma_step_cnt = (0 + j) * cpu_io_multi) then
                                     io_out(16#0200# + j, i);
@@ -418,9 +419,11 @@ end;
                             elsif (nmi_step_cnt = 2 * cpu_io_multi) then
                                 --scroll x=0
 --                                io_out(16#2005#, nmi_scl_y);
+                                io_brk;
                             elsif (nmi_step_cnt = 3 * cpu_io_multi) then
                                 --scroll y++
 --                                io_out(16#2005#, nmi_scl_y);
+                                io_brk;
                             else
                                 if (ref_cnt = 0) then
                                     nmi_oam_x := nmi_oam_x + 1;
