@@ -119,7 +119,7 @@ wave zoom full
 
 run 120 us
 run 200 us
-#run 30 us
+run 80 us
 
 ##wave addcursor 907923400 ps
 

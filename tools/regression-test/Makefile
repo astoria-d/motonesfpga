@@ -10,8 +10,9 @@ all :	$(OBJECTS) $(LIBRARIES)
 	cp regression.nes ../../de1_nes/simulation/modelsim/rom-file.nes
 	cp sample1-chr.hex ../../de1_nes/
 	cp sample1-prg-8k.hex ../../de1_nes/sample1-prg.hex
+	cp sample1-chr.hex ../../de0_cv_nes/
+	cp sample1-prg.hex ../../de0_cv_nes/
 
-    
 run : all
 	VirtuaNES.exe regression.nes
 
