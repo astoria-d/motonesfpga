@@ -9,7 +9,7 @@ all :	$(OBJECTS) $(LIBRARIES)
 	./dd-img.sh regression
 	cp regression.nes ../../de1_nes/simulation/modelsim/rom-file.nes
 	cp sample1-chr.hex ../../de1_nes/
-	cp sample1-prg.hex ../../de1_nes/
+	cp sample1-prg-8k.hex ../../de1_nes/sample1-prg.hex
 
     
 run : all

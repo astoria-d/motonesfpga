@@ -58,6 +58,8 @@ begin
     variable nmi_oam_x : integer range 0 to 255;
     variable nmi_scl_y : integer range 0 to 255;
 
+    variable ref_cnt : integer range 0 to 120;
+
 procedure io_out (ad: in integer; dt : in integer) is
 begin
     r_nw <= '0';
@@ -90,6 +92,7 @@ end;
             nmi_step_cnt := 0;
             nmi_oam_x := 0;
             nmi_scl_y := 200;
+            ref_cnt := 0;
 
         elsif (rising_edge(input_clk)) then
 
@@ -199,7 +202,7 @@ end;
                         else
                             io_brk;
                             if (plt_step_cnt > 30 * cpu_io_multi) then
-                                global_step_cnt := global_step_cnt + 1;
+                                global_step_cnt := global_step_cnt + 3;
                             end if;
                         end if;
                         plt_step_cnt := plt_step_cnt + 1;
@@ -253,7 +256,7 @@ end;
 
                         else
                             io_brk;
-                            if (nt_step_cnt > 17 * cpu_io_multi) then
+                            if (nt_step_cnt > 5 * cpu_io_multi) then
                                 global_step_cnt := global_step_cnt + 1;
                             end if;
                         end if;
@@ -267,7 +270,7 @@ end;
                             io_out(16#2003#, 16#00#);
                         elsif (spr_step_cnt = 1 * cpu_io_multi) then
                             --set sprite data: y=02
-                            io_out(16#2004#, 16#13#);
+                            io_out(16#2004#, 16#01#);
                         elsif (spr_step_cnt = 2 * cpu_io_multi) then
                             --tile=0x4d (ascii 'M')
                             io_out(16#2004#, 16#4d#);
@@ -280,7 +283,7 @@ end;
 
                         elsif (spr_step_cnt = 5 * cpu_io_multi) then
                             --set sprite data: y=50
-                            io_out(16#2004#, 16#32#);
+                            io_out(16#2004#, 8);
                         elsif (spr_step_cnt = 6 * cpu_io_multi) then
                             --tile=0x4d (ascii 'O')
                             io_out(16#2004#, 16#4f#);
@@ -319,7 +322,7 @@ end;
 
                         else
                             io_brk;
-                            if (spr_step_cnt > 4 * cpu_io_multi) then
+                            if (spr_step_cnt > 8 * cpu_io_multi) then
                                 global_step_cnt := global_step_cnt + 2;
                             end if;
                         end if;
@@ -335,7 +338,8 @@ end;
                                 ch := 16#41# + i;
                             end if;
 
-                            if (i < 64) then
+                            --if (i < 64) then
+                            if (i < 10) then
                                 --set dma value on the ram.
                                 if    (dma_step_cnt = (0 + j) * cpu_io_multi) then
                                     io_out(16#0200# + j, i);
@@ -415,16 +419,21 @@ end;
                             elsif (nmi_step_cnt = 2 * cpu_io_multi) then
                                 --scroll x=0
 --                                io_out(16#2005#, nmi_scl_y);
+                                io_brk;
                             elsif (nmi_step_cnt = 3 * cpu_io_multi) then
                                 --scroll y++
 --                                io_out(16#2005#, nmi_scl_y);
+                                io_brk;
                             else
-                                nmi_oam_x := nmi_oam_x + 1;
+                                if (ref_cnt = 0) then
+                                    nmi_oam_x := nmi_oam_x + 1;
+                                end if;
                                 if (nmi_step_cnt mod 10 = 0) then
                                     nmi_scl_y := nmi_scl_y + 1;
                                 end if;
                                 io_brk;
                                 if (nmi_step_cnt > 3 * cpu_io_multi) then
+                                    ref_cnt := ref_cnt + 1;
                                     global_step_cnt := global_step_cnt + 1;
                                 end if;
                             end if;

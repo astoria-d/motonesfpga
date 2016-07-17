@@ -20,7 +20,7 @@ echo "processing...."
 dd if=$in_file of=$out_file1 bs=16 skip=1 count=2048 2> /dev/null
 dd if=$in_file of=$out_file2 bs=16 skip=2049 2> /dev/null
 
-bin2hex ${in_name}-prg.bin sample1-prg.hex
-bin2hex ${in_name}-chr.bin sample1-chr.hex
+objcopy -I binary -O ihex $in_name-prg.bin sample1-prg.hex
+objcopy -I binary -O ihex $in_name-chr.bin sample1-chr.hex
 
 echo "done."

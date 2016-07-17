@@ -30,29 +30,31 @@
     jsr init_global
     jsr init_ppu
 
-    lda ad_start_msg
-    sta $00
-    lda ad_start_msg+1
-    sta $01
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
+;    lda ad_start_msg
+;    sta $00
+;    lda ad_start_msg+1
+;    sta $01
+;    jsr print_ln
+;    jsr print_ln
+;    jsr print_ln
+;    jsr print_ln
+;    jsr print_ln
+;    jsr print_ln
+;
+;    ;;test start...
+;    jsr addr_test
+;    jsr single_inst_test
+;    jsr a2_inst_test
+;    jsr a3_inst_test
+;    jsr a4_inst_test
+;    jsr a5_inst_test
+;    jsr status_test
+;    jsr ppu_test
+;
+;    jsr pg_border_test
+;    jsr dma_test
 
-    ;;test start...
-    jsr addr_test
-    jsr single_inst_test
-    jsr a2_inst_test
-    jsr a3_inst_test
-    jsr a4_inst_test
-    jsr a5_inst_test
-    jsr status_test
-    jsr ppu_test
-
-    jsr pg_border_test
-    jsr dma_test
+    jsr simple_dma_test
 
 .endproc
 
@@ -678,9 +680,13 @@ nmi_test:
 .endproc
 
 .proc update_scroll
-    lda #$00
+    lda scroll_x
+    inc scroll_x
+    inc scroll_x
+    clc
+    adc 1
+;;    lda #$00
     sta $2005
-    sta scroll_x
 
     ldx scroll_y
     inx
@@ -688,7 +694,7 @@ nmi_test:
     bne :+
     ldx #0
 :
-    ldx #80
+;;    ldx #80
     stx $2005
     stx scroll_y
 
@@ -3226,7 +3232,7 @@ ad_single_test:
 
 ;;ppu test flag.
 use_ppu:
-    .byte   $01
+    .byte   $00
 
 full_dma_test:
     .byte   $01

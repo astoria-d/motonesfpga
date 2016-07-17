@@ -9,7 +9,7 @@ all :
 
     
 run : all
-	VirtuaNES.exe $(IMAGE)
+	VirtuaNES.exe $(IMAGE).nes
 
 
 clean :
