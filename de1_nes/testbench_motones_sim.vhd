@@ -43,6 +43,7 @@ architecture stimulus of testbench_motones_sim is
     signal dbg_disp_nt, dbg_disp_attr : out std_logic_vector (7 downto 0);
     signal dbg_disp_ptn_h, dbg_disp_ptn_l : out std_logic_vector (15 downto 0);
     signal dbg_nmi  : out std_logic;
+    signal dummy_nmi  : in std_logic;
     
     
 --NES instance
@@ -63,6 +64,7 @@ architecture stimulus of testbench_motones_sim is
     signal reset_input      : std_logic;
     signal nmi_input      : std_logic;
     signal dbg_nmi      : std_logic;
+    signal dummy_nmi  : std_logic;
 
     signal h_sync_n    : std_logic;
     signal v_sync_n    : std_logic;
@@ -149,6 +151,7 @@ dbg_disp_ptn_h, dbg_disp_ptn_l ,
 --dbg_ppu_addr_we_n,
 --dbg_ppu_clk_cnt          ,
 dbg_nmi,
+dummy_nmi,
     
     base_clk, reset_input, joypad1, joypad2, 
             h_sync_n, v_sync_n, r, g, b, nt_v_mirror);
@@ -177,7 +180,7 @@ dbg_nmi,
 
     --- initiate nmi.
     nmi_p: process
-    constant nmi_wait     : time := 100 us;
+    constant nmi_wait     : time := 90040000 ps;
     constant vblank_time     : time := 60 us;
     variable wait_cnt : integer := 0;
     begin
@@ -193,6 +196,9 @@ dbg_nmi,
             wait for vblank_time / 4;
         end if;
     end process;
+    ---for test nmi...
+    dummy_nmi <= nmi_input;
+    --dummy_nmi <= 'Z';
 
     --set chr rom mirror setting.
     nt_v_mirror <= '1';

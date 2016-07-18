@@ -44,6 +44,7 @@ entity de1_nes is
     signal dbg_disp_nt, dbg_disp_attr : out std_logic_vector (7 downto 0);
     signal dbg_disp_ptn_h, dbg_disp_ptn_l : out std_logic_vector (15 downto 0);
     signal dbg_nmi  : out std_logic;
+    signal dummy_nmi  : in std_logic;
 
 --NES instance
         base_clk 	: in std_logic;
@@ -476,7 +477,7 @@ begin
 
     dbg_nmi <= nmi_n;
 
---    nmi_n <= dummy_nmi;
+    nmi_n <= dummy_nmi;
 --    dbg_ppu_ctrl <= dbg_pcl;
 --    dbg_ppu_mask <= dbg_pch;
 --    dbg_ppu_scrl_x(5) <= rom_ce_n;
