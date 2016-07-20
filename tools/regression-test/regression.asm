@@ -27,6 +27,8 @@
 	ldx	#$ff
 	txs
 
+    jmp aaaa
+    
     jsr init_global
     jsr init_ppu
 
@@ -111,6 +113,7 @@ test_done:
 	sta	$2001
 	sta	ppu_stat2
 
+aaaa:
     ;;;enable nmi
 	lda	#$80
 	sta	$2000
