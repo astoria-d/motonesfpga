@@ -10,17 +10,13 @@ entity mos6502 is
     signal dbg_int_d_bus    : out std_logic_vector(7 downto 0);
     signal dbg_exec_cycle   : out std_logic_vector (5 downto 0);
     signal dbg_ea_carry     : out std_logic;
-
---    signal dbg_index_bus    : out std_logic_vector(7 downto 0);
---    signal dbg_acc_bus      : out std_logic_vector(7 downto 0);
     signal dbg_status       : out std_logic_vector(7 downto 0);
     signal dbg_pcl, dbg_pch, dbg_sp, dbg_x, dbg_y, dbg_acc       : out std_logic_vector(7 downto 0);
     signal dbg_dec_oe_n    : out std_logic;
     signal dbg_dec_val     : out std_logic_vector (7 downto 0);
     signal dbg_int_dbus    : out std_logic_vector (7 downto 0);
---    signal dbg_status_val    : out std_logic_vector (7 downto 0);
     signal dbg_stat_we_n    : out std_logic;
-    signal dbg_idl_h, dbg_idl_l, dbg_dbb_r, dbg_dbb_w    : out std_logic_vector (7 downto 0);
+    signal dbg_idl_h, dbg_idl_l     : out std_logic_vector (7 downto 0);
 
             input_clk   : in std_logic; --phi0 input pin.
             rdy         : in std_logic;
@@ -179,12 +175,8 @@ component data_bus_buffer
             dsize : integer := 8
             );
     port (  
-    signal dbg_dbb_r     : out std_logic_vector (7 downto 0);
-    signal dbg_dbb_w     : out std_logic_vector (7 downto 0);
-
-            clk         : in std_logic;
-            r_nw        : in std_logic;
             int_oe_n    : in std_logic;
+            ext_oe_n    : in std_logic;
             int_dbus : inout std_logic_vector (dsize - 1 downto 0);
             ext_dbus : inout std_logic_vector (dsize - 1 downto 0)
         );
@@ -488,7 +480,7 @@ begin
 
     --io data buffer
     dbus_buf : data_bus_buffer generic map (dsize) 
-            port map(dbg_dbb_r, dbg_dbb_w, set_clk, dbuf_r_nw, dbuf_int_oe_n, int_d_bus, d_io);
+            port map(dbuf_int_oe_n, dbuf_r_nw, int_d_bus, d_io);
 
     --address operand data buffer.
     idl_l : input_data_latch generic map (dsize) 
