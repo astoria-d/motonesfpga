@@ -435,7 +435,7 @@ begin
                     );
 
     alu_inst : alu generic map (dsize) 
-            port map (trigger_clk, 
+            port map (set_clk, 
                     pcl_inc_n,
                     pch_inc_n,
                     sp_oe_n,

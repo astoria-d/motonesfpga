@@ -113,6 +113,34 @@ component alu_core
     );
 end component;
 
+constant ADDR_ADC    : std_logic_vector (1 downto 0) := "00";
+constant ADDR_INC    : std_logic_vector (1 downto 0) := "01";
+constant ADDR_DEC    : std_logic_vector (1 downto 0) := "10";
+constant ADDR_SIGNED_ADD : std_logic_vector (1 downto 0) := "11";
+
+constant ALU_AND    : std_logic_vector (3 downto 0) := "0000";
+constant ALU_EOR    : std_logic_vector (3 downto 0) := "0001";
+constant ALU_OR     : std_logic_vector (3 downto 0) := "0010";
+constant ALU_BIT    : std_logic_vector (3 downto 0) := "0011";
+constant ALU_ADC    : std_logic_vector (3 downto 0) := "0100";
+constant ALU_SBC    : std_logic_vector (3 downto 0) := "0101";
+constant ALU_CMP    : std_logic_vector (3 downto 0) := "0110";
+constant ALU_ASL    : std_logic_vector (3 downto 0) := "0111";
+constant ALU_LSR    : std_logic_vector (3 downto 0) := "1000";
+constant ALU_ROL    : std_logic_vector (3 downto 0) := "1001";
+constant ALU_ROR    : std_logic_vector (3 downto 0) := "1010";
+constant ALU_INC    : std_logic_vector (3 downto 0) := "1011";
+constant ALU_DEC    : std_logic_vector (3 downto 0) := "1100";
+
+---for indirect addressing.
+constant T0 : std_logic_vector (5 downto 0) := "000000";
+constant T1 : std_logic_vector (5 downto 0) := "000001";
+constant T2 : std_logic_vector (5 downto 0) := "000010";
+constant T3 : std_logic_vector (5 downto 0) := "000011";
+constant T4 : std_logic_vector (5 downto 0) := "000100";
+constant T5 : std_logic_vector (5 downto 0) := "000101";
+
+
 --------- signals for address calucuration ----------
 signal al_buf_we_n : std_logic;
 signal ah_buf_we_n : std_logic;
@@ -196,73 +224,16 @@ begin
             port map (d_oe_n, alu_out, d_out);
 
     -------------------------------
-    ------ alu main process -------
-    -------------------------------
-    alu_p : process (
-                    clk, 
-                    ---for address calucuration
-                    pcl_inc_n, pch_inc_n, sp_oe_n, sp_push_n, sp_pop_n,
-                    abs_xy_n, pg_next_n, zp_n, zp_xy_n, rel_calc_n, 
-                    indir_n, indir_x_n, indir_y_n, 
-                    index_bus, bal, bah,
-
-                    --for arithmatic operation.
-                    arith_en_n,
-                    instruction, exec_cycle, int_d_bus, acc_out, 
-                    carry_in, n, z, c, v
-                    )
-
-constant ADDR_ADC    : std_logic_vector (1 downto 0) := "00";
-constant ADDR_INC    : std_logic_vector (1 downto 0) := "01";
-constant ADDR_DEC    : std_logic_vector (1 downto 0) := "10";
-constant ADDR_SIGNED_ADD : std_logic_vector (1 downto 0) := "11";
-
-constant ALU_AND    : std_logic_vector (3 downto 0) := "0000";
-constant ALU_EOR    : std_logic_vector (3 downto 0) := "0001";
-constant ALU_OR     : std_logic_vector (3 downto 0) := "0010";
-constant ALU_BIT    : std_logic_vector (3 downto 0) := "0011";
-constant ALU_ADC    : std_logic_vector (3 downto 0) := "0100";
-constant ALU_SBC    : std_logic_vector (3 downto 0) := "0101";
-constant ALU_CMP    : std_logic_vector (3 downto 0) := "0110";
-constant ALU_ASL    : std_logic_vector (3 downto 0) := "0111";
-constant ALU_LSR    : std_logic_vector (3 downto 0) := "1000";
-constant ALU_ROL    : std_logic_vector (3 downto 0) := "1001";
-constant ALU_ROR    : std_logic_vector (3 downto 0) := "1010";
-constant ALU_INC    : std_logic_vector (3 downto 0) := "1011";
-constant ALU_DEC    : std_logic_vector (3 downto 0) := "1100";
-
----for indirect addressing.
-constant T0 : std_logic_vector (5 downto 0) := "000000";
-constant T1 : std_logic_vector (5 downto 0) := "000001";
-constant T2 : std_logic_vector (5 downto 0) := "000010";
-constant T3 : std_logic_vector (5 downto 0) := "000011";
-constant T4 : std_logic_vector (5 downto 0) := "000100";
-constant T5 : std_logic_vector (5 downto 0) := "000101";
-
-procedure output_d_bus is
-begin
-    arith_buf_we_n <= '0';
-    arith_buf_oe_n <= '0';
-    d_oe_n <= '0';
-    arith_reg_in <= d_out;
-    if (clk = '0') then
-        int_d_bus <= d_out;
-    else
-        int_d_bus <= arith_reg_out;
-    end if;
-end  procedure;
-
-procedure set_nz is
-begin
-    negative <= n;
-    zero <= z;
-end procedure;
-
-    begin
-
-    -------------------------------
     ----- address calcuration -----
     -------------------------------
+    alu_p : process (
+                    clk
+                    )
+    begin
+    
+    --address is synchronized with the clock...
+    if (rising_edge(clk)) then
+
     if (pcl_inc_n = '0') then
         ea_carry <= '0';
         a_sel <= ADDR_INC;
@@ -320,14 +291,15 @@ end procedure;
             a_sel <= ADDR_DEC;
             addr1 <= bal;
             addr_back <= addr_out;
+            abl <= bal;
 
-            al_buf_we_n <= '0';
-            al_reg_in <= bal;
-            if (clk = '0') then
-                abl <= bal;
-            else
-                abl <= al_reg;
-            end if;
+--            al_buf_we_n <= '0';
+--            al_reg_in <= bal;
+--            if (clk = '0') then
+--                abl <= bal;
+--            else
+--                abl <= al_reg;
+--            end if;
         end if;
     elsif (zp_n = '0') then
         ea_carry <= '0';
@@ -554,9 +526,39 @@ end procedure;
         addr_back <= bal;
     end if; --if (pcl_inc_n = '0') then
 
+    end if;--if (rising_edge(clk)) then
+    end process;
+
     -------------------------------
     ---- arithmatic operations-----
     -------------------------------
+    alu_arith_p : process (
+                    arith_en_n,
+                    instruction, exec_cycle, int_d_bus, acc_out, 
+                    carry_in, n, z, c, v
+                    )
+    --data calcuration follows the bus input...
+
+procedure output_d_bus is
+begin
+    arith_buf_we_n <= '0';
+    arith_buf_oe_n <= '0';
+    d_oe_n <= '0';
+    arith_reg_in <= d_out;
+    if (clk = '0') then
+        int_d_bus <= d_out;
+    else
+        int_d_bus <= arith_reg_out;
+    end if;
+end  procedure;
+
+procedure set_nz is
+begin
+    negative <= n;
+    zero <= z;
+end procedure;
+
+    begin
     if (arith_en_n = '0') then
 
         if instruction = conv_std_logic_vector(16#ca#, dsize) then
