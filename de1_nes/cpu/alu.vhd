@@ -14,7 +14,6 @@ entity alu is
             set_clk         : in std_logic;
             trig_clk        : in std_logic;
             pcl_inc_n       : in std_logic;
-            pch_inc_n       : in std_logic;
             sp_oe_n         : in std_logic;
             sp_push_n       : in std_logic;
             sp_pop_n        : in std_logic;
@@ -38,7 +37,6 @@ entity alu is
             acc_in          : out std_logic_vector (dsize - 1 downto 0);
             abl             : out std_logic_vector (dsize - 1 downto 0);
             abh             : out std_logic_vector (dsize - 1 downto 0);
-            pcl_inc_carry   : out std_logic;
             ea_carry        : out std_logic;
             carry_in        : in std_logic;
             negative        : out std_logic;
@@ -164,8 +162,6 @@ signal addr_c_in : std_logic;
 signal addr_c : std_logic;
 signal addr_c_reg : std_logic;
 
-signal pcl_carry_reg_in : std_logic;
-
 ----------- signals for arithmatic ----------
 signal sel : std_logic_vector (3 downto 0);
 signal d1 : std_logic_vector (dsize - 1 downto 0);
@@ -196,14 +192,6 @@ begin
     tmp_dff : d_flip_flop generic map (dsize) 
             port map(trig_clk, '1', '1', tmp_buf_we_n, tmp_reg_in, tmp_reg);
 
-    --pcl carry flag set.
-    pcl_carry_reg_in <= addr_c when pcl_inc_n = '0' else
-                '0';
-
-    pch_carry_dff_bit : d_flip_flop_bit 
-            port map(trig_clk, '1', '1', 
-                    '0', pcl_carry_reg_in, pcl_inc_carry);
-
     addr_calc_inst : address_calculator generic map (dsize)
             port map (a_sel, addr1, addr2, addr_out, addr_c_in, addr_c);
 
@@ -228,7 +216,7 @@ begin
     ----- address calcuration -----
     -------------------------------
     alu_addr_p : process (
-                    pcl_inc_n, pch_inc_n, sp_oe_n, sp_pop_n, sp_push_n,
+                    pcl_inc_n, sp_oe_n, sp_pop_n, sp_push_n,
                     zp_n, zp_xy_n, abs_xy_n, pg_next_n, rel_calc_n,
                     int_d_bus(7), indir_n, indir_x_n, exec_cycle,
                     indir_y_n
@@ -241,31 +229,8 @@ begin
         addr1 <= bal;
         addr_back <= addr_out;
 
-        --keep the value in the cycle
-        al_buf_we_n <= '0';
-        al_reg_in <= bal;
-        if (instruction = "01001100") then
-            ---exceptional case: only jmp instruction 
-            abl <= bal;
-        else
-            if (set_clk = '0') then
-                abl <= bal;
-            else
-                abl <= al_reg;
-            end if;
-        end if;
-        abh <= bah;
-
-    elsif (pch_inc_n = '0') then
-        ea_carry <= '0';
-        a_sel <= ADDR_INC;
-        addr1 <= bah;
-        addr_back <= addr_out;
-
-        --inc pch cycle is not fetch cycle.
-        --it is special cycle.
         abl <= bal;
-        abh <= bah;
+        abh <= bah + addr_c;
 
     elsif (sp_oe_n = '0') then
         --stack operation...
@@ -843,21 +808,6 @@ begin
     elsif sel = ADDR_SIGNED_ADD then
         res := ('0' & addr1) + ('0' & addr2);
         addr_out <= res(dsize - 1 downto 0);
---        if (addr2(dsize - 1) = '0') then
---            ---positive value add.
---            if (res(dsize) = '1') then
---                carry_out <= '1';
---            else
---                carry_out <= '0';
---            end if;
---        else
---            ---negative value add.
---            if (res(dsize) = '0') then
---                carry_out <= '1';
---            else
---                carry_out <= '0';
---            end if;
---        end if;
         -->>>simplified above.
         if ((addr2(dsize - 1) xor res(dsize)) = '1') then
             carry_out <= '1';

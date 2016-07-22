@@ -61,7 +61,6 @@ component decoder
             dl_ah_oe_n      : out std_logic;
             dl_dh_oe_n      : out std_logic;
             pcl_inc_n       : out std_logic;
-            pch_inc_n       : out std_logic;
             pcl_cmd         : out std_logic_vector(3 downto 0);
             pch_cmd         : out std_logic_vector(3 downto 0);
             sp_cmd          : out std_logic_vector(3 downto 0);
@@ -104,7 +103,6 @@ component alu
             set_clk         : in std_logic;
             trig_clk        : in std_logic;
             pcl_inc_n       : in std_logic;
-            pch_inc_n       : in std_logic;
             sp_oe_n         : in std_logic;
             sp_push_n       : in std_logic;
             sp_pop_n        : in std_logic;
@@ -128,7 +126,6 @@ component alu
             acc_in          : out std_logic_vector (dsize - 1 downto 0);
             abl             : out std_logic_vector (dsize - 1 downto 0);
             abh             : out std_logic_vector (dsize - 1 downto 0);
-            pcl_inc_carry   : out std_logic;
             ea_carry        : out std_logic;
             carry_in        : in std_logic;
             negative        : out std_logic;
@@ -268,8 +265,6 @@ end component;
     signal dl_dh_oe_n : std_logic;
 
     signal pcl_inc_n : std_logic;
-    signal pch_inc_n : std_logic;
-    signal pcl_inc_carry : std_logic;
     signal abs_xy_n        : std_logic;
     signal ea_carry        : std_logic;
     signal pg_next_n       : std_logic;
@@ -402,7 +397,6 @@ begin
                     dl_ah_oe_n,
                     dl_dh_oe_n,
                     pcl_inc_n,
-                    pch_inc_n,
                     pcl_cmd,
                     pch_cmd,
                     sp_cmd,
@@ -441,7 +435,6 @@ begin
                     set_clk, 
                     trigger_clk, 
                     pcl_inc_n,
-                    pch_inc_n,
                     sp_oe_n,
                     sp_push_n,
                     sp_pop_n,
@@ -465,7 +458,6 @@ begin
                     acc_in,
                     abl,
                     abh,
-                    pcl_inc_carry,
                     ea_carry,
                     stat_c,
                     alu_n,
@@ -478,9 +470,6 @@ begin
     exec_cycle_inst : d_flip_flop generic map (5) 
             port map(trigger_clk, '1', '1', '0', 
                     next_cycle(4 downto 0), exec_cycle(4 downto 0));
-
-    --exec_cycle top bit is phc carry flag.
-    exec_cycle(5) <= pcl_inc_carry;
 
     --io data buffer
     dbus_buf : data_bus_buffer generic map (dsize) 
@@ -502,9 +491,9 @@ begin
             port map(trigger_clk, inst_rst_n, '1', inst_we_n, d_io, instruction);
 
     pcl_inst : dual_dff generic map (dsize) 
-            port map(dbg_pcl, trigger_clk, rst_n, '1', pcl_cmd, int_d_bus, addr_back, bal);
+            port map(dbg_pcl, set_clk, rst_n, '1', pcl_cmd, int_d_bus, addr_back, bal);
     pch_inst : dual_dff generic map (dsize) 
-            port map(dbg_pch, trigger_clk, rst_n, '1', pch_cmd, int_d_bus, addr_back, bah);
+            port map(dbg_pch, set_clk, rst_n, '1', pch_cmd, int_d_bus, addr_back, bah);
 
     --status register
     status_register : processor_status generic map (dsize) 

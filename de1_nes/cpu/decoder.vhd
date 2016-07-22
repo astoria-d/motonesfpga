@@ -29,7 +29,6 @@ entity decoder is
             dl_ah_oe_n      : out std_logic;
             dl_dh_oe_n      : out std_logic;
             pcl_inc_n       : out std_logic;
-            pch_inc_n       : out std_logic;
             pcl_cmd         : out std_logic_vector(3 downto 0);
             pch_cmd         : out std_logic_vector(3 downto 0);
             sp_cmd          : out std_logic_vector(3 downto 0);
@@ -92,6 +91,9 @@ constant T4 : std_logic_vector (5 downto 0) := "000100";
 constant T5 : std_logic_vector (5 downto 0) := "000101";
 constant T6 : std_logic_vector (5 downto 0) := "000110";
 
+--T0r (T0 after reset) is the special cycle for very beginning T0 cycle of reset/nmi/irq.
+constant T0r : std_logic_vector (5 downto 0) := "000111";
+
 --01xxx : reset cycle : R0 > R1 > R2 > R3 > R4 > R5 > T0
 constant R0 : std_logic_vector (5 downto 0) := "001000";
 constant R1 : std_logic_vector (5 downto 0) := "001001";
@@ -133,9 +135,6 @@ constant st_I : integer := 2;
 constant st_Z : integer := 1;
 constant st_C : integer := 0;
 
----for pch_inc_n.
-signal pch_inc_input : std_logic;
-
 ---for nmi handling
 signal nmi_handled_n : std_logic;
 
@@ -148,11 +147,6 @@ signal wk_stat_alu_we_n   : std_logic;
 signal ea_carry_reg       : std_logic;
 
 begin
-
-    ---pc page next is connected to top bit of exec_cycle
-    pch_inc_input <= not exec_cycle(5);
-    pch_inc_reg : d_flip_flop_bit 
-            port map(set_clk, '1', '1', '0', pch_inc_input, pch_inc_n);
 
     ea_carry_inst: d_flip_flop_bit 
             port map(trig_clk, '1', '1', '0', ea_carry, ea_carry_reg);
@@ -310,7 +304,7 @@ end  procedure;
 ---T0 cycle routine 
 ---(along with the page boundary condition, the last 
 ---cycle is bypassed and slided to T0.)
-procedure t0_cycle is
+procedure t0_cycle(inc_pcl : in std_logic) is
 begin
     disable_pins;
     if (nmi_n = '0' and nmi_handled_n = '1') then
@@ -318,7 +312,7 @@ begin
         fetch_inst('1');
         wk_next_cycle <= N1;
     else
-        fetch_inst('0');
+        fetch_inst(inc_pcl);
         wk_next_cycle <= T1;
     end if;
 end  procedure;
@@ -1121,9 +1115,14 @@ end  procedure;
                 pcl_cmd <= "1111";
                 pch_cmd <= "1111";
                 r_nw <= 'Z';
+
+            elsif (exec_cycle = T0r) then
+                --cycle #1
+                t0_cycle('1');
+
             elsif (exec_cycle = T0 and ea_carry = '0') then
                 --cycle #1
-                t0_cycle;
+                t0_cycle('0');
 
             elsif exec_cycle = T1 or exec_cycle = T2 or exec_cycle = T3 or 
                 exec_cycle = T4 or exec_cycle = T5 or exec_cycle = T6 or 
@@ -2868,45 +2867,7 @@ end  procedure;
                     nmi_handled_n <= '0';
                 end if;
                 --start execute cycle.
-                wk_next_cycle <= T0;
-
-            elsif exec_cycle(5) = '1' then
-                ---pc increment and next page.
-                d_print(string'("pch next page..."));
-                --pcl stop increment
-                pcl_inc_n <= '1';
-                back_we(pcl_cmd, '1');
-
-                if ('0' & exec_cycle(4 downto 0) = T0 and
-                    instruction = conv_std_logic_vector(16#4c#, dsize) ) then
-                    --jmp instruction t0 cycle discards pch increment.
-                    back_we(pch_cmd, '1');
-                    front_we(pch_cmd, '1');
-                else
-                    --pch increment
-                    back_we(pch_cmd, '0');
-                    back_oe(pch_cmd, '0');
-                end if;
-
-                if ('0' & exec_cycle(4 downto 0) = T0) then
-                    --do the t0 identical routine.
-                    disable_pins;
-                    inst_we_n <= '1';
-                    r_nw <= '1';
-
-                elsif ('0' & exec_cycle(4 downto 0) = T1) then
-                    --if fetch cycle, preserve instrution register
-                    inst_we_n <= '1';
-
-                elsif ('0' & exec_cycle(4 downto 0) = T2) then
-                    --disable previous we_n gate.
-                    --t1 cycle is fetch low oprand.
-                    dl_al_we_n <= '1';
-                    dl_ah_we_n <= '1';
-                elsif ('0' & exec_cycle(4 downto 0) = T3) then
-                    --t2 cycle is fetch high oprand.
-                    dl_ah_we_n <= '1';
-                end if;
+                wk_next_cycle <= T0r;
 
             end if; --if rdy = '0' then
 
