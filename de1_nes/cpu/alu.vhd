@@ -10,7 +10,9 @@ use work.motonesfpga_common.all;
 entity alu is 
     generic (   dsize : integer := 8
             );
-    port (  clk             : in std_logic;
+    port (  
+            set_clk         : in std_logic;
+            trig_clk        : in std_logic;
             pcl_inc_n       : in std_logic;
             pch_inc_n       : in std_logic;
             sp_oe_n         : in std_logic;
@@ -153,7 +155,6 @@ signal al_reg : std_logic_vector (dsize - 1 downto 0);
 signal ah_reg : std_logic_vector (dsize - 1 downto 0);
 signal tmp_reg : std_logic_vector (dsize - 1 downto 0);
 
-
 signal a_sel : std_logic_vector (1 downto 0);
 signal addr1 : std_logic_vector (dsize - 1 downto 0);
 signal addr2 : std_logic_vector (dsize - 1 downto 0);
@@ -189,32 +190,32 @@ begin
      -- address calucurator instances ----
     ----------------------------------------
     al_dff : d_flip_flop generic map (dsize) 
-            port map(clk, '1', '1', al_buf_we_n, al_reg_in, al_reg);
+            port map(trig_clk, '1', '1', al_buf_we_n, al_reg_in, al_reg);
     ah_dff : d_flip_flop generic map (dsize) 
-            port map(clk, '1', '1', ah_buf_we_n, ah_reg_in, ah_reg);
+            port map(trig_clk, '1', '1', ah_buf_we_n, ah_reg_in, ah_reg);
     tmp_dff : d_flip_flop generic map (dsize) 
-            port map(clk, '1', '1', tmp_buf_we_n, tmp_reg_in, tmp_reg);
+            port map(trig_clk, '1', '1', tmp_buf_we_n, tmp_reg_in, tmp_reg);
 
     --pcl carry flag set.
     pcl_carry_reg_in <= addr_c when pcl_inc_n = '0' else
                 '0';
 
     pch_carry_dff_bit : d_flip_flop_bit 
-            port map(clk, '1', '1', 
+            port map(trig_clk, '1', '1', 
                     '0', pcl_carry_reg_in, pcl_inc_carry);
 
     addr_calc_inst : address_calculator generic map (dsize)
             port map (a_sel, addr1, addr2, addr_out, addr_c_in, addr_c);
 
     ea_carry_dff_bit : d_flip_flop_bit 
-            port map(clk, '1', '1', 
+            port map(trig_clk, '1', '1', 
                     '0', addr_c, addr_c_reg);
 
     ----------------------------------------
      -- arithmatic operation instances ----
     ----------------------------------------
     arith_dff : d_flip_flop generic map (dsize) 
-            port map(clk, '1', '1', arith_buf_we_n, arith_reg_in, arith_reg);
+            port map(trig_clk, '1', '1', arith_buf_we_n, arith_reg_in, arith_reg);
     arith_buf : tri_state_buffer generic map (dsize)
             port map (arith_buf_oe_n, arith_reg, arith_reg_out);
 
@@ -226,14 +227,14 @@ begin
     -------------------------------
     ----- address calcuration -----
     -------------------------------
-    alu_p : process (
-                    clk
+    alu_addr_p : process (
+                    pcl_inc_n, pch_inc_n, sp_oe_n, sp_pop_n, sp_push_n,
+                    zp_n, zp_xy_n, abs_xy_n, pg_next_n, rel_calc_n,
+                    int_d_bus(7), indir_n, indir_x_n, exec_cycle,
+                    indir_y_n
                     )
     begin
     
-    --address is synchronized with the clock...
-    if (rising_edge(clk)) then
-
     if (pcl_inc_n = '0') then
         ea_carry <= '0';
         a_sel <= ADDR_INC;
@@ -247,7 +248,7 @@ begin
             ---exceptional case: only jmp instruction 
             abl <= bal;
         else
-            if (clk = '0') then
+            if (set_clk = '0') then
                 abl <= bal;
             else
                 abl <= al_reg;
@@ -281,7 +282,7 @@ begin
 
             al_buf_we_n <= '0';
             al_reg_in <= bal;
-            if (clk = '0') then
+            if (set_clk = '0') then
                 abl <= bal;
             else
                 abl <= al_reg;
@@ -293,13 +294,6 @@ begin
             addr_back <= addr_out;
             abl <= bal;
 
---            al_buf_we_n <= '0';
---            al_reg_in <= bal;
---            if (clk = '0') then
---                abl <= bal;
---            else
---                abl <= al_reg;
---            end if;
         end if;
     elsif (zp_n = '0') then
         ea_carry <= '0';
@@ -526,7 +520,6 @@ begin
         addr_back <= bal;
     end if; --if (pcl_inc_n = '0') then
 
-    end if;--if (rising_edge(clk)) then
     end process;
 
     -------------------------------
@@ -545,7 +538,7 @@ begin
     arith_buf_oe_n <= '0';
     d_oe_n <= '0';
     arith_reg_in <= d_out;
-    if (clk = '0') then
+    if (set_clk = '0') then
         int_d_bus <= d_out;
     else
         int_d_bus <= arith_reg_out;

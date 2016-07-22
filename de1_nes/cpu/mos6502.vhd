@@ -100,7 +100,9 @@ end component;
 component alu
     generic (   dsize : integer := 8
             );
-    port (  clk             : in std_logic;
+    port (  
+            set_clk         : in std_logic;
+            trig_clk        : in std_logic;
             pcl_inc_n       : in std_logic;
             pch_inc_n       : in std_logic;
             sp_oe_n         : in std_logic;
@@ -435,7 +437,9 @@ begin
                     );
 
     alu_inst : alu generic map (dsize) 
-            port map (set_clk, 
+            port map (
+                    set_clk, 
+                    trigger_clk, 
                     pcl_inc_n,
                     pch_inc_n,
                     sp_oe_n,
@@ -518,7 +522,7 @@ begin
 
 
     sp : dual_dff generic map (dsize) 
-            port map(dbg_sp, trigger_clk, rst_n, '1', sp_cmd, int_d_bus, addr_back, bal);
+            port map(dbg_sp, set_clk, rst_n, '1', sp_cmd, int_d_bus, addr_back, bal);
 
     x : dual_dff generic map (dsize) 
             port map(dbg_x, trigger_clk, rst_n, '1', x_cmd, int_d_bus, null_bus, index_bus);
