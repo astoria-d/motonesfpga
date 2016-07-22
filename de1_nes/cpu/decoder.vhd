@@ -47,6 +47,7 @@ entity decoder is
             indir_n         : out std_logic;
             indir_x_n       : out std_logic;
             indir_y_n       : out std_logic;
+            ba_out_n        : out std_logic;
             arith_en_n      : out std_logic;
             stat_dec_oe_n   : out std_logic;
             stat_bus_oe_n   : out std_logic;
@@ -277,7 +278,7 @@ begin
 
 end  procedure;
 
-procedure fetch_inst (inc_pcl : in std_logic) is
+procedure fetch_inst (wk_inc_pcl_n : in std_logic) is
 begin
     if instruction = conv_std_logic_vector(16#4c#, dsize) then
         --if prior cycle is jump instruction, 
@@ -295,7 +296,8 @@ begin
     ad_oe_n <= '0';
     pch_cmd <= "1101";
     inst_we_n <= '0';
-    pcl_inc_n <= inc_pcl;
+    pcl_inc_n <= wk_inc_pcl_n;
+    ba_out_n <= not wk_inc_pcl_n;
     r_nw <= '1';
 
     d_print(string'("fetch 1"));
@@ -304,7 +306,7 @@ end  procedure;
 ---T0 cycle routine 
 ---(along with the page boundary condition, the last 
 ---cycle is bypassed and slided to T0.)
-procedure t0_cycle(inc_pcl : in std_logic) is
+procedure t0_cycle(wk_inc_pcl_n : in std_logic) is
 begin
     disable_pins;
     if (nmi_n = '0' and nmi_handled_n = '1') then
@@ -312,7 +314,7 @@ begin
         fetch_inst('1');
         wk_next_cycle <= N1;
     else
-        fetch_inst(inc_pcl);
+        fetch_inst(wk_inc_pcl_n);
         wk_next_cycle <= T1;
     end if;
 end  procedure;
@@ -1115,6 +1117,7 @@ end  procedure;
                 pcl_cmd <= "1111";
                 pch_cmd <= "1111";
                 r_nw <= 'Z';
+                ba_out_n <= '1';
 
             elsif (exec_cycle = T0r) then
                 --cycle #1
@@ -2755,6 +2758,7 @@ end  procedure;
                 indir_n <= '1';
                 indir_x_n <= '1';
                 indir_y_n <= '1';
+                ba_out_n <= '1';
                 arith_en_n <= '1';
 
                 stat_dec_oe_n <= '0';
@@ -2853,6 +2857,7 @@ end  procedure;
                     n_vec_oe_n <= '0';
                     wk_next_cycle <= N5;
                 end if;
+                ba_out_n <= '0';
                 
             elsif exec_cycle = R5 or exec_cycle = N5 then
                 front_we(pcl_cmd, '1');

@@ -79,6 +79,7 @@ component decoder
             indir_n         : out std_logic;
             indir_x_n       : out std_logic;
             indir_y_n       : out std_logic;
+            ba_out_n        : out std_logic;
             arith_en_n      : out std_logic;
             stat_dec_oe_n   : out std_logic;
             stat_bus_oe_n   : out std_logic;
@@ -114,6 +115,7 @@ component alu
             indir_n         : in std_logic;
             indir_x_n       : in std_logic;
             indir_y_n       : in std_logic;
+            ba_out_n        : in std_logic;
             arith_en_n      : in std_logic;
             instruction     : in std_logic_vector (dsize - 1 downto 0);
             exec_cycle      : in std_logic_vector (5 downto 0);
@@ -274,6 +276,7 @@ end component;
     signal indir_n         : std_logic;
     signal indir_x_n       : std_logic;
     signal indir_y_n       : std_logic;
+    signal ba_out_n        : std_logic;
     signal arith_en_n      : std_logic;
                     
     signal alu_n : std_logic;
@@ -415,6 +418,7 @@ begin
                     indir_n,
                     indir_x_n,
                     indir_y_n,
+                    ba_out_n,
                     arith_en_n,
                     stat_dec_oe_n, 
                     stat_bus_oe_n, 
@@ -446,6 +450,7 @@ begin
                     indir_n,
                     indir_x_n,
                     indir_y_n,
+                    ba_out_n,
                     arith_en_n,
                     instruction,
                     exec_cycle,
