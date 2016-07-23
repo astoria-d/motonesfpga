@@ -519,9 +519,9 @@ begin
             port map(dbg_sp, set_clk, rst_n, '1', sp_cmd, int_d_bus, addr_back, bal);
 
     x : dual_dff generic map (dsize) 
-            port map(dbg_x, trigger_clk, rst_n, '1', x_cmd, int_d_bus, null_bus, index_bus);
+            port map(dbg_x, set_clk, rst_n, '1', x_cmd, int_d_bus, null_bus, index_bus);
     y : dual_dff generic map (dsize) 
-            port map(dbg_y, trigger_clk, rst_n, '1', y_cmd, int_d_bus, null_bus, index_bus);
+            port map(dbg_y, set_clk, rst_n, '1', y_cmd, int_d_bus, null_bus, index_bus);
 
     acc : dual_dff generic map (dsize) 
             port map(dbg_acc, trigger_clk, rst_n, '1', acc_cmd, int_d_bus, acc_in, acc_out);

@@ -32,7 +32,7 @@ entity de1_nes is
 
 --ppu debug pins
     signal dbg_ppu_ce_n    : out std_logic;
-    signal dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status : out std_logic_vector (7 downto 0);
+    signal dbg_ppu_ctrl, dbg_ppu_ctrl_dummy, dbg_ppu_mask, dbg_ppu_status : out std_logic_vector (7 downto 0);
     signal dbg_ppu_addr : out std_logic_vector (13 downto 0);
     signal dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y : out std_logic_vector (7 downto 0);
     signal dbg_disp_nt, dbg_disp_attr : out std_logic_vector (7 downto 0);
@@ -355,7 +355,7 @@ begin
     --nes ppu instance
     ppu_inst: ppu port map (  
         dbg_ppu_ce_n                                        ,
-        dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status          ,
+        dbg_ppu_ctrl_dummy, dbg_ppu_mask, dbg_ppu_status          ,
         dbg_ppu_addr                                        ,
         dbg_ppu_data, dbg_ppu_scrl_x_dummy, dbg_ppu_scrl_y_dummy        ,
 
@@ -472,7 +472,7 @@ begin
     dbg_nmi <= nmi_n;
 
     nmi_n <= dummy_nmi;
---    dbg_ppu_ctrl <= dbg_pcl;
+    dbg_ppu_ctrl <= dbg_pcl;
 --    dbg_ppu_mask <= dbg_pch;
 --    dbg_ppu_scrl_x(5) <= rom_ce_n;
 --    dbg_ppu_scrl_x(6) <= ram_ce_n;

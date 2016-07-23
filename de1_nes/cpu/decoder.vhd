@@ -92,9 +92,6 @@ constant T4 : std_logic_vector (5 downto 0) := "000100";
 constant T5 : std_logic_vector (5 downto 0) := "000101";
 constant T6 : std_logic_vector (5 downto 0) := "000110";
 
---T0r (T0 after reset) is the special cycle for very beginning T0 cycle of reset/nmi/irq.
-constant T0r : std_logic_vector (5 downto 0) := "000111";
-
 --01xxx : reset cycle : R0 > R1 > R2 > R3 > R4 > R5 > T0
 constant R0 : std_logic_vector (5 downto 0) := "001000";
 constant R1 : std_logic_vector (5 downto 0) := "001001";
@@ -221,6 +218,7 @@ begin
     back_oe(pcl_cmd, '1');
     back_oe(pch_cmd, '1');
     back_we(pcl_cmd, '1');
+    ad_oe_n <= '1';
 end procedure;
 
 procedure read_status is
@@ -278,7 +276,7 @@ begin
 
 end  procedure;
 
-procedure fetch_inst (wk_inc_pcl_n : in std_logic) is
+procedure fetch_inst is
 begin
     if instruction = conv_std_logic_vector(16#4c#, dsize) then
         --if prior cycle is jump instruction, 
@@ -296,8 +294,7 @@ begin
     ad_oe_n <= '0';
     pch_cmd <= "1101";
     inst_we_n <= '0';
-    pcl_inc_n <= wk_inc_pcl_n;
-    ba_out_n <= not wk_inc_pcl_n;
+    pcl_inc_n <= '0';
     r_nw <= '1';
 
     d_print(string'("fetch 1"));
@@ -306,15 +303,16 @@ end  procedure;
 ---T0 cycle routine 
 ---(along with the page boundary condition, the last 
 ---cycle is bypassed and slided to T0.)
-procedure t0_cycle(wk_inc_pcl_n : in std_logic) is
+procedure t0_cycle is
 begin
     disable_pins;
     if (nmi_n = '0' and nmi_handled_n = '1') then
         --start nmi handling...
-        fetch_inst('1');
+        --fetch_inst('1');
         wk_next_cycle <= N1;
     else
-        fetch_inst(wk_inc_pcl_n);
+        fetch_inst;
+        ba_out_n <= '1';
         wk_next_cycle <= T1;
     end if;
 end  procedure;
@@ -1119,13 +1117,9 @@ end  procedure;
                 r_nw <= 'Z';
                 ba_out_n <= '1';
 
-            elsif (exec_cycle = T0r) then
-                --cycle #1
-                t0_cycle('1');
-
             elsif (exec_cycle = T0 and ea_carry = '0') then
                 --cycle #1
-                t0_cycle('0');
+                t0_cycle;
 
             elsif exec_cycle = T1 or exec_cycle = T2 or exec_cycle = T3 or 
                 exec_cycle = T4 or exec_cycle = T5 or exec_cycle = T6 or 
@@ -2872,7 +2866,7 @@ end  procedure;
                     nmi_handled_n <= '0';
                 end if;
                 --start execute cycle.
-                wk_next_cycle <= T0r;
+                wk_next_cycle <= T0;
 
             end if; --if rdy = '0' then
 
