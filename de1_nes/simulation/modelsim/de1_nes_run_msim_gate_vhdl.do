@@ -38,6 +38,8 @@ add wave -label exec_cycle -radix hex sim:/testbench_motones_sim/sim_board/dbg_e
 add wave -label ea_carry   -radix decimal -unsigned  sim:/testbench_motones_sim/sim_board/dbg_ea_carry     
 #add wave -label wait_a58_branch_next -radix hex sim:/testbench_motones_sim/sim_board/dbg_wait_a58_branch_next     
 
+
+add wave -label acc -radix hex sim:/testbench_motones_sim/sim_board/dbg_acc
 add wave -label pcl -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_ctrl
 
 
@@ -118,7 +120,7 @@ wave zoom full
 
 #wave zoom range 3339700 ps 5138320 ps
 
-run 5 us
+run 20 us
 
 ##wave addcursor 907923400 ps
 

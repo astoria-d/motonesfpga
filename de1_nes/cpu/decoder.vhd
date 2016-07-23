@@ -47,7 +47,6 @@ entity decoder is
             indir_n         : out std_logic;
             indir_x_n       : out std_logic;
             indir_y_n       : out std_logic;
-            ba_out_n        : out std_logic;
             arith_en_n      : out std_logic;
             stat_dec_oe_n   : out std_logic;
             stat_bus_oe_n   : out std_logic;
@@ -312,7 +311,6 @@ begin
         wk_next_cycle <= N1;
     else
         fetch_inst;
-        ba_out_n <= '1';
         wk_next_cycle <= T1;
     end if;
 end  procedure;
@@ -1115,7 +1113,6 @@ end  procedure;
                 pcl_cmd <= "1111";
                 pch_cmd <= "1111";
                 r_nw <= 'Z';
-                ba_out_n <= '1';
 
             elsif (exec_cycle = T0 and ea_carry = '0') then
                 --cycle #1
@@ -2752,7 +2749,6 @@ end  procedure;
                 indir_n <= '1';
                 indir_x_n <= '1';
                 indir_y_n <= '1';
-                ba_out_n <= '1';
                 arith_en_n <= '1';
 
                 stat_dec_oe_n <= '0';
@@ -2851,7 +2847,6 @@ end  procedure;
                     n_vec_oe_n <= '0';
                     wk_next_cycle <= N5;
                 end if;
-                ba_out_n <= '0';
                 
             elsif exec_cycle = R5 or exec_cycle = N5 then
                 front_we(pcl_cmd, '1');

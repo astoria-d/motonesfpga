@@ -25,7 +25,6 @@ entity alu is
             indir_n         : in std_logic;
             indir_x_n       : in std_logic;
             indir_y_n       : in std_logic;
-            ba_out_n        : in std_logic;
             arith_en_n      : in std_logic;
             instruction     : in std_logic_vector (dsize - 1 downto 0);
             exec_cycle      : in std_logic_vector (5 downto 0);
@@ -220,7 +219,7 @@ begin
                     pcl_inc_n, sp_oe_n, sp_pop_n, sp_push_n,
                     zp_n, zp_xy_n, abs_xy_n, pg_next_n, rel_calc_n,
                     int_d_bus(7), indir_n, indir_x_n, exec_cycle,
-                    indir_y_n, ba_out_n
+                    indir_y_n
                     )
     begin
     
@@ -464,18 +463,18 @@ begin
             tmp_buf_we_n <= '1';
             ea_carry <= '0';
         end if; -- if (exec_cycle = T2) then
-    elsif (ba_out_n = '0') then
-        abh <= bah;
-        abl <= bal;
     else
         al_buf_we_n <= '1';
         ah_buf_we_n <= '1';
         tmp_buf_we_n <= '1';
         ea_carry <= '0';
 
-        abl <= (others => 'Z');
-        abh <= (others => 'Z');
-        addr_back <= (others => 'Z');
+        abl <= bal;
+        abh <= bah;
+
+        ----addr_back is always bal for jmp/jsr instruction....
+        -----TODO must check later if it's ok.
+        addr_back <= bal;
     end if; --if (pcl_inc_n = '0') then
 
     end process;
