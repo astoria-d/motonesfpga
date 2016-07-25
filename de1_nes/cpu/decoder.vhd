@@ -190,7 +190,13 @@ begin
     back_oe(pcl_cmd, '0');
     back_oe(pch_cmd, '0');
     back_we(pcl_cmd, '0');
-    back_we(pch_cmd, '1');
+    back_we(pch_cmd, '0');
+    if exec_cycle = T1 then
+        front_we(idl_l_cmd, '0');
+    elsif exec_cycle = T2 then
+        front_we(idl_l_cmd, '1');
+        front_we(idl_h_cmd, '0');
+    end if;
 end procedure;
 
 procedure fetch_stop is
@@ -199,6 +205,7 @@ begin
     back_oe(pcl_cmd, '1');
     back_oe(pch_cmd, '1');
     back_we(pcl_cmd, '1');
+    back_we(pch_cmd, '1');
     ad_oe_n <= '1';
 end procedure;
 
@@ -213,10 +220,7 @@ begin
 --following pins are not set in this function.
 --            inst_we_n       : out std_logic;
 --            ad_oe_n         : out std_logic;
---            dl_al_oe_n      : out std_logic;
 --            pcl_inc_n       : out std_logic;
---            pcl_cmd         : out std_logic_vector(3 downto 0);
---            pch_cmd         : out std_logic_vector(3 downto 0);
 --            r_nw            : out std_logic
 
     --disable the last opration pins.
@@ -264,17 +268,17 @@ begin
         --if prior cycle is jump instruction, 
         --fetch opcode from where the latch is pointing to.
 
-        --latch > al.
-        idl_l_cmd <= "1110";
         pcl_cmd <= "1110";
     else
         --fetch opcode and pcl increment.
         pcl_cmd <= "1100";
-        --dl_al_oe_n <= '1';
     end if;
 
+    --latch > al.
+    idl_l_cmd <= "1110";
+    idl_h_cmd <= "1111";
     ad_oe_n <= '0';
-    pch_cmd <= "1101";
+    pch_cmd <= "1100";
     inst_we_n <= '0';
     pcl_inc_n <= '0';
     r_nw <= '1';
@@ -390,31 +394,27 @@ begin
     fetch_next;
     --latch abs low data.
     dbuf_int_oe_n <= '0';
-    --dl_al_we_n <= '0';
     next_cycle <= T2;
 end  procedure;
 
 procedure abs_fetch_high is
 begin
     d_print("abs (xy) 3");
-    --dl_al_we_n <= '1';
 
     --latch abs hi data.
     fetch_next;
     dbuf_int_oe_n <= '0';
-    --dl_ah_we_n <= '0';
     next_cycle <= T3;
 end  procedure;
 
 procedure abs_latch_out is
 begin
     --d_print("abs 4");
-    --dl_ah_we_n <= '1';
     fetch_stop;
 
     --latch > al/ah.
-    --dl_al_oe_n <= '0';
-    --dl_ah_oe_n <= '0';
+    back_oe(idl_l_cmd, '0');
+    back_oe(idl_h_cmd, '0');
 end  procedure;
 
 procedure ea_x_out is
@@ -439,10 +439,9 @@ begin
     elsif exec_cycle = T2 then
         fetch_stop;
         dbuf_int_oe_n <= '0';
-        --dl_al_we_n <= '1';
 
         --calc zp.
-        --dl_al_oe_n <= '0';
+        back_oe(idl_l_cmd, '0');
         zp_n <= '0';
         next_cycle <= T0;
     end if;
@@ -508,10 +507,9 @@ begin
         fetch_stop;
         --output BAL only
         dbuf_int_oe_n <= '0';
-        --dl_al_we_n <= '1';
 
         --calc zp.
-        --dl_al_oe_n <= '0';
+        back_oe(idl_l_cmd, '0');
         zp_n <= '0';
         next_cycle <= T3;
     elsif exec_cycle = T3 then
@@ -531,28 +529,26 @@ begin
     if exec_cycle = T1 then
         fetch_low;
         --get IAL
-        --dl_al_we_n <= '0';
 
     elsif exec_cycle = T2 then
         fetch_stop;
-        --dl_al_we_n <= '1';
 
         ---address is 00:IAL
         --output BAL @IAL
         indir_y_n <= '0';
-        --dl_al_oe_n <= '0';
+        back_oe(idl_l_cmd, '0');
         dbuf_int_oe_n <= '0';
         next_cycle <= T3;
 
     elsif exec_cycle = T3 then
         indir_y_n <= '0';
-        --dl_al_oe_n <= '0';
+        back_oe(idl_l_cmd, '0');
         --output BAH @IAL+1
         dbuf_int_oe_n <= '0';
         next_cycle <= T4;
 
     elsif exec_cycle = T4 then
-        --dl_al_oe_n <= '1';
+        back_oe(idl_l_cmd, '1');
         dbuf_int_oe_n <= '1';
 
         --add index y.
@@ -581,21 +577,19 @@ begin
     if exec_cycle = T1 then
         fetch_low;
         --get IAL
-        --dl_al_we_n <= '0';
 
     elsif exec_cycle = T2 then
         fetch_stop;
-        --dl_al_we_n <= '1';
 
         ---address is 00:IAL
         --output BAL @IAL, but cycle #2 is discarded
         indir_x_n <= '0';
-        --dl_al_oe_n <= '0';
+        back_oe(idl_l_cmd, '0');
         next_cycle <= T3;
 
     elsif exec_cycle = T3 then
         indir_x_n <= '0';
-        --dl_al_oe_n <= '1';
+        back_oe(idl_l_cmd, '1');
 
         --output BAH @IAL+x
         dbuf_int_oe_n <= '0';
@@ -625,10 +619,9 @@ begin
     elsif exec_cycle = T2 then
         fetch_stop;
         dbuf_int_oe_n <= '1';
-        --dl_al_we_n <= '1';
 
         --calc zp.
-        --dl_al_oe_n <= '0';
+        back_oe(idl_l_cmd, '0');
         zp_n <= '0';
         r_nw <= '0';
         next_cycle <= T0;
@@ -642,15 +635,14 @@ begin
     elsif exec_cycle = T2 then
         fetch_stop;
         dbuf_int_oe_n <= '1';
-        --dl_al_we_n <= '1';
 
         --calc zp.
-        --dl_al_oe_n <= '0';
+        back_oe(idl_l_cmd, '0');
         zp_n <= '0';
         next_cycle <= T3;
     elsif exec_cycle = T3 then
         --calc zp + index.
-        --dl_al_oe_n <= '0';
+        back_oe(idl_l_cmd, '0');
         zp_n <= '0';
         zp_xy_n <= '0';
         if (is_x = true) then
@@ -719,28 +711,26 @@ begin
     if exec_cycle = T1 then
         fetch_low;
         --get IAL
-        --dl_al_we_n <= '0';
 
     elsif exec_cycle = T2 then
         fetch_stop;
-        --dl_al_we_n <= '1';
 
         ---address is 00:IAL
         --output BAL @IAL
         indir_y_n <= '0';
-        --dl_al_oe_n <= '0';
+        back_oe(idl_l_cmd, '0');
         dbuf_int_oe_n <= '0';
         next_cycle <= T3;
 
     elsif exec_cycle = T3 then
         indir_y_n <= '0';
-        --dl_al_oe_n <= '0';
+        back_oe(idl_l_cmd, '0');
         --output BAH @IAL+1
         dbuf_int_oe_n <= '0';
         next_cycle <= T4;
 
     elsif exec_cycle = T4 then
-        --dl_al_oe_n <= '1';
+        back_oe(idl_l_cmd, '1');
         dbuf_int_oe_n <= '1';
 
         --add index y.
@@ -770,21 +760,19 @@ begin
     if exec_cycle = T1 then
         fetch_low;
         --get IAL
-        --dl_al_we_n <= '0';
 
     elsif exec_cycle = T2 then
         fetch_stop;
-        --dl_al_we_n <= '1';
 
         ---address is 00:IAL
         --output BAL @IAL, but cycle #2 is discarded
         indir_x_n <= '0';
-        --dl_al_oe_n <= '0';
+        back_oe(idl_l_cmd, '0');
         next_cycle <= T3;
 
     elsif exec_cycle = T3 then
         indir_x_n <= '0';
-        --dl_al_oe_n <= '1';
+        back_oe(idl_l_cmd, '1');
 
         --output BAH @IAL+x
         dbuf_int_oe_n <= '0';
@@ -815,10 +803,9 @@ begin
         fetch_low;
     elsif exec_cycle = T2 then
         fetch_stop;
-        --dl_al_we_n <= '1';
 
         --t2 cycle read and,
-        --dl_al_oe_n <= '0';
+        back_oe(idl_l_cmd, '0');
         zp_n <= '0';
         --keep data in the alu reg.
         arith_en_n <= '0';
@@ -826,14 +813,14 @@ begin
         next_cycle <= T3;
     elsif exec_cycle = T3 then
         --t3 fix alu internal register.
-        --dl_al_oe_n <= '0';
+        back_oe(idl_l_cmd, '0');
         zp_n <= '0';
         arith_en_n <= '0';
         dbuf_int_oe_n <= '1';
         next_cycle <= T4;
     elsif exec_cycle = T4 then
         --t5 cycle writes modified value.
-        --dl_al_oe_n <= '0';
+        back_oe(idl_l_cmd, '0');
         zp_n <= '0';
         r_nw <= '0';
         arith_en_n <= '0';
@@ -848,15 +835,14 @@ begin
     elsif exec_cycle = T2 then
         fetch_stop;
         dbuf_int_oe_n <= '1';
-        --dl_al_we_n <= '1';
 
         --t2 cycle read bal only.
-        --dl_al_oe_n <= '0';
+        back_oe(idl_l_cmd, '0');
         zp_n <= '0';
         next_cycle <= T3;
     elsif exec_cycle = T3 then
         --t3 cycle read bal + x
-        --dl_al_oe_n <= '0';
+        back_oe(idl_l_cmd, '0');
         zp_n <= '0';
         zp_xy_n <= '0';
         back_oe(x_cmd, '0');
@@ -867,7 +853,7 @@ begin
 
         next_cycle <= T4;
     elsif exec_cycle = T4 then
-        --dl_al_oe_n <= '0';
+        back_oe(idl_l_cmd, '0');
         zp_n <= '0';
         zp_xy_n <= '0';
         back_oe(x_cmd, '0');
@@ -880,7 +866,7 @@ begin
         dbuf_int_oe_n <= '1';
 
         --t5 cycle writes modified value.
-        --dl_al_oe_n <= '0';
+        back_oe(idl_l_cmd, '0');
         zp_n <= '0';
         zp_xy_n <= '0';
         back_oe(x_cmd, '0');
@@ -1020,7 +1006,7 @@ begin
 
             --latch rel value.
             dbuf_int_oe_n <= '0';
-            --dl_ah_we_n <= '0';
+            front_we(idl_h_cmd, '0');
             next_cycle <= T2;
         else
             d_print("no branch");
@@ -1030,12 +1016,12 @@ begin
         d_print("rel ea");
         fetch_stop;
         dbuf_int_oe_n <= '1';
-        --dl_ah_we_n <= '1';
+        front_we(idl_h_cmd, '1');
 
         --calc relative addr.
         rel_calc_n <= '0';
         pg_next_n <= '1';
-        --dl_dh_oe_n <= '0';
+        front_oe(idl_h_cmd, '0');
         back_oe(pcl_cmd, '0');
         back_oe(pch_cmd, '0');
         back_we(pcl_cmd, '0');
@@ -1048,7 +1034,7 @@ begin
         back_oe(pcl_cmd, '0');
         back_oe(pch_cmd, '0');
         back_we(pch_cmd, '0');
-        --dl_dh_oe_n <= '0';
+        front_oe(idl_h_cmd, '0');
 
         rel_calc_n <= '0';
         pg_next_n <= '0';
@@ -1091,7 +1077,7 @@ end  procedure;
                 disable_pins;
                 inst_we_n <= '1';
                 ad_oe_n <= '1';
-                --dl_al_oe_n <= '1';
+                back_oe(idl_l_cmd, '1');
                 pcl_inc_n <= '1';
                 pcl_cmd <= "1111";
                 pch_cmd <= "1111";
@@ -1113,7 +1099,7 @@ end  procedure;
                     d_print("decode and execute inst: " 
                             & conv_hex8(conv_integer(instruction)));
                     --disable pin for jmp instruction 
-                    --dl_al_oe_n <= '1';
+                    back_oe(idl_l_cmd, '1');
                     back_we(pcl_cmd, '1');
                     front_we(pch_cmd, '1');
 
@@ -2379,13 +2365,11 @@ end  procedure;
                         fetch_next;
                         dbuf_int_oe_n <= '0';
                         --latch adl
-                        --dl_al_we_n <= '0';
                         next_cycle <= T2;
                     elsif exec_cycle = T2 then
                         d_print("jsr 3");
                         fetch_stop;
                         dbuf_int_oe_n <= '1';
-                        --dl_al_we_n <= '1';
 
                        --push return addr high into stack.
                         sp_push_n <= '0';
@@ -2421,7 +2405,7 @@ end  procedure;
                         back_oe(pch_cmd, '0');
                         back_oe(pcl_cmd, '0');
                         dbuf_int_oe_n <= '0';
-                        --dl_ah_we_n <= '0';
+                        front_we(idl_h_cmd, '0');
 
                         next_cycle <= T5;
                     elsif exec_cycle = T5 then
@@ -2430,15 +2414,16 @@ end  procedure;
                         back_oe(pch_cmd, '1');
                         back_oe(pcl_cmd, '1');
                         dbuf_int_oe_n <= '1';
-                        --dl_ah_we_n <= '1';
+                        front_we(idl_h_cmd, '1');
+
 
                         --load/output  pch
                         ad_oe_n <= '1';
-                        --dl_dh_oe_n <= '0';
+                        front_oe(idl_h_cmd, '0');
                         front_we(pch_cmd, '0');
 
                         --load pcl.
-                        --dl_al_oe_n <= '0';
+                        back_oe(idl_l_cmd, '0');
                         back_we(pcl_cmd, '0');
 
                         next_cycle <= T0;
@@ -2531,18 +2516,15 @@ end  procedure;
 
                         --latch abs low data.
                         dbuf_int_oe_n <= '0';
-                        --dl_al_we_n <= '0';
                         next_cycle <= T2;
                     elsif exec_cycle = T2 then
                         d_print("jmp 3");
-                        --dl_al_we_n <= '1';
 
                         --fetch abs hi
                         fetch_next;
 
                         --latch  in dlh
                         dbuf_int_oe_n <= '0';
-                        --dl_ah_we_n <= '0';
                         ---load pch.
                         front_we(pch_cmd, '0');
 
@@ -2558,33 +2540,29 @@ end  procedure;
 
                         --latch abs low data.
                         dbuf_int_oe_n <= '0';
-                        --dl_al_we_n <= '0';
                         next_cycle <= T2;
                     elsif exec_cycle = T2 then
                         d_print("jmp 3");
-                        --dl_al_we_n <= '1';
 
                         --fetch abs hi
                         fetch_next;
 
                         --latch  in dlh
                         dbuf_int_oe_n <= '0';
-                        --dl_ah_we_n <= '0';
                         next_cycle <= T3;
 
                     elsif exec_cycle = T3 then
                         fetch_stop;
-                        --dl_ah_we_n <= '1';
 
                         --IAH/IAL > ADL
-                        --dl_ah_oe_n <= '0';
-                        --dl_al_oe_n <= '0';
+                        back_oe(idl_h_cmd, '0');
+                        back_oe(idl_l_cmd, '0');
                         front_we(pcl_cmd, '0');
                         next_cycle <= T4;
 
                     elsif exec_cycle = T4 then
-                        --dl_ah_oe_n <= '0';
-                        --dl_al_oe_n <= '0';
+                        back_oe(idl_h_cmd, '0');
+                        back_oe(idl_l_cmd, '0');
                         front_we(pcl_cmd, '1');
 
                         --IAH/IAL+1 > ADH
@@ -2708,21 +2686,20 @@ end  procedure;
                 inst_we_n <= '1';
                 ad_oe_n <= '1';
                 dbuf_int_oe_n <= '1';
-                --dl_al_we_n <= '1';
-                --dl_ah_we_n <= '1';
-                --dl_al_oe_n <= '1';
-                --dl_ah_oe_n <= '1';
-                --dl_dh_oe_n <= '1';
-                pcl_inc_n <= '1';
+
+                idl_l_cmd <= "1111";
+                idl_h_cmd <= "1111";
                 pcl_cmd <= "1111";
                 pch_cmd <= "1111";
                 sp_cmd <= "1111";
-                sp_oe_n <= '1';
-                sp_push_n <= '1';
-                sp_pop_n <= '1';
                 acc_cmd <= "1111";
                 x_cmd <= "1111";
                 y_cmd <= "1111";
+
+                pcl_inc_n <= '1';
+                sp_oe_n <= '1';
+                sp_push_n <= '1';
+                sp_pop_n <= '1';
 
                 abs_xy_n <= '1';
                 pg_next_n <= '1';
@@ -2753,7 +2730,7 @@ end  procedure;
                 pcl_cmd <= "1111";
                 pcl_inc_n <= '1';
                 inst_we_n <= '1';
-                --dl_al_oe_n <= '1';
+                back_oe(idl_l_cmd, '1');
 
                 --push pch.
                 d_print("R1");
@@ -2818,8 +2795,8 @@ end  procedure;
                 r_nw <= '1';
                 dbuf_int_oe_n <= '0';
                 front_we(pcl_cmd, '0');
-                --dl_al_oe_n <= '1';
-                --dl_ah_oe_n <= '1';
+                back_oe(idl_l_cmd, '1');
+                back_oe(idl_h_cmd, '1');
 
                 if exec_cycle = R4 then
                     r_vec_oe_n <= '0';

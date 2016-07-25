@@ -164,10 +164,9 @@ begin
         a_sel <= ADDR_INC;
         addr1 <= bal;
         addr_back_l <= addr_out;
-
+        addr_back_h <= bah + addr_c;
         abl <= bal;
-        abh <= bah + addr_c;
-        addr_back_h <= addr_out;
+        abh <= bah;
 
     elsif (sp_oe_n = '0') then
         --stack operation...
