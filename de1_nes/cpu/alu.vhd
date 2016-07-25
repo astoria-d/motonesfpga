@@ -1,5 +1,5 @@
 ----------------------------
----- 6502 ALU implementation
+---- 6502 address calrucator
 ----------------------------
 library ieee;
 use ieee.std_logic_1164.all;
@@ -7,12 +7,18 @@ use ieee.std_logic_unsigned.all;
 use ieee.std_logic_arith.conv_std_logic_vector;
 use work.motonesfpga_common.all;
 
-entity alu is 
+entity address_calcurator is 
     generic (   dsize : integer := 8
             );
     port (  
             set_clk         : in std_logic;
             trig_clk        : in std_logic;
+
+            --instruction reg
+            instruction     : in std_logic_vector (dsize - 1 downto 0);
+            exec_cycle      : in std_logic_vector (5 downto 0);
+
+            --control line.
             pcl_inc_n       : in std_logic;
             sp_oe_n         : in std_logic;
             sp_push_n       : in std_logic;
@@ -25,28 +31,21 @@ entity alu is
             indir_n         : in std_logic;
             indir_x_n       : in std_logic;
             indir_y_n       : in std_logic;
-            arith_en_n      : in std_logic;
-            instruction     : in std_logic_vector (dsize - 1 downto 0);
-            exec_cycle      : in std_logic_vector (5 downto 0);
-            int_d_bus       : inout std_logic_vector (dsize - 1 downto 0);
-            acc_out         : in std_logic_vector (dsize - 1 downto 0);
+
+            --in/out buses.
             index_bus       : in std_logic_vector (dsize - 1 downto 0);
             bal             : in std_logic_vector (dsize - 1 downto 0);
             bah             : in std_logic_vector (dsize - 1 downto 0);
-            addr_back       : out std_logic_vector (dsize - 1 downto 0);
-            acc_in          : out std_logic_vector (dsize - 1 downto 0);
+            int_d_bus       : inout std_logic_vector (dsize - 1 downto 0);
+            addr_back_l     : out std_logic_vector (dsize - 1 downto 0);
+            addr_back_h     : out std_logic_vector (dsize - 1 downto 0);
             abl             : out std_logic_vector (dsize - 1 downto 0);
             abh             : out std_logic_vector (dsize - 1 downto 0);
-            ea_carry        : out std_logic;
-            carry_in        : in std_logic;
-            negative        : out std_logic;
-            zero            : out std_logic;
-            carry_out       : out std_logic;
-            overflow        : out std_logic
-    );
-end alu;
+            ea_carry        : out std_logic
+            );
+end address_calcurator;
 
-architecture rtl of alu is
+architecture rtl of address_calcurator is
 
 component d_flip_flop
     generic (
@@ -84,7 +83,7 @@ component tri_state_buffer
         );
 end component;
 
-component address_calculator
+component addr_alu
     generic (   dsize : integer := 8
             );
     port ( 
@@ -97,40 +96,11 @@ component address_calculator
     );
 end component;
 
-component alu_core
-    generic (   dsize : integer := 8
-            );
-    port ( 
-            sel         : in std_logic_vector (3 downto 0);
-            d1          : in std_logic_vector (dsize - 1 downto 0);
-            d2          : in std_logic_vector (dsize - 1 downto 0);
-            d_out       : out std_logic_vector (dsize - 1 downto 0);
-            carry_in    : in std_logic;
-            negative    : out std_logic;
-            zero        : out std_logic;
-            carry_out   : out std_logic;
-            overflow    : out std_logic
-    );
-end component;
 
 constant ADDR_ADC    : std_logic_vector (1 downto 0) := "00";
 constant ADDR_INC    : std_logic_vector (1 downto 0) := "01";
 constant ADDR_DEC    : std_logic_vector (1 downto 0) := "10";
 constant ADDR_SIGNED_ADD : std_logic_vector (1 downto 0) := "11";
-
-constant ALU_AND    : std_logic_vector (3 downto 0) := "0000";
-constant ALU_EOR    : std_logic_vector (3 downto 0) := "0001";
-constant ALU_OR     : std_logic_vector (3 downto 0) := "0010";
-constant ALU_BIT    : std_logic_vector (3 downto 0) := "0011";
-constant ALU_ADC    : std_logic_vector (3 downto 0) := "0100";
-constant ALU_SBC    : std_logic_vector (3 downto 0) := "0101";
-constant ALU_CMP    : std_logic_vector (3 downto 0) := "0110";
-constant ALU_ASL    : std_logic_vector (3 downto 0) := "0111";
-constant ALU_LSR    : std_logic_vector (3 downto 0) := "1000";
-constant ALU_ROL    : std_logic_vector (3 downto 0) := "1001";
-constant ALU_ROR    : std_logic_vector (3 downto 0) := "1010";
-constant ALU_INC    : std_logic_vector (3 downto 0) := "1011";
-constant ALU_DEC    : std_logic_vector (3 downto 0) := "1100";
 
 ---for indirect addressing.
 constant T0 : std_logic_vector (5 downto 0) := "000000";
@@ -162,25 +132,6 @@ signal addr_c_in : std_logic;
 signal addr_c : std_logic;
 signal addr_c_reg : std_logic;
 
------------ signals for arithmatic ----------
-signal sel : std_logic_vector (3 downto 0);
-signal d1 : std_logic_vector (dsize - 1 downto 0);
-signal d2 : std_logic_vector (dsize - 1 downto 0);
-signal d_out : std_logic_vector (dsize - 1 downto 0);
-signal alu_out : std_logic_vector (dsize - 1 downto 0);
-
-signal n : std_logic;
-signal z : std_logic;
-signal c : std_logic;
-signal v : std_logic;
-
-signal arith_buf_we_n : std_logic;
-signal arith_buf_oe_n : std_logic;
-signal arith_reg_in : std_logic_vector (dsize - 1 downto 0);
-signal arith_reg : std_logic_vector (dsize - 1 downto 0);
-signal arith_reg_out : std_logic_vector (dsize - 1 downto 0);
-signal d_oe_n : std_logic;
-
 begin
     ----------------------------------------
      -- address calucurator instances ----
@@ -192,25 +143,12 @@ begin
     tmp_dff : d_flip_flop generic map (dsize) 
             port map(trig_clk, '1', '1', tmp_buf_we_n, tmp_reg_in, tmp_reg);
 
-    addr_calc_inst : address_calculator generic map (dsize)
+    addr_calc_inst : addr_alu generic map (dsize)
             port map (a_sel, addr1, addr2, addr_out, addr_c_in, addr_c);
 
     ea_carry_dff_bit : d_flip_flop_bit 
             port map(trig_clk, '1', '1', 
                     '0', addr_c, addr_c_reg);
-
-    ----------------------------------------
-     -- arithmatic operation instances ----
-    ----------------------------------------
-    arith_dff : d_flip_flop generic map (dsize) 
-            port map(trig_clk, '1', '1', arith_buf_we_n, arith_reg_in, arith_reg);
-    arith_buf : tri_state_buffer generic map (dsize)
-            port map (arith_buf_oe_n, arith_reg, arith_reg_out);
-
-    alu_inst : alu_core generic map (dsize)
-            port map (sel, d1, d2, alu_out, carry_in, n, z, c, v);
-    alu_buf : tri_state_buffer generic map (dsize)
-            port map (d_oe_n, alu_out, d_out);
 
     -------------------------------
     ----- address calcuration -----
@@ -227,10 +165,11 @@ begin
         ea_carry <= '0';
         a_sel <= ADDR_INC;
         addr1 <= bal;
-        addr_back <= addr_out;
+        addr_back_l <= addr_out;
 
         abl <= bal;
         abh <= bah + addr_c;
+        addr_back_h <= addr_out;
 
     elsif (sp_oe_n = '0') then
         --stack operation...
@@ -243,13 +182,13 @@ begin
             --case pop
             a_sel <= ADDR_INC;
             addr1 <= bal;
-            addr_back <= addr_out;
+            addr_back_l <= addr_out;
             abl <= bal;
         else
             ---case push
             a_sel <= ADDR_DEC;
             addr1 <= bal;
-            addr_back <= addr_out;
+            addr_back_l <= addr_out;
             abl <= bal;
         end if;
     elsif (zp_n = '0') then
@@ -303,7 +242,7 @@ begin
             ---addr1 is pch.`
             addr1 <= bah;
             ---rel val is on the d_bus.
-            addr_back <= addr_out;
+            addr_back_h <= addr_out;
             ea_carry <= '0'; 
 
             --keep the value in the cycle
@@ -318,7 +257,7 @@ begin
             addr1 <= bal;
             ---rel val is on the d_bus.
             addr2 <= int_d_bus;
-            addr_back <= addr_out;
+            addr_back_l <= addr_out;
             addr_c_in <= '0';
             ea_carry <= addr_c_reg;
 
@@ -474,14 +413,140 @@ begin
 
         ----addr_back is always bal for jmp/jsr instruction....
         -----TODO must check later if it's ok.
-        addr_back <= bal;
+        addr_back_l <= bal;
+        addr_back_h <= bah;
     end if; --if (pcl_inc_n = '0') then
 
     end process;
+end rtl;
 
     -------------------------------
-    ---- arithmatic operations-----
+    ---- ALU -----
     -------------------------------
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
+use ieee.std_logic_arith.conv_std_logic_vector;
+use work.motonesfpga_common.all;
+
+entity alu is 
+    generic (   dsize : integer := 8
+            );
+    port (  
+            set_clk         : in std_logic;
+            trig_clk        : in std_logic;
+            instruction     : in std_logic_vector (dsize - 1 downto 0);
+            exec_cycle      : in std_logic_vector (5 downto 0);
+            arith_en_n      : in std_logic;
+            int_d_bus       : inout std_logic_vector (dsize - 1 downto 0);
+            acc_in          : out std_logic_vector (dsize - 1 downto 0);
+            acc_out         : in std_logic_vector (dsize - 1 downto 0);
+            index_bus       : in std_logic_vector (dsize - 1 downto 0);
+            carry_in        : in std_logic;
+            negative        : out std_logic;
+            zero            : out std_logic;
+            carry_out       : out std_logic;
+            overflow        : out std_logic
+    );
+end alu;
+
+architecture rtl of alu is
+
+component alu_core
+    generic (   dsize : integer := 8
+            );
+    port ( 
+            sel         : in std_logic_vector (3 downto 0);
+            d1          : in std_logic_vector (dsize - 1 downto 0);
+            d2          : in std_logic_vector (dsize - 1 downto 0);
+            d_out       : out std_logic_vector (dsize - 1 downto 0);
+            carry_in    : in std_logic;
+            negative    : out std_logic;
+            zero        : out std_logic;
+            carry_out   : out std_logic;
+            overflow    : out std_logic
+    );
+end component;
+
+component d_flip_flop
+    generic (
+            dsize : integer := 8
+            );
+    port (  
+            clk     : in std_logic;
+            res_n   : in std_logic;
+            set_n   : in std_logic;
+            we_n    : in std_logic;
+            d       : in std_logic_vector (dsize - 1 downto 0);
+            q       : out std_logic_vector (dsize - 1 downto 0)
+        );
+end component;
+
+component tri_state_buffer
+    generic (
+            dsize : integer := 8
+            );
+    port (  
+            oe_n    : in std_logic;
+            d       : in std_logic_vector (dsize - 1 downto 0);
+            q       : out std_logic_vector (dsize - 1 downto 0)
+        );
+end component;
+
+constant ALU_AND    : std_logic_vector (3 downto 0) := "0000";
+constant ALU_EOR    : std_logic_vector (3 downto 0) := "0001";
+constant ALU_OR     : std_logic_vector (3 downto 0) := "0010";
+constant ALU_BIT    : std_logic_vector (3 downto 0) := "0011";
+constant ALU_ADC    : std_logic_vector (3 downto 0) := "0100";
+constant ALU_SBC    : std_logic_vector (3 downto 0) := "0101";
+constant ALU_CMP    : std_logic_vector (3 downto 0) := "0110";
+constant ALU_ASL    : std_logic_vector (3 downto 0) := "0111";
+constant ALU_LSR    : std_logic_vector (3 downto 0) := "1000";
+constant ALU_ROL    : std_logic_vector (3 downto 0) := "1001";
+constant ALU_ROR    : std_logic_vector (3 downto 0) := "1010";
+constant ALU_INC    : std_logic_vector (3 downto 0) := "1011";
+constant ALU_DEC    : std_logic_vector (3 downto 0) := "1100";
+
+constant T0 : std_logic_vector (5 downto 0) := "000000";
+constant T1 : std_logic_vector (5 downto 0) := "000001";
+constant T2 : std_logic_vector (5 downto 0) := "000010";
+constant T3 : std_logic_vector (5 downto 0) := "000011";
+constant T4 : std_logic_vector (5 downto 0) := "000100";
+constant T5 : std_logic_vector (5 downto 0) := "000101";
+
+----------- signals for arithmatic ----------
+signal sel : std_logic_vector (3 downto 0);
+signal d1 : std_logic_vector (dsize - 1 downto 0);
+signal d2 : std_logic_vector (dsize - 1 downto 0);
+signal d_out : std_logic_vector (dsize - 1 downto 0);
+signal alu_out : std_logic_vector (dsize - 1 downto 0);
+
+signal n : std_logic;
+signal z : std_logic;
+signal c : std_logic;
+signal v : std_logic;
+
+signal arith_buf_we_n : std_logic;
+signal arith_buf_oe_n : std_logic;
+signal arith_reg_in : std_logic_vector (dsize - 1 downto 0);
+signal arith_reg : std_logic_vector (dsize - 1 downto 0);
+signal arith_reg_out : std_logic_vector (dsize - 1 downto 0);
+signal d_oe_n : std_logic;
+
+begin
+    ----------------------------------------
+     -- arithmatic operation instances ----
+    ----------------------------------------
+    arith_dff : d_flip_flop generic map (dsize) 
+            port map(trig_clk, '1', '1', arith_buf_we_n, arith_reg_in, arith_reg);
+    arith_buf : tri_state_buffer generic map (dsize)
+            port map (arith_buf_oe_n, arith_reg, arith_reg_out);
+
+    alu_inst : alu_core generic map (dsize)
+            port map (sel, d1, d2, alu_out, carry_in, n, z, c, v);
+    alu_buf : tri_state_buffer generic map (dsize)
+            port map (d_oe_n, alu_out, d_out);
+
     alu_arith_p : process (
                     arith_en_n,
                     instruction, exec_cycle, int_d_bus, acc_out, 
@@ -766,7 +831,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 
-entity address_calculator is 
+entity addr_alu is 
     generic (   dsize : integer := 8
             );
     port ( 
@@ -777,9 +842,9 @@ entity address_calculator is
             carry_in    : in std_logic;
             carry_out   : out std_logic
     );
-end address_calculator;
+end addr_alu;
 
-architecture rtl of address_calculator is
+architecture rtl of addr_alu is
 
 constant ADDR_ADC    : std_logic_vector (1 downto 0) := "00";
 constant ADDR_INC    : std_logic_vector (1 downto 0) := "01";
