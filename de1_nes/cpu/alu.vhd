@@ -11,7 +11,6 @@ entity address_calcurator is
     generic (   dsize : integer := 8
             );
     port (  
-            set_clk         : in std_logic;
             trig_clk        : in std_logic;
 
             --instruction reg
@@ -133,26 +132,25 @@ signal addr_c : std_logic;
 signal addr_c_reg : std_logic;
 
 begin
-    ----------------------------------------
-     -- address calucurator instances ----
-    ----------------------------------------
+    ----work registers...
     al_dff : d_flip_flop generic map (dsize) 
             port map(trig_clk, '1', '1', al_buf_we_n, al_reg_in, al_reg);
     ah_dff : d_flip_flop generic map (dsize) 
             port map(trig_clk, '1', '1', ah_buf_we_n, ah_reg_in, ah_reg);
     tmp_dff : d_flip_flop generic map (dsize) 
             port map(trig_clk, '1', '1', tmp_buf_we_n, tmp_reg_in, tmp_reg);
+    ea_carry_dff_bit : d_flip_flop_bit 
+            port map(trig_clk, '1', '1', '0', addr_c, addr_c_reg);
 
+    ----------------------------------------
+     -- address calucurator instances ----
+    ----------------------------------------
     addr_calc_inst : addr_alu generic map (dsize)
             port map (a_sel, addr1, addr2, addr_out, addr_c_in, addr_c);
 
-    ea_carry_dff_bit : d_flip_flop_bit 
-            port map(trig_clk, '1', '1', 
-                    '0', addr_c, addr_c_reg);
-
-    -------------------------------
-    ----- address calcuration -----
-    -------------------------------
+    ------------------------------------------------
+    ----- address calcuration state machine...-----
+    ------------------------------------------------
     alu_addr_p : process (
                     pcl_inc_n, sp_oe_n, sp_pop_n, sp_push_n,
                     zp_n, zp_xy_n, abs_xy_n, pg_next_n, rel_calc_n,
@@ -420,9 +418,13 @@ begin
     end process;
 end rtl;
 
-    -------------------------------
-    ---- ALU -----
-    -------------------------------
+
+
+
+
+----------------------------
+---- 6502 ALU
+----------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
@@ -824,7 +826,7 @@ end procedure;
 end rtl;
 
 -----------------------------------------
----------- Address calculator------------
+ ------- Address calcuration core -----
 -----------------------------------------
 
 library ieee;
@@ -887,7 +889,7 @@ end rtl;
 
 
 -----------------------------------------
-------------- ALU Core -----------------
+ ------------ ALU Core -----------------
 -----------------------------------------
 
 library ieee;

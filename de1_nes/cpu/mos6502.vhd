@@ -109,7 +109,6 @@ component address_calcurator
     generic (   dsize : integer := 8
             );
     port (  
-            set_clk         : in std_logic;
             trig_clk        : in std_logic;
 
             --instruction reg
@@ -445,7 +444,6 @@ begin
 
     ad_calc_inst : address_calcurator generic map (dsize) 
             port map (
-            set_clk         ,
             trig_clk        ,
 
             instruction     ,
