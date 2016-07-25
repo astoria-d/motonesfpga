@@ -461,16 +461,6 @@ begin
     end if;
 end  procedure;
 
-procedure a2_page_next is
-begin
-    --close open gate if page boundary crossed.
-    back_we(acc_cmd, '1');
-    front_we(acc_cmd, '1');
-    front_we(x_cmd, '1');
-    front_we(y_cmd, '1');
-    stat_alu_we_n <= '1';
-end  procedure;
-
 procedure a2_abs_xy (is_x : in boolean) is
 begin
     if exec_cycle = T1 then

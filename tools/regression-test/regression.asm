@@ -27,6 +27,7 @@
 	ldx	#$ff
 	txs
 
+    jsr cpu_simple_test
     jmp aaaa
     
     jsr init_global
@@ -124,6 +125,35 @@ aaaa:
 mainloop:
 	jmp	mainloop
 
+
+.proc cpu_simple_test
+    ;a2_zp test
+    clc
+    lda #$50
+    sta $10
+    lda #$0a
+    adc $10
+    
+    ;a2_abs test
+    lda #$bb
+    sta $0410
+    lda #$75
+    and $0410
+
+    ;a2_abs_xy test
+    ldx #$cc
+    stx $0420
+    lda #$75
+    eor $354, x
+
+    ;a2_zp_xy
+    ldx #$5d
+    stx $66
+    lda #$a2
+    and $09, x
+    
+    rts
+.endproc
 
 .proc sprite_test
     jsr check_ppu
