@@ -206,7 +206,8 @@ begin
     back_oe(pch_cmd, '1');
     back_we(pcl_cmd, '1');
     back_we(pch_cmd, '1');
-    ad_oe_n <= '1';
+    front_we(idl_l_cmd, '1');
+    front_we(idl_h_cmd, '1');
 end procedure;
 
 procedure read_status is

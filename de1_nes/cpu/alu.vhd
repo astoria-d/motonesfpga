@@ -35,7 +35,7 @@ entity address_calcurator is
             index_bus       : in std_logic_vector (dsize - 1 downto 0);
             bal             : in std_logic_vector (dsize - 1 downto 0);
             bah             : in std_logic_vector (dsize - 1 downto 0);
-            int_d_bus       : inout std_logic_vector (dsize - 1 downto 0);
+            int_d_bus       : in std_logic_vector (dsize - 1 downto 0);
             addr_back_l     : out std_logic_vector (dsize - 1 downto 0);
             addr_back_h     : out std_logic_vector (dsize - 1 downto 0);
             abl             : out std_logic_vector (dsize - 1 downto 0);

@@ -39,7 +39,9 @@ add wave -label ea_carry   -radix decimal -unsigned  sim:/testbench_motones_sim/
 #add wave -label wait_a58_branch_next -radix hex sim:/testbench_motones_sim/sim_board/dbg_wait_a58_branch_next     
 
 
+add wave -divider cpu-work
 add wave -label idl_l -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_data
+add wave -label idl_h -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_mask
 add wave -label acc -radix hex sim:/testbench_motones_sim/sim_board/dbg_acc
 add wave -label pcl -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_ctrl
 
