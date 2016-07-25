@@ -268,14 +268,14 @@ begin
         --if prior cycle is jump instruction, 
         --fetch opcode from where the latch is pointing to.
 
+        --latch > al.
+        back_oe(idl_l_cmd, '0');
         pcl_cmd <= "1110";
     else
         --fetch opcode and pcl increment.
         pcl_cmd <= "1100";
     end if;
 
-    --latch > al.
-    idl_l_cmd <= "1110";
     idl_h_cmd <= "1111";
     ad_oe_n <= '0';
     pch_cmd <= "1100";
