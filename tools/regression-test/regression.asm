@@ -133,24 +133,59 @@ mainloop:
     sta $10
     lda #$0a
     adc $10
+    ;;ac=50+0a=5a
     
     ;a2_abs test
     lda #$bb
     sta $0410
     lda #$75
     and $0410
+    ;;ac=bb&75=31
 
     ;a2_abs_xy test
     ldx #$cc
     stx $0420
     lda #$75
     eor $354, x
+    ;;ac=cc^75=b9
 
     ;a2_zp_xy
     ldx #$5d
     stx $66
     lda #$a2
     and $09, x
+    ;;ac=a2&5d=2
+    
+    ;a2_indir_y
+    lda #$ee
+    sta $054f
+    
+    lda #$81
+    sta $04ee
+    ldy #$50
+    lda #$fa
+    ora $04ff, y
+    ;ee | fa = fe
+    
+    ;a2_indir_x
+    lda #$12
+    sta $83
+    
+    lda #$2e
+    sec
+    ldx #$33
+    sbc $50, x
+    ;2e-12=1c
+    
+    ;;misc instructions.
+    dex
+    dey
+    inx
+    iny
+    asl
+    rol
+    lsr
+    ror
     
     rts
 .endproc
