@@ -154,27 +154,34 @@ mainloop:
     stx $66
     lda #$a2
     and $09, x
-    ;;ac=a2&5d=2
+    ;;ac=a2&5d=0
     
     ;a2_indir_y
     lda #$ee
-    sta $054f
+    sta $04
+    lda #$05
+    sta $05
     
+    ;;05ee+50=63e
     lda #$81
-    sta $04ee
+    sta $63e
     ldy #$50
     lda #$fa
-    ora $04ff, y
-    ;ee | fa = fe
+    ora ($04), y
+    ;81 | fa = fb
     
     ;a2_indir_x
     lda #$12
     sta $83
+    lda #$03
+    sta $84
+    lda #$12
+    sta $0312
     
     lda #$2e
     sec
     ldx #$33
-    sbc $50, x
+    sbc ($50, x)
     ;2e-12=1c
     
     ;;misc instructions.
@@ -186,6 +193,50 @@ mainloop:
     rol
     lsr
     ror
+    
+    
+    ;a3_zp
+    lda #$45
+    sta $67
+    
+    ;a3_zp_xy
+    adc #$1
+    ldy #$90
+    ;;@90+91=21
+    sta $91, y
+    
+    ;a3_abs
+    ;acc=45+1+44=87
+    clc
+    adc #$44
+    sta $0866
+    
+    ;a3_abs_xy
+    adc #$10
+    ldx #$e4
+    ;;@491+e4=575
+    sta $0491, x
+
+    ;a3_indir_y
+    lda #$3e
+    sta $91
+    lda #$03
+    sta $92
+    
+    ldy #$75
+    ;@033e+75=3b3
+    sta ($91), y
+    
+    ;a3_indir_x
+    lda #$34
+    sta $7e
+    lda #$06
+    sta $7f
+    
+    ldx #$99
+    lda #$d2
+    ;;@e5+99=7E
+    sta ($e5, x)
     
     rts
 .endproc
