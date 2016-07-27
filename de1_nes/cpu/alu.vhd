@@ -434,7 +434,6 @@ entity alu is
     generic (   dsize : integer := 8
             );
     port (  
-            set_clk         : in std_logic;
             trig_clk        : in std_logic;
             instruction     : in std_logic_vector (dsize - 1 downto 0);
             exec_cycle      : in std_logic_vector (5 downto 0);
@@ -536,36 +535,33 @@ signal d_oe_n : std_logic;
 
 begin
     ----------------------------------------
-     -- arithmatic operation instances ----
+     ------ arithmatic registers --------
     ----------------------------------------
     arith_dff : d_flip_flop generic map (dsize) 
             port map(trig_clk, '1', '1', arith_buf_we_n, arith_reg_in, arith_reg);
+    
     arith_buf : tri_state_buffer generic map (dsize)
             port map (arith_buf_oe_n, arith_reg, arith_reg_out);
 
+    ----------------------------------------
+     ------------ ALU core --------------
+    ----------------------------------------
     alu_inst : alu_core generic map (dsize)
             port map (sel, d1, d2, alu_out, carry_in, n, z, c, v);
+    
     alu_buf : tri_state_buffer generic map (dsize)
             port map (d_oe_n, alu_out, d_out);
 
     alu_arith_p : process (
                     arith_en_n,
-                    instruction, exec_cycle, int_d_bus, acc_out, 
-                    carry_in, n, z, c, v
+                    instruction, exec_cycle
                     )
     --data calcuration follows the bus input...
 
 procedure output_d_bus is
 begin
-    arith_buf_we_n <= '0';
-    arith_buf_oe_n <= '0';
     d_oe_n <= '0';
-    arith_reg_in <= d_out;
-    if (set_clk = '0') then
-        int_d_bus <= d_out;
-    else
-        int_d_bus <= arith_reg_out;
-    end if;
+    int_d_bus <= d_out;
 end  procedure;
 
 procedure set_nz is

@@ -323,7 +323,7 @@ begin
     cpu_inst : mos6502 generic map (data_size, addr_size) 
         port map (
     dbg_instruction,
-    dbg_int_d_bus_dummy,
+    dbg_int_d_bus,
     dbg_exec_cycle,
     dbg_ea_carry,
  --   dbg_index_bus,

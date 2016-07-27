@@ -44,6 +44,8 @@ add wave -label idl_l -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_da
 add wave -label idl_h -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_mask
 add wave -label acc -radix hex sim:/testbench_motones_sim/sim_board/dbg_acc
 add wave -label pcl -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_ctrl
+add wave -label int_d_bus -radix hex sim:/testbench_motones_sim/sim_board/dbg_int_d_bus
+
 
 
 #add wave -divider regs
@@ -124,7 +126,7 @@ wave zoom full
 #wave zoom range 3339700 ps 5138320 ps
 
 run 60 us
-run 40 us
+#run 40 us
 
 ##wave addcursor 907923400 ps
 

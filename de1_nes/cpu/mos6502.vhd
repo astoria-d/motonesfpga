@@ -146,7 +146,6 @@ component alu
     generic (   dsize : integer := 8
             );
     port (  
-            set_clk         : in std_logic;
             trig_clk        : in std_logic;
             instruction     : in std_logic_vector (dsize - 1 downto 0);
             exec_cycle      : in std_logic_vector (5 downto 0);
@@ -475,7 +474,6 @@ begin
                     
     alu_inst : alu generic map (dsize) 
             port map (
-            set_clk         ,
             trig_clk        ,
             instruction     ,
             exec_cycle      ,
