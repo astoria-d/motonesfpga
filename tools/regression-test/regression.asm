@@ -238,6 +238,51 @@ mainloop:
     ;;@e5+99=7E
     sta ($e5, x)
     
+    ;a4_zp
+    lda #$80
+    sta $25
+    lsr $25
+    ;;80 >> 1 = 40
+    
+    ;a4_zp_x
+    lda #$40
+    sta $7b
+    ldx #$2b
+    ;;2b+25=50
+    sec
+    ror $50, x                  ;;;;<<<<data is changed during we is desserted...
+    ;;40 >> 1 + carry = a0
+    
+    
+    ;;a4_abs
+    lda #$5c
+    sta $0225
+    clc
+    rol $0225
+    ;5c << 1 = b8
+    
+    ;a4_abs_x
+    lda #$f4
+    sta $0416
+    ldx #$22
+    ;;3f4+22=416
+    asl $03f4, x
+    ;f4 << 1 = e8
+    
+    
+    ;;a51_push, a52_pull
+    lda #$44
+    pha
+    lda #$55
+    pla
+    
+    ;a58_branch
+    lda #$44
+    bne @l_bz
+@l_bnz:
+    jmp @l_bnz
+@l_bz:
+
     rts
 .endproc
 
