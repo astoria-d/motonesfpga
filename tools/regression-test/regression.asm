@@ -27,8 +27,8 @@
 	ldx	#$ff
 	txs
 
-    jsr cpu_simple_test
-    jmp aaaa
+;    jsr cpu_simple_test
+;    jmp aaaa
     
     jsr init_global
     jsr init_ppu
@@ -46,15 +46,15 @@
 ;
 ;    ;;test start...
 ;    jsr addr_test
-;    jsr single_inst_test
-;    jsr a2_inst_test
-;    jsr a3_inst_test
-;    jsr a4_inst_test
-;    jsr a5_inst_test
-;    jsr status_test
-;    jsr ppu_test
-;
-;    jsr pg_border_test
+    jsr single_inst_test
+    jsr a2_inst_test
+    jsr a3_inst_test
+    jsr a4_inst_test
+    jsr a5_inst_test
+    jsr status_test
+    jsr ppu_test
+
+    jsr pg_border_test
 ;    jsr dma_test
 
 ;    jsr simple_dma_test
