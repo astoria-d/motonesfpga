@@ -64,14 +64,10 @@ architecture rtl of de1_nes is
     signal dbg_int_d_bus  : out std_logic_vector(7 downto 0);
     signal dbg_exec_cycle      : out std_logic_vector (5 downto 0);
     signal dbg_ea_carry     : out std_logic;
---    signal dbg_index_bus    : out std_logic_vector(7 downto 0);
---    signal dbg_acc_bus      : out std_logic_vector(7 downto 0);
     signal dbg_status       : out std_logic_vector(7 downto 0);
     signal dbg_pcl, dbg_pch, dbg_sp, dbg_x, dbg_y, dbg_acc       : out std_logic_vector(7 downto 0);
     signal dbg_dec_oe_n    : out std_logic;
     signal dbg_dec_val     : out std_logic_vector (7 downto 0);
-    signal dbg_int_dbus    : out std_logic_vector (7 downto 0);
---    signal dbg_status_val    : out std_logic_vector (7 downto 0);
     signal dbg_stat_we_n    : out std_logic;
     signal dbg_idl_h, dbg_idl_l     : out std_logic_vector (7 downto 0);
     
@@ -326,14 +322,10 @@ begin
     dbg_int_d_bus,
     dbg_exec_cycle,
     dbg_ea_carry,
- --   dbg_index_bus,
- --   dbg_acc_bus,
     dbg_status_dummy,
     dbg_pcl, dbg_pch, dbg_sp_dummy, dbg_x_dummy, dbg_y, dbg_acc,
     dbg_dec_oe_n,
     dbg_dec_val,
-    dbg_int_dbus,
---    dbg_status_val    ,
     dbg_stat_we_n    ,
     dbg_idl_h, dbg_idl_l,
 

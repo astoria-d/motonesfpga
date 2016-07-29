@@ -13,10 +13,6 @@ entity address_calcurator is
     port (  
             trig_clk        : in std_logic;
 
-            --instruction reg
-            instruction     : in std_logic_vector (dsize - 1 downto 0);
-            exec_cycle      : in std_logic_vector (5 downto 0);
-
             --control line.
             pcl_inc_n       : in std_logic;
             sp_oe_n         : in std_logic;
@@ -30,6 +26,7 @@ entity address_calcurator is
             indir_n         : in std_logic;
             indir_x_n       : in std_logic;
             indir_y_n       : in std_logic;
+            addr_cycle      : in std_logic_vector(2 downto 0);
 
             --in/out buses.
             index_bus       : in std_logic_vector (dsize - 1 downto 0);
@@ -101,14 +98,13 @@ constant ADDR_INC    : std_logic_vector (1 downto 0) := "01";
 constant ADDR_DEC    : std_logic_vector (1 downto 0) := "10";
 constant ADDR_SIGNED_ADD : std_logic_vector (1 downto 0) := "11";
 
----for indirect addressing.
-constant T0 : std_logic_vector (5 downto 0) := "000000";
-constant T1 : std_logic_vector (5 downto 0) := "000001";
-constant T2 : std_logic_vector (5 downto 0) := "000010";
-constant T3 : std_logic_vector (5 downto 0) := "000011";
-constant T4 : std_logic_vector (5 downto 0) := "000100";
-constant T5 : std_logic_vector (5 downto 0) := "000101";
-
+--ALU cycle
+--indirect addressing has several stages in ALU/Addr_calc
+constant ADDR_Z  : std_logic_vector (2 downto 0) := "000";
+constant ADDR_T2 : std_logic_vector (2 downto 0) := "001";
+constant ADDR_T3 : std_logic_vector (2 downto 0) := "010";
+constant ADDR_T4 : std_logic_vector (2 downto 0) := "011";
+constant ADDR_T5 : std_logic_vector (2 downto 0) := "100";
 
 --------- signals for address calucuration ----------
 signal al_buf_we_n : std_logic;
@@ -154,8 +150,7 @@ begin
     alu_addr_p : process (
                     pcl_inc_n, sp_oe_n, sp_pop_n, sp_push_n,
                     zp_n, zp_xy_n, abs_xy_n, pg_next_n, rel_calc_n,
-                    int_d_bus(7), indir_n, indir_x_n, exec_cycle,
-                    indir_y_n
+                    indir_n, indir_x_n, indir_y_n, addr_cycle
                     )
     begin
     
@@ -274,7 +269,7 @@ begin
         ea_carry <= addr_c;
 
     elsif (indir_x_n = '0') then
-        if (exec_cycle = T2) then
+        if (addr_cycle = ADDR_T2) then
             ---input is IAL, but this cycle doesn't do anything....
             abh <= "00000000";
             abl <= bal;
@@ -282,7 +277,7 @@ begin
             --save base addr.
             tmp_buf_we_n <= '0';
             tmp_reg_in <= bal;
-        elsif (exec_cycle = T3) then
+        elsif (addr_cycle = ADDR_T3) then
 
             ---add x reg.
             a_sel <= ADDR_ADC;
@@ -302,7 +297,7 @@ begin
             al_buf_we_n <= '0';
             al_reg_in <= int_d_bus;
 
-        elsif (exec_cycle = T4) then
+        elsif (addr_cycle = ADDR_T4) then
             al_buf_we_n <= '1';
             tmp_buf_we_n <= '1';
 
@@ -317,17 +312,17 @@ begin
             ---save BAH.
             ah_buf_we_n <= '0';
             ah_reg_in <= int_d_bus;
-        elsif (exec_cycle = T5 or exec_cycle = T0) then
+        elsif (addr_cycle = ADDR_T5) then
             ah_buf_we_n <= '1';
 
             --output ah/al reg.
             abh <= ah_reg;
             abl <= al_reg;
-        end if; -- if (exec_cycle = T2) then
+        end if; -- if (addr_cycle = ADDR_T2) then
 
     elsif (indir_y_n = '0') then
 
-        if (exec_cycle = T2) then
+        if (addr_cycle = ADDR_T2) then
             ---input is IAL.
             abh <= "00000000";
             abl <= bal;
@@ -343,7 +338,7 @@ begin
             tmp_buf_we_n <= '0';
             tmp_reg_in <= addr_out;
 
-        elsif (exec_cycle = T3) then
+        elsif (addr_cycle = ADDR_T3) then
             al_buf_we_n <= '1';
             tmp_buf_we_n <= '1';
 
@@ -357,7 +352,7 @@ begin
             ah_reg_in <= int_d_bus;
             ea_carry <= addr_c;
 
-        elsif (exec_cycle = T4) then
+        elsif (addr_cycle = ADDR_T4) then
             ah_buf_we_n <= '1';
 
             ---add y reg.
@@ -378,7 +373,7 @@ begin
             al_reg_in <= addr_out;
             tmp_buf_we_n <= '0';
             tmp_reg_in <= ah_reg;
-        elsif (exec_cycle = T5 or exec_cycle = T0) then
+        elsif (addr_cycle = ADDR_T5) then
             al_buf_we_n <= '1';
             tmp_buf_we_n <= '1';
             ea_carry <= '0';
@@ -436,8 +431,8 @@ entity alu is
     port (  
             trig_clk        : in std_logic;
             instruction     : in std_logic_vector (dsize - 1 downto 0);
-            exec_cycle      : in std_logic_vector (5 downto 0);
             arith_en_n      : in std_logic;
+            alu_cycle       : in std_logic_vector(1 downto 0);
             int_d_bus       : inout std_logic_vector (dsize - 1 downto 0);
             acc_in          : out std_logic_vector (dsize - 1 downto 0);
             acc_out         : in std_logic_vector (dsize - 1 downto 0);
@@ -507,12 +502,11 @@ constant ALU_ROR    : std_logic_vector (3 downto 0) := "1010";
 constant ALU_INC    : std_logic_vector (3 downto 0) := "1011";
 constant ALU_DEC    : std_logic_vector (3 downto 0) := "1100";
 
-constant T0 : std_logic_vector (5 downto 0) := "000000";
-constant T1 : std_logic_vector (5 downto 0) := "000001";
-constant T2 : std_logic_vector (5 downto 0) := "000010";
-constant T3 : std_logic_vector (5 downto 0) := "000011";
-constant T4 : std_logic_vector (5 downto 0) := "000100";
-constant T5 : std_logic_vector (5 downto 0) := "000101";
+--ALU cycle (memory to memory operation) has several stages 
+constant MEM_Z  : std_logic_vector (1 downto 0) := "00";
+constant MEM_T1 : std_logic_vector (1 downto 0) := "01";
+constant MEM_T2 : std_logic_vector (1 downto 0) := "10";
+constant MEM_T3 : std_logic_vector (1 downto 0) := "11";
 
 ----------- signals for arithmatic ----------
 signal sel : std_logic_vector (3 downto 0);
@@ -553,8 +547,7 @@ begin
             port map (d_oe_n, alu_out, d_out);
 
     alu_arith_p : process (
-                    arith_en_n,
-                    instruction, exec_cycle
+                    arith_en_n, alu_cycle
                     )
     --data calcuration follows the bus input...
 
@@ -717,17 +710,11 @@ end procedure;
             --011	absolute
             --101	zero page,X
             --111	absolute,X
-            if ((exec_cycle = T2 and instruction (4 downto 2) = "001") or 
-                (exec_cycle = T3 and instruction (4 downto 2) = "011") or 
-                (exec_cycle = T3 and instruction (4 downto 2) = "101") or 
-                (exec_cycle = T4 and instruction (4 downto 2) = "111")) then
+            if (alu_cycle = MEM_T1) then
                 arith_buf_we_n <= '0';
                 arith_reg_in <= int_d_bus;
 
-            elsif ((exec_cycle = T3 and instruction (4 downto 2) = "001") or 
-                (exec_cycle = T4 and instruction (4 downto 2) = "011") or 
-                (exec_cycle = T4 and instruction (4 downto 2) = "101") or 
-                (exec_cycle = T5 and instruction (4 downto 2) = "111")) then
+            elsif (alu_cycle = MEM_T2) then
                 --first cycle. keep input variable.
                 --d_print("inc first.");
                 arith_buf_we_n <= '1';
@@ -736,7 +723,7 @@ end procedure;
                 d_oe_n <= '1';
 
                 d1 <= arith_reg;
-            else
+            elsif (alu_cycle = MEM_T3) then
                 --second cycle read from register, output modified data.
                 --d_print("inc second...");
                 arith_buf_we_n <= '1';

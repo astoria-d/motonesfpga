@@ -49,6 +49,7 @@ entity decoder is
             indir_n         : out std_logic;
             indir_x_n       : out std_logic;
             indir_y_n       : out std_logic;
+            addr_cycle      : out std_logic_vector(2 downto 0);
 
             ---status register
             stat_dec_oe_n   : out std_logic;
@@ -61,6 +62,7 @@ entity decoder is
             
             --ALU control
             arith_en_n      : out std_logic;
+            alu_cycle       : out std_logic_vector(1 downto 0);
             
             --reset vectors.
             r_vec_oe_n      : out std_logic;
@@ -139,6 +141,19 @@ constant st_D : integer := 3;
 constant st_I : integer := 2;
 constant st_Z : integer := 1;
 constant st_C : integer := 0;
+
+--Address calcuration (indirect addressing) has several stages
+constant ADDR_Z  : std_logic_vector (2 downto 0) := "000";
+constant ADDR_T2 : std_logic_vector (2 downto 0) := "001";
+constant ADDR_T3 : std_logic_vector (2 downto 0) := "010";
+constant ADDR_T4 : std_logic_vector (2 downto 0) := "011";
+constant ADDR_T5 : std_logic_vector (2 downto 0) := "100";
+
+--ALU cycle (memory to memory operation) has several stages 
+constant MEM_Z  : std_logic_vector (1 downto 0) := "00";
+constant MEM_T1 : std_logic_vector (1 downto 0) := "01";
+constant MEM_T2 : std_logic_vector (1 downto 0) := "10";
+constant MEM_T3 : std_logic_vector (1 downto 0) := "11";
 
 ---for nmi handling
 signal nmi_handled_n : std_logic;
@@ -247,7 +262,10 @@ begin
     indir_n <= '1';
     indir_x_n <= '1';
     indir_y_n <= '1';
+    addr_cycle <= ADDR_Z;
+
     arith_en_n <= '1';
+    alu_cycle <= MEM_Z;
 
     read_status;
     stat_bus_oe_n <= '1';
@@ -527,12 +545,14 @@ begin
         ---address is 00:IAL
         --output BAL @IAL
         indir_y_n <= '0';
+        addr_cycle <= ADDR_T2;
         back_oe(idl_l_cmd, '0');
         dbuf_int_oe_n <= '0';
         next_cycle <= T3;
 
     elsif exec_cycle = T3 then
         indir_y_n <= '0';
+        addr_cycle <= ADDR_T3;
         back_oe(idl_l_cmd, '0');
         --output BAH @IAL+1
         dbuf_int_oe_n <= '0';
@@ -546,6 +566,7 @@ begin
         pg_next_n <= '1';
         back_oe(y_cmd, '0');
         indir_y_n <= '0';
+        addr_cycle <= ADDR_T4;
         dbuf_int_oe_n <= '0';
 
         if (ea_carry = '1') then
@@ -575,11 +596,13 @@ begin
         ---address is 00:IAL
         --output BAL @IAL, but cycle #2 is discarded
         indir_x_n <= '0';
+        addr_cycle <= ADDR_T2;
         back_oe(idl_l_cmd, '0');
         next_cycle <= T3;
 
     elsif exec_cycle = T3 then
         indir_x_n <= '0';
+        addr_cycle <= ADDR_T3;
         back_oe(idl_l_cmd, '1');
 
         --output BAH @IAL+x
@@ -589,6 +612,7 @@ begin
 
     elsif exec_cycle = T4 then
         indir_x_n <= '0';
+        addr_cycle <= ADDR_T4;
 
         --output BAH @IAL+x+1
         dbuf_int_oe_n <= '0';
@@ -597,6 +621,7 @@ begin
         next_cycle <= T5;
     elsif (exec_cycle = T5) then
         indir_x_n <= '0';
+        addr_cycle <= ADDR_T5;
         next_cycle <= T0;
     end if;
 end  procedure;
@@ -709,12 +734,14 @@ begin
         ---address is 00:IAL
         --output BAL @IAL
         indir_y_n <= '0';
+        addr_cycle <= ADDR_T2;
         back_oe(idl_l_cmd, '0');
         dbuf_int_oe_n <= '0';
         next_cycle <= T3;
 
     elsif exec_cycle = T3 then
         indir_y_n <= '0';
+        addr_cycle <= ADDR_T3;
         back_oe(idl_l_cmd, '0');
         --output BAH @IAL+1
         dbuf_int_oe_n <= '0';
@@ -728,12 +755,14 @@ begin
         pg_next_n <= '1';
         back_oe(y_cmd, '0');
         indir_y_n <= '0';
+        addr_cycle <= ADDR_T4;
         next_cycle <= T5;
 
     elsif exec_cycle = T5 then
         --page handling.
         back_oe(y_cmd, '1');
         indir_y_n <= '0';
+        addr_cycle <= ADDR_T5;
         
         --ea_carry reg is suspicious. timing is not garanteed...
         if (ea_carry_reg = '1') then
@@ -758,11 +787,13 @@ begin
         ---address is 00:IAL
         --output BAL @IAL, but cycle #2 is discarded
         indir_x_n <= '0';
+        addr_cycle <= ADDR_T2;
         back_oe(idl_l_cmd, '0');
         next_cycle <= T3;
 
     elsif exec_cycle = T3 then
         indir_x_n <= '0';
+        addr_cycle <= ADDR_T3;
         back_oe(idl_l_cmd, '1');
 
         --output BAH @IAL+x
@@ -772,6 +803,7 @@ begin
 
     elsif exec_cycle = T4 then
         indir_x_n <= '0';
+        addr_cycle <= ADDR_T4;
 
         --output BAH @IAL+x+1
         dbuf_int_oe_n <= '0';
@@ -780,6 +812,7 @@ begin
         next_cycle <= T5;
     elsif (exec_cycle = T5) then
         indir_x_n <= '0';
+        addr_cycle <= ADDR_T5;
         dbuf_int_oe_n <= '1';
         r_nw <= '0';
         next_cycle <= T0;
@@ -800,6 +833,7 @@ begin
         zp_n <= '0';
         --keep data in the alu reg.
         arith_en_n <= '0';
+        alu_cycle <= MEM_T1;
         dbuf_int_oe_n <= '0';
         next_cycle <= T3;
     elsif exec_cycle = T3 then
@@ -807,6 +841,7 @@ begin
         back_oe(idl_l_cmd, '0');
         zp_n <= '0';
         arith_en_n <= '0';
+        alu_cycle <= MEM_T2;
         dbuf_int_oe_n <= '1';
         next_cycle <= T4;
     elsif exec_cycle = T4 then
@@ -815,6 +850,7 @@ begin
         zp_n <= '0';
         r_nw <= '0';
         arith_en_n <= '0';
+        alu_cycle <= MEM_T3;
         next_cycle <= T0;
     end if;
 end  procedure;
@@ -840,6 +876,7 @@ begin
 
         --keep data in the alu reg.
         arith_en_n <= '0';
+        alu_cycle <= MEM_T1;
         dbuf_int_oe_n <= '0';
 
         next_cycle <= T4;
@@ -851,6 +888,7 @@ begin
 
         --fix alu internal register.
         arith_en_n <= '0';
+        alu_cycle <= MEM_T2;
         dbuf_int_oe_n <= '1';
         next_cycle <= T5;
     elsif exec_cycle = T5 then
@@ -863,6 +901,7 @@ begin
         back_oe(x_cmd, '0');
         r_nw <= '0';
         arith_en_n <= '0';
+        alu_cycle <= MEM_T3;
         next_cycle <= T0;
     end if;
 end  procedure;
@@ -879,6 +918,7 @@ begin
 
         --keep data in the alu reg.
         arith_en_n <= '0';
+        alu_cycle <= MEM_T1;
         dbuf_int_oe_n <= '0';
         next_cycle <= T4;
     elsif exec_cycle = T4 then
@@ -886,6 +926,7 @@ begin
 
         --fix alu internal register.
         arith_en_n <= '0';
+        alu_cycle <= MEM_T2;
         dbuf_int_oe_n <= '1';
         next_cycle <= T5;
     elsif exec_cycle = T5 then
@@ -894,6 +935,7 @@ begin
         --t5 cycle writes modified value.
         r_nw <= '0';
         arith_en_n <= '0';
+        alu_cycle <= MEM_T3;
         next_cycle <= T0;
     end if;
 end  procedure;
@@ -923,12 +965,14 @@ begin
 
         --keep data in the alu reg.
         arith_en_n <= '0';
+        alu_cycle <= MEM_T1;
         dbuf_int_oe_n <= '0';
         next_cycle <= T5;
 
     elsif exec_cycle = T5 then
         --fix alu internal register.
         arith_en_n <= '0';
+        alu_cycle <= MEM_T2;
         dbuf_int_oe_n <= '1';
         next_cycle <= T6;
 
@@ -936,6 +980,7 @@ begin
         --t5 cycle writes modified value.
         r_nw <= '0';
         arith_en_n <= '0';
+        alu_cycle <= MEM_T3;
         next_cycle <= T0;
 
     end if;
@@ -2700,7 +2745,10 @@ end  procedure;
                 indir_n <= '1';
                 indir_x_n <= '1';
                 indir_y_n <= '1';
+                addr_cycle <= ADDR_Z;
+
                 arith_en_n <= '1';
+                addr_cycle <= ADDR_Z;
 
                 stat_dec_oe_n <= '0';
                 stat_bus_oe_n <= '1';

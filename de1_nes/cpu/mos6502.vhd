@@ -81,6 +81,7 @@ component decoder
             indir_n         : out std_logic;
             indir_x_n       : out std_logic;
             indir_y_n       : out std_logic;
+            addr_cycle      : out std_logic_vector(2 downto 0);
 
             ---status register
             stat_dec_oe_n   : out std_logic;
@@ -93,6 +94,7 @@ component decoder
             
             --ALU control
             arith_en_n      : out std_logic;
+            alu_cycle       : out std_logic_vector(1 downto 0);
             
             --reset vectors.
             r_vec_oe_n      : out std_logic;
@@ -110,10 +112,6 @@ component address_calcurator
     port (  
             trig_clk        : in std_logic;
 
-            --instruction reg
-            instruction     : in std_logic_vector (dsize - 1 downto 0);
-            exec_cycle      : in std_logic_vector (5 downto 0);
-
             --control line.
             pcl_inc_n       : in std_logic;
             sp_oe_n         : in std_logic;
@@ -127,6 +125,7 @@ component address_calcurator
             indir_n         : in std_logic;
             indir_x_n       : in std_logic;
             indir_y_n       : in std_logic;
+            addr_cycle      : in std_logic_vector(2 downto 0);
 
             --in/out buses.
             index_bus       : in std_logic_vector (dsize - 1 downto 0);
@@ -147,8 +146,8 @@ component alu
     port (  
             trig_clk        : in std_logic;
             instruction     : in std_logic_vector (dsize - 1 downto 0);
-            exec_cycle      : in std_logic_vector (5 downto 0);
             arith_en_n      : in std_logic;
+            alu_cycle       : in std_logic_vector(1 downto 0);
             int_d_bus       : inout std_logic_vector (dsize - 1 downto 0);
             acc_in          : out std_logic_vector (dsize - 1 downto 0);
             acc_out         : in std_logic_vector (dsize - 1 downto 0);
@@ -279,8 +278,10 @@ end component;
     signal sp_oe_n          : std_logic;
     signal sp_push_n        : std_logic;
     signal sp_pop_n         : std_logic;
+    signal addr_cycle       : std_logic_vector(2 downto 0);
 
     signal arith_en_n       : std_logic;                    
+    signal alu_cycle        : std_logic_vector(1 downto 0);
     signal stat_c           : std_logic;
 
     signal negative        : std_logic;
@@ -420,6 +421,7 @@ begin
                     indir_n         ,
                     indir_x_n       ,
                     indir_y_n       ,
+                    addr_cycle      ,
 
                     stat_dec_oe_n   ,
                     stat_bus_oe_n   ,
@@ -430,6 +432,7 @@ begin
                     stat_alu_we_n   ,
 
                     arith_en_n      ,
+                    alu_cycle       ,
 
                     r_vec_oe_n      ,
                     n_vec_oe_n      ,
@@ -441,9 +444,6 @@ begin
     ad_calc_inst : address_calcurator generic map (dsize) 
             port map (
             trig_clk        ,
-
-            instruction     ,
-            exec_cycle      ,
 
             pcl_inc_n       ,
             sp_oe_n         ,
@@ -457,6 +457,7 @@ begin
             indir_n         ,
             indir_x_n       ,
             indir_y_n       ,
+            addr_cycle      ,
 
             index_bus       ,
             bal             ,
@@ -473,8 +474,8 @@ begin
             port map (
             trig_clk        ,
             instruction     ,
-            exec_cycle      ,
             arith_en_n      ,
+            alu_cycle       ,
             int_d_bus       ,
             acc_in          ,
             acc_out         ,
