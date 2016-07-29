@@ -27,8 +27,8 @@
 	ldx	#$ff
 	txs
 
-;    jsr cpu_simple_test
-;    jmp aaaa
+    jsr cpu_simple_test
+;    jmp short_cut1
     
     jsr init_global
     jsr init_ppu
@@ -45,7 +45,7 @@
 ;    jsr print_ln
 ;
 ;    ;;test start...
-;    jsr addr_test
+    jsr addr_test
     jsr single_inst_test
     jsr a2_inst_test
     jsr a3_inst_test
@@ -114,7 +114,7 @@ test_done:
 	sta	$2001
 	sta	ppu_stat2
 
-aaaa:
+short_cut1:
     ;;;enable nmi
 	lda	#$80
 	sta	$2000
@@ -2393,7 +2393,7 @@ nmi_test:
     lda #$d0
     sta $0433     ;;;@0433=d0
 
-    ldx #$6b
+    ldx #$6b        ;;55+6b=c0
     lda #$22
     sec
     adc ($55, x)        ;;d0+22+1=f3

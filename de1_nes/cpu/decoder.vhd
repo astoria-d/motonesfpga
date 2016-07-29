@@ -575,6 +575,7 @@ begin
         --redo inst.
         d_print("(indir), y (page boudary crossed.)");
         --next page.
+        indir_y_n <= '0';
         pg_next_n <= '0';
         addr_cycle <= ADDR_T5;
         next_cycle <= T0;
@@ -761,7 +762,6 @@ begin
         indir_y_n <= '0';
         addr_cycle <= ADDR_T5;
         
-        --ea_carry reg is suspicious. timing is not garanteed...
         if (ea_carry_reg = '1') then
             pg_next_n <= '0';
         else

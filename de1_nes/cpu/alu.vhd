@@ -278,16 +278,13 @@ begin
             tmp_buf_we_n <= '0';
             tmp_reg_in <= bal;
         elsif (addr_cycle = ADDR_T3) then
+            tmp_buf_we_n <= '1';
 
             ---add x reg.
             a_sel <= ADDR_ADC;
             addr1 <= tmp_reg;
             addr2 <= index_bus;
             addr_c_in <= '0';
-
-            --save base addr.
-            tmp_buf_we_n <= '0';
-            tmp_reg_in <= addr_out;
 
             --output @IAL+x
             abh <= "00000000";
@@ -301,11 +298,13 @@ begin
             al_buf_we_n <= '1';
             tmp_buf_we_n <= '1';
 
-            ---increment.
-            a_sel <= ADDR_INC;
-            addr1 <= tmp_reg;
+            ---add x+1 reg.
+            a_sel <= ADDR_ADC;
+            addr1 <= tmp_reg + '1';
+            addr2 <= index_bus;
+            addr_c_in <= '0';
 
-            --output @IAL+x
+            --output @IAL+x+1
             abh <= "00000000";
             abl <= addr_out;
 
