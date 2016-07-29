@@ -296,7 +296,6 @@ begin
 
         elsif (addr_cycle = ADDR_T4) then
             al_buf_we_n <= '1';
-            tmp_buf_we_n <= '1';
 
             ---add x+1 reg.
             a_sel <= ADDR_ADC;
@@ -377,6 +376,9 @@ begin
             if (pg_next_n = '0') then
                 a_sel <= ADDR_INC;
                 addr1 <= ah_reg;
+                --incase addr get change...
+                addr2 <= (others => '0');
+                addr_c_in <= '0';
                 ---next page.
                 abh <= addr_out;
                 abl <= tmp_reg;
