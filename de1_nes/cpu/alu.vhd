@@ -368,31 +368,23 @@ begin
             abh <= ah_reg;
             abl <= addr_out;
 
-            ---save the address.
-            al_buf_we_n <= '0';
-            al_reg_in <= addr_out;
+            ---save al.
             tmp_buf_we_n <= '0';
-            tmp_reg_in <= ah_reg;
+            tmp_reg_in <= addr_out;
         elsif (addr_cycle = ADDR_T5) then
-            al_buf_we_n <= '1';
             tmp_buf_we_n <= '1';
             ea_carry <= '0';
 
             if (pg_next_n = '0') then
                 a_sel <= ADDR_INC;
-                addr1 <= tmp_reg;
+                addr1 <= ah_reg;
                 ---next page.
                 abh <= addr_out;
-                abl <= al_reg;
+                abl <= tmp_reg;
             else
-                abh <= tmp_reg;
-                abl <= al_reg;
+                abh <= ah_reg;
+                abl <= tmp_reg;
             end if;
-        else
-            al_buf_we_n <= '1';
-            ah_buf_we_n <= '1';
-            tmp_buf_we_n <= '1';
-            ea_carry <= '0';
         end if; -- if (exec_cycle = T2) then
     else
         al_buf_we_n <= '1';

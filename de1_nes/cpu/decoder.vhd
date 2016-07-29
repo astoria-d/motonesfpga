@@ -569,17 +569,14 @@ begin
         addr_cycle <= ADDR_T4;
         dbuf_int_oe_n <= '0';
 
-        if (ea_carry = '1') then
-            next_cycle <= T5;
-        else
-            next_cycle <= T0;
-        end if;
-    elsif (exec_cycle = T5) then
+        next_cycle <= T0;
+    elsif (exec_cycle = T0) then
         --case page boundary crossed.
         --redo inst.
         d_print("(indir), y (page boudary crossed.)");
         --next page.
         pg_next_n <= '0';
+        addr_cycle <= ADDR_T5;
         next_cycle <= T0;
     end if;
 end  procedure;
