@@ -27,7 +27,7 @@
 	ldx	#$ff
 	txs
 
-    jsr cpu_simple_test
+;    jsr cpu_simple_test
 ;    jmp short_cut1
     
     jsr init_global
@@ -45,16 +45,16 @@
 ;    jsr print_ln
 ;
 ;    ;;test start...
-    jsr addr_test
-    jsr single_inst_test
-    jsr a2_inst_test
-    jsr a3_inst_test
-    jsr a4_inst_test
-    jsr a5_inst_test
-    jsr status_test
-    jsr ppu_test
-
-    jsr pg_border_test
+;    jsr addr_test
+;    jsr single_inst_test
+;    jsr a2_inst_test
+;    jsr a3_inst_test
+;    jsr a4_inst_test
+;    jsr a5_inst_test
+;    jsr status_test
+;    jsr ppu_test
+;
+;    jsr pg_border_test
 ;    jsr dma_test
 
 ;    jsr simple_dma_test
@@ -780,7 +780,7 @@ y_loop:
 nmi_test:
     jsr update_counter
     jsr update_scroll
-    jsr update_dma
+;    jsr update_dma
 
     rti
 
