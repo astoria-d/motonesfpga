@@ -152,12 +152,56 @@ begin
                     zp_n, zp_xy_n, abs_xy_n, pg_next_n, rel_calc_n,
                     indir_n, indir_x_n, indir_y_n, addr_cycle
                     )
+
+procedure inc_addr (
+            p_addr        : in std_logic_vector (dsize - 1 downto 0)
+) is
+begin
+    a_sel       <= ADDR_INC;
+    addr1       <= p_addr;
+    addr2       <= (others => '0');
+    addr_c_in   <= '0';
+end  procedure;
+
+procedure dec_addr (
+            p_addr        : in std_logic_vector (dsize - 1 downto 0)
+) is
+begin
+    a_sel       <= ADDR_DEC;
+    addr1       <= p_addr;
+    addr2       <= (others => '0');
+    addr_c_in   <= '0';
+end  procedure;
+
+procedure adc_addr (
+            p_addr1        : in std_logic_vector (dsize - 1 downto 0);
+            p_addr2        : in std_logic_vector (dsize - 1 downto 0);
+            p_carry_in     : in std_logic
+) is
+begin
+    a_sel       <= ADDR_ADC;
+    addr1       <= p_addr1;
+    addr2       <= p_addr2;
+    addr_c_in   <= p_carry_in;
+end  procedure;
+
+procedure s_add_addr (
+            p_addr1        : in std_logic_vector (dsize - 1 downto 0);
+            p_addr2        : in std_logic_vector (dsize - 1 downto 0);
+            p_carry_in     : in std_logic
+) is
+begin
+    a_sel       <= ADDR_SIGNED_ADD;
+    addr1       <= p_addr1;
+    addr2       <= p_addr2;
+    addr_c_in   <= p_carry_in;
+end  procedure;
+
     begin
     
     if (pcl_inc_n = '0') then
         ea_carry <= '0';
-        a_sel <= ADDR_INC;
-        addr1 <= bal;
+        inc_addr(bal);
         addr_back_l <= addr_out;
         addr_back_h <= bah + addr_c;
         abl <= bal;
@@ -172,24 +216,19 @@ begin
             abl <= bal;
         elsif (sp_pop_n = '0') then
             --case pop
-            a_sel <= ADDR_INC;
-            addr1 <= bal;
+            inc_addr(bal);
             addr_back_l <= addr_out;
             abl <= bal;
         else
             ---case push
-            a_sel <= ADDR_DEC;
-            addr1 <= bal;
+            dec_addr(bal);
             addr_back_l <= addr_out;
             abl <= bal;
         end if;
     elsif (zp_n = '0') then
         ea_carry <= '0';
         if (zp_xy_n <= '0') then
-            a_sel <= ADDR_ADC;
-            addr1 <= bal;
-            addr2 <= index_bus;
-            addr_c_in <= '0';
+            adc_addr(bal, index_bus, '0');
 
             abh <= "00000000";
             abl <= addr_out;
@@ -200,8 +239,7 @@ begin
 
     elsif (abs_xy_n = '0') then
         if (pg_next_n = '0') then
-            a_sel <= ADDR_INC;
-            addr1 <= bah;
+            inc_addr(bah);
             ea_carry <= '0';
 
             al_buf_we_n <= '1';
@@ -209,10 +247,7 @@ begin
             ---al is in the al_reg.
             abl <= al_reg;
         else
-            a_sel <= ADDR_ADC;
-            addr1 <= bal;
-            addr2 <= index_bus;
-            addr_c_in <= '0';
+            adc_addr(bal, index_bus, '0');
             ea_carry <= addr_c;
 
             ---keep al for page crossed case
@@ -226,13 +261,12 @@ begin
         if (pg_next_n = '0') then
             if (int_d_bus(7) = '1') then
                 ---backward relative branch
-                a_sel <= ADDR_DEC;
+                dec_addr(bah);
             else
                 ---forward relative branch
-                a_sel <= ADDR_INC;
+                inc_addr(bah);
             end if;
             ---addr1 is pch.`
-            addr1 <= bah;
             ---rel val is on the d_bus.
             addr_back_h <= addr_out;
             ea_carry <= '0'; 
@@ -244,13 +278,11 @@ begin
             --al no change.
             abl <= bal;
         else
-            a_sel <= ADDR_SIGNED_ADD;
             ---addr1 is pcl.`
-            addr1 <= bal;
             ---rel val is on the d_bus.
-            addr2 <= int_d_bus;
+            s_add_addr(bal, int_d_bus, '0');
             addr_back_l <= addr_out;
-            addr_c_in <= '0';
+            
             ea_carry <= addr_c_reg;
 
             --keep the value in the cycle
@@ -262,8 +294,7 @@ begin
     elsif (indir_n = '0') then
         abh <= bah;
         --get next address.
-        addr1 <= bal;
-        a_sel <= ADDR_INC;
+        inc_addr(bal);
         abl <= addr_out;
 
         ea_carry <= addr_c;
@@ -281,10 +312,7 @@ begin
             tmp_buf_we_n <= '1';
 
             ---add x reg.
-            a_sel <= ADDR_ADC;
-            addr1 <= tmp_reg;
-            addr2 <= index_bus;
-            addr_c_in <= '0';
+            adc_addr(tmp_reg, index_bus, '0');
 
             --output @IAL+x
             abh <= "00000000";
@@ -298,10 +326,7 @@ begin
             al_buf_we_n <= '1';
 
             ---add x+1 reg.
-            a_sel <= ADDR_ADC;
-            addr1 <= tmp_reg + '1';
-            addr2 <= index_bus;
-            addr_c_in <= '0';
+            adc_addr(tmp_reg + '1', index_bus, '0');
 
             --output @IAL+x+1
             abh <= "00000000";
@@ -331,8 +356,7 @@ begin
             ea_carry <= '0';
 
             --get next address (IAL + 1)
-            a_sel <= ADDR_INC;
-            addr1 <= bal;
+            inc_addr(bal);
             tmp_buf_we_n <= '0';
             tmp_reg_in <= addr_out;
 
@@ -354,12 +378,8 @@ begin
             ah_buf_we_n <= '1';
 
             ---add y reg.
-            a_sel <= ADDR_ADC;
-
             --bal from al_reg.
-            addr1 <= al_reg;
-            addr2 <= index_bus;
-            addr_c_in <= '0';
+            adc_addr(al_reg, index_bus, '0');
             ea_carry <= addr_c;
 
             --bah from ah_reg
@@ -374,11 +394,7 @@ begin
             ea_carry <= '0';
 
             if (pg_next_n = '0') then
-                a_sel <= ADDR_INC;
-                addr1 <= ah_reg;
-                --incase addr get change...
-                addr2 <= (others => '0');
-                addr_c_in <= '0';
+                inc_addr(ah_reg);
                 ---next page.
                 abh <= addr_out;
                 abl <= tmp_reg;
