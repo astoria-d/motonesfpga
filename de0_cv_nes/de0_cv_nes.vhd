@@ -367,7 +367,7 @@ begin
         dbg_ppu_ce_n                                        ,
         dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status          ,
         dbg_ppu_addr                                        ,
-        dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y        ,
+        dbg_ppu_data, dbg_ppu_scrl_x_dummy, dbg_ppu_scrl_y_dummy        ,
 
         dbg_ppu_clk                      ,
         dbg_vga_clk                      ,
@@ -495,8 +495,8 @@ begin
 
     dbg_nmi <= nmi_n;
 --    nmi_n <= dummy_nmi;
---    dbg_ppu_ctrl <= dbg_pcl;
---    dbg_ppu_mask <= dbg_pch;
+    dbg_ppu_scrl_x <= dbg_pcl;
+    dbg_ppu_scrl_y <= dbg_pch;
 
 end rtl;
 

@@ -180,7 +180,7 @@ dummy_nmi,
 
     --- initiate nmi.
     nmi_p: process
-    constant nmi_wait     : time := 100 us;
+    constant nmi_wait     : time := 100657965 ps;
     --constant nmi_wait     : time := 10 ms;
     constant vblank_time     : time := 60 us;
     variable wait_cnt : integer := 0;
