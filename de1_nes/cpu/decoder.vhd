@@ -101,27 +101,40 @@ constant T4 : std_logic_vector (5 downto 0) := "000100";
 constant T5 : std_logic_vector (5 downto 0) := "000101";
 constant T6 : std_logic_vector (5 downto 0) := "000110";
 
---01xxx : reset cycle : R0 > R1 > R2 > R3 > R4 > R5 > T0
+--reset cycle:
+--R0/T0: hold pc
+--R1: hold pc
+--R2: push pch
+--R3: push pcl
+--R4: push p
+--R5: fetch vector low
+--R6: fetch vector high
+--T0: first opcode
+
+--01xxx : reset cycle : R0 > R1 > R2 > R3 > R4 > R5 > R6 > T0
 constant R0 : std_logic_vector (5 downto 0) := "001000";
 constant R1 : std_logic_vector (5 downto 0) := "001001";
 constant R2 : std_logic_vector (5 downto 0) := "001010";
 constant R3 : std_logic_vector (5 downto 0) := "001011";
 constant R4 : std_logic_vector (5 downto 0) := "001100";
 constant R5 : std_logic_vector (5 downto 0) := "001101";
+constant R6 : std_logic_vector (5 downto 0) := "001110";
 
---10xxx : nmi cycle : T0 > N1 > N2 > N3 > N4 > N5 > T0
+--10xxx : nmi cycle : T0 > N1 > N2 > N3 > N4 > N5 > N6 > T0
 constant N1 : std_logic_vector (5 downto 0) := "010001";
 constant N2 : std_logic_vector (5 downto 0) := "010010";
 constant N3 : std_logic_vector (5 downto 0) := "010011";
 constant N4 : std_logic_vector (5 downto 0) := "010100";
 constant N5 : std_logic_vector (5 downto 0) := "010101";
+constant N6 : std_logic_vector (5 downto 0) := "010110";
 
---11xxx : irq cycle : T0 > I1 > I2 > I3 > I4 > I5 > T0
+--11xxx : irq cycle : T0 > I1 > I2 > I3 > I4 > I5 > I6 > T0
 constant I1 : std_logic_vector (5 downto 0) := "011001";
 constant I2 : std_logic_vector (5 downto 0) := "011010";
 constant I3 : std_logic_vector (5 downto 0) := "011011";
 constant I4 : std_logic_vector (5 downto 0) := "011100";
 constant I5 : std_logic_vector (5 downto 0) := "011101";
+constant I6 : std_logic_vector (5 downto 0) := "011110";
 
 constant ERROR_CYCLE : std_logic_vector (5 downto 0) := "111111";
 
@@ -231,6 +244,56 @@ begin
     stat_dec_oe_n <= '0';
 end  procedure;
 
+procedure init_all_pins is
+begin
+    --initialize port...
+    inst_we_n <= '1';
+    ad_oe_n <= '1';
+    dbuf_int_oe_n <= '1';
+    r_nw <= '1';
+
+    idl_l_cmd <= "1111";
+    idl_h_cmd <= "1111";
+    pcl_cmd <= "1111";
+    pch_cmd <= "1111";
+    sp_cmd <= "1111";
+    x_cmd <= "1111";
+    y_cmd <= "1111";
+    acc_cmd <= "1111";
+
+    pcl_inc_n <= '1';
+    sp_oe_n <= '1';
+    sp_push_n <= '1';
+    sp_pop_n <= '1';
+    abs_xy_n <= '1';
+    pg_next_n <= '1';
+    zp_n <= '1';
+    zp_xy_n <= '1';
+    rel_calc_n <= '1';
+    indir_n <= '1';
+    indir_x_n <= '1';
+    indir_y_n <= '1';
+    addr_cycle <= ADDR_Z;
+
+    read_status;
+    stat_bus_oe_n <= '1';
+    stat_set_flg_n <= '1';
+    stat_flg <= '1';
+    stat_bus_all_n <= '1';
+    stat_bus_nz_n <= '1';
+    stat_alu_we_n <= '1';
+
+    arith_en_n <= '1';
+    addr_cycle <= ADDR_Z;
+
+    r_vec_oe_n <= '1';
+    n_vec_oe_n <= '1';
+    i_vec_oe_n <= '1';
+
+    nmi_handled_n <= '1';
+
+end  procedure;
+
 procedure disable_pins is
 begin
 --following pins are not set in this function.
@@ -247,9 +310,9 @@ begin
     pcl_cmd   <= "1111";
     pch_cmd   <= "1111";
     sp_cmd <= "1111";
-    acc_cmd <= "1111";
     x_cmd <= "1111";
     y_cmd <= "1111";
+    acc_cmd <= "1111";
 
     sp_oe_n <= '1';
     sp_push_n <= '1';
@@ -264,9 +327,6 @@ begin
     indir_y_n <= '1';
     addr_cycle <= ADDR_Z;
 
-    arith_en_n <= '1';
-    alu_cycle <= MEM_Z;
-
     read_status;
     stat_bus_oe_n <= '1';
     stat_set_flg_n <= '1';
@@ -275,13 +335,16 @@ begin
     stat_bus_nz_n <= '1';
     stat_alu_we_n <= '1';
 
+    arith_en_n <= '1';
+    alu_cycle <= MEM_Z;
+
     r_vec_oe_n <= '1';
     n_vec_oe_n <= '1';
     i_vec_oe_n <= '1';
 
 end  procedure;
 
-procedure fetch_inst is
+procedure fetch_inst (pm_pcl_inc_n : in std_logic) is
 begin
     if instruction = conv_std_logic_vector(16#4c#, dsize) then
         --if prior cycle is jump instruction, 
@@ -299,7 +362,7 @@ begin
     ad_oe_n <= '0';
     pch_cmd <= "1100";
     inst_we_n <= '0';
-    pcl_inc_n <= '0';
+    pcl_inc_n <= pm_pcl_inc_n;
     r_nw <= '1';
 
     d_print(string'("fetch 1"));
@@ -313,10 +376,10 @@ begin
     disable_pins;
     if (nmi_n = '0' and nmi_handled_n = '1') then
         --start nmi handling...
-        --fetch_inst('1');
+        fetch_inst('1');
         next_cycle <= N1;
     else
-        fetch_inst;
+        fetch_inst('0');
         next_cycle <= T1;
     end if;
 end  procedure;
@@ -2714,84 +2777,30 @@ end  procedure;
 
             elsif exec_cycle = R0 then
                 d_print(string'("reset"));
-
-                --initialize port...
-                inst_we_n <= '1';
-                ad_oe_n <= '1';
-                dbuf_int_oe_n <= '1';
-
-                idl_l_cmd <= "1111";
-                idl_h_cmd <= "1111";
-                pcl_cmd <= "1111";
-                pch_cmd <= "1111";
-                sp_cmd <= "1111";
-                acc_cmd <= "1111";
-                x_cmd <= "1111";
-                y_cmd <= "1111";
-
-                pcl_inc_n <= '1';
-                sp_oe_n <= '1';
-                sp_push_n <= '1';
-                sp_pop_n <= '1';
-
-                abs_xy_n <= '1';
-                pg_next_n <= '1';
-                zp_n <= '1';
-                zp_xy_n <= '1';
-                rel_calc_n <= '1';
-                indir_n <= '1';
-                indir_x_n <= '1';
-                indir_y_n <= '1';
-                addr_cycle <= ADDR_Z;
-
-                arith_en_n <= '1';
-                addr_cycle <= ADDR_Z;
-
-                stat_dec_oe_n <= '0';
-                stat_bus_oe_n <= '1';
-                stat_set_flg_n <= '1';
-                stat_flg <= '1';
-                stat_bus_all_n <= '1';
-                stat_bus_nz_n <= '1';
-                stat_alu_we_n <= '1';
-
-                r_vec_oe_n <= '1';
-                n_vec_oe_n <= '1';
-                i_vec_oe_n <= '1';
-                nmi_handled_n <= '1';
-                r_nw <= '1';
+                init_all_pins;
 
                 next_cycle <= R1;
             elsif exec_cycle = R1 or exec_cycle = N1 then
+                init_all_pins;
+                
+                if exec_cycle = R1 then
+                    next_cycle <= R2;
+                elsif exec_cycle = N1 then
+                    next_cycle <= N2;
+                end if;
+            elsif exec_cycle = R2 or exec_cycle = N2 then
                 pcl_cmd <= "1111";
                 pcl_inc_n <= '1';
                 inst_we_n <= '1';
                 back_oe(idl_l_cmd, '1');
 
                 --push pch.
-                d_print("R1");
+                d_print("R2");
                 ad_oe_n <= '0';
                 sp_push_n <= '0';
                 sp_oe_n <= '0';
                 pch_cmd <= "0111";
                 --front_oe(pch_cmd, '0');
-                back_oe(sp_cmd, '0');
-                back_we(sp_cmd, '0');
-                r_nw <= '0';
-
-                if exec_cycle = R1 then
-                    next_cycle <= R2;
-                elsif exec_cycle = N1 then
-                    next_cycle <= N2;
-                end if;
-
-            elsif exec_cycle = R2 or exec_cycle = N2 then
-                front_oe(pch_cmd, '1');
-
-               --push pcl.
-                sp_push_n <= '0';
-                sp_oe_n <= '0';
-                front_oe(pcl_cmd, '0');
                 back_oe(sp_cmd, '0');
                 back_we(sp_cmd, '0');
                 r_nw <= '0';
@@ -2803,12 +2812,12 @@ end  procedure;
                 end if;
 
             elsif exec_cycle = R3 or exec_cycle = N3 then
-                front_oe(pcl_cmd, '1');
+                front_oe(pch_cmd, '1');
 
-               --push status.
+               --push pcl.
                 sp_push_n <= '0';
                 sp_oe_n <= '0';
-                stat_bus_oe_n <= '0';
+                front_oe(pcl_cmd, '0');
                 back_oe(sp_cmd, '0');
                 back_we(sp_cmd, '0');
                 r_nw <= '0';
@@ -2820,6 +2829,23 @@ end  procedure;
                 end if;
 
             elsif exec_cycle = R4 or exec_cycle = N4 then
+                front_oe(pcl_cmd, '1');
+
+               --push status.
+                sp_push_n <= '0';
+                sp_oe_n <= '0';
+                stat_bus_oe_n <= '0';
+                back_oe(sp_cmd, '0');
+                back_we(sp_cmd, '0');
+                r_nw <= '0';
+
+                if exec_cycle = R4 then
+                    next_cycle <= R5;
+                elsif exec_cycle = N4 then
+                    next_cycle <= N5;
+                end if;
+
+            elsif exec_cycle = R5 or exec_cycle = N5 then
                 stat_bus_oe_n <= '1';
                 sp_push_n <= '1';
                 sp_oe_n <= '1';
@@ -2834,17 +2860,17 @@ end  procedure;
                 back_oe(idl_l_cmd, '1');
                 back_oe(idl_h_cmd, '1');
 
-                if exec_cycle = R4 then
+                if exec_cycle = R5 then
                     r_vec_oe_n <= '0';
                     n_vec_oe_n <= '1';
-                    next_cycle <= R5;
-                elsif exec_cycle = N4 then
+                    next_cycle <= R6;
+                elsif exec_cycle = N5 then
                     r_vec_oe_n <= '1';
                     n_vec_oe_n <= '0';
-                    next_cycle <= N5;
+                    next_cycle <= N6;
                 end if;
                 
-            elsif exec_cycle = R5 or exec_cycle = N5 then
+            elsif exec_cycle = R6 or exec_cycle = N6 then
                 front_we(pcl_cmd, '1');
 
                 --fetch reset vector hi
@@ -2853,7 +2879,7 @@ end  procedure;
                 front_we(pch_cmd, '0');
                 indir_n <= '0';
 
-                if exec_cycle = N5 then
+                if exec_cycle = N6 then
                     nmi_handled_n <= '0';
                 end if;
                 --start execute cycle.
