@@ -27,7 +27,8 @@
 	ldx	#$ff
 	txs
 
-    jmp aaaa
+;    jsr cpu_simple_test
+;    jmp short_cut1
     
     jsr init_global
     jsr init_ppu
@@ -113,7 +114,7 @@ test_done:
 	sta	$2001
 	sta	ppu_stat2
 
-aaaa:
+short_cut1:
     ;;;enable nmi
 	lda	#$80
 	sta	$2000
@@ -124,6 +125,166 @@ aaaa:
 mainloop:
 	jmp	mainloop
 
+
+.proc cpu_simple_test
+    ;a2_zp test
+    clc
+    lda #$50
+    sta $10
+    lda #$0a
+    adc $10
+    ;;ac=50+0a=5a
+    
+    ;a2_abs test
+    lda #$bb
+    sta $0410
+    lda #$75
+    and $0410
+    ;;ac=bb&75=31
+
+    ;a2_abs_xy test
+    ldx #$cc
+    stx $0420
+    lda #$75
+    eor $354, x
+    ;;ac=cc^75=b9
+
+    ;a2_zp_xy
+    ldx #$5d
+    stx $66
+    lda #$a2
+    and $09, x
+    ;;ac=a2&5d=0
+    
+    ;a2_indir_y
+    lda #$ee
+    sta $04
+    lda #$05
+    sta $05
+    
+    ;;05ee+50=63e
+    lda #$81
+    sta $63e
+    ldy #$50
+    lda #$fa
+    ora ($04), y
+    ;81 | fa = fb
+    
+    ;a2_indir_x
+    lda #$12
+    sta $83
+    lda #$03
+    sta $84
+    lda #$12
+    sta $0312
+    
+    lda #$2e
+    sec
+    ldx #$33
+    sbc ($50, x)
+    ;2e-12=1c
+    
+    ;;misc instructions.
+    dex
+    dey
+    inx
+    iny
+    asl
+    rol
+    lsr
+    ror
+    
+    
+    ;a3_zp
+    lda #$45
+    sta $67
+    
+    ;a3_zp_xy
+    adc #$1
+    ldy #$90
+    ;;@90+91=21
+    sta $91, y
+    
+    ;a3_abs
+    ;acc=45+1+44=87
+    clc
+    adc #$44
+    sta $0866
+    
+    ;a3_abs_xy
+    adc #$10
+    ldx #$e4
+    ;;@491+e4=575
+    sta $0491, x
+
+    ;a3_indir_y
+    lda #$3e
+    sta $91
+    lda #$03
+    sta $92
+    
+    ldy #$75
+    ;@033e+75=3b3
+    sta ($91), y
+    
+    ;a3_indir_x
+    lda #$34
+    sta $7e
+    lda #$06
+    sta $7f
+    
+    ldx #$99
+    lda #$d2
+    ;;@e5+99=7E
+    sta ($e5, x)
+    
+    ;a4_zp
+    lda #$80
+    sta $25
+    lsr $25
+    ;;80 >> 1 = 40
+    
+    ;a4_zp_x
+    lda #$40
+    sta $7b
+    ldx #$2b
+    ;;2b+25=50
+    sec
+    ror $50, x                  ;;;;<<<<data is changed during we is desserted...
+    ;;40 >> 1 + carry = a0
+    
+    
+    ;;a4_abs
+    lda #$5c
+    sta $0225
+    clc
+    rol $0225
+    ;5c << 1 = b8
+    
+    ;a4_abs_x
+    lda #$f4
+    sta $0416
+    ldx #$22
+    ;;3f4+22=416
+    asl $03f4, x
+    ;f4 << 1 = e8
+    
+    
+    ;;a51_push, a52_pull
+    lda #$44
+    pha
+    lda #$55
+    pla
+    
+    ;a58_branch
+    lda #$44
+    bne @l_bz
+@l_bnz:
+    jmp @l_bnz
+@l_bz:
+
+    rts
+.endproc
 
 .proc sprite_test
     jsr check_ppu
@@ -619,7 +780,7 @@ y_loop:
 nmi_test:
     jsr update_counter
     jsr update_scroll
-    jsr update_dma
+;    jsr update_dma
 
     rti
 
@@ -2232,7 +2393,7 @@ nmi_test:
     lda #$d0
     sta $0433     ;;;@0433=d0
 
-    ldx #$6b
+    ldx #$6b        ;;55+6b=c0
     lda #$22
     sec
     adc ($55, x)        ;;d0+22+1=f3

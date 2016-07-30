@@ -24,21 +24,15 @@ entity de1_nes is
     signal dbg_int_d_bus    : out std_logic_vector(7 downto 0);
     signal dbg_exec_cycle   : out std_logic_vector (5 downto 0);
     signal dbg_ea_carry     : out std_logic;
---    signal dbg_index_bus    : out std_logic_vector(7 downto 0);
---    signal dbg_acc_bus      : out std_logic_vector(7 downto 0);
     signal dbg_status       : out std_logic_vector(7 downto 0);
---    signal dbg_pcl, dbg_pch : out std_logic_vector(7 downto 0);
     signal dbg_sp, dbg_x, dbg_y, dbg_acc       : out std_logic_vector(7 downto 0);
     signal dbg_dec_oe_n    : out std_logic;
     signal dbg_dec_val     : out std_logic_vector (7 downto 0);
     signal dbg_int_dbus    : out std_logic_vector (7 downto 0);
---    signal dbg_status_val    : out std_logic_vector (7 downto 0);
---    signal dbg_stat_we_n    : out std_logic;
---    signal dbg_idl_h, dbg_idl_l, dbg_dbb_r, dbg_dbb_w    : out std_logic_vector (7 downto 0);
 
 --ppu debug pins
     signal dbg_ppu_ce_n    : out std_logic;
-    signal dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status : out std_logic_vector (7 downto 0);
+    signal dbg_ppu_ctrl, dbg_ppu_ctrl_dummy, dbg_ppu_mask, dbg_ppu_mask_dummy, dbg_ppu_status : out std_logic_vector (7 downto 0);
     signal dbg_ppu_addr : out std_logic_vector (13 downto 0);
     signal dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y : out std_logic_vector (7 downto 0);
     signal dbg_disp_nt, dbg_disp_attr : out std_logic_vector (7 downto 0);
@@ -70,16 +64,12 @@ architecture rtl of de1_nes is
     signal dbg_int_d_bus  : out std_logic_vector(7 downto 0);
     signal dbg_exec_cycle      : out std_logic_vector (5 downto 0);
     signal dbg_ea_carry     : out std_logic;
---    signal dbg_index_bus    : out std_logic_vector(7 downto 0);
---    signal dbg_acc_bus      : out std_logic_vector(7 downto 0);
     signal dbg_status       : out std_logic_vector(7 downto 0);
     signal dbg_pcl, dbg_pch, dbg_sp, dbg_x, dbg_y, dbg_acc       : out std_logic_vector(7 downto 0);
     signal dbg_dec_oe_n    : out std_logic;
     signal dbg_dec_val     : out std_logic_vector (7 downto 0);
-    signal dbg_int_dbus    : out std_logic_vector (7 downto 0);
---    signal dbg_status_val    : out std_logic_vector (7 downto 0);
     signal dbg_stat_we_n    : out std_logic;
-    signal dbg_idl_h, dbg_idl_l, dbg_dbb_r, dbg_dbb_w    : out std_logic_vector (7 downto 0);
+    signal dbg_idl_h, dbg_idl_l     : out std_logic_vector (7 downto 0);
     
                 input_clk   : in std_logic; --phi0 input pin.
                 rdy         : in std_logic;
@@ -281,7 +271,7 @@ architecture rtl of de1_nes is
 --    signal dbg_disp_ptn_h, dbg_disp_ptn_l : std_logic_vector (15 downto 0);
     signal dbg_pcl, dbg_pch : std_logic_vector(7 downto 0);
     signal dbg_stat_we_n    : std_logic;
-    signal dbg_idl_h, dbg_idl_l, dbg_dbb_r, dbg_dbb_w    : std_logic_vector (7 downto 0);
+    signal dbg_idl_h, dbg_idl_l     : std_logic_vector (7 downto 0);
 
     signal dbg_vga_clk                      : std_logic;
     signal dbg_ppu_addr_we_n                : std_logic;
@@ -329,19 +319,15 @@ begin
     cpu_inst : mos6502 generic map (data_size, addr_size) 
         port map (
     dbg_instruction,
-    dbg_int_d_bus_dummy,
+    dbg_int_d_bus,
     dbg_exec_cycle,
     dbg_ea_carry,
- --   dbg_index_bus,
- --   dbg_acc_bus,
     dbg_status_dummy,
     dbg_pcl, dbg_pch, dbg_sp_dummy, dbg_x_dummy, dbg_y, dbg_acc,
     dbg_dec_oe_n,
     dbg_dec_val,
-    dbg_int_dbus,
---    dbg_status_val    ,
     dbg_stat_we_n    ,
-    dbg_idl_h, dbg_idl_l, dbg_dbb_r, dbg_dbb_w,
+    dbg_idl_h, dbg_idl_l,
 
                 cpu_clk, rdy,
                 rst_n, irq_n, nmi_n, dbe, r_nw, 
@@ -361,9 +347,9 @@ begin
     --nes ppu instance
     ppu_inst: ppu port map (  
         dbg_ppu_ce_n                                        ,
-        dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status          ,
+        dbg_ppu_ctrl_dummy, dbg_ppu_mask_dummy, dbg_ppu_status          ,
         dbg_ppu_addr                                        ,
-        dbg_ppu_data, dbg_ppu_scrl_x_dummy, dbg_ppu_scrl_y_dummy        ,
+        dbg_ppu_data_dummy, dbg_ppu_scrl_x_dummy, dbg_ppu_scrl_y_dummy        ,
 
         dbg_ppu_clk                      ,
         dbg_vga_clk                      ,
@@ -478,8 +464,9 @@ begin
     dbg_nmi <= nmi_n;
 
     nmi_n <= dummy_nmi;
---    dbg_ppu_ctrl <= dbg_pcl;
---    dbg_ppu_mask <= dbg_pch;
+    dbg_ppu_ctrl <= dbg_pcl;
+    dbg_ppu_data <= dbg_idl_l;
+    dbg_ppu_mask <= dbg_idl_h;
 --    dbg_ppu_scrl_x(5) <= rom_ce_n;
 --    dbg_ppu_scrl_x(6) <= ram_ce_n;
 

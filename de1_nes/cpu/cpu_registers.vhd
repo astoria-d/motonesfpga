@@ -90,28 +90,14 @@ entity data_bus_buffer is
             dsize : integer := 8
             );
     port (  
-    signal dbg_dbb_r     : out std_logic_vector (7 downto 0);
-    signal dbg_dbb_w     : out std_logic_vector (7 downto 0);
-
-            clk         : in std_logic;
-            r_nw        : in std_logic;
             int_oe_n    : in std_logic;
+            ext_oe_n    : in std_logic;
             int_dbus : inout std_logic_vector (dsize - 1 downto 0);
             ext_dbus : inout std_logic_vector (dsize - 1 downto 0)
         );
 end data_bus_buffer;
 
 architecture rtl of data_bus_buffer is
-component data_latch
-    generic (
-            dsize : integer := 8
-            );
-    port (  
-            clk     : in std_logic;
-            d       : in std_logic_vector (dsize - 1 downto 0);
-            q       : out std_logic_vector (dsize - 1 downto 0)
-        );
-end component;
 
 component tri_state_buffer
     generic (
@@ -124,87 +110,15 @@ component tri_state_buffer
         );
 end component;
 
-signal rd_clk : std_logic;
-signal wr_clk : std_logic;
-signal read_buf : std_logic_vector (dsize - 1 downto 0);
-signal write_buf : std_logic_vector (dsize - 1 downto 0);
 begin
-    dbg_dbb_r <= read_buf;
-    dbg_dbb_w <= write_buf;
-    
-    rd_clk <= r_nw and clk;
-    wr_clk <= (not r_nw) and clk;
-
     --read from i/o to cpu
-    latch_r : data_latch generic map (dsize) 
-                    port map(rd_clk, ext_dbus, read_buf);
     read_tsb : tri_state_buffer generic map (dsize) 
-                    port map(int_oe_n, read_buf, int_dbus);
+                    port map(int_oe_n, ext_dbus, int_dbus);
     --write from cpu to io
-    latch_w : data_latch generic map (dsize) 
-                    port map(wr_clk, int_dbus, write_buf);
     write_tsb : tri_state_buffer generic map (dsize) 
-                    port map(r_nw, write_buf, ext_dbus);
+                    port map(ext_oe_n, int_dbus, ext_dbus);
 end rtl;
 
-------------------------------------------
------ input data latch register
-------------------------------------------
-
-library ieee;
-use ieee.std_logic_1164.all;
-
-entity input_data_latch is 
-    generic (
-            dsize : integer := 8
-            );
-    port (  
-    signal dbg_idl_val     : out std_logic_vector (7 downto 0);
-    
-            clk         : in std_logic;
-            oe_n        : in std_logic;
-            we_n        : in std_logic;
-            int_dbus    : in std_logic_vector (dsize - 1 downto 0);
-            alu_bus     : out std_logic_vector (dsize - 1 downto 0)
-        );
-end input_data_latch;
-
-architecture rtl of input_data_latch is
-
-component d_flip_flop
-    generic (
-            dsize : integer := 8
-            );
-    port (  
-            clk     : in std_logic;
-            res_n   : in std_logic;
-            set_n   : in std_logic;
-            we_n    : in std_logic;
-            d       : in std_logic_vector (dsize - 1 downto 0);
-            q       : out std_logic_vector (dsize - 1 downto 0)
-        );
-end component;
-
-component tri_state_buffer
-    generic (
-            dsize : integer := 8
-            );
-    port (  
-            oe_n    : in std_logic;
-            d       : in std_logic_vector (dsize - 1 downto 0);
-            q       : out std_logic_vector (dsize - 1 downto 0)
-        );
-end component;
-
-signal latch_buf : std_logic_vector (dsize - 1 downto 0);
-
-begin
-    latch_inst : d_flip_flop generic map (dsize) 
-                    port map(clk, '1', '1', we_n, int_dbus, latch_buf);
-    iput_data_tsb : tri_state_buffer generic map (dsize) 
-                    port map(oe_n, latch_buf, alu_bus);
-
-end rtl;
 
 ----------------------------------------
 --- status register component
@@ -220,8 +134,6 @@ entity processor_status is
     port (  
     signal dbg_dec_oe_n    : out std_logic;
     signal dbg_dec_val     : out std_logic_vector (7 downto 0);
-    signal dbg_int_dbus    : out std_logic_vector (7 downto 0);
---    signal dbg_status_val    : out std_logic_vector (7 downto 0);
     signal dbg_stat_we_n    : out std_logic;
 
     
@@ -294,9 +206,6 @@ begin
     stat_c <= status_val(0);
 
     dbg_dec_oe_n    <= dec_oe_n    ;
-    --dbg_dec_val     <= dec_val     ;
-    --dbg_int_dbus    <= int_dbus    ;
-    --dbg_status_val <= status_val;
     dbg_stat_we_n <= we_n;
 
     main_p : process (clk, res_n, we_n, dec_val, int_dbus, 

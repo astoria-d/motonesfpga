@@ -10,17 +10,12 @@ entity mos6502 is
     signal dbg_int_d_bus    : out std_logic_vector(7 downto 0);
     signal dbg_exec_cycle   : out std_logic_vector (5 downto 0);
     signal dbg_ea_carry     : out std_logic;
-
---    signal dbg_index_bus    : out std_logic_vector(7 downto 0);
---    signal dbg_acc_bus      : out std_logic_vector(7 downto 0);
     signal dbg_status       : out std_logic_vector(7 downto 0);
     signal dbg_pcl, dbg_pch, dbg_sp, dbg_x, dbg_y, dbg_acc       : out std_logic_vector(7 downto 0);
     signal dbg_dec_oe_n    : out std_logic;
     signal dbg_dec_val     : out std_logic_vector (7 downto 0);
-    signal dbg_int_dbus    : out std_logic_vector (7 downto 0);
---    signal dbg_status_val    : out std_logic_vector (7 downto 0);
     signal dbg_stat_we_n    : out std_logic;
-    signal dbg_idl_h, dbg_idl_l, dbg_dbb_r, dbg_dbb_w    : out std_logic_vector (7 downto 0);
+    signal dbg_idl_h, dbg_idl_l     : out std_logic_vector (7 downto 0);
 
             input_clk   : in std_logic; --phi0 input pin.
             rdy         : in std_logic;
@@ -43,9 +38,8 @@ architecture rtl of mos6502 is
     ----------------------------------------------
 component decoder
     generic (dsize : integer := 8);
-    port (  
-    --signal dbg_ea_carry     : out std_logic;
-
+    port (
+            --input lines.
             set_clk         : in std_logic;
             trig_clk        : in std_logic;
             res_n           : in std_logic;
@@ -55,28 +49,31 @@ component decoder
             instruction     : in std_logic_vector (dsize - 1 downto 0);
             exec_cycle      : in std_logic_vector (5 downto 0);
             next_cycle      : out std_logic_vector (5 downto 0);
+            ea_carry        : in  std_logic;
             status_reg      : inout std_logic_vector (dsize - 1 downto 0);
+
+            --general control.
             inst_we_n       : out std_logic;
             ad_oe_n         : out std_logic;
             dbuf_int_oe_n   : out std_logic;
-            dl_al_we_n      : out std_logic;
-            dl_ah_we_n      : out std_logic;
-            dl_al_oe_n      : out std_logic;
-            dl_ah_oe_n      : out std_logic;
-            dl_dh_oe_n      : out std_logic;
-            pcl_inc_n       : out std_logic;
-            pch_inc_n       : out std_logic;
+            r_nw            : out std_logic;
+
+            ----control line for dual port registers.
+            idl_l_cmd       : out std_logic_vector(3 downto 0);
+            idl_h_cmd       : out std_logic_vector(3 downto 0);
             pcl_cmd         : out std_logic_vector(3 downto 0);
             pch_cmd         : out std_logic_vector(3 downto 0);
             sp_cmd          : out std_logic_vector(3 downto 0);
+            x_cmd           : out std_logic_vector(3 downto 0);
+            y_cmd           : out std_logic_vector(3 downto 0);
+            acc_cmd         : out std_logic_vector(3 downto 0);
+            
+            --addr calc control
+            pcl_inc_n       : out std_logic;
             sp_oe_n         : out std_logic;
             sp_push_n       : out std_logic;
             sp_pop_n        : out std_logic;
-            acc_cmd         : out std_logic_vector(3 downto 0);
-            x_cmd           : out std_logic_vector(3 downto 0);
-            y_cmd           : out std_logic_vector(3 downto 0);
             abs_xy_n        : out std_logic;
-            ea_carry        : in  std_logic;
             pg_next_n       : out std_logic;
             zp_n            : out std_logic;
             zp_xy_n         : out std_logic;
@@ -84,7 +81,9 @@ component decoder
             indir_n         : out std_logic;
             indir_x_n       : out std_logic;
             indir_y_n       : out std_logic;
-            arith_en_n      : out std_logic;
+            addr_cycle      : out std_logic_vector(2 downto 0);
+
+            ---status register
             stat_dec_oe_n   : out std_logic;
             stat_bus_oe_n   : out std_logic;
             stat_set_flg_n  : out std_logic;
@@ -92,21 +91,29 @@ component decoder
             stat_bus_all_n  : out std_logic;
             stat_bus_nz_n   : out std_logic;
             stat_alu_we_n   : out std_logic;
+            
+            --ALU control
+            arith_en_n      : out std_logic;
+            alu_cycle       : out std_logic_vector(1 downto 0);
+            
+            --reset vectors.
             r_vec_oe_n      : out std_logic;
             n_vec_oe_n      : out std_logic;
-            i_vec_oe_n      : out std_logic;
-            r_nw            : out std_logic
+            i_vec_oe_n      : out std_logic
+
             ;---for parameter check purpose!!!
             check_bit     : out std_logic_vector(1 to 5)
         );
 end component;
 
-component alu
+component address_calcurator
     generic (   dsize : integer := 8
             );
-    port (  clk             : in std_logic;
+    port (  
+            trig_clk        : in std_logic;
+
+            --control line.
             pcl_inc_n       : in std_logic;
-            pch_inc_n       : in std_logic;
             sp_oe_n         : in std_logic;
             sp_push_n       : in std_logic;
             sp_pop_n        : in std_logic;
@@ -118,20 +125,33 @@ component alu
             indir_n         : in std_logic;
             indir_x_n       : in std_logic;
             indir_y_n       : in std_logic;
-            arith_en_n      : in std_logic;
-            instruction     : in std_logic_vector (dsize - 1 downto 0);
-            exec_cycle      : in std_logic_vector (5 downto 0);
-            int_d_bus       : inout std_logic_vector (dsize - 1 downto 0);
-            acc_out         : in std_logic_vector (dsize - 1 downto 0);
+            addr_cycle      : in std_logic_vector(2 downto 0);
+
+            --in/out buses.
             index_bus       : in std_logic_vector (dsize - 1 downto 0);
             bal             : in std_logic_vector (dsize - 1 downto 0);
             bah             : in std_logic_vector (dsize - 1 downto 0);
-            addr_back       : out std_logic_vector (dsize - 1 downto 0);
-            acc_in          : out std_logic_vector (dsize - 1 downto 0);
+            int_d_bus       : in std_logic_vector (dsize - 1 downto 0);
+            addr_back_l     : out std_logic_vector (dsize - 1 downto 0);
+            addr_back_h     : out std_logic_vector (dsize - 1 downto 0);
             abl             : out std_logic_vector (dsize - 1 downto 0);
             abh             : out std_logic_vector (dsize - 1 downto 0);
-            pcl_inc_carry   : out std_logic;
-            ea_carry        : out std_logic;
+            ea_carry        : out std_logic
+    );
+end component;
+
+component alu
+    generic (   dsize : integer := 8
+            );
+    port (  
+            trig_clk        : in std_logic;
+            instruction     : in std_logic_vector (dsize - 1 downto 0);
+            arith_en_n      : in std_logic;
+            alu_cycle       : in std_logic_vector(1 downto 0);
+            int_d_bus       : inout std_logic_vector (dsize - 1 downto 0);
+            acc_in          : out std_logic_vector (dsize - 1 downto 0);
+            acc_out         : in std_logic_vector (dsize - 1 downto 0);
+            index_bus       : in std_logic_vector (dsize - 1 downto 0);
             carry_in        : in std_logic;
             negative        : out std_logic;
             zero            : out std_logic;
@@ -179,30 +199,10 @@ component data_bus_buffer
             dsize : integer := 8
             );
     port (  
-    signal dbg_dbb_r     : out std_logic_vector (7 downto 0);
-    signal dbg_dbb_w     : out std_logic_vector (7 downto 0);
-
-            clk         : in std_logic;
-            r_nw        : in std_logic;
             int_oe_n    : in std_logic;
+            ext_oe_n    : in std_logic;
             int_dbus : inout std_logic_vector (dsize - 1 downto 0);
             ext_dbus : inout std_logic_vector (dsize - 1 downto 0)
-        );
-end component;
-
-component input_data_latch
-    generic (
-            dsize : integer := 8
-            );
-    port (  
-    signal dbg_idl_val     : out std_logic_vector (7 downto 0);
-    
-    
-            clk         : in std_logic;
-            oe_n        : in std_logic;
-            we_n        : in std_logic;
-            int_dbus    : in std_logic_vector (dsize - 1 downto 0);
-            alu_bus     : out std_logic_vector (dsize - 1 downto 0)
         );
 end component;
 
@@ -224,8 +224,6 @@ component processor_status
     port (  
     signal dbg_dec_oe_n    : out std_logic;
     signal dbg_dec_val     : out std_logic_vector (dsize - 1 downto 0);
-    signal dbg_int_dbus    : out std_logic_vector (dsize - 1 downto 0);
---    signal dbg_status_val    : out std_logic_vector (7 downto 0);
     signal dbg_stat_we_n    : out std_logic;
     
             clk         : in std_logic;
@@ -250,8 +248,8 @@ end component;
     ----------------------------------------------
     ------------ signal declareration ------------
     ----------------------------------------------
-    signal set_clk : std_logic;
-    signal trigger_clk : std_logic;
+    signal set_clk  : std_logic;
+    signal trig_clk : std_logic;
 
     signal exec_cycle : std_logic_vector(5 downto 0);
     signal next_cycle : std_logic_vector(5 downto 0);
@@ -260,95 +258,92 @@ end component;
     -------------------------------
     -------- control lines --------
     -------------------------------
-    signal inst_we_n : std_logic;
-    signal inst_rst_n : std_logic;
-    signal ad_oe_n : std_logic;
+    signal inst_we_n        : std_logic;
+    signal inst_rst_n       : std_logic;
+    signal ad_oe_n          : std_logic;
 
-    signal dbuf_r_nw : std_logic;
-    signal dbuf_int_oe_n : std_logic;
+    signal dbuf_r_nw        : std_logic;
+    signal dbuf_int_oe_n    : std_logic;
 
-    signal dl_al_we_n : std_logic;
-    signal dl_ah_we_n : std_logic;
-    signal dl_al_oe_n : std_logic;
-    signal dl_ah_oe_n : std_logic;
-    signal dl_dh_oe_n : std_logic;
+    signal pcl_inc_n        : std_logic;
+    signal abs_xy_n         : std_logic;
+    signal ea_carry         : std_logic;
+    signal pg_next_n        : std_logic;
+    signal zp_n             : std_logic;
+    signal zp_xy_n          : std_logic;
+    signal rel_calc_n       : std_logic;
+    signal indir_n          : std_logic;
+    signal indir_x_n        : std_logic;
+    signal indir_y_n        : std_logic;
+    signal sp_oe_n          : std_logic;
+    signal sp_push_n        : std_logic;
+    signal sp_pop_n         : std_logic;
+    signal addr_cycle       : std_logic_vector(2 downto 0);
 
-    signal pcl_inc_n : std_logic;
-    signal pch_inc_n : std_logic;
-    signal pcl_inc_carry : std_logic;
-    signal abs_xy_n        : std_logic;
-    signal ea_carry        : std_logic;
-    signal pg_next_n       : std_logic;
-    signal zp_n            : std_logic;
-    signal zp_xy_n         : std_logic;
-    signal rel_calc_n      : std_logic;
-    signal indir_n         : std_logic;
-    signal indir_x_n       : std_logic;
-    signal indir_y_n       : std_logic;
-    signal arith_en_n      : std_logic;
-                    
-    signal alu_n : std_logic;
-    signal alu_z : std_logic;
-    signal alu_c : std_logic;
-    signal alu_v : std_logic;
-    signal stat_c : std_logic;
+    signal arith_en_n       : std_logic;                    
+    signal alu_cycle        : std_logic_vector(1 downto 0);
+    signal stat_c           : std_logic;
+
+    signal negative        : std_logic;
+    signal zero            : std_logic;
+    signal carry_out       : std_logic;
+    signal overflow        : std_logic;
 
     ----control line for dual port registers.
-    signal pcl_cmd : std_logic_vector(3 downto 0);
-    signal pch_cmd : std_logic_vector(3 downto 0);
-    signal sp_cmd : std_logic_vector(3 downto 0);
-    signal acc_cmd : std_logic_vector(3 downto 0);
-    signal x_cmd : std_logic_vector(3 downto 0);
-    signal y_cmd : std_logic_vector(3 downto 0);
-    signal sp_oe_n : std_logic;
-    signal sp_push_n : std_logic;
-    signal sp_pop_n  : std_logic;
+    signal idl_l_cmd        : std_logic_vector(3 downto 0);
+    signal idl_h_cmd        : std_logic_vector(3 downto 0);
+    signal pcl_cmd          : std_logic_vector(3 downto 0);
+    signal pch_cmd          : std_logic_vector(3 downto 0);
+    signal sp_cmd           : std_logic_vector(3 downto 0);
+    signal acc_cmd          : std_logic_vector(3 downto 0);
+    signal x_cmd            : std_logic_vector(3 downto 0);
+    signal y_cmd            : std_logic_vector(3 downto 0);
 
     ---status register
-    signal stat_dec_oe_n : std_logic;
-    signal stat_bus_oe_n : std_logic;
-    signal stat_set_flg_n : std_logic;
-    signal stat_flg : std_logic;
-    signal stat_bus_all_n : std_logic;
-    signal stat_bus_nz_n : std_logic;
-    signal stat_alu_we_n : std_logic;
+    signal stat_dec_oe_n    : std_logic;
+    signal stat_bus_oe_n    : std_logic;
+    signal stat_set_flg_n   : std_logic;
+    signal stat_flg         : std_logic;
+    signal stat_bus_all_n   : std_logic;
+    signal stat_bus_nz_n    : std_logic;
+    signal stat_alu_we_n    : std_logic;
 
     -------------------------------
     ------------ buses ------------
     -------------------------------
-    signal instruction : std_logic_vector(dsize - 1 downto 0);
+    signal instruction  : std_logic_vector(dsize - 1 downto 0);
     
-    signal bah : std_logic_vector(dsize - 1 downto 0);
-    signal bal : std_logic_vector(dsize - 1 downto 0);
-    signal index_bus : std_logic_vector(dsize - 1 downto 0);
-    signal idl_h_out : std_logic_vector(dsize - 1 downto 0);
+    signal bah          : std_logic_vector(dsize - 1 downto 0);
+    signal bal          : std_logic_vector(dsize - 1 downto 0);
+    signal index_bus    : std_logic_vector(dsize - 1 downto 0);
 
-    signal acc_out : std_logic_vector(dsize - 1 downto 0);
-    signal acc_in : std_logic_vector(dsize - 1 downto 0);
-    signal addr_back : std_logic_vector(dsize - 1 downto 0);
+    signal acc_out      : std_logic_vector(dsize - 1 downto 0);
+    signal acc_in       : std_logic_vector(dsize - 1 downto 0);
+    signal addr_back_l  : std_logic_vector(dsize - 1 downto 0);
+    signal addr_back_h  : std_logic_vector(dsize - 1 downto 0);
 
     --not used bus.
-    signal null_bus : std_logic_vector(dsize - 1 downto 0);
+    signal null_bus     : std_logic_vector(dsize - 1 downto 0);
 
     --address bus
-    signal abh : std_logic_vector(dsize - 1 downto 0);
-    signal abl : std_logic_vector(dsize - 1 downto 0);
+    signal abh          : std_logic_vector(dsize - 1 downto 0);
+    signal abl          : std_logic_vector(dsize - 1 downto 0);
 
     ---internal data bus
-    signal int_d_bus : std_logic_vector(dsize - 1 downto 0);
+    signal int_d_bus    : std_logic_vector(dsize - 1 downto 0);
 
     ---reset vectors---
-    signal r_vec_oe_n : std_logic;
-    signal n_vec_oe_n : std_logic;
-    signal i_vec_oe_n : std_logic;
-    signal reset_l : std_logic_vector(dsize - 1 downto 0);
-    signal reset_h : std_logic_vector(dsize - 1 downto 0);
-    signal nmi_l : std_logic_vector(dsize - 1 downto 0);
-    signal nmi_h : std_logic_vector(dsize - 1 downto 0);
-    signal irq_l : std_logic_vector(dsize - 1 downto 0);
-    signal irq_h : std_logic_vector(dsize - 1 downto 0);
+    signal r_vec_oe_n   : std_logic;
+    signal n_vec_oe_n   : std_logic;
+    signal i_vec_oe_n   : std_logic;
+    signal reset_l      : std_logic_vector(dsize - 1 downto 0);
+    signal reset_h      : std_logic_vector(dsize - 1 downto 0);
+    signal nmi_l        : std_logic_vector(dsize - 1 downto 0);
+    signal nmi_h        : std_logic_vector(dsize - 1 downto 0);
+    signal irq_l        : std_logic_vector(dsize - 1 downto 0);
+    signal irq_h        : std_logic_vector(dsize - 1 downto 0);
 
-    signal check_bit     : std_logic_vector(1 to 5);
+    signal check_bit    : std_logic_vector(1 to 5);
 
 begin
 
@@ -366,7 +361,7 @@ begin
     phi1 <= input_clk;
     phi2 <= not input_clk;
     set_clk <= input_clk;
-    trigger_clk <= not input_clk;
+    trig_clk <= not input_clk;
 
     r_nw <= dbuf_r_nw;
     reset_l <= "11111100";
@@ -387,154 +382,162 @@ begin
 
     dec_inst : decoder generic map (dsize) 
             port map(
-    --dbg_ea_carry     ,
-            
-                    set_clk, 
-                    trigger_clk, 
-                    rst_n, 
-                    irq_n, 
-                    nmi_n, 
-                    rdy, 
-                    instruction, 
-                    exec_cycle,
-                    next_cycle,
-                    status_reg, 
-                    inst_we_n, 
-                    ad_oe_n, 
-                    dbuf_int_oe_n,
-                    dl_al_we_n,
-                    dl_ah_we_n,
-                    dl_al_oe_n,
-                    dl_ah_oe_n,
-                    dl_dh_oe_n,
-                    pcl_inc_n,
-                    pch_inc_n,
-                    pcl_cmd,
-                    pch_cmd,
-                    sp_cmd,
-                    sp_oe_n,
-                    sp_push_n,
-                    sp_pop_n,
-                    acc_cmd,
-                    x_cmd,
-                    y_cmd,
-                    abs_xy_n,
-                    ea_carry,
-                    pg_next_n,
-                    zp_n,
-                    zp_xy_n,
-                    rel_calc_n,
-                    indir_n,
-                    indir_x_n,
-                    indir_y_n,
-                    arith_en_n,
-                    stat_dec_oe_n, 
-                    stat_bus_oe_n, 
-                    stat_set_flg_n, 
-                    stat_flg, 
-                    stat_bus_all_n, 
-                    stat_bus_nz_n, 
-                    stat_alu_we_n, 
-                    r_vec_oe_n,
-                    n_vec_oe_n,
-                    i_vec_oe_n,
-                    dbuf_r_nw
+                    --input lines.
+                    set_clk         ,
+                    trig_clk        ,
+                    rst_n           ,
+                    irq_n           ,
+                    nmi_n           ,
+                    rdy             ,
+                    instruction     ,
+                    exec_cycle      ,
+                    next_cycle      ,
+                    ea_carry        ,
+                    status_reg      ,
+
+                    inst_we_n       ,
+                    ad_oe_n         ,
+                    dbuf_int_oe_n   ,
+                    dbuf_r_nw       ,
+
+                    idl_l_cmd       ,
+                    idl_h_cmd       ,
+                    pcl_cmd         ,
+                    pch_cmd         ,
+                    sp_cmd          ,
+                    x_cmd           ,
+                    y_cmd           ,
+                    acc_cmd         ,
+
+                    pcl_inc_n       ,
+                    sp_oe_n         ,
+                    sp_push_n       ,
+                    sp_pop_n        ,
+                    abs_xy_n        ,
+                    pg_next_n       ,
+                    zp_n            ,
+                    zp_xy_n         ,
+                    rel_calc_n      ,
+                    indir_n         ,
+                    indir_x_n       ,
+                    indir_y_n       ,
+                    addr_cycle      ,
+
+                    stat_dec_oe_n   ,
+                    stat_bus_oe_n   ,
+                    stat_set_flg_n  ,
+                    stat_flg        ,
+                    stat_bus_all_n  ,
+                    stat_bus_nz_n   ,
+                    stat_alu_we_n   ,
+
+                    arith_en_n      ,
+                    alu_cycle       ,
+
+                    r_vec_oe_n      ,
+                    n_vec_oe_n      ,
+                    i_vec_oe_n
+
                     , check_bit --check bit.
                     );
 
+    ad_calc_inst : address_calcurator generic map (dsize) 
+            port map (
+            trig_clk        ,
+
+            pcl_inc_n       ,
+            sp_oe_n         ,
+            sp_push_n       ,
+            sp_pop_n        ,
+            abs_xy_n        ,
+            pg_next_n       ,
+            zp_n            ,
+            zp_xy_n         ,
+            rel_calc_n      ,
+            indir_n         ,
+            indir_x_n       ,
+            indir_y_n       ,
+            addr_cycle      ,
+
+            index_bus       ,
+            bal             ,
+            bah             ,
+            int_d_bus       ,
+            addr_back_l     ,
+            addr_back_h     ,
+            abl             ,
+            abh             ,
+            ea_carry
+            );
+                    
     alu_inst : alu generic map (dsize) 
-            port map (trigger_clk, 
-                    pcl_inc_n,
-                    pch_inc_n,
-                    sp_oe_n,
-                    sp_push_n,
-                    sp_pop_n,
-                    abs_xy_n,
-                    pg_next_n,
-                    zp_n,
-                    zp_xy_n,
-                    rel_calc_n,
-                    indir_n,
-                    indir_x_n,
-                    indir_y_n,
-                    arith_en_n,
-                    instruction,
-                    exec_cycle,
-                    int_d_bus,
-                    acc_out,
-                    index_bus,
-                    bal,
-                    bah,
-                    addr_back,
-                    acc_in,
-                    abl,
-                    abh,
-                    pcl_inc_carry,
-                    ea_carry,
-                    stat_c,
-                    alu_n,
-                    alu_z,
-                    alu_c,
-                    alu_v 
+            port map (
+            trig_clk        ,
+            instruction     ,
+            arith_en_n      ,
+            alu_cycle       ,
+            int_d_bus       ,
+            acc_in          ,
+            acc_out         ,
+            index_bus       ,
+            stat_c          ,
+            negative        ,
+            zero            ,
+            carry_out       ,
+            overflow
                     );
 
     --cpu execution cycle number
     exec_cycle_inst : d_flip_flop generic map (5) 
-            port map(trigger_clk, '1', '1', '0', 
+            port map(trig_clk, '1', '1', '0', 
                     next_cycle(4 downto 0), exec_cycle(4 downto 0));
 
-    --exec_cycle top bit is phc carry flag.
-    exec_cycle(5) <= pcl_inc_carry;
-
-    --io data buffer
+    --io data gateway
     dbus_buf : data_bus_buffer generic map (dsize) 
-            port map(dbg_dbb_r, dbg_dbb_w, set_clk, dbuf_r_nw, dbuf_int_oe_n, int_d_bus, d_io);
+            port map(dbuf_int_oe_n, dbuf_r_nw, int_d_bus, d_io);
 
-    --address operand data buffer.
-    idl_l : input_data_latch generic map (dsize) 
-            port map(dbg_idl_l, set_clk, dl_al_oe_n, dl_al_we_n, int_d_bus, bal);
-    idl_h : input_data_latch generic map (dsize) 
-            port map(dbg_idl_h, set_clk, '0', dl_ah_we_n, int_d_bus, idl_h_out);
-    ---only DLH has b-bus side output.
-    idl_h_a_buf : tri_state_buffer generic map (dsize)
-            port map (dl_ah_oe_n, idl_h_out, bah);
-    idl_h_d_buf : tri_state_buffer generic map (dsize)
-            port map (dl_dh_oe_n, idl_h_out, int_d_bus);
-
-    -------- registers --------
+    -------- instruction register --------
     ir : d_flip_flop generic map (dsize) 
-            port map(trigger_clk, inst_rst_n, '1', inst_we_n, d_io, instruction);
+            port map(trig_clk, inst_rst_n, '1', inst_we_n, d_io, instruction);
 
+    --input data buffer.
+    idl_l : dual_dff generic map (dsize) 
+            port map(dbg_idl_l, trig_clk, rst_n, '1', idl_l_cmd, int_d_bus, null_bus, bal);
+    idl_h : dual_dff generic map (dsize) 
+            port map(dbg_idl_h, trig_clk, rst_n, '1', idl_h_cmd, int_d_bus, null_bus, bah);
+
+    -------- program counter --------
     pcl_inst : dual_dff generic map (dsize) 
-            port map(dbg_pcl, trigger_clk, rst_n, '1', pcl_cmd, int_d_bus, addr_back, bal);
+            port map(dbg_pcl, set_clk, rst_n, '1', pcl_cmd, int_d_bus, addr_back_l, bal);
     pch_inst : dual_dff generic map (dsize) 
-            port map(dbg_pch, trigger_clk, rst_n, '1', pch_cmd, int_d_bus, addr_back, bah);
+            port map(dbg_pch, set_clk, rst_n, '1', pch_cmd, int_d_bus, addr_back_h, bah);
+
+
+    --addressing register
+    sp : dual_dff generic map (dsize) 
+            port map(dbg_sp, set_clk, rst_n, '1', sp_cmd, int_d_bus, addr_back_l, bal);
+
+    x : dual_dff generic map (dsize) 
+            port map(dbg_x, trig_clk, rst_n, '1', x_cmd, int_d_bus, null_bus, index_bus);
+    y : dual_dff generic map (dsize) 
+            port map(dbg_y, trig_clk, rst_n, '1', y_cmd, int_d_bus, null_bus, index_bus);
+
+    --accumurator
+    acc : dual_dff generic map (dsize) 
+            port map(dbg_acc, trig_clk, rst_n, '1', acc_cmd, int_d_bus, acc_in, acc_out);
+
 
     --status register
     status_register : processor_status generic map (dsize) 
             port map (
     dbg_dec_oe_n,
     dbg_dec_val,
-    dbg_int_dbus,
---    dbg_status_val,
     dbg_stat_we_n    ,
-                    trigger_clk, rst_n, 
+                    trig_clk, rst_n, 
                     stat_dec_oe_n, stat_bus_oe_n, 
                     stat_set_flg_n, stat_flg, stat_bus_all_n, stat_bus_nz_n, 
-                    stat_alu_we_n, alu_n, alu_v, alu_z, alu_c, stat_c,
+                    stat_alu_we_n, negative, overflow, zero, carry_out, stat_c,
                     status_reg, int_d_bus);
-
-
-    sp : dual_dff generic map (dsize) 
-            port map(dbg_sp, trigger_clk, rst_n, '1', sp_cmd, int_d_bus, addr_back, bal);
-
-    x : dual_dff generic map (dsize) 
-            port map(dbg_x, trigger_clk, rst_n, '1', x_cmd, int_d_bus, null_bus, index_bus);
-    y : dual_dff generic map (dsize) 
-            port map(dbg_y, trigger_clk, rst_n, '1', y_cmd, int_d_bus, null_bus, index_bus);
-
-    acc : dual_dff generic map (dsize) 
-            port map(dbg_acc, trigger_clk, rst_n, '1', acc_cmd, int_d_bus, acc_in, acc_out);
 
     --adh output is controlled by decoder.
     adh_buf : tri_state_buffer generic map (dsize)
@@ -557,14 +560,6 @@ begin
             port map (i_vec_oe_n, irq_l, bal);
     irq_h_buf : tri_state_buffer generic map (dsize)
             port map (i_vec_oe_n, irq_h, bah);
-
-    reset_p : process (rst_n)
-    begin
-        if (rst_n = '0') then
-
-        end if;
-    end process;
-
 
 ------------------------------------------------------------
 ------------------------ for debug... ----------------------
