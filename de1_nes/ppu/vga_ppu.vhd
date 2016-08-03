@@ -964,8 +964,168 @@ begin
             end if; --if (rising_edge(emu_ppu_clk)) then
 
         end if;--if (rst_n = '0') then
-    end process;
+    end process;--spr_main_p 
 
+
+    
+    -----------------------------------------
+    ---bg display variables...
+    -----------------------------------------
+    ---bg prefetch x pos is 16 + scroll cycle ahead of current pos.
+    prf_x <= nes_x + ppu_scroll_x + "000010000" 
+                    when nes_x < conv_std_logic_vector(HSCAN, X_SIZE) else
+             nes_x + ppu_scroll_x + "010111011"; -- +16 -341
+
+    prf_y <= nes_y + ppu_scroll_y
+                    when nes_x < conv_std_logic_vector(HSCAN, X_SIZE) and
+                         nes_y < conv_std_logic_vector(VSCAN, X_SIZE) else
+             nes_y + ppu_scroll_y + "000000001" 
+                    when nes_y < conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE) else
+             "000000000"; 
+
+    --name tbl, attr tbl, pattern tble values..
+    nt_inst : d_flip_flop generic map(dsize)
+            port map (emu_ppu_clk_n, rst_n, '1', nt_we_n, vram_ad, disp_nt);
+
+    at_inst : d_flip_flop generic map(dsize)
+            port map (emu_ppu_clk_n, rst_n, '1', attr_we_n, vram_ad, attr_val);
+
+    disp_at_inst : shift_register generic map(dsize, 2)
+            port map (emu_ppu_clk_n, rst_n, attr_ce_n, disp_attr_we_n, attr_val, disp_attr);
+
+    --chr rom data's bit is stored in opposite direction.
+    --reverse bit when loading...
+    ptn_l_in <= (vram_ad(0) & vram_ad(1) & vram_ad(2) & vram_ad(3) & 
+                 vram_ad(4) & vram_ad(5) & vram_ad(6) & vram_ad(7));
+    ptn_h_in <= (vram_ad(0) & vram_ad(1) & vram_ad(2) & vram_ad(3) & 
+                 vram_ad(4) & vram_ad(5) & vram_ad(6) & vram_ad(7)) & 
+                disp_ptn_h (dsize downto 1);
+
+    ptn_l_inst : d_flip_flop generic map(dsize)
+            port map (emu_ppu_clk_n, rst_n, '1', ptn_l_we_n, ptn_l_in, ptn_l_val);
+
+    disp_ptn_l_in <= ptn_l_val & disp_ptn_l (dsize downto 1);
+    disp_ptn_l_inst : shift_register generic map(dsize * 2, 1)
+            port map (emu_ppu_clk_n, rst_n, '0', ptn_h_we_n, disp_ptn_l_in, disp_ptn_l);
+
+    ptn_h_inst : shift_register generic map(dsize * 2, 1)
+            port map (emu_ppu_clk_n, rst_n, '0', ptn_h_we_n, ptn_h_in, disp_ptn_h);
+
+
+    -----------------------------------------
+    ---bg main process
+    -----------------------------------------
+    bg_main_p : process (rst_n, emu_ppu_clk)
+    begin
+        if (rst_n = '0') then
+            nt_we_n <= '1';
+            attr_we_n <= '1';
+            disp_attr_we_n <= '1';
+            attr_ce_n <= '1';
+            ptn_l_we_n <= '1';
+            ptn_h_we_n <= '1';
+        else
+            if (rising_edge(emu_ppu_clk)) then
+
+                --fetch bg pattern and display.
+                if (ppu_mask(PPUSBG) = '1' and 
+                        (nes_x <= conv_std_logic_vector(HSCAN, X_SIZE) or
+                        nes_x > conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE)) and
+                        (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+                        nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE))) then
+                    --visible area bg image
+
+                    d_print("*");
+                    d_print("nes_x: " & conv_hex16(conv_integer(nes_x)));
+                    d_print("nes_y: " & conv_hex16(conv_integer(nes_y)));
+
+--                    ----fetch next tile byte.
+--                    if (prf_x (2 downto 0) = "001") then
+--                        --vram addr is incremented every 8 cycle.
+--                        --name table at 0x2000
+--                        vram_addr(9 downto 0) 
+--                            <= prf_y(dsize - 1 downto 3) 
+--                                & prf_x(dsize - 1 downto 3);
+--                        vram_addr(asize - 1 downto 10) <= "10" & ppu_ctrl(PPUBNA downto 0) 
+--                                                        + ("000" & prf_x(dsize));
+--                    ----fetch attr table byte.
+--                    elsif (prf_x (4 downto 0) = "00011") then
+--                        --attribute table is loaded every 32 cycle.
+--                        --attr table at 0x23c0
+--                        vram_addr(dsize - 1 downto 0) <= "11000000" +
+--                                ("00" & prf_y(7 downto 5) & prf_x(7 downto 5));
+--                        vram_addr(asize - 1 downto dsize) <= "10" &
+--                                ppu_ctrl(PPUBNA downto 0) & "11"
+--                                    + ("000" & prf_x(dsize) & "00");
+--                    ----fetch pattern table low byte.
+--                    elsif (prf_x (2 downto 0) = "101") then
+--                         --vram addr is incremented every 8 cycle.
+--                         vram_addr <= "0" & ppu_ctrl(PPUBPA) & 
+--                                              disp_nt(dsize - 1 downto 0) 
+--                                                    & "0"  & prf_y(2  downto 0);
+--                    ----fetch pattern table high byte.
+--                    elsif (prf_x (2 downto 0) = "111") then
+--                         --vram addr is incremented every 8 cycle.
+--                         vram_addr <= "0" & ppu_ctrl(PPUBPA) & 
+--                                              disp_nt(dsize - 1 downto 0) 
+--                                                    & "0"  & prf_y(2 downto 0) + "00000000001000";
+--                    end if;
+
+                    ----fetch next tile byte.
+                    if (prf_x (2 downto 0) = "010") then
+                        nt_we_n <= '0';
+                    else
+                        nt_we_n <= '1';
+                    end if;
+
+                    ----fetch attr table byte.
+                    if (prf_x (4 downto 0) = "00100") then
+                        attr_we_n <= '0';
+                    else
+                        attr_we_n <= '1';
+                    end if;
+                    if (prf_x (4 downto 0) = "10000") then
+                        disp_attr_we_n <= '0';
+                    else
+                        disp_attr_we_n <= '1';
+                    end if;
+                    ---attribute is shifted every 16 bit.
+                    if (prf_x (3 downto 0) = "0000") then
+                        attr_ce_n <= '0';
+                    else
+                        attr_ce_n <= '1';
+                    end if;
+
+                    ----fetch pattern table low byte.
+                    if (prf_x (2 downto 0) = "110") then
+                         ptn_l_we_n <= '0';
+                    else
+                         ptn_l_we_n <= '1';
+                    end if;
+
+                    ----fetch pattern table high byte.
+                    if (prf_x (2 downto 0) = "000") then
+                         ptn_h_we_n <= '0';
+                    else
+                         ptn_h_we_n <= '1';
+                    end if;
+
+                else
+                    nt_we_n <= '1';
+                    attr_we_n <= '1';
+                    disp_attr_we_n <= '1';
+                    attr_ce_n <= '1';
+                    ptn_l_we_n <= '1';
+                    ptn_h_we_n <= '1';
+                end if;--if (ppu_mask(PPUSBG) = '1') and
+            end if;--if (rising_edge(emu_ppu_clk)) then
+        end if;--if (rst_n = '0') then
+    end process;--bg_main_p 
+
+    
+    -----------------------------------------
+    ---vram addr access process
+    -----------------------------------------
     vaddr_p : process (rst_n, emu_ppu_clk)
     begin
         if (rst_n = '0') then
@@ -1022,9 +1182,12 @@ begin
                         --nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE))) then
             end if; --if (rising_edge(emu_ppu_clk)) then
         end if;--if (rst_n = '0') then
-    end process;
+    end process;--vaddr_p 
 
 
+    -----------------------------------------
+    ---rgb output / flag set process
+    -----------------------------------------
     output_p : process (rst_n, emu_ppu_clk)
 
 procedure output_rgb is
@@ -1101,144 +1264,7 @@ end;
 
             end if; --if (rising_edge(emu_ppu_clk)) then
         end if;--if (rst_n = '0') then
-    end process;
-
---    ---bg prefetch x pos is 16 + scroll cycle ahead of current pos.
---    prf_x <= nes_x + ppu_scroll_x + "000010000" 
---                    when nes_x < conv_std_logic_vector(HSCAN, X_SIZE) else
---             nes_x + ppu_scroll_x + "010111011"; -- +16 -341
---
---    prf_y <= nes_y + ppu_scroll_y
---                    when nes_x < conv_std_logic_vector(HSCAN, X_SIZE) and
---                         nes_y < conv_std_logic_vector(VSCAN, X_SIZE) else
---             nes_y + ppu_scroll_y + "000000001" 
---                    when nes_y < conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE) else
---             "000000000"; 
---
---    nt_inst : d_flip_flop generic map(dsize)
---            port map (ppu_clk_n, rst_n, '1', nt_we_n, vram_ad, disp_nt);
---
---    at_inst : d_flip_flop generic map(dsize)
---            port map (ppu_clk_n, rst_n, '1', attr_we_n, vram_ad, attr_val);
---
---    disp_at_inst : shift_register generic map(dsize, 2)
---            port map (ppu_clk_n, rst_n, attr_ce_n, disp_attr_we_n, attr_val, disp_attr);
---
---    --chr rom data's bit is stored in opposite direction.
---    --reverse bit when loading...
---    ptn_l_in <= (vram_ad(0) & vram_ad(1) & vram_ad(2) & vram_ad(3) & 
---                 vram_ad(4) & vram_ad(5) & vram_ad(6) & vram_ad(7));
---    ptn_h_in <= (vram_ad(0) & vram_ad(1) & vram_ad(2) & vram_ad(3) & 
---                 vram_ad(4) & vram_ad(5) & vram_ad(6) & vram_ad(7)) & 
---                disp_ptn_h (dsize downto 1);
---
---    ptn_l_inst : d_flip_flop generic map(dsize)
---            port map (ppu_clk_n, rst_n, '1', ptn_l_we_n, ptn_l_in, ptn_l_val);
---
---    disp_ptn_l_in <= ptn_l_val & disp_ptn_l (dsize downto 1);
---    disp_ptn_l_inst : shift_register generic map(dsize * 2, 1)
---            port map (ppu_clk_n, rst_n, '0', ptn_h_we_n, disp_ptn_l_in, disp_ptn_l);
---
---    ptn_h_inst : shift_register generic map(dsize * 2, 1)
---            port map (ppu_clk_n, rst_n, '0', ptn_h_we_n, ptn_h_in, disp_ptn_h);
---
-
-
-
-
---            nt_we_n <= '1';
-
---                --fetch bg pattern and display.
---                if (ppu_mask(PPUSBG) = '1' and 
---                        (nes_x <= conv_std_logic_vector(HSCAN, X_SIZE) or
---                        nes_x > conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE)) and
---                        (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
---                        nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE))) then
---                    --visible area bg image
---
---                    d_print("*");
---                    d_print("nes_x: " & conv_hex16(conv_integer(nes_x)));
---                    d_print("nes_y: " & conv_hex16(conv_integer(nes_y)));
---
---                    ----fetch next tile byte.
---                    if (prf_x (2 downto 0) = "001") then
---                        --vram addr is incremented every 8 cycle.
---                        --name table at 0x2000
---                        vram_addr(9 downto 0) 
---                            <= prf_y(dsize - 1 downto 3) 
---                                & prf_x(dsize - 1 downto 3);
---                        vram_addr(asize - 1 downto 10) <= "10" & ppu_ctrl(PPUBNA downto 0) 
---                                                        + ("000" & prf_x(dsize));
---                    ----fetch attr table byte.
---                    elsif (prf_x (4 downto 0) = "00011") then
---                        --attribute table is loaded every 32 cycle.
---                        --attr table at 0x23c0
---                        vram_addr(dsize - 1 downto 0) <= "11000000" +
---                                ("00" & prf_y(7 downto 5) & prf_x(7 downto 5));
---                        vram_addr(asize - 1 downto dsize) <= "10" &
---                                ppu_ctrl(PPUBNA downto 0) & "11"
---                                    + ("000" & prf_x(dsize) & "00");
---                    ----fetch pattern table low byte.
---                    elsif (prf_x (2 downto 0) = "101") then
---                         --vram addr is incremented every 8 cycle.
---                         vram_addr <= "0" & ppu_ctrl(PPUBPA) & 
---                                              disp_nt(dsize - 1 downto 0) 
---                                                    & "0"  & prf_y(2  downto 0);
---                    ----fetch pattern table high byte.
---                    elsif (prf_x (2 downto 0) = "111") then
---                         --vram addr is incremented every 8 cycle.
---                         vram_addr <= "0" & ppu_ctrl(PPUBPA) & 
---                                              disp_nt(dsize - 1 downto 0) 
---                                                    & "0"  & prf_y(2 downto 0) + "00000000001000";
---                    end if;
---
---                    ----fetch next tile byte.
---                    if (prf_x (2 downto 0) = "010") then
---                        nt_we_n <= '0';
---                    else
---                        nt_we_n <= '1';
---                    end if;
---
---                    ----fetch attr table byte.
---                    if (prf_x (4 downto 0) = "00100") then
---                        attr_we_n <= '0';
---                    else
---                        attr_we_n <= '1';
---                    end if;
---                    if (prf_x (4 downto 0) = "10000") then
---                        disp_attr_we_n <= '0';
---                    else
---                        disp_attr_we_n <= '1';
---                    end if;
---                    ---attribute is shifted every 16 bit.
---                    if (prf_x (3 downto 0) = "0000") then
---                        attr_ce_n <= '0';
---                    else
---                        attr_ce_n <= '1';
---                    end if;
---
---                    ----fetch pattern table low byte.
---                    if (prf_x (2 downto 0) = "110") then
---                         ptn_l_we_n <= '0';
---                    else
---                         ptn_l_we_n <= '1';
---                    end if;
---
---                    ----fetch pattern table high byte.
---                    if (prf_x (2 downto 0) = "000") then
---                         ptn_h_we_n <= '0';
---                    else
---                         ptn_h_we_n <= '1';
---                    end if;
---
---                else
---                    nt_we_n <= '1';
---                    attr_we_n <= '1';
---                    disp_attr_we_n <= '1';
---                    attr_ce_n <= '1';
---                    ptn_l_we_n <= '1';
---                    ptn_h_we_n <= '1';
---                end if;--if (ppu_mask(PPUSBG) = '1') and
-
+    end process;--output_p
+    
 end rtl;
 
