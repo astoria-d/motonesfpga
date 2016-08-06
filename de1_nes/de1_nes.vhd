@@ -12,6 +12,7 @@ entity de1_nes is
 --debug signal
     signal dbg_cpu_clk  : out std_logic;
     signal dbg_ppu_clk  : out std_logic;
+    signal dbg_emu_ppu_clk  : out std_logic;
     signal dbg_mem_clk  : out std_logic;
     signal dbg_r_nw     : out std_logic;
     signal dbg_addr     : out std_logic_vector( 16 - 1 downto 0);
@@ -290,7 +291,6 @@ architecture rtl of de1_nes is
     signal dbg_s_oam_ce_rn_wn               : std_logic_vector (2 downto 0);
     signal dbg_s_oam_addr                   : std_logic_vector (4 downto 0);
     signal dbg_s_oam_data                   : std_logic_vector (7 downto 0);
-    signal dbg_emu_ppu_clk                  : std_logic;
     signal dbg_ppu_data_dummy               : std_logic_vector (7 downto 0);
     signal dbg_ppu_status_dummy             : std_logic_vector (7 downto 0);
     signal dbg_ppu_scrl_x_dummy             : std_logic_vector (7 downto 0);
@@ -433,7 +433,6 @@ begin
 -----------------------------------------------------------
 
     --ppu debug....
-    dbg_exec_cycle(3) <= dbg_emu_ppu_clk;
     dbg_exec_cycle(0) <= dbg_nes_x(8);
     dbg_instruction <= dbg_nes_x(7 downto 0);
     dbg_exec_cycle(4) <= dbg_nes_y(8);

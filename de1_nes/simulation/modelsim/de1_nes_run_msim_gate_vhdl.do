@@ -65,7 +65,7 @@ add wave -label ppu_data -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu
 
 
 add wave -divider vga_pos
-add wave -label emu_ppu_clk     sim:/testbench_motones_sim/sim_board/dbg_exec_cycle(3)
+add wave -label emu_ppu_clk     sim:/testbench_motones_sim/sim_board/dbg_emu_ppu_clk
 add wave -label nes_x           -radix decimal -unsigned  {sim:/testbench_motones_sim/sim_board/dbg_exec_cycle(0) & 
                                                            sim:/testbench_motones_sim/sim_board/dbg_instruction(7 downto 0)}
 add wave -label nes_y           -radix decimal -unsigned  {sim:/testbench_motones_sim/sim_board/dbg_exec_cycle(4) & 
