@@ -1100,7 +1100,6 @@ begin
             vram_addr <= (others => 'Z');
         else
             if (rising_edge(emu_ppu_clk)) then
-                --fetch sprite and display.
 
                 if (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                      nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)) then
@@ -1181,6 +1180,8 @@ begin
                                                 + "00000000001000";
                             end if;
                         end if;
+                    else
+                        vram_addr <= (others => 'Z');
                     end if; --if (nes_x > conv_std_logic_vector(HSCAN, X_SIZE) and 
                                 --nes_x <= conv_std_logic_vector(HSCAN_SPR_MAX, X_SIZE)) then
                 else
