@@ -91,6 +91,7 @@ architecture rtl of de1_nes is
                 reset_n     : in std_logic;
                 cpu_clk     : out std_logic;
                 ppu_clk     : out std_logic;
+                emu_ppu_clk : out std_logic;
                 mem_clk     : out std_logic;
                 vga_clk     : out std_logic
             );
@@ -135,8 +136,6 @@ architecture rtl of de1_nes is
         signal dbg_ppu_addr : out std_logic_vector (13 downto 0);
         signal dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y : out std_logic_vector (7 downto 0);
 
-        signal dbg_ppu_clk                      : out std_logic;
-        signal dbg_vga_clk                      : out std_logic;
         signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
         signal dbg_vga_x                        : out std_logic_vector (9 downto 0);
         signal dbg_nes_y                        : out std_logic_vector (8 downto 0);
@@ -152,12 +151,13 @@ architecture rtl of de1_nes is
         signal dbg_s_oam_ce_rn_wn               : out std_logic_vector (2 downto 0);
         signal dbg_s_oam_addr                   : out std_logic_vector (4 downto 0);
         signal dbg_s_oam_data                   : out std_logic_vector (7 downto 0);
-        signal dbg_emu_ppu_clk                  : out std_logic;
 
         signal dbg_ppu_addr_we_n                : out std_logic;
         signal dbg_ppu_clk_cnt                  : out std_logic_vector(1 downto 0);
 
                 ppu_clk     : in std_logic;
+                vga_clk     : in std_logic;
+                emu_ppu_clk : in std_logic;
                 mem_clk     : in std_logic;
                 ce_n        : in std_logic;
                 rst_n       : in std_logic;
@@ -172,7 +172,6 @@ architecture rtl of de1_nes is
                 vram_ad     : inout std_logic_vector (7 downto 0);
                 vram_a      : out std_logic_vector (13 downto 8);
 
-                vga_clk     : in std_logic;
                 h_sync_n    : out std_logic;
                 v_sync_n    : out std_logic;
                 r           : out std_logic_vector(3 downto 0);
@@ -243,7 +242,8 @@ architecture rtl of de1_nes is
     signal cpu_clk  : std_logic;
     signal ppu_clk  : std_logic;
     signal mem_clk  : std_logic;
-    signal vga_clk   : std_logic;
+    signal vga_clk  : std_logic;
+    signal emu_ppu_clk  : std_logic;
 
     signal rdy, irq_n, nmi_n, dbe, r_nw : std_logic;
     signal phi1, phi2 : std_logic;
@@ -310,7 +310,7 @@ begin
 
     --ppu/cpu clock generator
     clock_inst : clock_divider port map 
-        (base_clk, rst_n, cpu_clk, ppu_clk, mem_clk, vga_clk);
+        (base_clk, rst_n, cpu_clk, ppu_clk, emu_ppu_clk, mem_clk, vga_clk);
 
     addr_dec_inst : address_decoder generic map (addr_size, data_size) 
         port map (phi2, mem_clk, r_nw, addr, rom_ce_n, ram_ce_n, ppu_ce_n, apu_ce_n);
@@ -351,8 +351,6 @@ begin
         dbg_ppu_addr                                        ,
         dbg_ppu_data, dbg_ppu_scrl_x_dummy, dbg_ppu_scrl_y_dummy        ,
 
-        dbg_ppu_clk                      ,
-        dbg_vga_clk                      ,
         dbg_nes_x                        ,
         dbg_vga_x                        ,
         dbg_nes_y                        ,
@@ -368,11 +366,12 @@ begin
         dbg_s_oam_ce_rn_wn              ,
         dbg_s_oam_addr                  ,
         dbg_s_oam_data                  ,
-        dbg_emu_ppu_clk                 ,
         dbg_ppu_addr_we_n                                   ,
         dbg_ppu_clk_cnt                                     ,
 
                 ppu_clk         ,
+                vga_clk     ,
+                emu_ppu_clk     ,
                 mem_clk     ,
                 ppu_ce_n        ,
                 rst_n       ,
@@ -387,7 +386,6 @@ begin
                 vram_ad     ,
                 vram_a      ,
 
-                vga_clk     ,
                 h_sync_n    ,
                 v_sync_n    ,
                 r           ,
@@ -454,7 +452,9 @@ begin
 
     ----general...
     dbg_cpu_clk <= cpu_clk;
+    dbg_emu_ppu_clk <= emu_ppu_clk;
     dbg_mem_clk <= mem_clk;
+    dbg_vga_clk <= vga_clk;
     dbg_r_nw <= r_nw;
     dbg_addr <= addr;
     dbg_d_io <= d_io;

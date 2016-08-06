@@ -7,6 +7,7 @@ entity clock_divider is
             reset_n     : in std_logic;
             cpu_clk     : out std_logic;
             ppu_clk     : out std_logic;
+            emu_ppu_clk : out std_logic;
             mem_clk     : out std_logic;
             vga_clk     : out std_logic
         );
@@ -58,12 +59,13 @@ begin
     --cpu clock = base clock / 24 = 2.08 MHz (480 ns / cycle)
     --ppu clock = base clock / 8
     --vga clock = base clock / 2
+    --emu ppu clock = base clock / 4
     --mem clock = base clock
 
     ppu_clk <= not loop8(2);
+	emu_ppu_clk <= not loop8(1);
 	vga_clk <= not loop8(0);
     mem_clk <= base_clk;
-    --cpu_clk <= not (loop6(2) or loop6(1));
     cpu_clk <= not cpu_clk_wk;
     base_clk_n <= base_clk;
     

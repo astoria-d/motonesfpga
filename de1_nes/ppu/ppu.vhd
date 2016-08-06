@@ -9,8 +9,6 @@ entity ppu is
     signal dbg_ppu_addr : out std_logic_vector (13 downto 0);
     signal dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y : out std_logic_vector (7 downto 0);
 
-    signal dbg_ppu_clk                      : out std_logic;
-    signal dbg_vga_clk                      : out std_logic;
     signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
     signal dbg_vga_x                        : out std_logic_vector (9 downto 0);
     signal dbg_nes_y                        : out std_logic_vector (8 downto 0);
@@ -26,13 +24,14 @@ entity ppu is
     signal dbg_s_oam_ce_rn_wn               : out std_logic_vector (2 downto 0);
     signal dbg_s_oam_addr                   : out std_logic_vector (4 downto 0);
     signal dbg_s_oam_data                   : out std_logic_vector (7 downto 0);
-    signal dbg_emu_ppu_clk                  : out std_logic;
 
     signal dbg_ppu_addr_we_n                : out std_logic;
     signal dbg_ppu_clk_cnt                  : out std_logic_vector(1 downto 0);
 
     
             ppu_clk     : in std_logic;
+            vga_clk     : in std_logic;
+            emu_ppu_clk : in std_logic;
             mem_clk     : in std_logic;
             ce_n        : in std_logic;
             rst_n       : in std_logic;
@@ -47,7 +46,6 @@ entity ppu is
             vram_ad     : inout std_logic_vector (7 downto 0);
             vram_a      : out std_logic_vector (13 downto 8);
 
-            vga_clk     : in std_logic;
             h_sync_n    : out std_logic;
             v_sync_n    : out std_logic;
             r           : out std_logic_vector(3 downto 0);
@@ -61,7 +59,6 @@ architecture rtl of ppu is
 
 component vga_ppu_render
     port (  
-    signal dbg_vga_clk                      : out std_logic;
     signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
     signal dbg_vga_x                        : out std_logic_vector (9 downto 0);
     signal dbg_nes_y                        : out std_logic_vector (8 downto 0);
@@ -77,9 +74,9 @@ component vga_ppu_render
     signal dbg_s_oam_ce_rn_wn               : out std_logic_vector (2 downto 0);
     signal dbg_s_oam_addr                   : out std_logic_vector (4 downto 0);
     signal dbg_s_oam_data                   : out std_logic_vector (7 downto 0);
-    signal dbg_emu_ppu_clk                  : out std_logic;
 
             vga_clk     : in std_logic;
+            emu_ppu_clk : in std_logic;
             mem_clk     : in std_logic;
             rst_n       : in std_logic;
 
@@ -223,7 +220,6 @@ signal ST_VBL_old       : std_logic;
 begin
 
 
-    dbg_ppu_clk <= ppu_clk;
     dbg_ppu_ce_n <= ce_n;
     dbg_ppu_ctrl <= ppu_ctrl;
     dbg_ppu_mask <= ppu_mask;
@@ -238,7 +234,6 @@ begin
 
 
     vga_render_inst : vga_ppu_render port map (
-    dbg_vga_clk                      ,
     dbg_nes_x                        ,
     dbg_vga_x                        ,
     dbg_nes_y                        ,
@@ -253,9 +248,8 @@ begin
     dbg_s_oam_ce_rn_wn              ,
     dbg_s_oam_addr                  ,
     dbg_s_oam_data                  ,
-    dbg_emu_ppu_clk                 ,
     
-            vga_clk, mem_clk, rst_n,
+            vga_clk, emu_ppu_clk, mem_clk, rst_n,
             rd_n, wr_n, ale, vram_ad, vram_a,
             h_sync_n, v_sync_n, r, g, b, 
             ppu_ctrl, ppu_mask, read_status, ppu_status, ppu_scroll_x, ppu_scroll_y,

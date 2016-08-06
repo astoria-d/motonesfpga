@@ -13,7 +13,6 @@ use work.motonesfpga_common.all;
 
 entity vga_ppu_render is 
     port (  
-    signal dbg_vga_clk                      : out std_logic;
     signal dbg_nes_x                        : out std_logic_vector (8 downto 0);
     signal dbg_vga_x                        : out std_logic_vector (9 downto 0);
     signal dbg_nes_y                        : out std_logic_vector (8 downto 0);
@@ -32,6 +31,7 @@ entity vga_ppu_render is
     signal dbg_emu_ppu_clk                  : out std_logic;
 
             vga_clk     : in std_logic;
+            emu_ppu_clk : in std_logic;
             mem_clk     : in std_logic;
             rst_n       : in std_logic;
 
@@ -206,9 +206,7 @@ signal y_res_n      : std_logic;
 signal y_en_n       : std_logic;
 signal vga_clk_n    : std_logic;
 
-signal emu_ppu_clk      : std_logic;
 signal emu_ppu_clk_n    : std_logic;
-signal count1       : std_logic_vector (0 downto 0);
 signal nes_x        : std_logic_vector (8 downto 0);
 signal nes_y        : std_logic_vector (8 downto 0);
 
@@ -396,8 +394,6 @@ constant nes_color_palette : nes_color_array := (
 begin
     dbg_vga_x <= vga_x;
     dbg_vga_y <= vga_y;
-    dbg_vga_clk <= vga_clk;
-    dbg_emu_ppu_clk <= emu_ppu_clk;
 
     vga_clk_n <= not vga_clk;
     
@@ -448,11 +444,7 @@ begin
         end if;
     end process;
 
-    --nes position counter
-    count1_inst : counter_register generic map (1, 1)
-            port map (vga_clk , rst_n, '0', '1', (others => '0'), count1);
-    emu_ppu_clk <= not count1(0);
-    emu_ppu_clk_n <= count1(0);
+    emu_ppu_clk_n <= not emu_ppu_clk;
     nes_x <= vga_x(9 downto 1);
     --debug purpose, accelarate the clock...
     nes_y <= vga_y(9 downto 1);

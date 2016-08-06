@@ -34,3 +34,5 @@ simulation/modelsim/bookmarks.do
 undo_redo.txt
 *.work
 serv_req_info.txt
+.qsys_edit/*
+output_files/*
