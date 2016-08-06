@@ -213,7 +213,7 @@ end;
                             --set vram addr 2005 (first row, 6th col)
                             io_out(16#2006#, 16#20#);
                         elsif (nt_step_cnt = 1 * cpu_io_multi) then
-                            io_out(16#2006#, 16#3b#);
+                            io_out(16#2006#, 16#03#);
                         elsif (nt_step_cnt = 2 * cpu_io_multi) then
                             --set name tbl data
                             --0x44, 45, 45 = DEE
@@ -256,7 +256,7 @@ end;
 
                         else
                             io_brk;
-                            if (nt_step_cnt > 5 * cpu_io_multi) then
+                            if (nt_step_cnt > 4 * cpu_io_multi) then
                                 global_step_cnt := global_step_cnt + 1;
                             end if;
                         end if;
@@ -374,10 +374,10 @@ end;
                         --step4 = scroll test.
                         if (scl_step_cnt = 0) then
                             --x scroll pos=123
-                            io_out(16#2005#, 123);
+                            io_out(16#2005#, 0);
                         elsif (scl_step_cnt = 1 * cpu_io_multi) then
                             --y scroll pos=100
-                            io_out(16#2005#, 100);
+                            io_out(16#2005#, 0);
 
                         else
                             io_brk;
