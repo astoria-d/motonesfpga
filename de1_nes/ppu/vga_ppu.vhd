@@ -1181,12 +1181,8 @@ begin
                                                 + "00000000001000";
                             end if;
                         end if;
-
-                    else
-                        vram_addr <= (others => 'Z');
                     end if; --if (nes_x > conv_std_logic_vector(HSCAN, X_SIZE) and 
                                 --nes_x <= conv_std_logic_vector(HSCAN_SPR_MAX, X_SIZE)) then
-
                 else
                     vram_addr <= (others => 'Z');
                 end if; --(nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
