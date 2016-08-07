@@ -97,8 +97,10 @@ end rtl;
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.std_logic_arith.conv_std_logic_vector;
 
 entity ram_ctrl is 
+    generic (wr_en_timing : integer);
     port (  
             clk              : in std_logic;
             ce_n, oe_n, we_n : in std_logic;
@@ -141,7 +143,7 @@ begin
             port map (cnt_clk, cnt_rst_n, '0', '1', (others => '0'), clk_cnt);
 
     sync_ce_n <= '0' when ce_n = '0' and oe_n = '0' and we_n = '1' else
-                 '0' when ce_n = '0' and oe_n = '1' and we_n = '0' and clk_cnt = "000001" else
+                 '0' when ce_n = '0' and oe_n = '1' and we_n = '0' and clk_cnt = conv_std_logic_vector(wr_en_timing, 6) else
                  '1';
 
 end rtl;

@@ -143,6 +143,7 @@ component palette_ram
 end component;
 
 component ram_ctrl
+    generic (wr_en_timing : integer);
     port (  
             clk              : in std_logic;
             ce_n, oe_n, we_n : in std_logic;
@@ -568,7 +569,7 @@ begin
     oam_d_buf_r : tri_state_buffer generic map (dsize)
             port map (p_oam_r_n, p_oam_data, oam_plt_data);
 
-    p_oam_ram_ctl : ram_ctrl
+    p_oam_ram_ctl : ram_ctrl generic map (3)
             port map (mem_clk, p_oam_ram_ce_n_in, p_oam_r_n, p_oam_w_n, p_oam_ram_ce_n);
     primary_oam_inst : ram generic map (dsize, dsize)
             port map (mem_clk, p_oam_ram_ce_n, p_oam_r_n, p_oam_w_n, p_oam_addr, p_oam_data);
@@ -602,7 +603,7 @@ begin
                                 s_oam_addr_cpy_n = '0' else
                       '1';
 
-    s_oam_ram_ctl : ram_ctrl
+    s_oam_ram_ctl : ram_ctrl generic map (3)
             port map (mem_clk, s_oam_ram_ce_n_in, s_oam_r_n, s_oam_w_n, s_oam_ram_ce_n);
     secondary_oam_inst : ram generic map (5, dsize)
             port map (mem_clk, s_oam_ram_ce_n, s_oam_r_n, s_oam_w_n, s_oam_addr, s_oam_data);
@@ -718,7 +719,7 @@ begin
             port map (plt_w_n, oam_plt_data, plt_data);
     plt_d_buf_r : tri_state_buffer generic map (dsize)
             port map (plt_r_n, plt_data, oam_plt_data);
-    plt_ram_ctl : ram_ctrl
+    plt_ram_ctl : ram_ctrl generic map (3)
             port map (mem_clk, plt_ram_ce_n_in, plt_r_n, plt_w_n, plt_ram_ce_n);
     palette_inst : palette_ram generic map (5, dsize)
             port map (mem_clk, plt_ram_ce_n, plt_r_n, plt_w_n, plt_addr, plt_data);

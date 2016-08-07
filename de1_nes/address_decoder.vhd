@@ -28,6 +28,7 @@ end address_decoder;
 architecture rtl of address_decoder is
 
 component ram_ctrl
+    generic (wr_en_timing : integer);
     port (  
             clk              : in std_logic;
             ce_n, oe_n, we_n : in std_logic;
@@ -51,7 +52,7 @@ begin
                 '1';
 
     r_n <= not r_nw;
-    ram_ctl_inst : ram_ctrl
+    ram_ctl_inst : ram_ctrl generic map (1)
             port map (mem_clk, ram_ce_n_in, r_n, r_nw, ram_ce_n);
 
     --ram io timing.
@@ -119,6 +120,7 @@ end v_address_decoder;
 architecture rtl of v_address_decoder is
 
 component ram_ctrl
+    generic (wr_en_timing : integer);
     port (  
             clk              : in std_logic;
             ce_n, oe_n, we_n : in std_logic;
@@ -134,9 +136,9 @@ begin
     pt_ce_n <= '0' when (v_addr(13) = '0' and rd_n = '0') else
              '1' ;
 
-    nt0_ram_ctl : ram_ctrl
+    nt0_ram_ctl : ram_ctrl generic map (1)
             port map (mem_clk, nt0_ce_n_in, rd_n, wr_n, nt0_ce_n);
-    nt1_ram_ctl : ram_ctrl
+    nt1_ram_ctl : ram_ctrl generic map (1)
             port map (mem_clk, nt1_ce_n_in, rd_n, wr_n, nt1_ce_n);
 
     --ram io timing.
