@@ -71,16 +71,13 @@ architecture rtl of de1_nes is
     signal dbg_dec_val     : out std_logic_vector (7 downto 0);
     signal dbg_stat_we_n    : out std_logic;
     signal dbg_idl_h, dbg_idl_l     : out std_logic_vector (7 downto 0);
-    
-                input_clk   : in std_logic; --phi0 input pin.
+
+                cpu_clk     : in std_logic; --phi0 input pin.
                 rdy         : in std_logic;
                 rst_n       : in std_logic;
                 irq_n       : in std_logic;
                 nmi_n       : in std_logic;
-                dbe         : in std_logic;
                 r_nw        : out std_logic;
-                phi1        : out std_logic;
-                phi2        : out std_logic;
                 addr        : out std_logic_vector ( asize - 1 downto 0);
                 d_io        : inout std_logic_vector ( dsize - 1 downto 0)
         );
@@ -238,8 +235,7 @@ architecture rtl of de1_nes is
     signal vga_clk  : std_logic;
     signal emu_ppu_clk  : std_logic;
 
-    signal rdy, irq_n, nmi_n, dbe, r_nw : std_logic;
-    signal phi1, phi2 : std_logic;
+    signal rdy, irq_n, nmi_n, r_nw : std_logic;
     signal addr : std_logic_vector( addr_size - 1 downto 0);
     signal d_io : std_logic_vector( data_size - 1 downto 0);
 
@@ -311,38 +307,38 @@ begin
     --mos 6502 cpu instance
     cpu_inst : mos6502 generic map (data_size, addr_size) 
         port map (
-    dbg_instruction_dummy,
-    dbg_int_d_bus_dummy,
-    dbg_exec_cycle_dummy,
+    dbg_instruction,
+    dbg_int_d_bus,
+    dbg_exec_cycle,
     dbg_ea_carry,
-    dbg_status_dummy,
-    dbg_pcl, dbg_pch, dbg_sp_dummy, dbg_x_dummy, dbg_y, dbg_acc,
+    dbg_status,
+    dbg_pcl, dbg_pch, dbg_sp, dbg_x, dbg_y, dbg_acc,
     dbg_dec_oe_n,
     dbg_dec_val,
     dbg_stat_we_n    ,
     dbg_idl_h, dbg_idl_l,
 
                 cpu_clk, rdy,
-                rst_n, irq_n, nmi_n, dbe, r_nw, 
-                phi1, phi2, addr, d_io);
+                rst_n, irq_n, nmi_n, r_nw, 
+                addr, d_io);
 
     --main ROM/RAM instance
 --    prg_rom_inst : prg_rom generic map (rom_32k, data_size)
 --            port map (mem_clk, rom_ce_n, addr(rom_32k - 1 downto 0), d_io);
 
     prg_rom_inst : prg_rom generic map (rom_8k, data_size)
-            port map (mem_clk, rom_ce_n, addr(rom_8k - 1 downto 0), d_io);
+            port map (cpu_clk, rom_ce_n, addr(rom_8k - 1 downto 0), d_io);
 
     ram_oe_n <= not R_nW;
     prg_ram_inst : ram generic map (ram_2k, data_size)
-            port map (mem_clk, ram_ce_n, ram_oe_n, R_nW, addr(ram_2k - 1 downto 0), d_io);
+            port map (cpu_clk, ram_ce_n, ram_oe_n, R_nW, addr(ram_2k - 1 downto 0), d_io);
 
     --nes ppu instance
     ppu_inst: ppu port map (  
         dbg_ppu_ce_n                                        ,
-        dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status          ,
-        dbg_ppu_addr                                        ,
-        dbg_ppu_data, dbg_ppu_scrl_x_dummy, dbg_ppu_scrl_y_dummy        ,
+        dbg_ppu_ctrl_dummy, dbg_ppu_mask_dummy, dbg_ppu_status_dummy          ,
+        dbg_ppu_addr_dummy                                        ,
+        dbg_ppu_data_dummy, dbg_ppu_scrl_x_dummy, dbg_ppu_scrl_y_dummy        ,
 
         dbg_nes_x                        ,
         dbg_vga_x                        ,
@@ -423,21 +419,21 @@ begin
 -----------------------------------------------------------
 
     --ppu debug....
-    dbg_exec_cycle(0) <= dbg_nes_x(8);
-    dbg_instruction <= dbg_nes_x(7 downto 0);
-    dbg_exec_cycle(4) <= dbg_nes_y(8);
-    dbg_status <= dbg_nes_y(7 downto 0);
-    dbg_sp(7 downto 6) <= dbg_ppu_clk_cnt;
-
-    dbg_disp_ptn_l (7 downto 0) <= dbg_p_oam_addr;
-    dbg_disp_ptn_l (15 downto 8) <= dbg_p_oam_data;
-    dbg_int_d_bus(4 downto 0) <= dbg_s_oam_addr(4 downto 0);
-    dbg_ppu_scrl_y <= dbg_s_oam_data;
-
-    dbg_ppu_scrl_x(0) <= ale;
-    dbg_ppu_scrl_x(1) <= rd_n;
-    dbg_ppu_scrl_x(2) <= wr_n;
-    dbg_ppu_scrl_x(3) <= nt0_ce_n;
+--    dbg_exec_cycle(0) <= dbg_nes_x(8);
+--    dbg_instruction <= dbg_nes_x(7 downto 0);
+--    dbg_exec_cycle(4) <= dbg_nes_y(8);
+--    dbg_status <= dbg_nes_y(7 downto 0);
+--    dbg_sp(7 downto 6) <= dbg_ppu_clk_cnt;
+--
+--    dbg_disp_ptn_l (7 downto 0) <= dbg_p_oam_addr;
+--    dbg_disp_ptn_l (15 downto 8) <= dbg_p_oam_data;
+--    dbg_int_d_bus(4 downto 0) <= dbg_s_oam_addr(4 downto 0);
+--    dbg_ppu_scrl_y <= dbg_s_oam_data;
+--
+--    dbg_ppu_scrl_x(0) <= ale;
+--    dbg_ppu_scrl_x(1) <= rd_n;
+--    dbg_ppu_scrl_x(2) <= wr_n;
+--    dbg_ppu_scrl_x(3) <= nt0_ce_n;
 
 --    nmi_n <= dummy_nmi;
     ---------------
@@ -455,10 +451,10 @@ begin
     dbg_vram_a  <= vram_a ;
     dbg_nmi <= nmi_n;
 
---    ----cpu...
---    dbg_ppu_ctrl <= dbg_pcl;
---    dbg_ppu_data <= dbg_idl_l;
---    dbg_ppu_mask <= dbg_idl_h;
+    ----cpu...
+    dbg_ppu_ctrl <= dbg_pcl;
+    dbg_ppu_data <= dbg_idl_l;
+    dbg_ppu_mask <= dbg_idl_h;
 
 end rtl;
 

@@ -11,7 +11,7 @@ entity address_calcurator is
     generic (   dsize : integer := 8
             );
     port (  
-            trig_clk        : in std_logic;
+            cpu_clk         : in std_logic;
 
             --control line.
             pcl_inc_n       : in std_logic;
@@ -130,13 +130,13 @@ signal addr_c_reg : std_logic;
 begin
     ----work registers...
     al_dff : d_flip_flop generic map (dsize) 
-            port map(trig_clk, '1', '1', al_buf_we_n, al_reg_in, al_reg);
+            port map(cpu_clk, '1', '1', al_buf_we_n, al_reg_in, al_reg);
     ah_dff : d_flip_flop generic map (dsize) 
-            port map(trig_clk, '1', '1', ah_buf_we_n, ah_reg_in, ah_reg);
+            port map(cpu_clk, '1', '1', ah_buf_we_n, ah_reg_in, ah_reg);
     tmp_dff : d_flip_flop generic map (dsize) 
-            port map(trig_clk, '1', '1', tmp_buf_we_n, tmp_reg_in, tmp_reg);
+            port map(cpu_clk, '1', '1', tmp_buf_we_n, tmp_reg_in, tmp_reg);
     ea_carry_dff_bit : d_flip_flop_bit 
-            port map(trig_clk, '1', '1', '0', addr_c, addr_c_reg);
+            port map(cpu_clk, '1', '1', '0', addr_c, addr_c_reg);
 
     ----------------------------------------
      -- address calucurator instances ----
@@ -438,7 +438,7 @@ entity alu is
     generic (   dsize : integer := 8
             );
     port (  
-            trig_clk        : in std_logic;
+            cpu_clk         : in std_logic;
             instruction     : in std_logic_vector (dsize - 1 downto 0);
             arith_en_n      : in std_logic;
             alu_cycle       : in std_logic_vector(1 downto 0);
@@ -541,7 +541,7 @@ begin
      ------ arithmatic registers --------
     ----------------------------------------
     arith_dff : d_flip_flop generic map (dsize) 
-            port map(trig_clk, '1', '1', arith_buf_we_n, arith_reg_in, arith_reg);
+            port map(cpu_clk, '1', '1', arith_buf_we_n, arith_reg_in, arith_reg);
     
     arith_buf : tri_state_buffer generic map (dsize)
             port map (arith_buf_oe_n, arith_reg, arith_reg_out);

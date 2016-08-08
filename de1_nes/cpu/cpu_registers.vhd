@@ -137,7 +137,7 @@ entity processor_status is
     signal dbg_stat_we_n    : out std_logic;
 
     
-            clk         : in std_logic;
+            cpu_clk     : in std_logic;
             res_n       : in std_logic;
             dec_oe_n    : in std_logic;
             bus_oe_n    : in std_logic;
@@ -200,7 +200,7 @@ begin
     ---status val: researved bit always 1, decimal bit always 0.        
     d2 <= d(7 downto 6) & "1" & d(4) & "0" & d(2 downto 0);
     dff_inst : d_flip_flop generic map (dsize) 
-                    port map(clk, '1', res_n, we_n, d2, status_val);
+                    port map(cpu_clk, '1', res_n, we_n, d2, status_val);
 
     --carry status for adc/sbc.
     stat_c <= status_val(0);
@@ -208,7 +208,7 @@ begin
     dbg_dec_oe_n    <= dec_oe_n    ;
     dbg_stat_we_n <= we_n;
 
-    main_p : process (clk, res_n, we_n, dec_val, int_dbus, 
+    main_p : process (cpu_clk, res_n, we_n, dec_val, int_dbus, 
                             alu_n, alu_v, alu_z, alu_c)
     variable tmp : std_logic_vector (dsize - 1 downto 0);
     begin

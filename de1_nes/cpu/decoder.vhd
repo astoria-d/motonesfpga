@@ -8,15 +8,13 @@ entity decoder is
     generic (dsize : integer := 8);
     port (  
             --input lines.
-            set_clk         : in std_logic;
-            trig_clk        : in std_logic;
+            cpu_clk         : in std_logic;
             res_n           : in std_logic;
             irq_n           : in std_logic;
             nmi_n           : in std_logic;
             rdy             : in std_logic;
             instruction     : in std_logic_vector (dsize - 1 downto 0);
-            exec_cycle      : in std_logic_vector (5 downto 0);
-            next_cycle      : out std_logic_vector (5 downto 0);
+            exec_cycle      : out std_logic_vector (5 downto 0);
             ea_carry        : in  std_logic;
             status_reg      : inout std_logic_vector (dsize - 1 downto 0);
 
@@ -170,15 +168,17 @@ constant MEM_T3 : std_logic_vector (1 downto 0) := "11";
 
 ---for nmi handling
 signal nmi_handled_n : std_logic;
-
 signal ea_carry_reg       : std_logic;
+signal wk_exec_cycle      : std_logic_vector (5 downto 0);
 
 begin
 
-    ea_carry_inst: d_flip_flop_bit 
-            port map(trig_clk, '1', '1', '0', ea_carry, ea_carry_reg);
+    exec_cycle <= wk_exec_cycle;
 
-    main_p : process (set_clk, res_n, nmi_n)
+    ea_carry_inst: d_flip_flop_bit 
+            port map(cpu_clk, '1', '1', '0', ea_carry, ea_carry_reg);
+
+    main_p : process (cpu_clk, res_n, nmi_n)
 
 -------------------------------------------------------------
 -------------------------------------------------------------
@@ -219,9 +219,9 @@ begin
     back_oe(pch_cmd, '0');
     back_we(pcl_cmd, '0');
     back_we(pch_cmd, '0');
-    if exec_cycle = T1 then
+    if wk_exec_cycle = T1 then
         front_we(idl_l_cmd, '0');
-    elsif exec_cycle = T2 then
+    elsif wk_exec_cycle = T2 then
         front_we(idl_l_cmd, '1');
         front_we(idl_h_cmd, '0');
     end if;
@@ -377,10 +377,10 @@ begin
     if (nmi_n = '0' and nmi_handled_n = '1') then
         --start nmi handling...
         fetch_inst('1');
-        next_cycle <= N1;
+        wk_exec_cycle <= N1;
     else
         fetch_inst('0');
-        next_cycle <= T1;
+        wk_exec_cycle <= T1;
     end if;
 end  procedure;
 
@@ -388,7 +388,7 @@ end  procedure;
 procedure single_inst is
 begin
     fetch_stop;
-    next_cycle <= T0;
+    wk_exec_cycle <= T0;
 end  procedure;
 
 procedure fetch_imm is
@@ -398,7 +398,7 @@ begin
     --send data from data bus buffer.
     --receiver is instruction dependent.
     dbuf_int_oe_n <= '0';
-    next_cycle <= T0;
+    wk_exec_cycle <= T0;
 end  procedure;
 
 procedure set_nz_from_bus is
@@ -476,7 +476,7 @@ begin
     fetch_next;
     --latch abs low data.
     dbuf_int_oe_n <= '0';
-    next_cycle <= T2;
+    wk_exec_cycle <= T2;
 end  procedure;
 
 procedure abs_fetch_high is
@@ -486,7 +486,7 @@ begin
     --latch abs hi data.
     fetch_next;
     dbuf_int_oe_n <= '0';
-    next_cycle <= T3;
+    wk_exec_cycle <= T3;
 end  procedure;
 
 procedure abs_latch_out is
@@ -516,39 +516,39 @@ end  procedure;
 
 procedure a2_zp is
 begin
-    if exec_cycle = T1 then
+    if wk_exec_cycle = T1 then
         fetch_low;
-    elsif exec_cycle = T2 then
+    elsif wk_exec_cycle = T2 then
         fetch_stop;
         dbuf_int_oe_n <= '0';
 
         --calc zp.
         back_oe(idl_l_cmd, '0');
         zp_n <= '0';
-        next_cycle <= T0;
+        wk_exec_cycle <= T0;
     end if;
 end  procedure;
 
 procedure a2_abs is
 begin
-    if exec_cycle = T1 then
+    if wk_exec_cycle = T1 then
         fetch_low;
-    elsif exec_cycle = T2 then
+    elsif wk_exec_cycle = T2 then
         abs_fetch_high;
-    elsif exec_cycle = T3 then
+    elsif wk_exec_cycle = T3 then
         abs_latch_out;
         dbuf_int_oe_n <= '0';
-        next_cycle <= T0;
+        wk_exec_cycle <= T0;
     end if;
 end  procedure;
 
 procedure a2_abs_xy (is_x : in boolean) is
 begin
-    if exec_cycle = T1 then
+    if wk_exec_cycle = T1 then
         fetch_low;
-    elsif exec_cycle = T2 then
+    elsif wk_exec_cycle = T2 then
         abs_fetch_high;
-    elsif exec_cycle = T3 then
+    elsif wk_exec_cycle = T3 then
         --ea calc & lda
         pg_next_n <= '1';
         abs_latch_out;
@@ -559,23 +559,23 @@ begin
         end if;
         dbuf_int_oe_n <= '0';
 
-        next_cycle <= T0;
+        wk_exec_cycle <= T0;
         d_print("absx step 1");
-    elsif (exec_cycle = T0 and ea_carry_reg = '1') then
+    elsif (wk_exec_cycle = T0 and ea_carry_reg = '1') then
         --case page boundary crossed.
         --redo inst.
         d_print("absx 5 (page boudary crossed.)");
         --next page.
         pg_next_n <= '0';
-        next_cycle <= T0;
+        wk_exec_cycle <= T0;
     end if;
 end  procedure;
 
 procedure a2_zp_xy (is_x : in boolean) is
 begin
-    if exec_cycle = T1 then
+    if wk_exec_cycle = T1 then
         fetch_low;
-    elsif exec_cycle = T2 then
+    elsif wk_exec_cycle = T2 then
         fetch_stop;
         --output BAL only
         dbuf_int_oe_n <= '0';
@@ -583,8 +583,8 @@ begin
         --calc zp.
         back_oe(idl_l_cmd, '0');
         zp_n <= '0';
-        next_cycle <= T3;
-    elsif exec_cycle = T3 then
+        wk_exec_cycle <= T3;
+    elsif wk_exec_cycle = T3 then
         --t3 zp, xy 
         zp_xy_n <= '0';
         if (is_x = true) then
@@ -592,17 +592,17 @@ begin
         else
             back_oe(y_cmd, '0');
         end if;
-        next_cycle <= T0;
+        wk_exec_cycle <= T0;
     end if;
 end  procedure;
 
 procedure a2_indir_y is
 begin
-    if exec_cycle = T1 then
+    if wk_exec_cycle = T1 then
         fetch_low;
         --get IAL
 
-    elsif exec_cycle = T2 then
+    elsif wk_exec_cycle = T2 then
         fetch_stop;
 
         ---address is 00:IAL
@@ -611,17 +611,17 @@ begin
         addr_cycle <= ADDR_T2;
         back_oe(idl_l_cmd, '0');
         dbuf_int_oe_n <= '0';
-        next_cycle <= T3;
+        wk_exec_cycle <= T3;
 
-    elsif exec_cycle = T3 then
+    elsif wk_exec_cycle = T3 then
         indir_y_n <= '0';
         addr_cycle <= ADDR_T3;
         back_oe(idl_l_cmd, '0');
         --output BAH @IAL+1
         dbuf_int_oe_n <= '0';
-        next_cycle <= T4;
+        wk_exec_cycle <= T4;
 
-    elsif exec_cycle = T4 then
+    elsif wk_exec_cycle = T4 then
         back_oe(idl_l_cmd, '1');
         dbuf_int_oe_n <= '1';
 
@@ -632,8 +632,8 @@ begin
         addr_cycle <= ADDR_T4;
         dbuf_int_oe_n <= '0';
 
-        next_cycle <= T0;
-    elsif (exec_cycle = T0) then
+        wk_exec_cycle <= T0;
+    elsif (wk_exec_cycle = T0) then
         --case page boundary crossed.
         --redo inst.
         d_print("(indir), y (page boudary crossed.)");
@@ -641,17 +641,17 @@ begin
         indir_y_n <= '0';
         pg_next_n <= '0';
         addr_cycle <= ADDR_T5;
-        next_cycle <= T0;
+        wk_exec_cycle <= T0;
     end if;
 end  procedure;
 
 procedure a2_indir_x is
 begin
-    if exec_cycle = T1 then
+    if wk_exec_cycle = T1 then
         fetch_low;
         --get IAL
 
-    elsif exec_cycle = T2 then
+    elsif wk_exec_cycle = T2 then
         fetch_stop;
 
         ---address is 00:IAL
@@ -659,9 +659,9 @@ begin
         indir_x_n <= '0';
         addr_cycle <= ADDR_T2;
         back_oe(idl_l_cmd, '0');
-        next_cycle <= T3;
+        wk_exec_cycle <= T3;
 
-    elsif exec_cycle = T3 then
+    elsif wk_exec_cycle = T3 then
         indir_x_n <= '0';
         addr_cycle <= ADDR_T3;
         back_oe(idl_l_cmd, '1');
@@ -669,9 +669,9 @@ begin
         --output BAH @IAL+x
         dbuf_int_oe_n <= '0';
         back_oe(x_cmd, '0');
-        next_cycle <= T4;
+        wk_exec_cycle <= T4;
 
-    elsif exec_cycle = T4 then
+    elsif wk_exec_cycle = T4 then
         indir_x_n <= '0';
         addr_cycle <= ADDR_T4;
 
@@ -679,11 +679,11 @@ begin
         dbuf_int_oe_n <= '0';
         back_oe(x_cmd, '0');
 
-        next_cycle <= T5;
-    elsif (exec_cycle = T5) then
+        wk_exec_cycle <= T5;
+    elsif (wk_exec_cycle = T5) then
         indir_x_n <= '0';
         addr_cycle <= ADDR_T5;
-        next_cycle <= T0;
+        wk_exec_cycle <= T0;
     end if;
 end  procedure;
 
@@ -691,9 +691,9 @@ end  procedure;
 
 procedure a3_zp is
 begin
-    if exec_cycle = T1 then
+    if wk_exec_cycle = T1 then
         fetch_low;
-    elsif exec_cycle = T2 then
+    elsif wk_exec_cycle = T2 then
         fetch_stop;
         dbuf_int_oe_n <= '1';
 
@@ -701,23 +701,23 @@ begin
         back_oe(idl_l_cmd, '0');
         zp_n <= '0';
         r_nw <= '0';
-        next_cycle <= T0;
+        wk_exec_cycle <= T0;
     end if;
 end  procedure;
 
 procedure a3_zp_xy (is_x : in boolean) is
 begin
-    if exec_cycle = T1 then
+    if wk_exec_cycle = T1 then
         fetch_low;
-    elsif exec_cycle = T2 then
+    elsif wk_exec_cycle = T2 then
         fetch_stop;
         dbuf_int_oe_n <= '1';
 
         --calc zp.
         back_oe(idl_l_cmd, '0');
         zp_n <= '0';
-        next_cycle <= T3;
-    elsif exec_cycle = T3 then
+        wk_exec_cycle <= T3;
+    elsif wk_exec_cycle = T3 then
         --calc zp + index.
         back_oe(idl_l_cmd, '0');
         zp_n <= '0';
@@ -730,31 +730,31 @@ begin
 
         --write data
         r_nw <= '0';
-        next_cycle <= T0;
+        wk_exec_cycle <= T0;
     end if;
 end  procedure;
 
 procedure a3_abs is
 begin
-    if exec_cycle = T1 then
+    if wk_exec_cycle = T1 then
         fetch_low;
-    elsif exec_cycle = T2 then
+    elsif wk_exec_cycle = T2 then
         abs_fetch_high;
-    elsif exec_cycle = T3 then
+    elsif wk_exec_cycle = T3 then
         abs_latch_out;
         dbuf_int_oe_n <= '1';
         r_nw <= '0';
-        next_cycle <= T0;
+        wk_exec_cycle <= T0;
     end if;
 end  procedure;
 
 procedure a3_abs_xy (is_x : in boolean) is
 begin
-    if exec_cycle = T1 then
+    if wk_exec_cycle = T1 then
         fetch_low;
-    elsif exec_cycle = T2 then
+    elsif wk_exec_cycle = T2 then
         abs_fetch_high;
-    elsif exec_cycle = T3 then
+    elsif wk_exec_cycle = T3 then
         --ea calc & lda
         pg_next_n <= '1';
         abs_latch_out;
@@ -764,8 +764,8 @@ begin
         else
             ea_y_out;
         end if;
-        next_cycle <= T4;
-    elsif exec_cycle = T4 then
+        wk_exec_cycle <= T4;
+    elsif wk_exec_cycle = T4 then
         if (ea_carry_reg = '1') then
             pg_next_n <= '0';
         else
@@ -778,18 +778,18 @@ begin
             ea_y_out;
         end if;
         r_nw <= '0';
-        next_cycle <= T0;
+        wk_exec_cycle <= T0;
     end if;
 end  procedure;
 
 
 procedure a3_indir_y is
 begin
-    if exec_cycle = T1 then
+    if wk_exec_cycle = T1 then
         fetch_low;
         --get IAL
 
-    elsif exec_cycle = T2 then
+    elsif wk_exec_cycle = T2 then
         fetch_stop;
 
         ---address is 00:IAL
@@ -798,17 +798,17 @@ begin
         addr_cycle <= ADDR_T2;
         back_oe(idl_l_cmd, '0');
         dbuf_int_oe_n <= '0';
-        next_cycle <= T3;
+        wk_exec_cycle <= T3;
 
-    elsif exec_cycle = T3 then
+    elsif wk_exec_cycle = T3 then
         indir_y_n <= '0';
         addr_cycle <= ADDR_T3;
         back_oe(idl_l_cmd, '0');
         --output BAH @IAL+1
         dbuf_int_oe_n <= '0';
-        next_cycle <= T4;
+        wk_exec_cycle <= T4;
 
-    elsif exec_cycle = T4 then
+    elsif wk_exec_cycle = T4 then
         back_oe(idl_l_cmd, '1');
         dbuf_int_oe_n <= '1';
 
@@ -817,9 +817,9 @@ begin
         back_oe(y_cmd, '0');
         indir_y_n <= '0';
         addr_cycle <= ADDR_T4;
-        next_cycle <= T5;
+        wk_exec_cycle <= T5;
 
-    elsif exec_cycle = T5 then
+    elsif wk_exec_cycle = T5 then
         --page handling.
         back_oe(y_cmd, '1');
         indir_y_n <= '0';
@@ -831,17 +831,17 @@ begin
             pg_next_n <= '1';
         end if;
         r_nw <= '0';
-        next_cycle <= T0;
+        wk_exec_cycle <= T0;
     end if;
 end  procedure;
 
 procedure a3_indir_x is
 begin
-    if exec_cycle = T1 then
+    if wk_exec_cycle = T1 then
         fetch_low;
         --get IAL
 
-    elsif exec_cycle = T2 then
+    elsif wk_exec_cycle = T2 then
         fetch_stop;
 
         ---address is 00:IAL
@@ -849,9 +849,9 @@ begin
         indir_x_n <= '0';
         addr_cycle <= ADDR_T2;
         back_oe(idl_l_cmd, '0');
-        next_cycle <= T3;
+        wk_exec_cycle <= T3;
 
-    elsif exec_cycle = T3 then
+    elsif wk_exec_cycle = T3 then
         indir_x_n <= '0';
         addr_cycle <= ADDR_T3;
         back_oe(idl_l_cmd, '1');
@@ -859,9 +859,9 @@ begin
         --output BAH @IAL+x
         dbuf_int_oe_n <= '0';
         back_oe(x_cmd, '0');
-        next_cycle <= T4;
+        wk_exec_cycle <= T4;
 
-    elsif exec_cycle = T4 then
+    elsif wk_exec_cycle = T4 then
         indir_x_n <= '0';
         addr_cycle <= ADDR_T4;
 
@@ -869,13 +869,13 @@ begin
         dbuf_int_oe_n <= '0';
         back_oe(x_cmd, '0');
 
-        next_cycle <= T5;
-    elsif (exec_cycle = T5) then
+        wk_exec_cycle <= T5;
+    elsif (wk_exec_cycle = T5) then
         indir_x_n <= '0';
         addr_cycle <= ADDR_T5;
         dbuf_int_oe_n <= '1';
         r_nw <= '0';
-        next_cycle <= T0;
+        wk_exec_cycle <= T0;
     end if;
 end  procedure;
 
@@ -883,9 +883,9 @@ end  procedure;
 
 procedure a4_zp is
 begin
-    if exec_cycle = T1 then
+    if wk_exec_cycle = T1 then
         fetch_low;
-    elsif exec_cycle = T2 then
+    elsif wk_exec_cycle = T2 then
         fetch_stop;
 
         --t2 cycle read and,
@@ -895,39 +895,39 @@ begin
         arith_en_n <= '0';
         alu_cycle <= MEM_T1;
         dbuf_int_oe_n <= '0';
-        next_cycle <= T3;
-    elsif exec_cycle = T3 then
+        wk_exec_cycle <= T3;
+    elsif wk_exec_cycle = T3 then
         --t3 fix alu internal register.
         back_oe(idl_l_cmd, '0');
         zp_n <= '0';
         arith_en_n <= '0';
         alu_cycle <= MEM_T2;
         dbuf_int_oe_n <= '1';
-        next_cycle <= T4;
-    elsif exec_cycle = T4 then
+        wk_exec_cycle <= T4;
+    elsif wk_exec_cycle = T4 then
         --t5 cycle writes modified value.
         back_oe(idl_l_cmd, '0');
         zp_n <= '0';
         r_nw <= '0';
         arith_en_n <= '0';
         alu_cycle <= MEM_T3;
-        next_cycle <= T0;
+        wk_exec_cycle <= T0;
     end if;
 end  procedure;
 
 procedure a4_zp_x is
 begin
-    if exec_cycle = T1 then
+    if wk_exec_cycle = T1 then
         fetch_low;
-    elsif exec_cycle = T2 then
+    elsif wk_exec_cycle = T2 then
         fetch_stop;
         dbuf_int_oe_n <= '1';
 
         --t2 cycle read bal only.
         back_oe(idl_l_cmd, '0');
         zp_n <= '0';
-        next_cycle <= T3;
-    elsif exec_cycle = T3 then
+        wk_exec_cycle <= T3;
+    elsif wk_exec_cycle = T3 then
         --t3 cycle read bal + x
         back_oe(idl_l_cmd, '0');
         zp_n <= '0';
@@ -939,8 +939,8 @@ begin
         alu_cycle <= MEM_T1;
         dbuf_int_oe_n <= '0';
 
-        next_cycle <= T4;
-    elsif exec_cycle = T4 then
+        wk_exec_cycle <= T4;
+    elsif wk_exec_cycle = T4 then
         back_oe(idl_l_cmd, '0');
         zp_n <= '0';
         zp_xy_n <= '0';
@@ -950,8 +950,8 @@ begin
         arith_en_n <= '0';
         alu_cycle <= MEM_T2;
         dbuf_int_oe_n <= '1';
-        next_cycle <= T5;
-    elsif exec_cycle = T5 then
+        wk_exec_cycle <= T5;
+    elsif wk_exec_cycle = T5 then
         dbuf_int_oe_n <= '1';
 
         --t5 cycle writes modified value.
@@ -962,59 +962,59 @@ begin
         r_nw <= '0';
         arith_en_n <= '0';
         alu_cycle <= MEM_T3;
-        next_cycle <= T0;
+        wk_exec_cycle <= T0;
     end if;
 end  procedure;
 
 
 procedure a4_abs is
 begin
-    if exec_cycle = T1 then
+    if wk_exec_cycle = T1 then
         fetch_low;
-    elsif exec_cycle = T2 then
+    elsif wk_exec_cycle = T2 then
         abs_fetch_high;
-    elsif exec_cycle = T3 then
+    elsif wk_exec_cycle = T3 then
         abs_latch_out;
 
         --keep data in the alu reg.
         arith_en_n <= '0';
         alu_cycle <= MEM_T1;
         dbuf_int_oe_n <= '0';
-        next_cycle <= T4;
-    elsif exec_cycle = T4 then
+        wk_exec_cycle <= T4;
+    elsif wk_exec_cycle = T4 then
         abs_latch_out;
 
         --fix alu internal register.
         arith_en_n <= '0';
         alu_cycle <= MEM_T2;
         dbuf_int_oe_n <= '1';
-        next_cycle <= T5;
-    elsif exec_cycle = T5 then
+        wk_exec_cycle <= T5;
+    elsif wk_exec_cycle = T5 then
         dbuf_int_oe_n <= '1';
 
         --t5 cycle writes modified value.
         r_nw <= '0';
         arith_en_n <= '0';
         alu_cycle <= MEM_T3;
-        next_cycle <= T0;
+        wk_exec_cycle <= T0;
     end if;
 end  procedure;
 
 procedure a4_abs_x is
 begin
-    if exec_cycle = T1 then
+    if wk_exec_cycle = T1 then
         fetch_low;
-    elsif exec_cycle = T2 then
+    elsif wk_exec_cycle = T2 then
         abs_fetch_high;
-    elsif exec_cycle = T3 then
+    elsif wk_exec_cycle = T3 then
         --T3 cycle discarded.
         pg_next_n <= '1';
         abs_latch_out;
         ea_x_out;
         dbuf_int_oe_n <= '0';
-        next_cycle <= T4;
+        wk_exec_cycle <= T4;
 
-    elsif exec_cycle = T4 then
+    elsif wk_exec_cycle = T4 then
         abs_latch_out;
         ea_x_out;
         if (ea_carry_reg = '1') then
@@ -1027,21 +1027,21 @@ begin
         arith_en_n <= '0';
         alu_cycle <= MEM_T1;
         dbuf_int_oe_n <= '0';
-        next_cycle <= T5;
+        wk_exec_cycle <= T5;
 
-    elsif exec_cycle = T5 then
+    elsif wk_exec_cycle = T5 then
         --fix alu internal register.
         arith_en_n <= '0';
         alu_cycle <= MEM_T2;
         dbuf_int_oe_n <= '1';
-        next_cycle <= T6;
+        wk_exec_cycle <= T6;
 
-    elsif exec_cycle = T6 then
+    elsif wk_exec_cycle = T6 then
         --t5 cycle writes modified value.
         r_nw <= '0';
         arith_en_n <= '0';
         alu_cycle <= MEM_T3;
-        next_cycle <= T0;
+        wk_exec_cycle <= T0;
 
     end if;
 end  procedure;
@@ -1050,35 +1050,35 @@ end  procedure;
 -- A.5.1 push stack
 procedure a51_push is
 begin
-    if exec_cycle = T1 then
+    if wk_exec_cycle = T1 then
         fetch_stop;
-        next_cycle <= T2;
-    elsif exec_cycle = T2 then
+        wk_exec_cycle <= T2;
+    elsif wk_exec_cycle = T2 then
         back_oe(sp_cmd, '0');
         back_we(sp_cmd, '0');
         sp_push_n <= '0';
         sp_oe_n <= '0';
         r_nw <= '0';
-        next_cycle <= T0;
+        wk_exec_cycle <= T0;
     end if;
 end procedure;
 
 -- A.5.2 pull stack
 procedure a52_pull is
 begin
-    if exec_cycle = T1 then
+    if wk_exec_cycle = T1 then
         fetch_stop;
-        next_cycle <= T2;
+        wk_exec_cycle <= T2;
 
-    elsif exec_cycle = T2 then
+    elsif wk_exec_cycle = T2 then
         --stack decrement first.
         back_oe(sp_cmd, '0');
         back_we(sp_cmd, '0');
         sp_pop_n <= '0';
         sp_oe_n <= '0';
-        next_cycle <= T3;
+        wk_exec_cycle <= T3;
 
-    elsif exec_cycle = T3 then
+    elsif wk_exec_cycle = T3 then
         sp_pop_n <= '1';
         back_we(sp_cmd, '1');
 
@@ -1086,7 +1086,7 @@ begin
         back_oe(sp_cmd, '0');
         sp_oe_n <= '0';
         dbuf_int_oe_n <= '0';
-        next_cycle <= T0;
+        wk_exec_cycle <= T0;
     end if;
 end procedure;
 
@@ -1095,7 +1095,7 @@ end procedure;
 
 procedure a58_branch (int_flg : in integer; br_cond : in std_logic) is
 begin
-    if exec_cycle = T1 then
+    if wk_exec_cycle = T1 then
         fetch_next;
         if status_reg(int_flg) = br_cond then
             d_print("get rel");
@@ -1103,12 +1103,12 @@ begin
             --latch rel value.
             dbuf_int_oe_n <= '0';
             front_we(idl_h_cmd, '0');
-            next_cycle <= T2;
+            wk_exec_cycle <= T2;
         else
             d_print("no branch");
-            next_cycle <= T0;
+            wk_exec_cycle <= T0;
         end if;
-    elsif exec_cycle = T2 then
+    elsif wk_exec_cycle = T2 then
         d_print("rel ea");
         fetch_stop;
         dbuf_int_oe_n <= '1';
@@ -1122,8 +1122,8 @@ begin
         back_oe(pch_cmd, '0');
         back_we(pcl_cmd, '0');
 
-        next_cycle <= T0;
-    elsif (exec_cycle = T0 and ea_carry = '1') then
+        wk_exec_cycle <= T0;
+    elsif (wk_exec_cycle = T0 and ea_carry = '1') then
         d_print("page crossed.");
         --page crossed. adh calc.
         back_we(pcl_cmd, '1');
@@ -1134,7 +1134,7 @@ begin
 
         rel_calc_n <= '0';
         pg_next_n <= '0';
-        next_cycle <= T0;
+        wk_exec_cycle <= T0;
     end if;
 end  procedure;
 
@@ -1158,9 +1158,9 @@ end  procedure;
             --pc l/h is reset vector.
             pcl_cmd <= "1110";
             pch_cmd <= "1110";
-            next_cycle <= R0;
+            wk_exec_cycle <= R0;
 
-        elsif (rising_edge(set_clk)) then
+        elsif (rising_edge(cpu_clk)) then
             d_print(string'("-"));
 
             if (nmi_n = '1') then
@@ -1179,19 +1179,19 @@ end  procedure;
                 pch_cmd <= "1111";
                 r_nw <= 'Z';
 
-            elsif (exec_cycle = T0 and ea_carry = '0') then
+            elsif (wk_exec_cycle = T0 and ea_carry = '0') then
                 --cycle #1
                 t0_cycle;
 
-            elsif exec_cycle = T1 or exec_cycle = T2 or exec_cycle = T3 or 
-                exec_cycle = T4 or exec_cycle = T5 or exec_cycle = T6 or 
-                (exec_cycle = T0 and ea_carry = '1') then
+            elsif wk_exec_cycle = T1 or wk_exec_cycle = T2 or wk_exec_cycle = T3 or 
+                wk_exec_cycle = T4 or wk_exec_cycle = T5 or wk_exec_cycle = T6 or 
+                (wk_exec_cycle = T0 and ea_carry = '1') then
                 --execute inst.
 
                 ---asyncronous page change might happen.
                 back_we(pch_cmd, '1');
 
-                if exec_cycle = T1 then
+                if wk_exec_cycle = T1 then
                     d_print("decode and execute inst: " 
                             & conv_hex8(conv_integer(instruction)));
                     --disable pin for jmp instruction 
@@ -1379,7 +1379,7 @@ end  procedure;
                     --zp
                     d_print("adc");
                     a2_zp;
-                    if exec_cycle = T2 then
+                    if wk_exec_cycle = T2 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
@@ -1390,7 +1390,7 @@ end  procedure;
                     --zp, x
                     d_print("adc");
                     a2_zp_xy(true);
-                    if exec_cycle = T3 then
+                    if wk_exec_cycle = T3 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
@@ -1401,7 +1401,7 @@ end  procedure;
                     --abs
                     d_print("adc");
                     a2_abs;
-                    if exec_cycle = T3 then
+                    if wk_exec_cycle = T3 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
@@ -1412,7 +1412,7 @@ end  procedure;
                     --abs, x
                     d_print("adc");
                     a2_abs_xy(true);
-                    if exec_cycle = T3 or exec_cycle = T0 then
+                    if wk_exec_cycle = T3 or wk_exec_cycle = T0 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
@@ -1423,7 +1423,7 @@ end  procedure;
                     --abs, y
                     d_print("adc");
                     a2_abs_xy(false);
-                    if exec_cycle = T3 or exec_cycle = T0 then
+                    if wk_exec_cycle = T3 or wk_exec_cycle = T0 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
@@ -1434,7 +1434,7 @@ end  procedure;
                     --(indir, x)
                     d_print("adc");
                     a2_indir_x;
-                    if exec_cycle = T5 then
+                    if wk_exec_cycle = T5 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
@@ -1445,7 +1445,7 @@ end  procedure;
                     --(indir), y
                     d_print("adc");
                     a2_indir_y;
-                    if exec_cycle = T4 or exec_cycle = T0 then
+                    if wk_exec_cycle = T4 or wk_exec_cycle = T0 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
@@ -1465,7 +1465,7 @@ end  procedure;
                     --zp
                     d_print("and");
                     a2_zp;
-                    if exec_cycle = T2 then
+                    if wk_exec_cycle = T2 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
@@ -1476,7 +1476,7 @@ end  procedure;
                     --zp, x
                     d_print("and");
                     a2_zp_xy(true);
-                    if exec_cycle = T3 then
+                    if wk_exec_cycle = T3 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
@@ -1487,7 +1487,7 @@ end  procedure;
                     --abs
                     d_print("and");
                     a2_abs;
-                    if exec_cycle = T3 then
+                    if wk_exec_cycle = T3 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
@@ -1498,7 +1498,7 @@ end  procedure;
                     --abs, x
                     d_print("and");
                     a2_abs_xy(true);
-                    if exec_cycle = T3 or exec_cycle = T0 then
+                    if wk_exec_cycle = T3 or wk_exec_cycle = T0 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
@@ -1509,7 +1509,7 @@ end  procedure;
                     --abs, y
                     d_print("and");
                     a2_abs_xy(false);
-                    if exec_cycle = T3 or exec_cycle = T0 then
+                    if wk_exec_cycle = T3 or wk_exec_cycle = T0 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
@@ -1520,7 +1520,7 @@ end  procedure;
                     --(indir, x)
                     d_print("and");
                     a2_indir_x;
-                    if exec_cycle = T5 then
+                    if wk_exec_cycle = T5 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
@@ -1531,7 +1531,7 @@ end  procedure;
                     --(indir), y
                     d_print("and");
                     a2_indir_y;
-                    if exec_cycle = T4 or exec_cycle = T0 then
+                    if wk_exec_cycle = T4 or wk_exec_cycle = T0 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
@@ -1542,7 +1542,7 @@ end  procedure;
                     --zp
                     d_print("bit");
                     a2_zp;
-                    if exec_cycle = T2 then
+                    if wk_exec_cycle = T2 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         set_nvz_from_alu;
@@ -1552,7 +1552,7 @@ end  procedure;
                     --abs
                     d_print("bit");
                     a2_abs;
-                    if exec_cycle = T3 then
+                    if wk_exec_cycle = T3 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         set_nvz_from_alu;
@@ -1570,7 +1570,7 @@ end  procedure;
                     --zp
                     d_print("cmp");
                     a2_zp;
-                    if exec_cycle = T2 then
+                    if wk_exec_cycle = T2 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         set_nzc_from_alu;
@@ -1580,7 +1580,7 @@ end  procedure;
                     --zp, x
                     d_print("cmp");
                     a2_zp_xy(true);
-                    if exec_cycle = T3 then
+                    if wk_exec_cycle = T3 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         set_nzc_from_alu;
@@ -1590,7 +1590,7 @@ end  procedure;
                     --abs
                     d_print("cmp");
                     a2_abs;
-                    if exec_cycle = T3 then
+                    if wk_exec_cycle = T3 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         set_nzc_from_alu;
@@ -1600,7 +1600,7 @@ end  procedure;
                     --abs, x
                     d_print("cmp");
                     a2_abs_xy(true);
-                    if exec_cycle = T3 or exec_cycle = T0 then
+                    if wk_exec_cycle = T3 or wk_exec_cycle = T0 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         set_nzc_from_alu;
@@ -1610,7 +1610,7 @@ end  procedure;
                     --abs, y
                     d_print("cmp");
                     a2_abs_xy(false);
-                    if exec_cycle = T3 or exec_cycle = T0 then
+                    if wk_exec_cycle = T3 or wk_exec_cycle = T0 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         set_nzc_from_alu;
@@ -1620,7 +1620,7 @@ end  procedure;
                     --(indir, x)
                     d_print("cmp");
                     a2_indir_x;
-                    if exec_cycle = T5 then
+                    if wk_exec_cycle = T5 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         set_nzc_from_alu;
@@ -1630,7 +1630,7 @@ end  procedure;
                     --(indir), y
                     d_print("cmp");
                     a2_indir_y;
-                    if exec_cycle = T4 or exec_cycle = T0 then
+                    if wk_exec_cycle = T4 or wk_exec_cycle = T0 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         set_nzc_from_alu;
@@ -1648,7 +1648,7 @@ end  procedure;
                     --zp
                     d_print("cpx");
                     a2_zp;
-                    if exec_cycle = T2 then
+                    if wk_exec_cycle = T2 then
                         arith_en_n <= '0';
                         back_oe(x_cmd, '0');
                         set_nzc_from_alu;
@@ -1658,7 +1658,7 @@ end  procedure;
                     --abs
                     d_print("cpx");
                     a2_abs;
-                    if exec_cycle = T3 then
+                    if wk_exec_cycle = T3 then
                         arith_en_n <= '0';
                         back_oe(x_cmd, '0');
                         set_nzc_from_alu;
@@ -1676,7 +1676,7 @@ end  procedure;
                     --zp
                     d_print("cpy");
                     a2_zp;
-                    if exec_cycle = T2 then
+                    if wk_exec_cycle = T2 then
                         arith_en_n <= '0';
                         back_oe(y_cmd, '0');
                         set_nzc_from_alu;
@@ -1686,7 +1686,7 @@ end  procedure;
                     --abs
                     d_print("cpy");
                     a2_abs;
-                    if exec_cycle = T3 then
+                    if wk_exec_cycle = T3 then
                         arith_en_n <= '0';
                         back_oe(y_cmd, '0');
                         set_nzc_from_alu;
@@ -1705,7 +1705,7 @@ end  procedure;
                     --zp
                     d_print("eor");
                     a2_zp;
-                    if exec_cycle = T2 then
+                    if wk_exec_cycle = T2 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
@@ -1716,7 +1716,7 @@ end  procedure;
                     --zp, x
                     d_print("eor");
                     a2_zp_xy(true);
-                    if exec_cycle = T3 then
+                    if wk_exec_cycle = T3 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
@@ -1727,7 +1727,7 @@ end  procedure;
                     --abs
                     d_print("eor");
                     a2_abs;
-                    if exec_cycle = T3 then
+                    if wk_exec_cycle = T3 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
@@ -1738,7 +1738,7 @@ end  procedure;
                     --abs, x
                     d_print("eor");
                     a2_abs_xy(true);
-                    if exec_cycle = T3 or exec_cycle = T0 then
+                    if wk_exec_cycle = T3 or wk_exec_cycle = T0 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
@@ -1749,7 +1749,7 @@ end  procedure;
                     --abs, y
                     d_print("eor");
                     a2_abs_xy(false);
-                    if exec_cycle = T3 or exec_cycle = T0 then
+                    if wk_exec_cycle = T3 or wk_exec_cycle = T0 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
@@ -1760,7 +1760,7 @@ end  procedure;
                     --(indir, x)
                     d_print("eor");
                     a2_indir_x;
-                    if exec_cycle = T5 then
+                    if wk_exec_cycle = T5 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
@@ -1771,7 +1771,7 @@ end  procedure;
                     --(indir), y
                     d_print("eor");
                     a2_indir_y;
-                    if exec_cycle = T4 or exec_cycle = T0 then
+                    if wk_exec_cycle = T4 or wk_exec_cycle = T0 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
@@ -1789,7 +1789,7 @@ end  procedure;
                     --zp
                     d_print("lda");
                     a2_zp;
-                    if exec_cycle = T2 then
+                    if wk_exec_cycle = T2 then
                         front_we(acc_cmd, '0');
                         set_nz_from_bus;
                     end if;
@@ -1798,7 +1798,7 @@ end  procedure;
                     --zp, x
                     d_print("lda");
                     a2_zp_xy(true);
-                    if exec_cycle = T3 then
+                    if wk_exec_cycle = T3 then
                         front_we(acc_cmd, '0');
                         set_nz_from_bus;
                     end if;
@@ -1807,7 +1807,7 @@ end  procedure;
                     --abs
                     d_print("lda");
                     a2_abs;
-                    if exec_cycle = T3 then
+                    if wk_exec_cycle = T3 then
                         set_nz_from_bus;
                         front_we(acc_cmd, '0');
                     end if;
@@ -1816,7 +1816,7 @@ end  procedure;
                     --abs, x
                     d_print("lda");
                     a2_abs_xy(true);
-                    if exec_cycle = T3 or exec_cycle = T0 then
+                    if wk_exec_cycle = T3 or wk_exec_cycle = T0 then
                         --lda.
                         front_we(acc_cmd, '0');
                         set_nz_from_bus;
@@ -1826,7 +1826,7 @@ end  procedure;
                     --abs, y
                     d_print("lda");
                     a2_abs_xy(false);
-                    if exec_cycle = T3 or exec_cycle = T0 then
+                    if wk_exec_cycle = T3 or wk_exec_cycle = T0 then
                         --lda.
                         front_we(acc_cmd, '0');
                         set_nz_from_bus;
@@ -1836,7 +1836,7 @@ end  procedure;
                     --(indir, x)
                     d_print("lda");
                     a2_indir_x;
-                    if exec_cycle = T5 then
+                    if wk_exec_cycle = T5 then
                         front_we(acc_cmd, '0');
                         set_nz_from_bus;
                     end if;
@@ -1845,7 +1845,7 @@ end  procedure;
                     --(indir), y
                     d_print("lda");
                     a2_indir_y;
-                    if exec_cycle = T4 or exec_cycle = T0 then
+                    if wk_exec_cycle = T4 or wk_exec_cycle = T0 then
                         --lda.
                         front_we(acc_cmd, '0');
                         set_nz_from_bus;
@@ -1862,7 +1862,7 @@ end  procedure;
                     --zp
                     d_print("ldx");
                     a2_zp;
-                    if exec_cycle = T2 then
+                    if wk_exec_cycle = T2 then
                         front_we(x_cmd, '0');
                         set_nz_from_bus;
                     end if;
@@ -1871,7 +1871,7 @@ end  procedure;
                     --zp, y
                     d_print("ldx");
                     a2_zp_xy(false);
-                    if exec_cycle = T3 then
+                    if wk_exec_cycle = T3 then
                         front_we(x_cmd, '0');
                         set_nz_from_bus;
                     end if;
@@ -1880,7 +1880,7 @@ end  procedure;
                     --abs
                     d_print("ldx");
                     a2_abs;
-                    if exec_cycle = T3 then
+                    if wk_exec_cycle = T3 then
                         set_nz_from_bus;
                         front_we(x_cmd, '0');
                     end if;
@@ -1889,7 +1889,7 @@ end  procedure;
                     --abs, y
                     d_print("ldx");
                     a2_abs_xy(false);
-                    if exec_cycle = T3 or exec_cycle = T0 then
+                    if wk_exec_cycle = T3 or wk_exec_cycle = T0 then
                         front_we(x_cmd, '0');
                         set_nz_from_bus;
                     end if;
@@ -1905,7 +1905,7 @@ end  procedure;
                     --zp
                     d_print("ldy");
                     a2_zp;
-                    if exec_cycle = T2 then
+                    if wk_exec_cycle = T2 then
                         front_we(y_cmd, '0');
                         set_nz_from_bus;
                     end if;
@@ -1914,7 +1914,7 @@ end  procedure;
                     --zp, x
                     d_print("ldy");
                     a2_zp_xy(true);
-                    if exec_cycle = T3 then
+                    if wk_exec_cycle = T3 then
                         front_we(y_cmd, '0');
                         set_nz_from_bus;
                     end if;
@@ -1923,7 +1923,7 @@ end  procedure;
                     --abs
                     d_print("ldy");
                     a2_abs;
-                    if exec_cycle = T3 then
+                    if wk_exec_cycle = T3 then
                         set_nz_from_bus;
                         front_we(y_cmd, '0');
                     end if;
@@ -1932,7 +1932,7 @@ end  procedure;
                     --abs, x
                     d_print("ldy");
                     a2_abs_xy(true);
-                    if exec_cycle = T3 or exec_cycle = T0 then
+                    if wk_exec_cycle = T3 or wk_exec_cycle = T0 then
                         set_nz_from_bus;
                         front_we(y_cmd, '0');
                     end if;
@@ -1950,7 +1950,7 @@ end  procedure;
                     --zp
                     d_print("ora");
                     a2_zp;
-                    if exec_cycle = T2 then
+                    if wk_exec_cycle = T2 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
@@ -1961,7 +1961,7 @@ end  procedure;
                     --zp, x
                     d_print("ora");
                     a2_zp_xy(true);
-                    if exec_cycle = T3 then
+                    if wk_exec_cycle = T3 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
@@ -1972,7 +1972,7 @@ end  procedure;
                     --abs
                     d_print("ora");
                     a2_abs;
-                    if exec_cycle = T3 then
+                    if wk_exec_cycle = T3 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
@@ -1983,7 +1983,7 @@ end  procedure;
                     --abs, x
                     d_print("ora");
                     a2_abs_xy(true);
-                    if exec_cycle = T3 or exec_cycle = T0 then
+                    if wk_exec_cycle = T3 or wk_exec_cycle = T0 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
@@ -1994,7 +1994,7 @@ end  procedure;
                     --abs, y
                     d_print("ora");
                     a2_abs_xy(false);
-                    if exec_cycle = T3 or exec_cycle = T0 then
+                    if wk_exec_cycle = T3 or wk_exec_cycle = T0 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
@@ -2005,7 +2005,7 @@ end  procedure;
                     --(indir, x)
                     d_print("ora");
                     a2_indir_x;
-                    if exec_cycle = T5 then
+                    if wk_exec_cycle = T5 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
@@ -2016,7 +2016,7 @@ end  procedure;
                     --(indir), y
                     d_print("ora");
                     a2_indir_y;
-                    if exec_cycle = T4 or exec_cycle = T0 then
+                    if wk_exec_cycle = T4 or wk_exec_cycle = T0 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
@@ -2036,7 +2036,7 @@ end  procedure;
                     --zp
                     d_print("sbc");
                     a2_zp;
-                    if exec_cycle = T2 then
+                    if wk_exec_cycle = T2 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
@@ -2047,7 +2047,7 @@ end  procedure;
                     --zp, x
                     d_print("sbc");
                     a2_zp_xy(true);
-                    if exec_cycle = T3 then
+                    if wk_exec_cycle = T3 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
@@ -2058,7 +2058,7 @@ end  procedure;
                     --abs
                     d_print("sbc");
                     a2_abs;
-                    if exec_cycle = T3 then
+                    if wk_exec_cycle = T3 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
@@ -2069,7 +2069,7 @@ end  procedure;
                     --abs, x
                     d_print("sbc");
                     a2_abs_xy(true);
-                    if exec_cycle = T3 or exec_cycle = T0 then
+                    if wk_exec_cycle = T3 or wk_exec_cycle = T0 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
@@ -2080,7 +2080,7 @@ end  procedure;
                     --abs, y
                     d_print("sbc");
                     a2_abs_xy(false);
-                    if exec_cycle = T3 or exec_cycle = T0 then
+                    if wk_exec_cycle = T3 or wk_exec_cycle = T0 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
@@ -2091,7 +2091,7 @@ end  procedure;
                     --(indir, x)
                     d_print("sbc");
                     a2_indir_x;
-                    if exec_cycle = T5 then
+                    if wk_exec_cycle = T5 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
@@ -2102,7 +2102,7 @@ end  procedure;
                     --(indir), y
                     d_print("sbc");
                     a2_indir_y;
-                    if exec_cycle = T4 or exec_cycle = T0 then
+                    if wk_exec_cycle = T4 or wk_exec_cycle = T0 then
                         arith_en_n <= '0';
                         back_oe(acc_cmd, '0');
                         back_we(acc_cmd, '0');
@@ -2118,7 +2118,7 @@ end  procedure;
                     --zp
                     d_print("sta");
                     a3_zp;
-                    if exec_cycle = T2 then
+                    if wk_exec_cycle = T2 then
                         front_oe(acc_cmd, '0');
                     end if;
 
@@ -2126,7 +2126,7 @@ end  procedure;
                     --zp, x
                     d_print("sta");
                     a3_zp_xy(true);
-                    if exec_cycle = T2 then
+                    if wk_exec_cycle = T2 then
                         front_oe(acc_cmd, '0');
                     end if;
 
@@ -2134,7 +2134,7 @@ end  procedure;
                     --abs
                     d_print("sta");
                     a3_abs;
-                    if exec_cycle = T3 then
+                    if wk_exec_cycle = T3 then
                         front_oe(acc_cmd, '0');
                     end if;
 
@@ -2142,7 +2142,7 @@ end  procedure;
                     --abs, x
                     d_print("sta");
                     a3_abs_xy (true);
-                    if exec_cycle = T4 then
+                    if wk_exec_cycle = T4 then
                         front_oe(acc_cmd, '0');
                     end if;
 
@@ -2150,7 +2150,7 @@ end  procedure;
                     --abs, y
                     d_print("sta");
                     a3_abs_xy (false);
-                    if exec_cycle = T4 then
+                    if wk_exec_cycle = T4 then
                         front_oe(acc_cmd, '0');
                     end if;
 
@@ -2158,7 +2158,7 @@ end  procedure;
                     --(indir, x)
                     d_print("sta");
                     a3_indir_x;
-                    if exec_cycle = T5 then
+                    if wk_exec_cycle = T5 then
                         front_oe(acc_cmd, '0');
                     end if;
 
@@ -2166,7 +2166,7 @@ end  procedure;
                     --(indir), y
                     d_print("sta");
                     a3_indir_y;
-                    if exec_cycle = T5 then
+                    if wk_exec_cycle = T5 then
                         front_oe(acc_cmd, '0');
                     end if;
 
@@ -2174,7 +2174,7 @@ end  procedure;
                     --zp
                     d_print("stx");
                     a3_zp;
-                    if exec_cycle = T2 then
+                    if wk_exec_cycle = T2 then
                         front_oe(x_cmd, '0');
                     end if;
 
@@ -2182,7 +2182,7 @@ end  procedure;
                     --zp, y
                     d_print("stx");
                     a3_zp_xy(false);
-                    if exec_cycle = T2 then
+                    if wk_exec_cycle = T2 then
                         front_oe(x_cmd, '0');
                     end if;
 
@@ -2190,7 +2190,7 @@ end  procedure;
                     --abs
                     d_print("stx");
                     a3_abs;
-                    if exec_cycle = T3 then
+                    if wk_exec_cycle = T3 then
                         front_oe(x_cmd, '0');
                     end if;
 
@@ -2198,7 +2198,7 @@ end  procedure;
                     --zp
                     d_print("sty");
                     a3_zp;
-                    if exec_cycle = T2 then
+                    if wk_exec_cycle = T2 then
                         front_oe(y_cmd, '0');
                     end if;
 
@@ -2206,7 +2206,7 @@ end  procedure;
                     --zp, x
                     d_print("sty");
                     a3_zp_xy(true);
-                    if exec_cycle = T2 then
+                    if wk_exec_cycle = T2 then
                         front_oe(y_cmd, '0');
                     end if;
 
@@ -2214,7 +2214,7 @@ end  procedure;
                     --abs
                     d_print("sty");
                     a3_abs;
-                    if exec_cycle = T3 then
+                    if wk_exec_cycle = T3 then
                         front_oe(y_cmd, '0');
                     end if;
 
@@ -2226,7 +2226,7 @@ end  procedure;
                     --zp
                     d_print("asl");
                     a4_zp;
-                    if exec_cycle = T4 then
+                    if wk_exec_cycle = T4 then
                         set_nzc_from_alu;
                     end if;
 
@@ -2234,7 +2234,7 @@ end  procedure;
                     --zp, x
                     d_print("asl");
                     a4_zp_x;
-                    if exec_cycle = T5 then
+                    if wk_exec_cycle = T5 then
                         set_nzc_from_alu;
                     end if;
 
@@ -2242,7 +2242,7 @@ end  procedure;
                     --abs
                     d_print("asl");
                     a4_abs;
-                    if exec_cycle = T5 then
+                    if wk_exec_cycle = T5 then
                         set_nzc_from_alu;
                     end if;
 
@@ -2250,7 +2250,7 @@ end  procedure;
                     --abs, x
                     d_print("asl");
                     a4_abs_x;
-                    if exec_cycle = T6 then
+                    if wk_exec_cycle = T6 then
                         set_nzc_from_alu;
                     end if;
 
@@ -2258,7 +2258,7 @@ end  procedure;
                     --zp
                     d_print("dec");
                     a4_zp;
-                    if exec_cycle = T4 then
+                    if wk_exec_cycle = T4 then
                         set_nz_from_bus;
                     end if;
 
@@ -2266,7 +2266,7 @@ end  procedure;
                     --zp, x
                     d_print("dec");
                     a4_zp_x;
-                    if exec_cycle = T5 then
+                    if wk_exec_cycle = T5 then
                         set_nz_from_bus;
                     end if;
 
@@ -2274,7 +2274,7 @@ end  procedure;
                     --abs
                     d_print("dec");
                     a4_abs;
-                    if exec_cycle = T5 then
+                    if wk_exec_cycle = T5 then
                         set_nz_from_bus;
                     end if;
 
@@ -2282,7 +2282,7 @@ end  procedure;
                     --abs, x
                     d_print("dec");
                     a4_abs_x;
-                    if exec_cycle = T6 then
+                    if wk_exec_cycle = T6 then
                         set_nz_from_bus;
                     end if;
 
@@ -2290,7 +2290,7 @@ end  procedure;
                     --zp
                     d_print("inc");
                     a4_zp;
-                    if exec_cycle = T4 then
+                    if wk_exec_cycle = T4 then
                         set_nz_from_bus;
                     end if;
 
@@ -2298,7 +2298,7 @@ end  procedure;
                     --zp, x
                     d_print("inc");
                     a4_zp_x;
-                    if exec_cycle = T5 then
+                    if wk_exec_cycle = T5 then
                         set_nz_from_bus;
                     end if;
 
@@ -2306,7 +2306,7 @@ end  procedure;
                     --abs
                     d_print("inc");
                     a4_abs;
-                    if exec_cycle = T5 then
+                    if wk_exec_cycle = T5 then
                         set_nz_from_bus;
                     end if;
 
@@ -2314,7 +2314,7 @@ end  procedure;
                     --abs, x
                     d_print("inc");
                     a4_abs_x;
-                    if exec_cycle = T6 then
+                    if wk_exec_cycle = T6 then
                         set_nz_from_bus;
                     end if;
 
@@ -2322,7 +2322,7 @@ end  procedure;
                     --zp
                     d_print("lsr");
                     a4_zp;
-                    if exec_cycle = T4 then
+                    if wk_exec_cycle = T4 then
                         set_zc_from_alu;
                     end if;
 
@@ -2330,7 +2330,7 @@ end  procedure;
                     --zp, x
                     d_print("lsr");
                     a4_zp_x;
-                    if exec_cycle = T5 then
+                    if wk_exec_cycle = T5 then
                         set_zc_from_alu;
                     end if;
 
@@ -2338,7 +2338,7 @@ end  procedure;
                     --abs
                     d_print("lsr");
                     a4_abs;
-                    if exec_cycle = T5 then
+                    if wk_exec_cycle = T5 then
                         set_zc_from_alu;
                     end if;
 
@@ -2346,7 +2346,7 @@ end  procedure;
                     --abs, x
                     d_print("lsr");
                     a4_abs_x;
-                    if exec_cycle = T6 then
+                    if wk_exec_cycle = T6 then
                         set_zc_from_alu;
                     end if;
 
@@ -2354,7 +2354,7 @@ end  procedure;
                     --zp
                     d_print("rol");
                     a4_zp;
-                    if exec_cycle = T4 then
+                    if wk_exec_cycle = T4 then
                         set_nzc_from_alu;
                     end if;
 
@@ -2362,7 +2362,7 @@ end  procedure;
                     --zp, x
                     d_print("rol");
                     a4_zp_x;
-                    if exec_cycle = T5 then
+                    if wk_exec_cycle = T5 then
                         set_nzc_from_alu;
                     end if;
 
@@ -2370,7 +2370,7 @@ end  procedure;
                     --abs
                     d_print("rol");
                     a4_abs;
-                    if exec_cycle = T5 then
+                    if wk_exec_cycle = T5 then
                         set_nzc_from_alu;
                     end if;
 
@@ -2378,7 +2378,7 @@ end  procedure;
                     --abs, x
                     d_print("rol");
                     a4_abs_x;
-                    if exec_cycle = T6 then
+                    if wk_exec_cycle = T6 then
                         set_nzc_from_alu;
                     end if;
 
@@ -2386,7 +2386,7 @@ end  procedure;
                     --zp
                     d_print("ror");
                     a4_zp;
-                    if exec_cycle = T4 then
+                    if wk_exec_cycle = T4 then
                         set_nzc_from_alu;
                     end if;
 
@@ -2394,7 +2394,7 @@ end  procedure;
                     --zp, x
                     d_print("ror");
                     a4_zp_x;
-                    if exec_cycle = T5 then
+                    if wk_exec_cycle = T5 then
                         set_nzc_from_alu;
                     end if;
 
@@ -2402,7 +2402,7 @@ end  procedure;
                     --abs
                     d_print("ror");
                     a4_abs;
-                    if exec_cycle = T5 then
+                    if wk_exec_cycle = T5 then
                         set_nzc_from_alu;
                     end if;
 
@@ -2410,7 +2410,7 @@ end  procedure;
                     --abs, x
                     d_print("ror");
                     a4_abs_x;
-                    if exec_cycle = T6 then
+                    if wk_exec_cycle = T6 then
                         set_nzc_from_alu;
                     end if;
 
@@ -2423,21 +2423,21 @@ end  procedure;
                 elsif instruction = conv_std_logic_vector(16#08#, dsize) then
                     d_print("php");
                     a51_push;
-                    if exec_cycle = T2 then
+                    if wk_exec_cycle = T2 then
                         stat_bus_oe_n <= '0';
                     end if;
 
                 elsif instruction = conv_std_logic_vector(16#48#, dsize) then
                     d_print("pha");
                     a51_push;
-                    if exec_cycle = T2 then
+                    if wk_exec_cycle = T2 then
                         front_oe(acc_cmd, '0');
                     end if;
 
                 elsif instruction = conv_std_logic_vector(16#28#, dsize) then
                     d_print("plp");
                     a52_pull;
-                    if exec_cycle = T3 then
+                    if wk_exec_cycle = T3 then
                         stat_dec_oe_n <= '1';
                         stat_bus_all_n <= '0';
                     end if;
@@ -2445,7 +2445,7 @@ end  procedure;
                 elsif instruction = conv_std_logic_vector(16#68#, dsize) then
                     d_print("pla");
                     a52_pull;
-                    if exec_cycle = T3 then
+                    if wk_exec_cycle = T3 then
                         front_we(acc_cmd, '0');
                         set_nz_from_bus;
                     end if;
@@ -2455,14 +2455,14 @@ end  procedure;
                 -- A.5.3 jsr
                 ----------------------------------------
                 elsif instruction = conv_std_logic_vector(16#20#, dsize) then
-                    if exec_cycle = T1 then
+                    if wk_exec_cycle = T1 then
                         d_print("jsr abs 2");
                         --fetch opcode.
                         fetch_next;
                         dbuf_int_oe_n <= '0';
                         --latch adl
-                        next_cycle <= T2;
-                    elsif exec_cycle = T2 then
+                        wk_exec_cycle <= T2;
+                    elsif wk_exec_cycle = T2 then
                         d_print("jsr 3");
                         fetch_stop;
                         dbuf_int_oe_n <= '1';
@@ -2474,8 +2474,8 @@ end  procedure;
                         back_oe(sp_cmd, '0');
                         back_we(sp_cmd, '0');
                         r_nw <= '0';
-                        next_cycle <= T3;
-                    elsif exec_cycle = T3 then
+                        wk_exec_cycle <= T3;
+                    elsif wk_exec_cycle = T3 then
                         d_print("jsr 4");
                         front_oe(pch_cmd, '1');
 
@@ -2487,8 +2487,8 @@ end  procedure;
                         back_we(sp_cmd, '0');
                         r_nw <= '0';
 
-                        next_cycle <= T4;
-                    elsif exec_cycle = T4 then
+                        wk_exec_cycle <= T4;
+                    elsif wk_exec_cycle = T4 then
                         d_print("jsr 5");
                         sp_push_n <= '1';
                         sp_oe_n <= '1';
@@ -2503,8 +2503,8 @@ end  procedure;
                         dbuf_int_oe_n <= '0';
                         front_we(idl_h_cmd, '0');
 
-                        next_cycle <= T5;
-                    elsif exec_cycle = T5 then
+                        wk_exec_cycle <= T5;
+                    elsif wk_exec_cycle = T5 then
                         d_print("jsr 6");
 
                         back_oe(pch_cmd, '1');
@@ -2522,8 +2522,8 @@ end  procedure;
                         back_oe(idl_l_cmd, '0');
                         back_we(pcl_cmd, '0');
 
-                        next_cycle <= T0;
-                    end if; --if exec_cycle = T1 then
+                        wk_exec_cycle <= T0;
+                    end if; --if wk_exec_cycle = T1 then
 
                 -- A.5.4 break
                 elsif instruction = conv_std_logic_vector(16#00#, dsize) then
@@ -2532,7 +2532,7 @@ end  procedure;
                 -- A.5.5 return from interrupt
                 ----------------------------------------
                 elsif instruction = conv_std_logic_vector(16#40#, dsize) then
-                    if exec_cycle = T1 then
+                    if wk_exec_cycle = T1 then
                         d_print("rti 2");
                         fetch_stop;
 
@@ -2542,8 +2542,8 @@ end  procedure;
                         sp_pop_n <= '0';
                         sp_oe_n <= '0';
 
-                        next_cycle <= T2;
-                    elsif exec_cycle = T2 then
+                        wk_exec_cycle <= T2;
+                    elsif wk_exec_cycle = T2 then
                         d_print("rti 3");
 
                         --pop p (status)
@@ -2557,8 +2557,8 @@ end  procedure;
                         dbuf_int_oe_n <= '0';
                         stat_bus_all_n <= '0';
 
-                        next_cycle <= T3;
-                    elsif exec_cycle = T3 then
+                        wk_exec_cycle <= T3;
+                    elsif wk_exec_cycle = T3 then
                         d_print("rti 4");
                         stat_bus_all_n <= '1';
 
@@ -2572,8 +2572,8 @@ end  procedure;
                         dbuf_int_oe_n <= '0';
                         front_we(pcl_cmd, '0');
 
-                        next_cycle <= T4;
-                    elsif exec_cycle = T4 then
+                        wk_exec_cycle <= T4;
+                    elsif wk_exec_cycle = T4 then
                         d_print("rti 5");
                         --stack decrement stop.
                         back_we(sp_cmd, '1');
@@ -2587,8 +2587,8 @@ end  procedure;
                         dbuf_int_oe_n <= '0';
                         front_we(pch_cmd, '0');
 
-                        next_cycle <= T5;
-                    elsif exec_cycle = T5 then
+                        wk_exec_cycle <= T5;
+                    elsif wk_exec_cycle = T5 then
                         d_print("rti 6");
                         back_oe(sp_cmd, '1');
                         sp_oe_n <= '1';
@@ -2597,23 +2597,23 @@ end  procedure;
                         front_we(pch_cmd, '1');
 
                         --increment pc.
-                        next_cycle <= T0;
-                    end if; --if exec_cycle = T1 then
+                        wk_exec_cycle <= T0;
+                    end if; --if wk_exec_cycle = T1 then
 
                 ----------------------------------------
                 -- A.5.6 jmp
                 ----------------------------------------
                 elsif instruction = conv_std_logic_vector(16#4c#, dsize) then
                     --abs
-                    if exec_cycle = T1 then
+                    if wk_exec_cycle = T1 then
                         d_print("jmp 2");
                         --fetch next opcode (abs low).
                         fetch_next;
 
                         --latch abs low data.
                         dbuf_int_oe_n <= '0';
-                        next_cycle <= T2;
-                    elsif exec_cycle = T2 then
+                        wk_exec_cycle <= T2;
+                    elsif wk_exec_cycle = T2 then
                         d_print("jmp 3");
 
                         --fetch abs hi
@@ -2624,20 +2624,20 @@ end  procedure;
                         ---load pch.
                         front_we(pch_cmd, '0');
 
-                        next_cycle <= T0;
+                        wk_exec_cycle <= T0;
                     end if;
 
                 elsif instruction = conv_std_logic_vector(16#6c#, dsize) then
                     --jmp (indir)
-                    if exec_cycle = T1 then
+                    if wk_exec_cycle = T1 then
                         d_print("jmp 2");
                         --fetch next opcode (abs low).
                         fetch_next;
 
                         --latch abs low data.
                         dbuf_int_oe_n <= '0';
-                        next_cycle <= T2;
-                    elsif exec_cycle = T2 then
+                        wk_exec_cycle <= T2;
+                    elsif wk_exec_cycle = T2 then
                         d_print("jmp 3");
 
                         --fetch abs hi
@@ -2645,18 +2645,18 @@ end  procedure;
 
                         --latch  in dlh
                         dbuf_int_oe_n <= '0';
-                        next_cycle <= T3;
+                        wk_exec_cycle <= T3;
 
-                    elsif exec_cycle = T3 then
+                    elsif wk_exec_cycle = T3 then
                         fetch_stop;
 
                         --IAH/IAL > ADL
                         back_oe(idl_h_cmd, '0');
                         back_oe(idl_l_cmd, '0');
                         front_we(pcl_cmd, '0');
-                        next_cycle <= T4;
+                        wk_exec_cycle <= T4;
 
-                    elsif exec_cycle = T4 then
+                    elsif wk_exec_cycle = T4 then
                         back_oe(idl_h_cmd, '0');
                         back_oe(idl_l_cmd, '0');
                         front_we(pcl_cmd, '1');
@@ -2665,7 +2665,7 @@ end  procedure;
                         front_we(pch_cmd, '0');
                         indir_n <= '0';
 
-                        next_cycle <= T0;
+                        wk_exec_cycle <= T0;
 
                     end if;
 
@@ -2674,7 +2674,7 @@ end  procedure;
                 -- A.5.7 return from soubroutine
                 ----------------------------------------
                 elsif instruction = conv_std_logic_vector(16#60#, dsize) then
-                    if exec_cycle = T1 then
+                    if wk_exec_cycle = T1 then
                         d_print("rts 2");
                         fetch_stop;
 
@@ -2684,8 +2684,8 @@ end  procedure;
                         sp_pop_n <= '0';
                         sp_oe_n <= '0';
 
-                        next_cycle <= T2;
-                    elsif exec_cycle = T2 then
+                        wk_exec_cycle <= T2;
+                    elsif wk_exec_cycle = T2 then
                         d_print("rts 3");
 
                         --pop pcl
@@ -2698,8 +2698,8 @@ end  procedure;
                         dbuf_int_oe_n <= '0';
                         front_we(pcl_cmd, '0');
 
-                        next_cycle <= T3;
-                    elsif exec_cycle = T3 then
+                        wk_exec_cycle <= T3;
+                    elsif wk_exec_cycle = T3 then
                         d_print("rts 4");
                         --stack decrement stop.
                         back_we(sp_cmd, '1');
@@ -2713,8 +2713,8 @@ end  procedure;
                         dbuf_int_oe_n <= '0';
                         front_we(pch_cmd, '0');
 
-                        next_cycle <= T4;
-                    elsif exec_cycle = T4 then
+                        wk_exec_cycle <= T4;
+                    elsif wk_exec_cycle = T4 then
                         d_print("rts 5");
                         back_oe(sp_cmd, '1');
                         sp_oe_n <= '1';
@@ -2723,14 +2723,14 @@ end  procedure;
                         front_we(pch_cmd, '1');
                         --empty cycle.
                         --complying h/w manual...
-                        next_cycle <= T5;
-                    elsif exec_cycle = T5 then
+                        wk_exec_cycle <= T5;
+                    elsif wk_exec_cycle = T5 then
                         d_print("rts 6");
 
                         --increment pc.
                         fetch_next;
-                        next_cycle <= T0;
-                    end if; --if exec_cycle = T1 then
+                        wk_exec_cycle <= T0;
+                    end if; --if wk_exec_cycle = T1 then
 
                 ----------------------------------------
                 -- A.5.8 branch operations
@@ -2775,20 +2775,20 @@ end  procedure;
                         severity failure;
                 end if; --if instruction = conv_std_logic_vector(16#0a#, dsize) 
 
-            elsif exec_cycle = R0 then
+            elsif wk_exec_cycle = R0 then
                 d_print(string'("reset"));
                 init_all_pins;
 
-                next_cycle <= R1;
-            elsif exec_cycle = R1 or exec_cycle = N1 then
+                wk_exec_cycle <= R1;
+            elsif wk_exec_cycle = R1 or wk_exec_cycle = N1 then
                 init_all_pins;
                 
-                if exec_cycle = R1 then
-                    next_cycle <= R2;
-                elsif exec_cycle = N1 then
-                    next_cycle <= N2;
+                if wk_exec_cycle = R1 then
+                    wk_exec_cycle <= R2;
+                elsif wk_exec_cycle = N1 then
+                    wk_exec_cycle <= N2;
                 end if;
-            elsif exec_cycle = R2 or exec_cycle = N2 then
+            elsif wk_exec_cycle = R2 or wk_exec_cycle = N2 then
                 pcl_cmd <= "1111";
                 pcl_inc_n <= '1';
                 inst_we_n <= '1';
@@ -2805,13 +2805,13 @@ end  procedure;
                 back_we(sp_cmd, '0');
                 r_nw <= '0';
 
-                if exec_cycle = R2 then
-                    next_cycle <= R3;
-                elsif exec_cycle = N2 then
-                    next_cycle <= N3;
+                if wk_exec_cycle = R2 then
+                    wk_exec_cycle <= R3;
+                elsif wk_exec_cycle = N2 then
+                    wk_exec_cycle <= N3;
                 end if;
 
-            elsif exec_cycle = R3 or exec_cycle = N3 then
+            elsif wk_exec_cycle = R3 or wk_exec_cycle = N3 then
                 front_oe(pch_cmd, '1');
 
                --push pcl.
@@ -2822,13 +2822,13 @@ end  procedure;
                 back_we(sp_cmd, '0');
                 r_nw <= '0';
 
-                if exec_cycle = R3 then
-                    next_cycle <= R4;
-                elsif exec_cycle = N3 then
-                    next_cycle <= N4;
+                if wk_exec_cycle = R3 then
+                    wk_exec_cycle <= R4;
+                elsif wk_exec_cycle = N3 then
+                    wk_exec_cycle <= N4;
                 end if;
 
-            elsif exec_cycle = R4 or exec_cycle = N4 then
+            elsif wk_exec_cycle = R4 or wk_exec_cycle = N4 then
                 front_oe(pcl_cmd, '1');
 
                --push status.
@@ -2839,13 +2839,13 @@ end  procedure;
                 back_we(sp_cmd, '0');
                 r_nw <= '0';
 
-                if exec_cycle = R4 then
-                    next_cycle <= R5;
-                elsif exec_cycle = N4 then
-                    next_cycle <= N5;
+                if wk_exec_cycle = R4 then
+                    wk_exec_cycle <= R5;
+                elsif wk_exec_cycle = N4 then
+                    wk_exec_cycle <= N5;
                 end if;
 
-            elsif exec_cycle = R5 or exec_cycle = N5 then
+            elsif wk_exec_cycle = R5 or wk_exec_cycle = N5 then
                 stat_bus_oe_n <= '1';
                 sp_push_n <= '1';
                 sp_oe_n <= '1';
@@ -2860,17 +2860,17 @@ end  procedure;
                 back_oe(idl_l_cmd, '1');
                 back_oe(idl_h_cmd, '1');
 
-                if exec_cycle = R5 then
+                if wk_exec_cycle = R5 then
                     r_vec_oe_n <= '0';
                     n_vec_oe_n <= '1';
-                    next_cycle <= R6;
-                elsif exec_cycle = N5 then
+                    wk_exec_cycle <= R6;
+                elsif wk_exec_cycle = N5 then
                     r_vec_oe_n <= '1';
                     n_vec_oe_n <= '0';
-                    next_cycle <= N6;
+                    wk_exec_cycle <= N6;
                 end if;
                 
-            elsif exec_cycle = R6 or exec_cycle = N6 then
+            elsif wk_exec_cycle = R6 or wk_exec_cycle = N6 then
                 front_we(pcl_cmd, '1');
 
                 --fetch reset vector hi
@@ -2879,11 +2879,11 @@ end  procedure;
                 front_we(pch_cmd, '0');
                 indir_n <= '0';
 
-                if exec_cycle = N6 then
+                if wk_exec_cycle = N6 then
                     nmi_handled_n <= '0';
                 end if;
                 --start execute cycle.
-                next_cycle <= T0;
+                wk_exec_cycle <= T0;
 
             end if; --if rdy = '0' then
 
