@@ -444,6 +444,7 @@ begin
 
     ----general...
     dbg_cpu_clk <= cpu_clk;
+    dbg_ppu_clk <= ppu_clk;
     dbg_emu_ppu_clk <= emu_ppu_clk;
     dbg_mem_clk <= mem_clk;
     dbg_vga_clk <= vga_clk;
