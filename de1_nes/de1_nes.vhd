@@ -99,9 +99,7 @@ architecture rtl of de1_nes is
 
     component address_decoder
     generic (abus_size : integer := 16; dbus_size : integer := 8);
-        port (  phi2        : in std_logic;
-                mem_clk     : in std_logic;
-                R_nW        : in std_logic; 
+        port (
                 addr        : in std_logic_vector (abus_size - 1 downto 0);
                 rom_ce_n    : out std_logic;
                 ram_ce_n    : out std_logic;
@@ -182,13 +180,8 @@ architecture rtl of de1_nes is
 
     component v_address_decoder
     generic (abus_size : integer := 14; dbus_size : integer := 8);
-        port (  clk         : in std_logic; 
-                mem_clk     : in std_logic;
-                rd_n        : in std_logic;
-                wr_n        : in std_logic;
-                ale         : in std_logic;
+        port (
                 v_addr      : in std_logic_vector (13 downto 0);
-                v_data      : in std_logic_vector (7 downto 0);
                 nt_v_mirror : in std_logic;
                 pt_ce_n     : out std_logic;
                 nt0_ce_n    : out std_logic;
@@ -313,7 +306,7 @@ begin
         (base_clk, rst_n, cpu_clk, ppu_clk, emu_ppu_clk, mem_clk, vga_clk);
 
     addr_dec_inst : address_decoder generic map (addr_size, data_size) 
-        port map (phi2, mem_clk, r_nw, addr, rom_ce_n, ram_ce_n, ppu_ce_n, apu_ce_n);
+        port map (addr, rom_ce_n, ram_ce_n, ppu_ce_n, apu_ce_n);
 
     --mos 6502 cpu instance
     cpu_inst : mos6502 generic map (data_size, addr_size) 
@@ -395,8 +388,7 @@ begin
         );
 
     ppu_addr_decoder : v_address_decoder generic map (vram_size14, data_size) 
-        port map (ppu_clk, mem_clk, rd_n, wr_n, ale, v_addr, vram_ad, 
-                nt_v_mirror, pt_ce_n, nt0_ce_n, nt1_ce_n);
+        port map (v_addr, nt_v_mirror, pt_ce_n, nt0_ce_n, nt1_ce_n);
 
     ---VRAM/CHR ROM instances
     v_addr (13 downto 8) <= vram_a;

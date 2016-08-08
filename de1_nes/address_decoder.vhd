@@ -4,9 +4,7 @@ use ieee.std_logic_1164.all;
 -- this address decoder inserts dummy setup time on write.
 entity address_decoder is
 generic (abus_size : integer := 16; dbus_size : integer := 8);
-    port (  phi2        : in std_logic; --dropping edge syncronized clock.
-            mem_clk     : in std_logic;
-            R_nW        : in std_logic; -- active high on read / active low on write.
+    port (
             addr        : in std_logic_vector (abus_size - 1 downto 0);
             rom_ce_n    : out std_logic;
             ram_ce_n    : out std_logic;
@@ -27,18 +25,6 @@ end address_decoder;
 
 architecture rtl of address_decoder is
 
-component ram_ctrl
-    generic (wr_en_timing : integer);
-    port (  
-            clk              : in std_logic;
-            ce_n, oe_n, we_n : in std_logic;
-            sync_ce_n        : out std_logic
-        );
-end component;
-
-signal ram_ce_n_in    : std_logic;
-signal r_n            : std_logic;
-
 begin
 
     rom_ce_n <= not addr(15);
@@ -51,31 +37,11 @@ begin
             when (addr(15) = '0' and addr(14) = '1' and addr(13) = '0')  else
                 '1';
 
-    r_n <= not r_nw;
-    ram_ctl_inst : ram_ctrl generic map (1)
-            port map (mem_clk, ram_ce_n_in, r_n, r_nw, ram_ce_n);
-
-    --ram io timing.
-    main_p : process (phi2, addr, R_nW)
-    begin
-            -- ram range : 0 - 0x2000.
-            -- 0x2000 is 0010_0000_0000_0000
-        if ((addr(15) or addr(14) or addr(13)) = '0') then
-        --if (addr < "0010000000000000") then
-            if (R_nW = '0') then
-                --write
-                --write timing slided by half clock.
-                ram_ce_n_in <= not phi2;
-            elsif (R_nW = '1') then 
-                --read
-                ram_ce_n_in <= '0';
-            else
-                ram_ce_n_in <= '1';
-            end if;
-        else
-            ram_ce_n_in <= '1';
-        end if;
-    end process;
+    -- ram range : 0 - 0x2000.
+    -- 0x2000 is 0010_0000_0000_0000
+    ram_ce_n <= '0'
+            when ((addr(15) or addr(14) or addr(13)) = '0') else
+                '1';
 
 end rtl;
 
@@ -92,13 +58,8 @@ use ieee.std_logic_1164.all;
 
 entity v_address_decoder is
 generic (abus_size : integer := 14; dbus_size : integer := 8);
-    port (  clk         : in std_logic; 
-            mem_clk     : in std_logic;
-            rd_n        : in std_logic;
-            wr_n        : in std_logic;
-            ale         : in std_logic;
+    port (
             v_addr      : in std_logic_vector (13 downto 0);
-            v_data      : in std_logic_vector (7 downto 0);
             nt_v_mirror : in std_logic;
             pt_ce_n     : out std_logic;
             nt0_ce_n    : out std_logic;
@@ -119,78 +80,25 @@ end v_address_decoder;
 
 architecture rtl of v_address_decoder is
 
-component ram_ctrl
-    generic (wr_en_timing : integer);
-    port (  
-            clk              : in std_logic;
-            ce_n, oe_n, we_n : in std_logic;
-            sync_ce_n        : out std_logic
-        );
-end component;
-
-signal nt0_ce_n_in    : std_logic;
-signal nt1_ce_n_in    : std_logic;
 begin
 
     --pattern table
-    pt_ce_n <= '0' when (v_addr(13) = '0' and rd_n = '0') else
+    pt_ce_n <= '0' when (v_addr(13) = '0') else
              '1' ;
 
-    nt0_ram_ctl : ram_ctrl generic map (1)
-            port map (mem_clk, nt0_ce_n_in, rd_n, wr_n, nt0_ce_n);
-    nt1_ram_ctl : ram_ctrl generic map (1)
-            port map (mem_clk, nt1_ce_n_in, rd_n, wr_n, nt1_ce_n);
+    --name table0
+    nt0_ce_n <=     '1' when (v_addr(13 downto 8) = "111111") else
+                    '0' when (((v_addr(11) or v_addr(10)) = '0') 
+                        or (nt_v_mirror = '1' and v_addr(11) = '1' and v_addr(10) = '0')
+                        or (nt_v_mirror = '0' and v_addr(11) = '0' and v_addr(10) = '1')) else
+                    '1';
 
-    --ram io timing.
-    main_p : process (clk, v_addr, v_data, wr_n)
-    begin
-        if (v_addr(13) = '1') then
-            if (v_addr(13 downto 8) = "111111") then
-                --palette ram
-                nt0_ce_n_in <= '1';
-                nt1_ce_n_in <= '1';
-            else
-                ---name tbl
-                if (((v_addr(11) or v_addr(10)) = '0') 
-                    or (nt_v_mirror = '1' and v_addr(11) = '1' and v_addr(10) = '0')
-                    or (nt_v_mirror = '0' and v_addr(11) = '0' and v_addr(10) = '1')
-                    ) then
-                    --name table 0 enable.
-                    nt1_ce_n_in <= '1';
-                    if (wr_n = '0') then
-                        --write
-                        nt0_ce_n_in <= not clk;
-                    elsif (rd_n = '0') then 
-                        --read
-                        nt0_ce_n_in <= '0';
-                    else
-                        nt0_ce_n_in <= '1';
-                    end if;
-                elsif (((v_addr(11) and v_addr(10)) = '1') 
+    --name table1
+    nt1_ce_n <=     '1' when (v_addr(13 downto 8) = "111111") else
+                    '0' when (((v_addr(11) and v_addr(10)) = '1') 
                     or (nt_v_mirror = '1' and v_addr(11) = '0' and v_addr(10) = '1')
-                    or (nt_v_mirror = '0' and v_addr(11) = '1' and v_addr(10) = '0')
-                    ) then
-                    --name table 1 enable.
-                    nt0_ce_n_in <= '1';
-                    if (wr_n = '0') then
-                        --write
-                        nt1_ce_n_in <= clk;
-                    elsif (rd_n = '0') then 
-                        --read
-                        nt1_ce_n_in <= '0';
-                    else
-                        nt1_ce_n_in <= '1';
-                    end if;
-                else
-                    nt0_ce_n_in <= '1';
-                    nt1_ce_n_in <= '1';
-                end if;
-            end if;
-        else
-            nt0_ce_n_in <= '1';
-            nt1_ce_n_in <= '1';
-        end if; --if (v_addr(13) = '1') then
-    end process;
+                    or (nt_v_mirror = '0' and v_addr(11) = '1' and v_addr(10) = '0')) else
+                    '1';
 
 end rtl;
 
