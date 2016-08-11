@@ -122,6 +122,11 @@ component address_calcurator
             indir_y_n       : in std_logic;
             addr_cycle      : in std_logic_vector(2 downto 0);
 
+            --reset vectors.
+            r_vec_oe_n      : in std_logic;
+            n_vec_oe_n      : in std_logic;
+            i_vec_oe_n      : in std_logic;
+
             --in/out buses.
             index_bus       : in std_logic_vector (dsize - 1 downto 0);
             bal             : in std_logic_vector (dsize - 1 downto 0);
@@ -327,12 +332,6 @@ end component;
     signal r_vec_oe_n   : std_logic;
     signal n_vec_oe_n   : std_logic;
     signal i_vec_oe_n   : std_logic;
-    signal reset_l      : std_logic_vector(dsize - 1 downto 0);
-    signal reset_h      : std_logic_vector(dsize - 1 downto 0);
-    signal nmi_l        : std_logic_vector(dsize - 1 downto 0);
-    signal nmi_h        : std_logic_vector(dsize - 1 downto 0);
-    signal irq_l        : std_logic_vector(dsize - 1 downto 0);
-    signal irq_h        : std_logic_vector(dsize - 1 downto 0);
 
     signal check_bit    : std_logic_vector(1 to 5);
 
@@ -347,14 +346,7 @@ begin
 --    dbg_acc_bus <= acc_out;
     dbg_status <= status_reg;
 
-
     r_nw <= dbuf_r_nw;
-    reset_l <= "11111100";
-    reset_h <= "11111111";
-    nmi_l <= "11111010";
-    nmi_h <= "11111111";
-    irq_l <= "11111110";
-    irq_h <= "11111111";
 
     --instruction register is reset when handling exceptions(nmi/irq cycle).
     inst_rst_n <= '0' when rst_n = '0' else
@@ -442,6 +434,10 @@ begin
             indir_y_n       ,
             addr_cycle      ,
 
+            r_vec_oe_n      ,
+            n_vec_oe_n      ,
+            i_vec_oe_n      ,
+
             index_bus       ,
             bal             ,
             bah             ,
@@ -524,21 +520,6 @@ begin
             port map (ad_oe_n, abl, addr(dsize - 1 downto 0));
 
     null_bus <= (others => 'Z');
-
-    ----gating reset vector.
-    res_l_buf : tri_state_buffer generic map (dsize)
-            port map (r_vec_oe_n, reset_l, bal);
-    res_h_buf : tri_state_buffer generic map (dsize)
-            port map (r_vec_oe_n, reset_h, bah);
-    nmi_l_buf : tri_state_buffer generic map (dsize)
-            port map (n_vec_oe_n, nmi_l, bal);
-    nmi_h_buf : tri_state_buffer generic map (dsize)
-            port map (n_vec_oe_n, nmi_h, bah);
-    irq_l_buf : tri_state_buffer generic map (dsize)
-            port map (i_vec_oe_n, irq_l, bal);
-    irq_h_buf : tri_state_buffer generic map (dsize)
-            port map (i_vec_oe_n, irq_h, bah);
-
 
 end rtl;
 
