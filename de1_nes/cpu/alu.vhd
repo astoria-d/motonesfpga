@@ -423,15 +423,23 @@ end  procedure;
         ea_carry <= '0';
         addr_back_l <= (others => 'Z');
         addr_back_h <= (others => 'Z');
-        abl <= "11111010";
         abh <= "11111111";
+        if (addr_cycle = ADDR_Z) then
+            abl <= "11111010";
+        else
+            abl <= "11111011";
+        end if;
 
     elsif (i_vec_oe_n = '0') then
         ea_carry <= '0';
         addr_back_l <= (others => 'Z');
         addr_back_h <= (others => 'Z');
-        abl <= "11111110";
         abh <= "11111111";
+        if (addr_cycle = ADDR_Z) then
+            abl <= "11111110";
+        else
+            abl <= "11111111";
+        end if;
 
     else
         al_buf_we_n <= '1';
