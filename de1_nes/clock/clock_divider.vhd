@@ -8,8 +8,9 @@ entity clock_divider is
             cpu_clk     : out std_logic;
             ppu_clk     : out std_logic;
             emu_ppu_clk : out std_logic;
-            mem_clk     : out std_logic;
-            vga_clk     : out std_logic
+            vga_clk     : out std_logic;
+            cpu_mem_clk     : out std_logic;
+            emu_ppu_mem_clk : out std_logic
         );
 end clock_divider;
 
@@ -46,6 +47,8 @@ signal cpu_cnt_rst_n 	: std_logic;
 signal base_clk_n 	: std_logic;
 signal cpu_clk_wk 	: std_logic;
 
+constant CPU_MEM_DELAY  : time := 40 ns;
+
 begin
     --Actual NES base clock =  21.477272 MHz
     --CPU clock = base clock / 12
@@ -65,7 +68,6 @@ begin
     ppu_clk <= not loop8(2);
 	emu_ppu_clk <= not loop8(1);
 	vga_clk <= not loop8(0);
-    mem_clk <= base_clk;
     cpu_clk <= not cpu_clk_wk;
     base_clk_n <= base_clk;
     
@@ -104,5 +106,21 @@ begin
         end if;
     end process;
 
+    --delayed clock for cpu memory...
+    --loop8(1) is emu ppu clock = 12.5 MHz (80ns) cycle.
+    --cpu_mem_clk is delayed to cpu_clk by 80ns.
+    delay_cpu_clk_p : process (loop8(1))
+    begin
+        if (reset_n = '0') then
+            cpu_mem_clk <= '0';
+        else
+            if (loop8(1)'event and loop8(1) = '0') then
+                cpu_mem_clk <= not cpu_clk_wk;
+            end if;
+        end if;
+    end process;
+
+    --cpu_mem_clk <= not cpu_clk_wk after CPU_MEM_DELAY;
+    emu_ppu_mem_clk <= not loop8(1);
 end rtl;
 

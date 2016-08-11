@@ -59,7 +59,6 @@ entity ppu is
             ppu_clk     : in std_logic;
             vga_clk     : in std_logic;
             emu_ppu_clk : in std_logic;
-            mem_clk     : in std_logic;
             ce_n        : in std_logic;
             rst_n       : in std_logic;
             r_nw        : in std_logic;
