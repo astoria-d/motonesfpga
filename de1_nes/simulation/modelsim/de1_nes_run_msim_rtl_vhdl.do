@@ -137,7 +137,7 @@ add wave -label y -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/y/q
 view structure
 view signals
 
-run 3 us
+run 8 us
 #run 1000 us
 wave zoom full
 #run 10000 us
