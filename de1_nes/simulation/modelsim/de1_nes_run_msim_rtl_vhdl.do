@@ -58,6 +58,9 @@ add wave -label sp -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/sp/q
 add wave -label x -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/x/q
 add wave -label y -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/y/q
 
+add wave -label pcl -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/pcl_inst/q
+add wave -label pch -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/pch_inst/q
+
 
 ##add wave -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/status_reg
 

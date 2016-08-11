@@ -2877,7 +2877,7 @@ end  procedure;
                 r_nw <= '1';
                 dbuf_int_oe_n <= '0';
                 front_we(pch_cmd, '0');
-                indir_n <= '0';
+                addr_cycle <= ADDR_T2;
 
                 if wk_exec_cycle = N6 then
                     nmi_handled_n <= '0';

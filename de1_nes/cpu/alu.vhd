@@ -302,7 +302,6 @@ end  procedure;
         --get next address.
         inc_addr(bal);
         abl <= addr_out;
-
         ea_carry <= addr_c;
 
     elsif (indir_x_n = '0') then
@@ -413,8 +412,12 @@ end  procedure;
         ea_carry <= '0';
         addr_back_l <= (others => 'Z');
         addr_back_h <= (others => 'Z');
-        abl <= "11111100";
         abh <= "11111111";
+        if (addr_cycle = ADDR_Z) then
+            abl <= "11111100";
+        else
+            abl <= "11111101";
+        end if;
 
     elsif (n_vec_oe_n = '0') then
         ea_carry <= '0';
