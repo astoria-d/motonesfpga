@@ -85,6 +85,7 @@ end ppu;
 architecture rtl of ppu is
 
 begin
+    cpu_d       <= (others => 'Z');
     vblank_n    <= 'Z';
     rd_n        <= 'Z';
     wr_n        <= 'Z';
