@@ -101,13 +101,15 @@ add wave -label pch -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/pch
 #add wave -radix hex  sim:/testbench_motones_sim/sim_board/cpu_inst/dec_inst/*
 #add wave -divider
 #add wave -radix hex  sim:/testbench_motones_sim/sim_board/cpu_inst/ad_calc_inst/*
+#add wave -divider
+#add wave -radix hex  sim:/testbench_motones_sim/sim_board/clock_inst/*
 
 
 view structure
 view signals
 
 run 8 us
-#run 1000 us
+run 10 us
 wave zoom full
 #run 10000 us
 

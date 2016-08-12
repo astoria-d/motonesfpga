@@ -74,6 +74,7 @@ architecture rtl of de1_nes is
     signal dbg_idl_h, dbg_idl_l     : out std_logic_vector (7 downto 0);
 
                 cpu_clk     : in std_logic; --phi0 input pin.
+                dl_cpu_clk  : in std_logic; --phi1 delayed clock.
                 rdy         : in std_logic;
                 rst_n       : in std_logic;
                 irq_n       : in std_logic;
@@ -92,6 +93,7 @@ architecture rtl of de1_nes is
                 emu_ppu_clk : out std_logic;
                 vga_clk     : out std_logic;
                 cpu_mem_clk     : out std_logic;
+                cpu_recv_clk     : out std_logic;
                 emu_ppu_mem_clk : out std_logic
             );
     end component;
@@ -235,6 +237,7 @@ architecture rtl of de1_nes is
     signal vga_clk  : std_logic;
     signal emu_ppu_clk  : std_logic;
     signal cpu_mem_clk     : std_logic;
+    signal cpu_recv_clk    : std_logic;
     signal emu_ppu_mem_clk : std_logic;
 
     signal rdy, irq_n, nmi_n, r_nw : std_logic;
@@ -301,7 +304,7 @@ begin
 
     --ppu/cpu clock generator
     clock_inst : clock_divider port map 
-        (base_clk, rst_n, cpu_clk, ppu_clk, emu_ppu_clk, vga_clk, cpu_mem_clk, emu_ppu_mem_clk);
+        (base_clk, rst_n, cpu_clk, ppu_clk, emu_ppu_clk, vga_clk, cpu_mem_clk, cpu_recv_clk, emu_ppu_mem_clk);
 
     addr_dec_inst : address_decoder generic map (addr_size, data_size) 
         port map (addr, rom_ce_n, ram_ce_n, ppu_ce_n, apu_ce_n);
@@ -320,7 +323,7 @@ begin
     dbg_stat_we_n    ,
     dbg_idl_h, dbg_idl_l,
 
-                cpu_clk, rdy,
+                cpu_clk, cpu_recv_clk, rdy,
                 rst_n, irq_n, nmi_n, r_nw, 
                 addr, d_io);
 

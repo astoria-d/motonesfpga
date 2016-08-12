@@ -18,6 +18,7 @@ entity mos6502 is
     signal dbg_idl_h, dbg_idl_l     : out std_logic_vector (7 downto 0);
 
             cpu_clk     : in std_logic; --phi0 input pin.
+            dl_cpu_clk  : in std_logic; --phi1 delayed clock.
             rdy         : in std_logic;
             rst_n       : in std_logic;
             irq_n       : in std_logic;
@@ -43,7 +44,8 @@ component decoder
             nmi_n           : in std_logic;
             rdy             : in std_logic;
             instruction     : in std_logic_vector (dsize - 1 downto 0);
-            exec_cycle      : out std_logic_vector (5 downto 0);
+            exec_cycle      : in std_logic_vector (5 downto 0);
+            next_cycle      : out std_logic_vector (5 downto 0);
             ea_carry        : in  std_logic;
             status_reg      : inout std_logic_vector (dsize - 1 downto 0);
 
@@ -249,6 +251,7 @@ end component;
     ------------ signal declareration ------------
     ----------------------------------------------
     signal exec_cycle : std_logic_vector(5 downto 0);
+    signal next_cycle : std_logic_vector(5 downto 0);
     signal status_reg : std_logic_vector (dsize - 1 downto 0);
 
     -------------------------------
@@ -367,6 +370,7 @@ begin
                     rdy             ,
                     instruction     ,
                     exec_cycle      ,
+                    next_cycle      ,
                     ea_carry        ,
                     status_reg      ,
 
@@ -418,7 +422,7 @@ begin
 
     ad_calc_inst : address_calcurator generic map (dsize) 
             port map (
-            cpu_clk         ,
+            dl_cpu_clk         ,
 
             pcl_inc_n       ,
             sp_oe_n         ,
@@ -451,7 +455,7 @@ begin
                     
     alu_inst : alu generic map (dsize) 
             port map (
-            cpu_clk         ,
+            dl_cpu_clk         ,
             instruction     ,
             arith_en_n      ,
             alu_cycle       ,
@@ -466,19 +470,23 @@ begin
             overflow
                     );
 
+    --cpu execution cycle number
+    exec_cycle_inst : d_flip_flop generic map (6) 
+            port map(dl_cpu_clk, '1', '1', '0', next_cycle, exec_cycle);
+
     --io data gateway
     dbus_buf : data_bus_buffer generic map (dsize) 
             port map(dbuf_int_oe_n, dbuf_r_nw, int_d_bus, d_io);
 
     -------- instruction register --------
     ir : d_flip_flop generic map (dsize) 
-            port map(cpu_clk, inst_rst_n, '1', inst_we_n, d_io, instruction);
+            port map(dl_cpu_clk, inst_rst_n, '1', inst_we_n, d_io, instruction);
 
     --input data buffer.
     idl_l : dual_dff generic map (dsize) 
-            port map(dbg_idl_l, cpu_clk, rst_n, '1', idl_l_cmd, int_d_bus, null_bus, bal);
+            port map(dbg_idl_l, dl_cpu_clk, rst_n, '1', idl_l_cmd, int_d_bus, null_bus, bal);
     idl_h : dual_dff generic map (dsize) 
-            port map(dbg_idl_h, cpu_clk, rst_n, '1', idl_h_cmd, int_d_bus, null_bus, bah);
+            port map(dbg_idl_h, dl_cpu_clk, rst_n, '1', idl_h_cmd, int_d_bus, null_bus, bah);
 
     -------- program counter --------
     pcl_inst : dual_dff generic map (dsize) 
@@ -492,13 +500,13 @@ begin
             port map(dbg_sp, cpu_clk, rst_n, '1', sp_cmd, int_d_bus, addr_back_l, bal);
 
     x : dual_dff generic map (dsize) 
-            port map(dbg_x, cpu_clk, rst_n, '1', x_cmd, int_d_bus, null_bus, index_bus);
+            port map(dbg_x, dl_cpu_clk, rst_n, '1', x_cmd, int_d_bus, null_bus, index_bus);
     y : dual_dff generic map (dsize) 
-            port map(dbg_y, cpu_clk, rst_n, '1', y_cmd, int_d_bus, null_bus, index_bus);
+            port map(dbg_y, dl_cpu_clk, rst_n, '1', y_cmd, int_d_bus, null_bus, index_bus);
 
     --accumurator
     acc : dual_dff generic map (dsize) 
-            port map(dbg_acc, cpu_clk, rst_n, '1', acc_cmd, int_d_bus, acc_in, acc_out);
+            port map(dbg_acc, dl_cpu_clk, rst_n, '1', acc_cmd, int_d_bus, acc_in, acc_out);
 
 
     --status register
@@ -507,7 +515,7 @@ begin
     dbg_dec_oe_n,
     dbg_dec_val,
     dbg_stat_we_n    ,
-                    cpu_clk, rst_n, 
+                    dl_cpu_clk, rst_n, 
                     stat_dec_oe_n, stat_bus_oe_n, 
                     stat_set_flg_n, stat_flg, stat_bus_all_n, stat_bus_nz_n, 
                     stat_alu_we_n, negative, overflow, zero, carry_out, stat_c,

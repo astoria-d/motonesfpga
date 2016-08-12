@@ -10,6 +10,7 @@ entity clock_divider is
             emu_ppu_clk : out std_logic;
             vga_clk     : out std_logic;
             cpu_mem_clk     : out std_logic;
+            cpu_recv_clk     : out std_logic;
             emu_ppu_mem_clk : out std_logic
         );
 end clock_divider;
@@ -46,6 +47,7 @@ signal loop6 : std_logic_vector (2 downto 0);
 signal cpu_cnt_rst_n 	: std_logic;
 signal base_clk_n 	: std_logic;
 signal cpu_clk_wk 	: std_logic;
+signal cpu_mem_clk_wk   : std_logic;
 
 constant CPU_MEM_DELAY  : time := 40 ns;
 
@@ -112,10 +114,23 @@ begin
     delay_cpu_clk_p : process (loop8(1))
     begin
         if (reset_n = '0') then
-            cpu_mem_clk <= '0';
+            cpu_mem_clk_wk <= '0';
         else
             if (loop8(1)'event and loop8(1) = '0') then
-                cpu_mem_clk <= not cpu_clk_wk;
+                cpu_mem_clk_wk <= not cpu_clk_wk;
+            end if;
+        end if;
+    end process;
+    cpu_mem_clk <= cpu_mem_clk_wk;
+
+    --two phase delayed clock for cpu register...
+    delay_cpu_clk_p2 : process (loop8(1))
+    begin
+        if (reset_n = '0') then
+            cpu_recv_clk <= '0';
+        else
+            if (loop8(1)'event and loop8(1) = '0') then
+                cpu_recv_clk <= cpu_mem_clk_wk;
             end if;
         end if;
     end process;
