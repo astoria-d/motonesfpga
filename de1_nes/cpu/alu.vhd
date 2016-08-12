@@ -29,6 +29,7 @@ entity address_calcurator is
             addr_cycle      : in std_logic_vector(2 downto 0);
 
             --reset vectors.
+
             r_vec_oe_n      : in std_logic;
             n_vec_oe_n      : in std_logic;
             i_vec_oe_n      : in std_logic;
@@ -156,7 +157,8 @@ begin
                     pcl_inc_n, sp_oe_n, sp_pop_n, sp_push_n,
                     zp_n, zp_xy_n, abs_xy_n, pg_next_n, rel_calc_n,
                     indir_n, indir_x_n, indir_y_n, addr_cycle,
-                    r_vec_oe_n, n_vec_oe_n, i_vec_oe_n
+                    r_vec_oe_n, n_vec_oe_n, i_vec_oe_n,
+                    index_bus, bal, bah, int_d_bus
                     )
 
 procedure inc_addr (

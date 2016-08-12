@@ -97,6 +97,10 @@ add wave -label pch -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/pch
 #add wave  -label dma_start_n sim:/testbench_motones_sim/sim_board/apu_inst/dma_start_n
 #add wave  -label dma_end_n sim:/testbench_motones_sim/sim_board/apu_inst/dma_end_n
 
+#add wave -divider
+#add wave -radix hex  sim:/testbench_motones_sim/sim_board/cpu_inst/dec_inst/*
+#add wave -divider
+#add wave -radix hex  sim:/testbench_motones_sim/sim_board/cpu_inst/ad_calc_inst/*
 
 
 view structure
