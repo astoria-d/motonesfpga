@@ -9,6 +9,7 @@ entity decoder is
     port (  
             --input lines.
             cpu_clk         : in std_logic;
+            dl_cpu_clk      : in std_logic;
             res_n           : in std_logic;
             irq_n           : in std_logic;
             nmi_n           : in std_logic;
@@ -174,7 +175,7 @@ signal ea_carry_reg       : std_logic;
 begin
 
     ea_carry_inst: d_flip_flop_bit 
-            port map(cpu_clk, '1', '1', '0', ea_carry, ea_carry_reg);
+            port map(dl_cpu_clk, '1', '1', '0', ea_carry, ea_carry_reg);
 
     main_p : process (cpu_clk, res_n, nmi_n)
 
