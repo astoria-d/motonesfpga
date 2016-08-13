@@ -73,17 +73,22 @@ signal p_rom : rom_array := rom_fill;
 --attribute ram_init_file : string;
 --attribute ram_init_file of p_rom : signal is "sample1-prg.hex";
 
+signal wk_data  : std_logic_vector (dbus_size - 1 downto 0);
+
 begin
 
     p : process (clk)
     begin
     if (rising_edge(clk)) then
         if (ce_n = '0') then
-            data <= p_rom(conv_integer(addr));
+            wk_data <= p_rom(conv_integer(addr));
         else
-            data <= (others => 'Z');
+            wk_data <= (others => 'Z');
         end if;
     end if;
     end process;
+    
+    data <= wk_data when ce_n = '0' else
+            (others => 'Z');
 end rtl;
 

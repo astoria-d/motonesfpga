@@ -26,6 +26,8 @@ signal work_ram : ram_array := (others => (others => '0'));
 constant RAM_TAOE : time := 25 ns;      --OE access time
 constant RAM_TOH : time := 10 ns;       --write data hold time
 
+signal wk_d_io    : std_logic_vector (dbus_size - 1 downto 0);
+
 begin
     p_write : process (clk)
     begin
@@ -40,12 +42,15 @@ begin
     begin
     if (rising_edge(clk)) then
         if (ce_n= '0' and we_n = '1' and oe_n = '0') then
-            d_io <= work_ram(conv_integer(addr));
+            wk_d_io <= work_ram(conv_integer(addr));
         else
-            d_io <= (others => 'Z');
+            wk_d_io <= (others => 'Z');
         end if;
     end if;
     end process;
+    
+    d_io <= wk_d_io when ce_n= '0' and we_n = '1' and oe_n = '0' else
+            (others => 'Z');
 end rtl;
 
 -----------------------------------------------------
