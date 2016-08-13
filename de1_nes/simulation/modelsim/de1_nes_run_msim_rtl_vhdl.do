@@ -90,12 +90,12 @@ add wave -label idl_l -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/i
 #add wave  -radix hex  sim:/testbench_motones_sim/sim_board/apu_inst/*
 
 #add wave -divider
-#add wave -radix hex  sim:/testbench_motones_sim/sim_board/cpu_inst/dec_inst/*
-#add wave -divider
-#add wave -radix hex  sim:/testbench_motones_sim/sim_board/cpu_inst/ad_calc_inst/*
-#add wave -divider
 #add wave -radix hex  sim:/testbench_motones_sim/sim_board/clock_inst/*
 #add wave -divider
+#add wave -radix hex  sim:/testbench_motones_sim/sim_board/cpu_inst/dec_inst/*
+#add wave -divider
+add wave -radix hex  sim:/testbench_motones_sim/sim_board/cpu_inst/ad_calc_inst/*
+add wave -divider
 #add wave -radix hex  sim:/testbench_motones_sim/sim_board/cpu_inst/alu_inst/*
 
 
@@ -104,7 +104,7 @@ view signals
 
 run 8 us
 wave zoom full
-run 20 us
+run 890 us
 #run 10000 us
 
 
