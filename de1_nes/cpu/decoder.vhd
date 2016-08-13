@@ -345,8 +345,9 @@ end  procedure;
 
 procedure fetch_inst (pm_pcl_inc_n : in std_logic) is
 begin
-    if instruction = conv_std_logic_vector(16#4c#, dsize) then
-        --if prior cycle is jump instruction, 
+    if (instruction = conv_std_logic_vector(16#4c#, dsize) or 
+        instruction = conv_std_logic_vector(16#20#, dsize)) then
+        --if prior cycle is jump/jsr instruction, 
         --fetch opcode from where the latch is pointing to.
 
         --latch > al.
@@ -2466,22 +2467,19 @@ end  procedure;
                         fetch_stop;
                         dbuf_int_oe_n <= '1';
 
-                       --push return addr high into stack.
-                        sp_push_n <= '0';
+                       --read sp (discarded).
                         sp_oe_n <= '0';
-                        front_oe(pch_cmd, '0');
                         back_oe(sp_cmd, '0');
-                        back_we(sp_cmd, '0');
-                        r_nw <= '0';
+                        r_nw <= '1';
                         next_cycle <= T3;
                     elsif exec_cycle = T3 then
                         d_print("jsr 4");
                         front_oe(pch_cmd, '1');
 
-                       --push return addr low into stack.
+                        --push return addr high into stack.
                         sp_push_n <= '0';
                         sp_oe_n <= '0';
-                        front_oe(pcl_cmd, '0');
+                        front_oe(pch_cmd, '0');
                         back_oe(sp_cmd, '0');
                         back_we(sp_cmd, '0');
                         r_nw <= '0';
@@ -2489,6 +2487,19 @@ end  procedure;
                         next_cycle <= T4;
                     elsif exec_cycle = T4 then
                         d_print("jsr 5");
+                        front_oe(pch_cmd, '1');
+
+                        --push return addr low into stack.
+                        sp_push_n <= '0';
+                        sp_oe_n <= '0';
+                        front_oe(pcl_cmd, '0');
+                        back_oe(sp_cmd, '0');
+                        back_we(sp_cmd, '0');
+                        r_nw <= '0';
+
+                        next_cycle <= T5;
+                    elsif exec_cycle = T5 then
+                        d_print("jsr 6");
                         sp_push_n <= '1';
                         sp_oe_n <= '1';
                         front_oe(pcl_cmd, '1');
@@ -2496,30 +2507,11 @@ end  procedure;
                         back_we(sp_cmd, '1');
                         r_nw <= '1';
 
-                        --fetch last op.
+                        --fetch pch.
+                        dbuf_int_oe_n <= '0';
                         back_oe(pch_cmd, '0');
                         back_oe(pcl_cmd, '0');
-                        dbuf_int_oe_n <= '0';
-                        front_we(idl_h_cmd, '0');
-
-                        next_cycle <= T5;
-                    elsif exec_cycle = T5 then
-                        d_print("jsr 6");
-
-                        back_oe(pch_cmd, '1');
-                        back_oe(pcl_cmd, '1');
-                        dbuf_int_oe_n <= '1';
-                        front_we(idl_h_cmd, '1');
-
-
-                        --load/output  pch
-                        ad_oe_n <= '1';
-                        front_oe(idl_h_cmd, '0');
                         front_we(pch_cmd, '0');
-
-                        --load pcl.
-                        back_oe(idl_l_cmd, '0');
-                        back_we(pcl_cmd, '0');
 
                         next_cycle <= T0;
                     end if; --if exec_cycle = T1 then
