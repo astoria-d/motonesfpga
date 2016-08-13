@@ -597,7 +597,8 @@ begin
 
     alu_arith_p : process (
                     arith_en_n, alu_cycle,
-                    int_d_bus, acc_out, d_out
+                    int_d_bus, acc_out, d_out,
+                    n, z, c, v
                     )
     --data calcuration follows the bus input...
 
