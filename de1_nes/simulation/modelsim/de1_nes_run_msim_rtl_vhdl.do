@@ -22,9 +22,8 @@ add wave -label y -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/y/q
 
 add wave -label pcl -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/pcl_inst/q
 add wave -label pch -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/pch_inst/q
+add wave -label idl_l -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/idl_l/q
 
-
-##add wave -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/status_reg
 
 #add wave -divider ppu
 #add wave  -label cpu_addr -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/cpu_addr
@@ -77,6 +76,7 @@ add wave -label pch -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/pch
 #add wave -label attr_val -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/ppu_render_inst/attr_val
 
 
+#add wave -divider vga
 #add wave -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/nes_r \
 #sim:/testbench_motones_sim/sim_board/ppu_inst/nes_g \
 #sim:/testbench_motones_sim/sim_board/ppu_inst/nes_b
@@ -87,15 +87,7 @@ add wave -label pch -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/pch
 
 
 #add wave -divider apu
-#add wave  -label cpu_addr sim:/testbench_motones_sim/sim_board/apu_inst/dma_start_n
-#add wave  -label dma_next_status -radix hex sim:/testbench_motones_sim/sim_board/apu_inst/dma_next_status
-#add wave  -label dma_status -radix hex sim:/testbench_motones_sim/sim_board/apu_inst/dma_status
-#add wave  -label dma_cnt_ce sim:/testbench_motones_sim/sim_board/apu_inst/dma_cnt_ce
-#add wave  -label rdy sim:/testbench_motones_sim/sim_board/apu_inst/rdy
-#add wave  -label dma_write_we_n sim:/testbench_motones_sim/sim_board/apu_inst/dma_write_we_n
-#add wave  -label dma_addr -radix hex sim:/testbench_motones_sim/sim_board/apu_inst/dma_addr
-#add wave  -label dma_start_n sim:/testbench_motones_sim/sim_board/apu_inst/dma_start_n
-#add wave  -label dma_end_n sim:/testbench_motones_sim/sim_board/apu_inst/dma_end_n
+#add wave  -radix hex  sim:/testbench_motones_sim/sim_board/apu_inst/*
 
 #add wave -divider
 #add wave -radix hex  sim:/testbench_motones_sim/sim_board/cpu_inst/dec_inst/*
@@ -103,14 +95,16 @@ add wave -label pch -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/pch
 #add wave -radix hex  sim:/testbench_motones_sim/sim_board/cpu_inst/ad_calc_inst/*
 #add wave -divider
 #add wave -radix hex  sim:/testbench_motones_sim/sim_board/clock_inst/*
+#add wave -divider
+#add wave -radix hex  sim:/testbench_motones_sim/sim_board/cpu_inst/alu_inst/*
 
 
 view structure
 view signals
 
 run 8 us
-run 10 us
 wave zoom full
+run 20 us
 #run 10000 us
 
 

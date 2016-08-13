@@ -596,7 +596,8 @@ begin
             port map (d_oe_n, alu_out, d_out);
 
     alu_arith_p : process (
-                    arith_en_n, alu_cycle
+                    arith_en_n, alu_cycle,
+                    int_d_bus, acc_out, d_out
                     )
     --data calcuration follows the bus input...
 
