@@ -27,8 +27,8 @@
 	ldx	#$ff
 	txs
 
-;    jsr cpu_simple_test
-;    jmp short_cut1
+    jsr cpu_simple_test
+    jmp short_cut1
     
     jsr init_global
     jsr init_ppu
