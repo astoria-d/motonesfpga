@@ -492,9 +492,9 @@ begin
 
     -------- program counter --------
     pcl_inst : dual_dff generic map (dsize) 
-            port map(dbg_pcl, dl_cpu_clk, rst_n, '1', pcl_cmd, int_d_bus, addr_back_l, bal);
+            port map(dbg_pcl, cpu_clk, rst_n, '1', pcl_cmd, int_d_bus, addr_back_l, bal);
     pch_inst : dual_dff generic map (dsize) 
-            port map(dbg_pch, dl_cpu_clk, rst_n, '1', pch_cmd, int_d_bus, addr_back_h, bah);
+            port map(dbg_pch, cpu_clk, rst_n, '1', pch_cmd, int_d_bus, addr_back_h, bah);
 
 
     --addressing register
