@@ -88,7 +88,7 @@ component d_flip_flop_bit
 end component;
 
 --cycle bit format 
--- bit 5    : pcl increment carry flag
+-- bit 5    : special cycle
 -- bit 4,3  : cycle type: 00 normal, 01 reset , 10 nmi, 11 irq 
 -- bit 2-0  : cycle
 

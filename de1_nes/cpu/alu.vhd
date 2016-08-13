@@ -158,7 +158,7 @@ begin
                     zp_n, zp_xy_n, abs_xy_n, pg_next_n, rel_calc_n,
                     indir_n, indir_x_n, indir_y_n, addr_cycle,
                     r_vec_oe_n, n_vec_oe_n, i_vec_oe_n,
-                    index_bus, bal, bah, int_d_bus
+                    index_bus, bal, bah, int_d_bus, addr_out
                     )
 
 procedure inc_addr (
