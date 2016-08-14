@@ -12,6 +12,7 @@ add wave -label d_io -radix hex sim:/testbench_motones_sim/sim_board/d_io
 add wave -label instruction -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/instruction
 add wave -label int_d_bus -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/int_d_bus
 add wave -label exec_cycle -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/exec_cycle
+add wave -label ea_carry -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/dec_inst/ea_carry
 
 add wave -divider regs
 add wave -label acc -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/acc/q
@@ -94,8 +95,8 @@ add wave -label idl_l -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/i
 #add wave -divider
 #add wave -radix hex  sim:/testbench_motones_sim/sim_board/cpu_inst/dec_inst/*
 #add wave -divider
-add wave -radix hex  sim:/testbench_motones_sim/sim_board/cpu_inst/ad_calc_inst/*
-add wave -divider
+#add wave -radix hex  sim:/testbench_motones_sim/sim_board/cpu_inst/ad_calc_inst/*
+#add wave -divider
 #add wave -radix hex  sim:/testbench_motones_sim/sim_board/cpu_inst/alu_inst/*
 
 
