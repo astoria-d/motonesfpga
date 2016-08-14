@@ -337,6 +337,18 @@ begin
 
 
     cpu_d <= (others => 'Z');
+    vblank_n    <= 'Z';
+    rd_n        <= 'Z';
+    wr_n        <= 'Z';
+    ale         <= 'Z';
+    vram_ad     <= (others => 'Z');
+    vram_a      <= (others => 'Z');
+
+    h_sync_n    <= 'Z';
+    v_sync_n    <= 'Z';
+    r           <= (others => 'Z');
+    g           <= (others => 'Z');
+    b           <= (others => 'Z');
 
 
 
