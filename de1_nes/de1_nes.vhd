@@ -152,7 +152,6 @@ architecture rtl of de1_nes is
         signal dbg_s_oam_data                   : out std_logic_vector (7 downto 0);
 
         signal dbg_ppu_addr_we_n                : out std_logic;
-        signal dbg_ppu_clk_cnt                  : out std_logic_vector(1 downto 0);
 
                 dl_cpu_clk  : in std_logic;
                 ppu_clk     : in std_logic;
@@ -271,7 +270,6 @@ architecture rtl of de1_nes is
 
     signal dbg_vga_clk                      : std_logic;
     signal dbg_ppu_addr_we_n                : std_logic;
-    signal dbg_ppu_clk_cnt                  : std_logic_vector(1 downto 0);
     signal dbg_ppu_addr_dummy               : std_logic_vector (13 downto 0);
     signal dbg_nes_x                        : std_logic_vector (8 downto 0);
     signal dbg_vga_x                        : std_logic_vector (9 downto 0);
@@ -362,7 +360,6 @@ begin
         dbg_s_oam_addr                  ,
         dbg_s_oam_data                  ,
         dbg_ppu_addr_we_n                                   ,
-        dbg_ppu_clk_cnt                                     ,
 
                 cpu_mem_clk     ,
                 ppu_clk         ,
@@ -429,7 +426,6 @@ begin
     dbg_instruction <= dbg_nes_x(7 downto 0);
     dbg_exec_cycle(4) <= dbg_nes_y(8);
     dbg_status <= dbg_nes_y(7 downto 0);
-    dbg_sp(7 downto 6) <= dbg_ppu_clk_cnt;
 
     dbg_disp_ptn_l (7 downto 0) <= dbg_p_oam_addr;
     dbg_disp_ptn_l (15 downto 8) <= dbg_p_oam_data;

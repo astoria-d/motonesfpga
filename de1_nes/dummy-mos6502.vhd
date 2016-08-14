@@ -113,9 +113,14 @@ end;
                             io_out(16#2006#, 16#02#);
                         elsif (init_step_cnt = 5 * cpu_io_multi) then
                             io_out(16#2006#, 16#40#);
+                        elsif (init_step_cnt = 6 * cpu_io_multi) then
+                            --scroll
+                            io_out(16#2005#, 16#21#);
+                        elsif (init_step_cnt = 7 * cpu_io_multi) then
+                            io_out(16#2005#, 16#5#);
                         else
                             io_brk;
-                            if (init_step_cnt > 5 * cpu_io_multi) then
+                            if (init_step_cnt > 8 * cpu_io_multi) then
                                 global_step_cnt := global_step_cnt + 1;
                             end if;
                         end if;

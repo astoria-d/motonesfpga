@@ -26,7 +26,6 @@ entity ppu is
     signal dbg_s_oam_data                   : out std_logic_vector (7 downto 0);
 
     signal dbg_ppu_addr_we_n                : out std_logic;
-    signal dbg_ppu_clk_cnt                  : out std_logic_vector(1 downto 0);
 
     
             dl_cpu_clk  : in std_logic;
@@ -169,9 +168,6 @@ constant PPUVAI     : integer := 2;  --vram address increment
 constant PPUNEN     : integer := 7;  --nmi enable
 constant ST_VBL     : integer := 7;  --vblank
 
-signal ppu_clk_cnt_res_n    : std_logic;
-signal ppu_clk_cnt          : std_logic_vector(1 downto 0);
-
 signal ppu_ctrl_we_n    : std_logic;
 signal ppu_mask_we_n    : std_logic;
 signal ppu_addr_we_n        : std_logic;
@@ -179,20 +175,21 @@ signal ppu_addr_inc_n       : std_logic;
 signal ppu_data_we_n    : std_logic;
 signal ppu_scroll_x_we_n    : std_logic;
 signal ppu_scroll_y_we_n    : std_logic;
-signal oam_addr_ce_n    : std_logic;
+signal oam_addr_inc_n    : std_logic;
 signal oam_addr_we_n    : std_logic;
 signal oam_data_we_n    : std_logic;
 
 signal ppu_ctrl         : std_logic_vector (dsize - 1 downto 0);
 signal ppu_mask         : std_logic_vector (dsize - 1 downto 0);
-signal read_status      : std_logic;
-signal ppu_status       : std_logic_vector (dsize - 1 downto 0);
-signal ppu_stat_out     : std_logic_vector (dsize - 1 downto 0);
 signal ppu_addr         : std_logic_vector (13 downto 0);
 signal ppu_addr_inc1    : std_logic_vector (13 downto 0);
 signal ppu_addr_inc32   : std_logic_vector (13 downto 0);
 signal ppu_addr_in      : std_logic_vector (13 downto 0);
 signal ppu_addr_wr_cycle    : std_logic_vector (0 downto 0);
+
+signal read_status      : std_logic;
+signal ppu_status       : std_logic_vector (dsize - 1 downto 0);
+signal ppu_stat_out     : std_logic_vector (dsize - 1 downto 0);
 
 signal ppu_data         : std_logic_vector (dsize - 1 downto 0);
 signal ppu_data_in      : std_logic_vector (dsize - 1 downto 0);
@@ -201,6 +198,8 @@ signal oam_addr         : std_logic_vector (dsize - 1 downto 0);
 signal oam_data         : std_logic_vector (dsize - 1 downto 0);
 signal ppu_scroll_x     : std_logic_vector (dsize - 1 downto 0);
 signal ppu_scroll_y     : std_logic_vector (dsize - 1 downto 0);
+signal ppu_scr_wr_cycle    : std_logic_vector (0 downto 0);
+
 signal read_data_n      : std_logic;
 signal v_bus_busy_n     : std_logic;
 
@@ -228,7 +227,6 @@ begin
     dbg_ppu_scrl_x <= ppu_scroll_x;
     dbg_ppu_scrl_y <= ppu_scroll_y;
     dbg_ppu_addr_we_n <= ppu_addr_we_n;
-    dbg_ppu_clk_cnt <= ppu_clk_cnt;
 
 
     -----------------------------
@@ -253,7 +251,6 @@ begin
     ppu_addr_in <=  cpu_d(5 downto 0) & ppu_addr(7 downto 0)
                         when ppu_addr_wr_cycle = WR0 else
                     ppu_addr(13 downto 8) & cpu_d;
-
     ppu_addr_we_n <= '0' when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
                      '1';
     ppu_addr_inc_en_inst : d_flip_flop_bit
@@ -262,7 +259,6 @@ begin
             port map (dl_cpu_clk, rst_n, ppu_addr_inc_n, ppu_addr_we_n, ppu_addr_in, ppu_addr_inc1);
     ppu_addr_inst_inc32 : counter_register generic map(14, 32)
             port map (dl_cpu_clk, rst_n, ppu_addr_inc_n, ppu_addr_we_n, ppu_addr_in, ppu_addr_inc32);
-
     ppu_addr <= ppu_addr_inc32 when ppu_ctrl(PPUVAI) = '1' else
                 ppu_addr_inc1;
 
@@ -270,22 +266,66 @@ begin
     begin
         if (rst_n = '0') then
             ppu_addr_wr_cycle <= WR0;
+            ppu_scr_wr_cycle <= WR0;
         elsif (rising_edge(dl_cpu_clk) and ce_n = '0') then
+            --ppu addr cycle.
             if (cpu_addr = PPUADDR and r_nw = '0') then
                 if (ppu_addr_wr_cycle = WR1) then
                     ppu_addr_wr_cycle <= WR0;
                 else
                     ppu_addr_wr_cycle <= WR1;
                 end if;
+            elsif (cpu_addr = PPUSTATUS and r_nw = '1') then
+                --reset read count after reading status res.
+                ppu_addr_wr_cycle <= WR0;
             end if;
+
+            --ppu scroll cycle.
+            if (cpu_addr = PPUSCROLL and r_nw = '0') then
+                if (ppu_scr_wr_cycle = WR1) then
+                    ppu_scr_wr_cycle <= WR0;
+                else
+                    ppu_scr_wr_cycle <= WR1;
+                end if;
+            elsif (cpu_addr = PPUSTATUS and r_nw = '1') then
+                --reset read count after reading status res.
+                ppu_scr_wr_cycle <= WR0;
+            end if;
+
         end if;
     end process;
 
-    --ppu addr reg.
+    --ppu data reg.
     ppu_data_we_n <= '0' when ce_n = '0' and cpu_addr = PPUDATA and r_nw = '0' else
                      '1';
     ppu_data_inst : d_flip_flop generic map(dsize)
             port map (dl_cpu_clk, rst_n, '1', ppu_data_we_n, cpu_d, ppu_data);
+
+    --oam addr reg.
+    oam_addr_we_n <= '0' when ce_n = '0' and cpu_addr = OAMADDR and r_nw = '0' else
+                     '1';
+    oam_addr_inc_en_inst : d_flip_flop_bit
+            port map (dl_cpu_clk, '1', rst_n, '0', oam_data_we_n, oam_addr_inc_n);
+    oma_addr_inst : counter_register generic map(dsize, 1)
+            port map (dl_cpu_clk, rst_n, oam_addr_inc_n, oam_addr_we_n, cpu_d, oam_addr);
+
+    --oam datsa reg.
+    oam_data_we_n <= '0' when ce_n = '0' and cpu_addr = OAMDATA and r_nw = '0' else
+                     '1';
+    oma_data_inst : d_flip_flop generic map(dsize)
+            port map (dl_cpu_clk, rst_n, '1', oam_data_we_n, cpu_d, oam_data);
+
+    --scroll reg.
+    ppu_scroll_x_we_n <= '0' when ce_n = '0' and cpu_addr = PPUSCROLL and 
+                                  r_nw = '0' and ppu_scr_wr_cycle = WR0 else
+                     '1';
+    ppu_scroll_x_inst : d_flip_flop generic map(dsize)
+            port map (dl_cpu_clk, rst_n, '1', ppu_scroll_x_we_n, cpu_d, ppu_scroll_x);
+    ppu_scroll_y_we_n <= '0' when ce_n = '0' and cpu_addr = PPUSCROLL and 
+                                  r_nw = '0' and ppu_scr_wr_cycle = WR1 else
+                     '1';
+    ppu_scroll_y_inst : d_flip_flop generic map(dsize)
+            port map (dl_cpu_clk, rst_n, '1', ppu_scroll_y_we_n, cpu_d, ppu_scroll_y);
 
 --    ppu_data_in_inst : d_flip_flop generic map(dsize)
 --            port map (dl_cpu_clk, rst_n, '1', ppu_data_we_n, vram_ad, ppu_data_in);
@@ -293,10 +333,6 @@ begin
 --    ppu_data_out_inst : d_flip_flop generic map(dsize)
 --            port map (read_data_n, rst_n, '1', '0', ppu_data_in, ppu_data_out);
 
---    ppu_scroll_x_inst : d_flip_flop generic map(dsize)
---            port map (dl_cpu_clk, rst_n, '1', ppu_scroll_x_we_n, cpu_d, ppu_scroll_x);
---    ppu_scroll_y_inst : d_flip_flop generic map(dsize)
---            port map (dl_cpu_clk, rst_n, '1', ppu_scroll_y_we_n, cpu_d, ppu_scroll_y);
 
 
 
@@ -330,10 +366,6 @@ begin
 --    ppu_clk_cnt_inst : counter_register generic map (2, 1)
 --            port map (dl_cpu_clk, ppu_clk_cnt_res_n, '0', '1', (others => '0'), ppu_clk_cnt); 
 --
---    oma_addr_inst : counter_register generic map(dsize, 1)
---            port map (dl_cpu_clk, rst_n, oam_addr_ce_n, oam_addr_we_n, cpu_d, oam_addr);
---    oma_data_inst : d_flip_flop generic map(dsize)
---            port map (dl_cpu_clk, rst_n, '1', oam_data_we_n, cpu_d, oam_data);
 --
 --    ppu_scroll_cnt_inst : counter_register generic map (1, 1)
 --            port map (dl_cpu_clk, ppu_latch_rst_n, ppu_scroll_cnt_ce_n, 

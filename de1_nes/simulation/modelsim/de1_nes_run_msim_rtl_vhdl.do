@@ -37,6 +37,8 @@ add wave -label ppu_mask -radix hex sim:/testbench_motones_sim/sim_board/ppu_ins
 add wave -label ppu_status -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/ppu_status
 add wave -label ppu_addr -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/ppu_addr
 add wave -label ppu_data -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/ppu_data
+add wave -label oam_addr -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/oam_addr
+add wave -label oam_data -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/oam_data
 add wave -label ppu_scr_x -radix decimal -unsigned sim:/testbench_motones_sim/sim_board/ppu_inst/ppu_scroll_x
 add wave -label ppu_scr_y -radix decimal -unsigned sim:/testbench_motones_sim/sim_board/ppu_inst/ppu_scroll_y
 
