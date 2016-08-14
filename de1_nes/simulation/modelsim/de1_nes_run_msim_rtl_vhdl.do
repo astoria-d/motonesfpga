@@ -82,6 +82,6 @@ view signals
 
 run 30 us
 wave zoom full
-run 100 us
+run 50 us
 #run 10000 us
 
