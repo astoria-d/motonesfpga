@@ -22,15 +22,13 @@ entity mos6502 is
     signal dbg_stat_we_n    : out std_logic;
     signal dbg_idl_h, dbg_idl_l, dbg_dbb_r, dbg_dbb_w    : out std_logic_vector (7 downto 0);
 
-            input_clk   : in std_logic; --phi0 input pin.
+            cpu_clk     : in std_logic; --phi0 input pin.
+            dl_cpu_clk  : in std_logic; --phi1 delayed clock.
             rdy         : in std_logic;
             rst_n       : in std_logic;
             irq_n       : in std_logic;
             nmi_n       : in std_logic;
-            dbe         : in std_logic;
             r_nw        : out std_logic;
-            phi1        : out std_logic;
-            phi2        : out std_logic;
             addr        : out std_logic_vector ( asize - 1 downto 0);
             d_io        : inout std_logic_vector ( dsize - 1 downto 0)
     );
@@ -40,11 +38,9 @@ architecture rtl of mos6502 is
 
 
 begin
-    phi1 <= input_clk;
-    phi2 <= not input_clk;
 
     --set ppu value...
-    set_ppu_p : process (input_clk, rst_n)
+    set_ppu_p : process (cpu_clk, rst_n)
     use ieee.std_logic_arith.conv_std_logic_vector;
 
     variable init_step_cnt, plt_step_cnt, 
@@ -94,7 +90,7 @@ end;
             nmi_scl_y := 200;
             ref_cnt := 0;
 
-        elsif (rising_edge(input_clk)) then
+        elsif (rising_edge(cpu_clk)) then
 
             if (rdy = '1') then
                 if (init_done = '0') then

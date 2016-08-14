@@ -9,7 +9,8 @@ add wave -label cpu_clk sim:/testbench_motones_sim/sim_board/cpu_clk
 add wave -label addr -radix hex sim:/testbench_motones_sim/sim_board/addr
 add wave -label d_io -radix hex sim:/testbench_motones_sim/sim_board/d_io
 
-add wave -label instruction -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/instruction
+#cpu debug...
+#add wave -label instruction -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/instruction
 #add wave -label int_d_bus -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/int_d_bus
 #add wave -label exec_cycle -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/exec_cycle
 #add wave -label ea_carry -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/dec_inst/ea_carry
@@ -83,5 +84,4 @@ run 30 us
 wave zoom full
 run 100 us
 #run 10000 us
-
 
