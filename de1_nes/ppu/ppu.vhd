@@ -32,7 +32,6 @@ entity ppu is
             ppu_clk     : in std_logic;
             vga_clk     : in std_logic;
             emu_ppu_clk : in std_logic;
-            mem_clk     : in std_logic;
             ce_n        : in std_logic;
             rst_n       : in std_logic;
             r_nw        : in std_logic;
@@ -77,7 +76,6 @@ component vga_ppu_render
 
             vga_clk     : in std_logic;
             emu_ppu_clk : in std_logic;
-            mem_clk     : in std_logic;
             rst_n       : in std_logic;
 
             --vram i/f
@@ -249,7 +247,7 @@ begin
     dbg_s_oam_addr                  ,
     dbg_s_oam_data                  ,
     
-            vga_clk, emu_ppu_clk, mem_clk, rst_n,
+            vga_clk, emu_ppu_clk, rst_n,
             rd_n, wr_n, ale, vram_ad, vram_a,
             h_sync_n, v_sync_n, r, g, b, 
             ppu_ctrl, ppu_mask, read_status, ppu_status, ppu_scroll_x, ppu_scroll_y,

@@ -14,11 +14,11 @@ vcom -93 -work work {../../mem/ram.vhd}
 vcom -93 -work work {../../apu/apu.vhd}
 
 #ppu block...
-#vcom -93 -work work {../../mem/chr_rom.vhd}
-#vcom -93 -work work {../../ppu/ppu.vhd}
-#vcom -93 -work work {../../ppu/ppu_registers.vhd}
-#vcom -93 -work work {../../ppu/vga_ppu.vhd}
-vcom -93 -work work {../../dummy-ppu.vhd}
+vcom -93 -work work {../../mem/chr_rom.vhd}
+vcom -93 -work work {../../ppu/ppu.vhd}
+vcom -93 -work work {../../ppu/ppu_registers.vhd}
+vcom -93 -work work {../../ppu/vga_ppu.vhd}
+#vcom -93 -work work {../../dummy-ppu.vhd}
 
 #cpu block...
 vcom -93 -work work {../../mem/prg_rom.vhd}

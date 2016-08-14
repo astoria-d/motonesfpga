@@ -32,7 +32,6 @@ entity vga_ppu_render is
 
             vga_clk     : in std_logic;
             emu_ppu_clk : in std_logic;
-            mem_clk     : in std_logic;
             rst_n       : in std_logic;
 
             --vram i/f
@@ -616,7 +615,7 @@ begin
     plt_d_buf_r : tri_state_buffer generic map (dsize)
             port map (plt_r_n, plt_data, oam_plt_data);
     palette_inst : palette_ram generic map (5, dsize)
-            port map (mem_clk, plt_ram_ce_n, plt_r_n, plt_w_n, plt_addr, plt_data);
+            port map (emu_ppu_clk, plt_ram_ce_n, plt_r_n, plt_w_n, plt_addr, plt_data);
 
 
     -----------------------------------------
@@ -652,7 +651,7 @@ begin
             port map (p_oam_r_n, p_oam_data, oam_plt_data);
 
     primary_oam_inst : ram generic map (dsize, dsize)
-            port map (mem_clk, p_oam_ram_ce_n, p_oam_r_n, p_oam_w_n, p_oam_addr, p_oam_data);
+            port map (emu_ppu_clk, p_oam_ram_ce_n, p_oam_r_n, p_oam_w_n, p_oam_addr, p_oam_data);
 
     -----------------------------------------
     ---secondary oam implementation
@@ -684,7 +683,7 @@ begin
                       '1';
 
     secondary_oam_inst : ram generic map (5, dsize)
-            port map (mem_clk, s_oam_ram_ce_n, s_oam_r_n, s_oam_w_n, s_oam_addr, s_oam_data);
+            port map (emu_ppu_clk, s_oam_ram_ce_n, s_oam_r_n, s_oam_w_n, s_oam_addr, s_oam_data);
 
     --sprite y tmp val
     spr_y_inst : d_flip_flop generic map(dsize)
