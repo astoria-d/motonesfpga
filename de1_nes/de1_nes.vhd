@@ -154,6 +154,7 @@ architecture rtl of de1_nes is
         signal dbg_ppu_addr_we_n                : out std_logic;
         signal dbg_ppu_clk_cnt                  : out std_logic_vector(1 downto 0);
 
+                dl_cpu_clk  : in std_logic;
                 ppu_clk     : in std_logic;
                 vga_clk     : in std_logic;
                 emu_ppu_clk : in std_logic;
@@ -363,6 +364,7 @@ begin
         dbg_ppu_addr_we_n                                   ,
         dbg_ppu_clk_cnt                                     ,
 
+                cpu_mem_clk     ,
                 ppu_clk         ,
                 vga_clk     ,
                 emu_ppu_clk     ,

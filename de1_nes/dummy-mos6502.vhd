@@ -97,14 +97,25 @@ end;
                     if (global_step_cnt = 0) then
                         --step0.0 = init ppu.
                         if (init_step_cnt = 0 * cpu_io_multi) then
+                            --PPUCTRL=01 for test...
+                            io_out(16#2000#, 16#01#);
+                        elsif (init_step_cnt = 1 * cpu_io_multi) then
+                            --PPUMASK=02
+                            io_out(16#2001#, 16#02#);
+                        elsif (init_step_cnt = 2 * cpu_io_multi) then
                             --PPUCTRL=00
                             io_out(16#2000#, 16#00#);
-                        elsif (init_step_cnt = 1 * cpu_io_multi) then
+                        elsif (init_step_cnt = 3 * cpu_io_multi) then
                             --PPUMASK=00
                             io_out(16#2001#, 16#00#);
+                        elsif (init_step_cnt = 4 * cpu_io_multi) then
+                            --ppuaddr
+                            io_out(16#2006#, 16#02#);
+                        elsif (init_step_cnt = 5 * cpu_io_multi) then
+                            io_out(16#2006#, 16#40#);
                         else
                             io_brk;
-                            if (init_step_cnt > 2 * cpu_io_multi) then
+                            if (init_step_cnt > 5 * cpu_io_multi) then
                                 global_step_cnt := global_step_cnt + 1;
                             end if;
                         end if;
