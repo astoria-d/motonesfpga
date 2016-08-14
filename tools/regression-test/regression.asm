@@ -38,24 +38,24 @@
     lda ad_start_msg+1
     sta $01
     jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
+;    jsr print_ln
+;    jsr print_ln
+;    jsr print_ln
+;    jsr print_ln
+;    jsr print_ln
 
     ;;test start...
-    jsr addr_test
-    jsr single_inst_test
-    jsr a2_inst_test
-    jsr a3_inst_test
-    jsr a4_inst_test
-    jsr a5_inst_test
-    jsr status_test
+;    jsr addr_test
+;    jsr single_inst_test
+;    jsr a2_inst_test
+;    jsr a3_inst_test
+;    jsr a4_inst_test
+;    jsr a5_inst_test
+;    jsr status_test
     jsr ppu_test
 
-    jsr pg_border_test
-    jsr dma_test
+;    jsr pg_border_test
+;    jsr dma_test
 
     jsr simple_dma_test
 
@@ -3397,7 +3397,7 @@ ad_single_test:
 
 ;;ppu test flag.
 use_ppu:
-    .byte   $00
+    .byte   $01
 
 full_dma_test:
     .byte   $01

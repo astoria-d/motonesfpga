@@ -81,12 +81,12 @@ set_global_assignment -name VHDL_FILE mem/ram.vhd
 set_global_assignment -name VHDL_FILE apu/apu.vhd
 
 #ppu block...
-#set_global_assignment -name VHDL_FILE mem/chr_rom.vhd
-#set_global_assignment -name VHDL_FILE ppu/ppu_registers.vhd
-#set_global_assignment -name VHDL_FILE ppu/vga_ppu.vhd
-#set_global_assignment -name VHDL_FILE ppu/ppu.vhd
+set_global_assignment -name VHDL_FILE mem/chr_rom.vhd
+set_global_assignment -name VHDL_FILE ppu/ppu_registers.vhd
+set_global_assignment -name VHDL_FILE ppu/vga_ppu.vhd
+set_global_assignment -name VHDL_FILE ppu/ppu.vhd
 
-set_global_assignment -name VHDL_FILE "dummy-ppu.vhd"
+#set_global_assignment -name VHDL_FILE "dummy-ppu.vhd"
 
 #cpu block...
 set_global_assignment -name VHDL_FILE mem/prg_rom.vhd
