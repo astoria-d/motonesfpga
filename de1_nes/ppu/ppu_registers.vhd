@@ -106,6 +106,7 @@ signal ale_n : std_logic;
 
 begin
     d_in <= vram_a & vram_ad;
+    ale_n <= not ale;
     out_reg_inst : d_flip_flop generic map (14)
             port map (clk, '1', '1', ale_n, d_in, q_out);
     tsb_inst : tri_state_buffer generic map (14)
