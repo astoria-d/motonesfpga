@@ -42,18 +42,20 @@ add wave -label oam_data -radix hex sim:/testbench_motones_sim/sim_board/ppu_ins
 add wave -label ppu_scr_x -radix decimal -unsigned sim:/testbench_motones_sim/sim_board/ppu_inst/ppu_scroll_x
 add wave -label ppu_scr_y -radix decimal -unsigned sim:/testbench_motones_sim/sim_board/ppu_inst/ppu_scroll_y
 
+add wave -divider vram
+add wave -label emu_ppu_clk sim:/testbench_motones_sim/sim_board/ppu_inst/emu_ppu_clk
+add wave -label ale sim:/testbench_motones_sim/sim_board/ppu_inst/ale
+add wave -label rd_n sim:/testbench_motones_sim/sim_board/ppu_inst/rd_n
+add wave -label wr_n sim:/testbench_motones_sim/sim_board/ppu_inst/wr_n
+add wave -label vram_a -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/vram_a
+add wave -label vram_ad -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/vram_ad
+
 
 #add wave -divider render
-#add wave -label emu_ppu_clk sim:/testbench_motones_sim/sim_board/ppu_inst/emu_ppu_clk
 ##add wave -label vba_x -radix decimal -unsigned sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/vga_x
 #add wave -label nes_x -radix decimal -unsigned sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/nes_x
 ##add wave -label vga_y -radix decimal -unsigned sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/vga_y
 #add wave -label nes_y -radix decimal -unsigned sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/nes_y
-#
-#add wave -label ale sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/ale
-#add wave -label rd_n sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/rd_n
-#add wave -label wr_n sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/wr_n
-#
 ##add wave -label disp_nt -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/ppu_render_inst/disp_nt
 ##add wave -label disp_attr -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/ppu_render_inst/disp_attr
 ##add wave -label attr_val -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/ppu_render_inst/attr_val
@@ -88,5 +90,5 @@ view signals
 
 run 15 us
 wave zoom full
-run 40 us
+run 10 us
 

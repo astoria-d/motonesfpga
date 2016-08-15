@@ -172,6 +172,7 @@ signal ppu_ctrl_we_n    : std_logic;
 signal ppu_mask_we_n    : std_logic;
 signal ppu_addr_we_n        : std_logic;
 signal ppu_addr_inc_n       : std_logic;
+signal ppu_addr_upd_n       : std_logic;
 signal ppu_data_we_n    : std_logic;
 signal ppu_scroll_x_we_n    : std_logic;
 signal ppu_scroll_y_we_n    : std_logic;
@@ -262,6 +263,7 @@ begin
     ppu_addr <= ppu_addr_inc32 when ppu_ctrl(PPUVAI) = '1' else
                 ppu_addr_inc1;
 
+    --ppu write cycle update.
     clk_addr_wr_p : process (rst_n, dl_cpu_clk)
     begin
         if (rst_n = '0') then
@@ -335,14 +337,32 @@ begin
 
 
 
+    -----------------------------
+    --vram access.
+    -----------------------------
+    ppu_addr_upd_en_inst : d_flip_flop_bit
+            port map (dl_cpu_clk, rst_n, '1', '0', ppu_addr_inc_n, ppu_addr_upd_n);
+    ale <= '1' when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
+           '1' when ppu_addr_upd_n = '0' else
+           '0' when ce_n = '0' and cpu_addr = PPUDATA and r_nw = '0' else
+           'Z';
+    wr_n <= '0' when ce_n = '0' and cpu_addr = PPUDATA and r_nw = '0' else
+            '1' when ppu_addr_upd_n = '0' else
+            '1' when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
+            'Z';
+    rd_n <= '1' when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
+            '1' when ppu_addr_upd_n = '0' else
+            'Z';
+    vram_a <= ppu_addr(13 downto 8) when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
+              ppu_addr(13 downto 8) when ppu_addr_upd_n = '0' else
+              (others => 'Z');
+    vram_ad <= cpu_d when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
+               ppu_addr(7 downto 0) when ppu_addr_upd_n = '0' else
+               cpu_d when ce_n = '0' and cpu_addr = PPUDATA and r_nw = '0' else
+               (others => 'Z');
 
     cpu_d <= (others => 'Z');
     vblank_n    <= 'Z';
-    rd_n        <= 'Z';
-    wr_n        <= 'Z';
-    ale         <= 'Z';
-    vram_ad     <= (others => 'Z');
-    vram_a      <= (others => 'Z');
 
     h_sync_n    <= 'Z';
     v_sync_n    <= 'Z';
