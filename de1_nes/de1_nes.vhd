@@ -257,8 +257,6 @@ architecture rtl of de1_nes is
     signal nt0_ce_n : std_logic;
     signal nt1_ce_n : std_logic;
 
-    signal ale_n       : std_logic;
-
 --    signal dbg_disp_nt, dbg_disp_attr : std_logic_vector (7 downto 0);
 --    signal dbg_disp_ptn_h, dbg_disp_ptn_l : std_logic_vector (15 downto 0);
     signal dbg_pcl, dbg_pch : std_logic_vector(7 downto 0);
@@ -389,7 +387,6 @@ begin
     --transparent d-latch
     --ale=1 >> addr latch
     --ale=0 >> addr output.
-	ale_n <= not ale;
 	vram_latch : ls373
                 port map(emu_ppu_clk, ale, vram_a, vram_ad, v_addr);
 
