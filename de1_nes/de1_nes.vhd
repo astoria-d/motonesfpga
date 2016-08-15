@@ -200,14 +200,11 @@ architecture rtl of de1_nes is
     end component;
 
     component ls373
-        generic (
-            dsize : integer := 8
-        );
-        port (  c         : in std_logic;
-                we_n      : in std_logic;
-                oc_n      : in std_logic;
-                d         : in std_logic_vector(dsize - 1 downto 0);
-                q         : out std_logic_vector(dsize - 1 downto 0)
+        port (  clk         : in std_logic;
+                ale         : in std_logic;
+                vram_a      : in std_logic_vector (13 downto 8);
+                vram_ad     : in std_logic_vector (7 downto 0);
+                v_addr      : out std_logic_vector (13 downto 0)
         );
     end component;
 
@@ -389,15 +386,12 @@ begin
     ppu_addr_decoder : v_address_decoder generic map (vram_size14, data_size) 
         port map (v_addr, nt_v_mirror, pt_ce_n, nt0_ce_n, nt1_ce_n);
 
-    ---VRAM/CHR ROM instances
-    v_addr (13 downto 8) <= vram_a;
-
     --transparent d-latch
     --ale=1 >> addr latch
     --ale=0 >> addr output.
 	ale_n <= not ale;
-	vram_latch : ls373 generic map (data_size)
-                port map(vga_clk, ale_n, ale, vram_ad, v_addr(7 downto 0));
+	vram_latch : ls373
+                port map(emu_ppu_clk, ale, vram_a, vram_ad, v_addr);
 
     vchr_rom : chr_rom generic map (chr_rom_8k, data_size)
             port map (emu_ppu_clk, pt_ce_n, v_addr(chr_rom_8k - 1 downto 0), vram_ad);

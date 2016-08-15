@@ -65,15 +65,12 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 entity ls373 is 
-    generic (
-        dsize : integer := 8
-    );
-    port (  c         : in std_logic;
-            we_n      : in std_logic;
-            oc_n      : in std_logic;
-            d         : in std_logic_vector(dsize - 1 downto 0);
-            q         : out std_logic_vector(dsize - 1 downto 0)
-    );
+    port (  clk         : in std_logic;
+            ale         : in std_logic;
+            vram_a      : in std_logic_vector (13 downto 8);
+            vram_ad     : in std_logic_vector (7 downto 0);
+            v_addr      : out std_logic_vector (13 downto 0)
+            );
 end ls373;
 
 architecture rtl of ls373 is
@@ -103,12 +100,15 @@ component tri_state_buffer
         );
 end component;
 
-signal q_out       : std_logic_vector (dsize - 1 downto 0);
+signal d_in : std_logic_vector(13 downto 0);
+signal q_out : std_logic_vector(13 downto 0);
+signal ale_n : std_logic;
 
 begin
-    out_reg_inst : d_flip_flop generic map (dsize)
-            port map (c, '1', '1', we_n, d, q_out);
-    tsb_inst : tri_state_buffer generic map (dsize)
-            port map (oc_n, q_out, q);
+    d_in <= vram_a & vram_ad;
+    out_reg_inst : d_flip_flop generic map (14)
+            port map (clk, '1', '1', ale_n, d_in, q_out);
+    tsb_inst : tri_state_buffer generic map (14)
+            port map (ale, q_out, v_addr);
 end rtl;
 
