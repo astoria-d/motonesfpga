@@ -151,8 +151,6 @@ architecture rtl of de1_nes is
         signal dbg_s_oam_addr                   : out std_logic_vector (4 downto 0);
         signal dbg_s_oam_data                   : out std_logic_vector (7 downto 0);
 
-        signal dbg_ppu_addr_we_n                : out std_logic;
-
                 dl_cpu_clk  : in std_logic;
                 ppu_clk     : in std_logic;
                 vga_clk     : in std_logic;
@@ -264,7 +262,6 @@ architecture rtl of de1_nes is
     signal dbg_idl_h, dbg_idl_l     : std_logic_vector (7 downto 0);
 
     signal dbg_vga_clk                      : std_logic;
-    signal dbg_ppu_addr_we_n                : std_logic;
     signal dbg_ppu_addr_dummy               : std_logic_vector (13 downto 0);
     signal dbg_nes_x                        : std_logic_vector (8 downto 0);
     signal dbg_vga_x                        : std_logic_vector (9 downto 0);
@@ -311,7 +308,7 @@ begin
     dbg_exec_cycle_dummy,
     dbg_ea_carry,
     dbg_status_dummy,
-    dbg_pcl, dbg_pch, dbg_sp_dummy, dbg_x, dbg_y, dbg_acc,
+    dbg_pcl, dbg_pch, dbg_sp_dummy, dbg_x_dummy, dbg_y, dbg_acc,
     dbg_dec_oe_n,
     dbg_dec_val,
     dbg_stat_we_n    ,
@@ -354,7 +351,6 @@ begin
         dbg_s_oam_ce_rn_wn              ,
         dbg_s_oam_addr                  ,
         dbg_s_oam_data                  ,
-        dbg_ppu_addr_we_n                                   ,
 
                 cpu_mem_clk     ,
                 ppu_clk         ,
@@ -421,13 +417,16 @@ begin
     dbg_disp_ptn_l (7 downto 0) <= dbg_p_oam_addr;
     dbg_disp_ptn_l (15 downto 8) <= dbg_p_oam_data;
     dbg_int_d_bus(4 downto 0) <= dbg_s_oam_addr(4 downto 0);
-    dbg_ppu_scrl_y <= dbg_s_oam_data;
+    --dbg_ppu_scrl_y <= dbg_s_oam_data;
+    dbg_ppu_scrl_y <= dbg_ppu_scrl_y_dummy;
 
     dbg_ppu_scrl_x(0) <= ale;
     dbg_ppu_scrl_x(1) <= rd_n;
     dbg_ppu_scrl_x(2) <= wr_n;
     dbg_ppu_scrl_x(3) <= nt0_ce_n;
 
+    dbg_sp <= "00" & v_addr(13 downto 8);
+    dbg_x <= v_addr(7 downto 0);
     --nmi_n <= dummy_nmi;
     ---------------
 

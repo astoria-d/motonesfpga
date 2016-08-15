@@ -89,27 +89,14 @@ component d_flip_flop
         );
 end component;
 
-component tri_state_buffer
-    generic (
-            dsize : integer := 8
-            );
-    port (  
-            oe_n    : in std_logic;
-            d       : in std_logic_vector (dsize - 1 downto 0);
-            q       : out std_logic_vector (dsize - 1 downto 0)
-        );
-end component;
-
 signal d_in : std_logic_vector(13 downto 0);
-signal q_out : std_logic_vector(13 downto 0);
-signal ale_n : std_logic;
+signal we_n : std_logic;
 
 begin
     d_in <= vram_a & vram_ad;
-    ale_n <= not ale;
+    we_n <= '0' when ale = '1' else
+            '1';
     out_reg_inst : d_flip_flop generic map (14)
-            port map (clk, '1', '1', ale_n, d_in, q_out);
-    tsb_inst : tri_state_buffer generic map (14)
-            port map (ale, q_out, v_addr);
+            port map (clk, '1', '1', we_n, d_in, v_addr);
 end rtl;
 
