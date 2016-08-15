@@ -47,8 +47,8 @@ add wave -label ppu_mask  -radix hex sim:/testbench_motones_sim/sim_board/dbg_pp
 add wave -label ppu_status   -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_status
 add wave -label ppu_addr -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_addr
 add wave -label ppu_data -radix hex sim:/testbench_motones_sim/sim_board/dbg_ppu_data
-add wave -label ppu_scrl_x -radix decimal -unsigned  sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x
-add wave -label ppu_scrl_y -radix decimal -unsigned  sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_y
+#add wave -label ppu_scrl_x -radix decimal -unsigned  sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x
+#add wave -label ppu_scrl_y -radix decimal -unsigned  sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_y
 
 
 add wave -divider vga_pos

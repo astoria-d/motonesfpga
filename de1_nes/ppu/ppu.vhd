@@ -353,13 +353,13 @@ begin
     rd_n <= '1' when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
             '1' when ppu_addr_upd_n = '0' else
             'Z';
-    vram_a <= ppu_addr(13 downto 8) when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
-              ppu_addr(13 downto 8) when ppu_addr_upd_n = '0' else
-              (others => 'Z');
-    vram_ad <= cpu_d when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
-               ppu_addr(7 downto 0) when ppu_addr_upd_n = '0' else
-               cpu_d when ce_n = '0' and cpu_addr = PPUDATA and r_nw = '0' else
-               (others => 'Z');
+--    vram_a <= ppu_addr(13 downto 8) when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
+--              ppu_addr(13 downto 8) when ppu_addr_upd_n = '0' else
+--              (others => 'Z');
+--    vram_ad <= cpu_d when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
+--               ppu_addr(7 downto 0) when ppu_addr_upd_n = '0' else
+--               cpu_d when ce_n = '0' and cpu_addr = PPUDATA and r_nw = '0' else
+--               (others => 'Z');
 
     cpu_d <= (others => 'Z');
     vblank_n    <= 'Z';
@@ -370,7 +370,8 @@ begin
     g           <= (others => 'Z');
     b           <= (others => 'Z');
 
-
+    vram_ad     <= (others => 'Z');
+    vram_a      <= (others => 'Z');
 
 --    vga_render_inst : vga_ppu_render port map (
 --    dbg_nes_x                        ,
