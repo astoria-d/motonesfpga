@@ -114,7 +114,7 @@ begin
             q <= (others => '0');
         elsif (set_n = '0') then
             q <= d;
-        elsif (clk'event and clk = '1') then
+        elsif (rising_edge(clk)) then
             if (we_n = '0') then
                 q <= d;
             end if;
@@ -147,7 +147,7 @@ begin
             q <= '0';
         elsif (set_n = '0') then
             q <= d;
-        elsif (clk'event and clk = '1') then
+        elsif (rising_edge(clk)) then
             if (we_n = '0') then
                 q <= d;
             end if;
@@ -201,39 +201,26 @@ end counter_register;
 
 architecture rtl of counter_register is
 
-component d_flip_flop
-    generic (
-            dsize : integer := 8
-            );
-    port (  
-            clk     : in std_logic;
-            res_n   : in std_logic;
-            set_n   : in std_logic;
-            we_n    : in std_logic;
-            d       : in std_logic_vector (dsize - 1 downto 0);
-            q       : out std_logic_vector (dsize - 1 downto 0)
-        );
-end component;
-
 use ieee.std_logic_unsigned.all;
 
-signal dff_we_n : std_logic;
-signal d_in : std_logic_vector(dsize - 1 downto 0);
-signal q_out : std_logic_vector(dsize - 1 downto 0);
 
 begin
-    q <= q_out;
-    dff_we_n <= ce_n and we_n;
-    counter_reg_inst : d_flip_flop generic map (dsize)
-            port map (clk, rst_n, '1', dff_we_n, d_in, q_out);
         
-    clk_p : process (clk, we_n, ce_n, d)
+    clk_p : process (clk, rst_n)
+    variable q_out : std_logic_vector(dsize - 1 downto 0);
     begin
-        if (we_n = '0') then
-            d_in <= d;
-        elsif (ce_n = '0') then
-            d_in <= q_out + inc;
+        if (rst_n = '0') then
+            q_out := (others => '0');
+        elsif (rising_edge(clk)) then
+            if (we_n = '0') then
+                q_out := d;
+            elsif (ce_n = '0') then
+                q_out := q_out + inc;
+            end if;
         end if;
+        
+        --output data...
+        q <= q_out;
     end process;
 
 end rtl;
