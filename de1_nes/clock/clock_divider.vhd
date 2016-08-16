@@ -42,12 +42,9 @@ component d_flip_flop_bit
         );
 end component;
 
-signal loop8 : std_logic_vector (2 downto 0);
-signal loop6 : std_logic_vector (2 downto 0);
-signal cpu_cnt_rst_n 	: std_logic;
-signal base_clk_n 	: std_logic;
-signal cpu_clk_wk 	: std_logic;
+signal loop16 : std_logic_vector (3 downto 0);
 signal cpu_mem_clk_wk   : std_logic;
+signal cpu_dl_clk_wk   : std_logic;
 
 constant CPU_MEM_DELAY  : time := 40 ns;
 
@@ -67,75 +64,38 @@ begin
     --emu ppu clock = base clock / 4
     --mem clock = base clock
 
-    ppu_clk <= not loop8(2);
-	emu_ppu_clk <= not loop8(1);
-	vga_clk <= not loop8(0);
-    cpu_clk <= not cpu_clk_wk;
-    base_clk_n <= base_clk;
+	vga_clk <= not loop16(0);
+	emu_ppu_clk <= not loop16(1);
+    ppu_clk <= not loop16(2);
+    cpu_clk <= not loop16(3);
     
-    ppu_clk_cnt : counter_register generic map (3) port map 
-        (base_clk_n, reset_n, '0', '1', (others=>'0'), loop8);
-
-    cpu_clk_cnt : counter_register generic map (3) port map 
-        (loop8(1), cpu_cnt_rst_n, '0', '1', (others=>'0'), loop6);
-
-
-    clock_p : process (loop8(1))
-    begin
-        if (reset_n = '0') then
-            cpu_clk_wk <= '0';
-        else
-            if (loop8(1)'event and loop8(1) = '0') then
-                if (loop6(0) = '1') then
-                    cpu_clk_wk <= not cpu_clk_wk ;
-                end if;
-            end if;
-        end if;
-    end process;
-
-    clock_p2 : process (loop8(1))
-    begin
-        if (reset_n = '0') then
-            cpu_cnt_rst_n <= '0';
-        else
-            if (loop8(1)'event and loop8(1) = '1') then
-                if (loop6 = "100") then
-                    cpu_cnt_rst_n <= '0';
-                else
-                    cpu_cnt_rst_n <= '1';
-                end if;
-            end if;
-        end if;
-    end process;
+    clock_divider_inst : counter_register generic map (4) port map 
+        (base_clk, reset_n, '0', '1', (others=>'0'), loop16);
 
     --delayed clock for cpu memory...
-    --loop8(1) is emu ppu clock = 12.5 MHz (80ns) cycle.
+    --loop16(1) is emu ppu clock = 12.5 MHz (80ns) cycle.
     --cpu_mem_clk is delayed to cpu_clk by 80ns.
-    delay_cpu_clk_p : process (loop8(1))
+    delay_cpu_clk_p : process (loop16(1))
     begin
         if (reset_n = '0') then
             cpu_mem_clk_wk <= '0';
+            cpu_dl_clk_wk <= '0';
         else
-            if (loop8(1)'event and loop8(1) = '0') then
-                cpu_mem_clk_wk <= not cpu_clk_wk;
+            if (falling_edge(loop16(1))) then
+                cpu_dl_clk_wk <= not loop16(3);
+                cpu_mem_clk_wk <= cpu_dl_clk_wk;
             end if;
         end if;
+
     end process;
+
+    --one phase delayed clock for memory...
     cpu_mem_clk <= cpu_mem_clk_wk;
-
     --two phase delayed clock for cpu register...
-    delay_cpu_clk_p2 : process (loop8(1))
-    begin
-        if (reset_n = '0') then
-            cpu_recv_clk <= '0';
-        else
-            if (loop8(1)'event and loop8(1) = '0') then
-                cpu_recv_clk <= cpu_mem_clk_wk;
-            end if;
-        end if;
-    end process;
+    cpu_recv_clk <= not cpu_dl_clk_wk;
 
-    --cpu_mem_clk <= not cpu_clk_wk after CPU_MEM_DELAY;
-    emu_ppu_mem_clk <= not loop8(1);
+    emu_ppu_mem_clk <= not loop16(1);
+
+
 end rtl;
 
