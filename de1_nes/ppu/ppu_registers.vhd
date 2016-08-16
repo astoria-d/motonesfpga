@@ -112,9 +112,8 @@ begin
     d_in <= vram_a & vram_ad;
     we_n <= '0' when ale = '1' else
             '1';
---    oe_n <= '0' when ale = '0' else
---            '1';
-    oe_n <= '0';
+    oe_n <= '0' when ale = '0' else
+            '1';
     out_reg_inst : d_flip_flop generic map (14)
             port map (clk, rst_n, '1', we_n, d_in, q_out);
     out_tss_inst : tri_state_buffer generic map (14)

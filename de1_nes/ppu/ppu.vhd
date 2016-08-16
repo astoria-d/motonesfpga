@@ -337,14 +337,14 @@ begin
     ale <= '1' when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
            '1' when ppu_addr_upd_n = '0' else
            '0' when ce_n = '0' and cpu_addr = PPUDATA and r_nw = '0' else
-           'Z';
+           '0';
     wr_n <= '0' when ce_n = '0' and cpu_addr = PPUDATA and r_nw = '0' else
             '1' when ppu_addr_upd_n = '0' else
             '1' when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
-            'Z';
+            '1';
     rd_n <= '1' when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
             '1' when ppu_addr_upd_n = '0' else
-            'Z';
+            '1';
     vram_a <= ppu_addr(13 downto 8) when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
               ppu_addr(13 downto 8) when ppu_addr_upd_n = '0' else
               (others => 'Z');
