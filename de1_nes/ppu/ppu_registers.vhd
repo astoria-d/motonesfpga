@@ -65,7 +65,11 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 entity ls373 is 
-    port (  clk         : in std_logic;
+    port (
+            dbg_vl_we_n     : out std_logic;
+
+            clk         : in std_logic;
+            rst_n       : in std_logic;
             ale         : in std_logic;
             vram_a      : in std_logic_vector (13 downto 8);
             vram_ad     : in std_logic_vector (7 downto 0);
@@ -79,8 +83,7 @@ component d_flip_flop
     generic (
             dsize : integer := 8
             );
-    port (  
-            clk     : in std_logic;
+    port (  clk     : in std_logic;
             res_n   : in std_logic;
             set_n   : in std_logic;
             we_n    : in std_logic;
@@ -104,13 +107,16 @@ signal d_in, q_out : std_logic_vector(13 downto 0);
 signal we_n, oe_n : std_logic;
 
 begin
+    dbg_vl_we_n <= we_n;
+
     d_in <= vram_a & vram_ad;
     we_n <= '0' when ale = '1' else
             '1';
-    oe_n <= '0' when ale = '0' else
-            '1';
+--    oe_n <= '0' when ale = '0' else
+--            '1';
+    oe_n <= '0';
     out_reg_inst : d_flip_flop generic map (14)
-            port map (clk, '1', '1', we_n, d_in, q_out);
+            port map (clk, rst_n, '1', we_n, d_in, q_out);
     out_tss_inst : tri_state_buffer generic map (14)
             port map (oe_n, q_out, v_addr);
 end rtl;

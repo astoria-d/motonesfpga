@@ -198,7 +198,10 @@ architecture rtl of de1_nes is
     end component;
 
     component ls373
-        port (  clk         : in std_logic;
+        port (
+                dbg_vl_we_n     : out std_logic;
+                clk         : in std_logic;
+                rst_n       : in std_logic;
                 ale         : in std_logic;
                 vram_a      : in std_logic_vector (13 downto 8);
                 vram_ad     : in std_logic_vector (7 downto 0);
@@ -288,6 +291,8 @@ architecture rtl of de1_nes is
     signal dbg_ea_carry_dummy     : std_logic;
     signal dbg_status_dummy       : std_logic_vector(7 downto 0);
     signal dbg_sp_dummy, dbg_x_dummy, dbg_y_dummy, dbg_acc_dummy       : std_logic_vector(7 downto 0);
+
+    signal dbg_vl_we_n     : std_logic;
 
 begin
 
@@ -384,7 +389,7 @@ begin
     --ale=1 >> addr latch
     --ale=0 >> addr output.
 	vram_latch : ls373
-                port map(emu_ppu_clk, ale, vram_a, vram_ad, v_addr);
+                port map(dbg_vl_we_n, emu_ppu_clk, rst_n, ale, vram_a, vram_ad, v_addr);
 
     vchr_rom : chr_rom generic map (chr_rom_8k, data_size)
             port map (emu_ppu_clk, pt_ce_n, v_addr(chr_rom_8k - 1 downto 0), vram_ad);
@@ -425,8 +430,9 @@ begin
     dbg_ppu_scrl_x(2) <= wr_n;
     dbg_ppu_scrl_x(3) <= nt0_ce_n;
 
-    dbg_sp <= "00" & v_addr(13 downto 8);
+    dbg_sp(5 downto 0) <= v_addr(13 downto 8);
     dbg_x <= v_addr(7 downto 0);
+    dbg_sp(6) <= dbg_vl_we_n;
     --nmi_n <= dummy_nmi;
     ---------------
 
