@@ -335,21 +335,21 @@ begin
     ppu_addr_upd_en_inst : d_flip_flop_bit
             port map (dl_cpu_clk, rst_n, '1', '0', ppu_addr_inc_n, ppu_addr_upd_n);
     ale <= '1' when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
-           --'1' when ppu_addr_upd_n = '0' else
+           '1' when ppu_addr_upd_n = '0' else
            '0' when ce_n = '0' and cpu_addr = PPUDATA and r_nw = '0' else
            'Z';
     wr_n <= '0' when ce_n = '0' and cpu_addr = PPUDATA and r_nw = '0' else
-            --'1' when ppu_addr_upd_n = '0' else
+            '1' when ppu_addr_upd_n = '0' else
             '1' when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
             'Z';
     rd_n <= '1' when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
-            --'1' when ppu_addr_upd_n = '0' else
+            '1' when ppu_addr_upd_n = '0' else
             'Z';
     vram_a <= ppu_addr(13 downto 8) when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
-              --ppu_addr(13 downto 8) when ppu_addr_upd_n = '0' else
+              ppu_addr(13 downto 8) when ppu_addr_upd_n = '0' else
               (others => 'Z');
     vram_ad <= cpu_d when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
-               --ppu_addr(7 downto 0) when ppu_addr_upd_n = '0' else
+               ppu_addr(7 downto 0) when ppu_addr_upd_n = '0' else
                cpu_d when ce_n = '0' and cpu_addr = PPUDATA and r_nw = '0' else
                (others => 'Z');
 

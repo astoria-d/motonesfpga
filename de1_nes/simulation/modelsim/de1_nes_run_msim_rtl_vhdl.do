@@ -49,6 +49,7 @@ add wave -label rd_n sim:/testbench_motones_sim/sim_board/ppu_inst/rd_n
 add wave -label wr_n sim:/testbench_motones_sim/sim_board/ppu_inst/wr_n
 add wave -label vram_a -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/vram_a
 add wave -label vram_ad -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/vram_ad
+add wave -label v_addr -radix hex sim:/testbench_motones_sim/sim_board/v_addr
 
 
 #add wave -divider render
