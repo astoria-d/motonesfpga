@@ -58,10 +58,12 @@ entity vga_ppu_render is
 
             --ppu internal ram access
             r_nw            : in std_logic;
-            oam_bus_ce_n    : in std_logic;
             plt_bus_ce_n    : in std_logic;
-            oam_plt_addr    : in std_logic_vector (7 downto 0);
-            oam_plt_data    : inout std_logic_vector (7 downto 0);
+            plt_addr_in     : in std_logic_vector (4 downto 0);
+            plt_data_in     : in std_logic_vector (7 downto 0);
+            oam_bus_ce_n    : in std_logic;
+            oam_addr_in     : in std_logic_vector (7 downto 0);
+            oam_data_in     : in std_logic_vector (7 downto 0);
             v_bus_busy_n    : out std_logic
     );
 end vga_ppu_render;
@@ -205,7 +207,6 @@ signal x_res_n      : std_logic;
 signal y_res_n      : std_logic;
 signal y_en_n       : std_logic;
 
-signal emu_ppu_clk_n    : std_logic;
 signal nes_x        : std_logic_vector (8 downto 0);
 signal nes_y        : std_logic_vector (8 downto 0);
 
@@ -461,720 +462,719 @@ begin
     -----------------------------------------
     ---emurated ppu clock and nes positions...
     -----------------------------------------
-    emu_ppu_clk_n <= not emu_ppu_clk;
     nes_x <= vga_x(9 downto 1);
     --debug purpose, accelarate the clock...
     nes_y <= vga_y(9 downto 1);
     --nes_y <= vga_y(8 downto 0);
 
 
-    -----------------------------------------
-    ---vram access signals
-    -----------------------------------------
-    reset_p : process (rst_n, emu_ppu_clk)
-    begin
-        if (rst_n = '0') then
-            io_cnt_rst_n <= '0';
-        else
-            if (falling_edge(emu_ppu_clk)) then
-                if (nes_x >= conv_std_logic_vector(VGA_W_MAX / 2 - 1, X_SIZE)) then io_cnt_rst_n <= '0';
-                else io_cnt_rst_n <= '1';
-                end if; 
-            end if;
-        end if;
-    end process;
-
-    io_cnt_inst : counter_register generic map (1, 1)
-            port map (emu_ppu_clk, io_cnt_rst_n, '0', '1', (others => '0'), io_cnt);
-
-    ale <= 
-            not io_cnt(0) when (
-                ((ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
-                (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
-                nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
-            'Z';
-    rd_n <= 
-            not io_cnt(0) when (
-                ((ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
-                (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
-                nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
-            'Z';
-    wr_n <= 
-            '1' when (
-                ((ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
-                (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
-                nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
-            'Z';
-    al_oe_n <= 
-            io_cnt(0) when (
-                ((ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
-                (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
-                nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
-               '1';
-    ah_oe_n <= 
-            '0' when (
-                ((ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
-                (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
-                nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
-            '1';
-    v_bus_busy_n <= ah_oe_n;
-
-
-    -----------------------------------------
-    --vram i/o
-    -----------------------------------------
-    vram_io_buf : tri_state_buffer generic map (dsize)
-            port map (al_oe_n, vram_addr(dsize - 1 downto 0), vram_ad);
-
-    vram_a_buf : tri_state_buffer generic map (6)
-            port map (ah_oe_n, vram_addr(asize - 1 downto dsize), vram_a);
-
-
-    -----------------------------------------
-    ---palette ram
-    -----------------------------------------
-    r_n <= not r_nw;
-
-    plt_ram_ce_n <= '0' when plt_bus_ce_n = '0' and r_nw = '0' else 
-                    '0' when plt_bus_ce_n = '0' and r_nw = '1' else
-                    '0' when ppu_mask(PPUSBG) = '1' and 
-                            (nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) and 
-                            (nes_y < conv_std_logic_vector(VSCAN, X_SIZE)) else
-                    '1';
-
-    plt_addr <= oam_plt_addr(4 downto 0) when plt_bus_ce_n = '0' else
-                "1" & spr_attr(0)(1 downto 0) & spr_ptn_h(0)(0) & spr_ptn_l(0)(0)
-                    when ppu_mask(PPUSSP) = '1' and
-                        (nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
-                        (nes_y < conv_std_logic_vector(VSCAN, X_SIZE)) and
-                        spr_x_cnt(0) = "00000000" and 
-                        (spr_ptn_h(0)(0) or spr_ptn_l(0)(0)) = '1' else
-                "1" & spr_attr(1)(1 downto 0) & spr_ptn_h(1)(0) & spr_ptn_l(1)(0)
-                    when ppu_mask(PPUSSP) = '1' and
-                        (nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
-                        (nes_y < conv_std_logic_vector(VSCAN, X_SIZE)) and
-                        spr_x_cnt(1) = "00000000" and 
-                        (spr_ptn_h(1)(0) or spr_ptn_l(1)(0)) = '1' else
-                "1" & spr_attr(2)(1 downto 0) & spr_ptn_h(2)(0) & spr_ptn_l(2)(0)
-                    when ppu_mask(PPUSSP) = '1' and 
-                        (nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
-                        (nes_y < conv_std_logic_vector(VSCAN, X_SIZE)) and
-                        spr_x_cnt(2) = "00000000" and
-                        (spr_ptn_h(2)(0) or spr_ptn_l(2)(0)) = '1' else
-                "1" & spr_attr(3)(1 downto 0) & spr_ptn_h(3)(0) & spr_ptn_l(3)(0)
-                    when ppu_mask(PPUSSP) = '1' and
-                        (nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
-                        (nes_y < conv_std_logic_vector(VSCAN, X_SIZE)) and
-                        spr_x_cnt(3) = "00000000" and
-                        (spr_ptn_h(3)(0) or spr_ptn_l(3)(0)) = '1' else
-                "1" & spr_attr(4)(1 downto 0) & spr_ptn_h(4)(0) & spr_ptn_l(4)(0)
-                    when ppu_mask(PPUSSP) = '1' and
-                        (nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
-                        (nes_y < conv_std_logic_vector(VSCAN, X_SIZE)) and
-                        spr_x_cnt(4) = "00000000" and
-                        (spr_ptn_h(4)(0) or spr_ptn_l(4)(0)) = '1' else
-                "1" & spr_attr(5)(1 downto 0) & spr_ptn_h(5)(0) & spr_ptn_l(5)(0)
-                    when ppu_mask(PPUSSP) = '1' and
-                        (nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
-                        (nes_y < conv_std_logic_vector(VSCAN, X_SIZE)) and
-                        spr_x_cnt(5) = "00000000" and
-                        (spr_ptn_h(5)(0) or spr_ptn_l(5)(0)) = '1' else
-                "1" & spr_attr(6)(1 downto 0) & spr_ptn_h(6)(0) & spr_ptn_l(6)(0)
-                    when ppu_mask(PPUSSP) = '1' and
-                        (nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
-                        (nes_y < conv_std_logic_vector(VSCAN, X_SIZE)) and
-                        spr_x_cnt(6) = "00000000" and
-                        (spr_ptn_h(6)(0) or spr_ptn_l(6)(0)) = '1' else
-                "1" & spr_attr(7)(1 downto 0) & spr_ptn_h(7)(0) & spr_ptn_l(7)(0)
-                    when ppu_mask(PPUSSP) = '1' and
-                        (nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
-                        (nes_y < conv_std_logic_vector(VSCAN, X_SIZE)) and
-                        spr_x_cnt(7) = "00000000" and
-                        (spr_ptn_h(7)(0) or spr_ptn_l(7)(0)) = '1' else
-                "0" & disp_attr(1 downto 0) & disp_ptn_h(0) & disp_ptn_l(0) 
-                    when ppu_mask(PPUSBG) = '1' and nes_y(4) = '0' and
-                        ((disp_ptn_h(0) or disp_ptn_l(0)) = '1') and
-                        (nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
-                        (nes_y < conv_std_logic_vector(VSCAN, X_SIZE)) else
-                "0" & disp_attr(5 downto 4) & disp_ptn_h(0) & disp_ptn_l(0)
-                    when ppu_mask(PPUSBG) = '1' and nes_y(4) = '1' and
-                        ((disp_ptn_h(0) or disp_ptn_l(0)) = '1') and
-                        (nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
-                        (nes_y < conv_std_logic_vector(VSCAN, X_SIZE)) else
-                ---else: no output color >> universal bg color output.
-                --0x3f00 is the universal bg palette.
-                (others => '0');    
-
-    plt_r_n <= not r_nw when plt_bus_ce_n = '0' else
-                '0' when ppu_mask(PPUSBG) = '1' else
-                '1';
-    plt_w_n <= r_nw when plt_bus_ce_n = '0' else
-                '1';
-    plt_d_buf_w : tri_state_buffer generic map (dsize)
-            port map (plt_w_n, oam_plt_data, plt_data);
-    plt_d_buf_r : tri_state_buffer generic map (dsize)
-            port map (plt_r_n, plt_data, oam_plt_data);
-    palette_inst : palette_ram generic map (5, dsize)
-            port map (emu_ppu_clk, plt_ram_ce_n, plt_r_n, plt_w_n, plt_addr, plt_data);
-
-
-    -----------------------------------------
-    ---primary oam implementation...
-    -----------------------------------------
-    p_oam_ram_ce_n <=
-                    '0' when oam_bus_ce_n = '0' else
-                    '0' when ppu_mask(PPUSSP) = '1' and
-                         (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
-                         nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)) and
-                         nes_x > conv_std_logic_vector(HSCAN_OAM_EVA_START, X_SIZE) and 
-                         nes_x <= conv_std_logic_vector(HSCAN, X_SIZE) else
-                    '1';
-    p_oam_addr <= oam_plt_addr when oam_bus_ce_n = '0' else
-                p_oam_addr_in when ppu_mask(PPUSSP) = '1' and 
-                         (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
-                         nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)) and
-                         nes_x > conv_std_logic_vector(HSCAN_OAM_EVA_START, X_SIZE) and 
-                         nes_x <= conv_std_logic_vector(HSCAN, X_SIZE) else
-                (others => 'Z');
-    p_oam_r_n <= not r_nw when oam_bus_ce_n = '0' else
-                '0' when ppu_mask(PPUSSP) = '1' and 
-                         (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
-                         nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)) and
-                         nes_x > conv_std_logic_vector(HSCAN_OAM_EVA_START, X_SIZE) and 
-                         nes_x <= conv_std_logic_vector(HSCAN, X_SIZE) else
-                '1';
-    p_oam_w_n <= r_nw when oam_bus_ce_n = '0' else
-                '1';
-    oam_d_buf_w : tri_state_buffer generic map (dsize)
-            port map (p_oam_w_n, oam_plt_data, p_oam_data);
-    oam_d_buf_r : tri_state_buffer generic map (dsize)
-            port map (p_oam_r_n, p_oam_data, oam_plt_data);
-
-    primary_oam_inst : ram generic map (dsize, dsize)
-            port map (emu_ppu_clk, p_oam_ram_ce_n, p_oam_r_n, p_oam_w_n, p_oam_addr, p_oam_data);
-
-    -----------------------------------------
-    ---secondary oam implementation
-    -----------------------------------------
-    --primary oam copy count
-    p_oam_cnt_inst : counter_register generic map (dsize + 1, 4)
-            port map (emu_ppu_clk_n, p_oam_cnt_res_n, p_oam_cnt_ce_n, '1', (others => '0'), p_oam_cnt);
-    --primary oam copy count
-    s_oam_cnt_inst : counter_register generic map (6, 1)
-            port map (emu_ppu_clk_n, p_oam_cnt_res_n, s_oam_cnt_ce_n, '1', (others => '0'), s_oam_cnt);
-    --secondary oam pattern index.
-    s_oam_addr_cpy_inst : counter_register generic map (5, 1)
-            port map (emu_ppu_clk_n, p_oam_cnt_res_n, s_oam_addr_cpy_ce_n, 
-                    '1', (others => '0'), s_oam_addr_cpy);
-
-    s_oam_ram_ce_n <=
-                      --enabled on clear only.
-                      '0' when ppu_mask(PPUSSP) = '1' and nes_x(0) = '0' and
-                                nes_x <= conv_std_logic_vector(HSCAN_OAM_EVA_START, X_SIZE) else
-                      --enabled on copy only.
-                      '0' when ppu_mask(PPUSSP) = '1' and nes_x(0) = '0' and
-                                nes_x > conv_std_logic_vector(HSCAN_OAM_EVA_START, X_SIZE) and
-                                nes_x <= conv_std_logic_vector(HSCAN, X_SIZE) else
-                      --enabled all the time for reference.
-                      '0' when ppu_mask(PPUSSP) = '1' and
-                                nes_x > conv_std_logic_vector(HSCAN, X_SIZE) and
-                                nes_x <= conv_std_logic_vector(HSCAN_SPR_MAX, X_SIZE) and
-                                s_oam_addr_cpy_n = '0' else
-                      '1';
-
-    secondary_oam_inst : ram generic map (5, dsize)
-            port map (emu_ppu_clk, s_oam_ram_ce_n, s_oam_r_n, s_oam_w_n, s_oam_addr, s_oam_data);
-
-    --sprite y tmp val
-    spr_y_inst : d_flip_flop generic map(dsize)
-            port map (emu_ppu_clk_n, p_oam_cnt_res_n, '1', spr_y_we_n, s_oam_data, spr_y_tmp);
-    --sprite pattern tmp val
-    spr_tile_inst : d_flip_flop generic map(dsize)
-            port map (emu_ppu_clk_n, p_oam_cnt_res_n, '1', spr_tile_we_n, s_oam_data, spr_tile_tmp);
-
-
-    --reverse bit when NOT SPRHFL is set (.nes file format bit endian).
-    spr_ptn_in <= vram_ad when spr_attr(conv_integer(s_oam_addr_cpy(4 downto 2)))(SPRHFL) = '1' else
-                (vram_ad(0) & vram_ad(1) & vram_ad(2) & vram_ad(3) & 
-                 vram_ad(4) & vram_ad(5) & vram_ad(6) & vram_ad(7));
-    --oam array instances...
-    spr_inst : for i in 0 to 7 generate
-        spr_x_inst : counter_register generic map(dsize, 16#ff#)
-                port map (emu_ppu_clk_n, rst_n, spr_x_ce_n(i), spr_x_we_n(i), s_oam_data, spr_x_cnt(i));
-
-        spr_attr_inst : d_flip_flop generic map(dsize)
-                port map (emu_ppu_clk_n, rst_n, '1', spr_attr_we_n(i), s_oam_data, spr_attr(i));
-
-        spr_ptn_l_inst : shift_register generic map(dsize, 1)
-                port map (emu_ppu_clk_n, rst_n, spr_ptn_ce_n(i), spr_ptn_l_we_n(i), spr_ptn_in, spr_ptn_l(i));
-
-        spr_ptn_h_inst : shift_register generic map(dsize, 1)
-                port map (emu_ppu_clk_n, rst_n, spr_ptn_ce_n(i), spr_ptn_h_we_n(i), spr_ptn_in, spr_ptn_h(i));
-    end generate;
-
-
-    -----------------------------------------
-    ---sprite main process
-    -----------------------------------------
-    spr_main_p : process (rst_n, emu_ppu_clk)
-    begin
-        if (rst_n = '0') then
-            s_oam_addr <= (others => 'Z');
-            s_oam_data <= (others => 'Z');
-
-            s_oam_r_n <= '1';
-            s_oam_w_n <= '1';
-            p_oam_cnt_res_n <= '1';
-            p_oam_cnt_ce_n <= '1';
-            s_oam_cnt_ce_n <= '1';
-            oam_ev_status <= EV_STAT_COMP;
-            p_oam_addr_in <= (others => 'Z');
-
-            s_oam_addr_cpy_n <= '1';
-            spr_y_we_n <= '1';
-            spr_tile_we_n <= '1';
-            spr_x_we_n <= (others => '1');
-            spr_attr_we_n <= (others => '1');
-            spr_ptn_l_we_n <= (others => '1');
-            spr_ptn_h_we_n <= (others => '1');
-            s_oam_addr_cpy_ce_n <= '1';
-            spr_x_ce_n <= (others => '1');
-            spr_ptn_ce_n <= (others => '1');
-
-            sprite0_evaluated <= '0';
-            sprite0_displayed <= '0';
-
-        else
-
-            if (rising_edge(emu_ppu_clk)) then
-
-                if (ppu_mask(PPUSSP) = '1' and
-                        (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
-                        nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE))) then
-                    --secondary oam clear
-                    if (nes_x <= conv_std_logic_vector(HSCAN_OAM_EVA_START, X_SIZE)) then
-                        if (nes_x(0) = '1') then
-                            --odd cycle is set address.
-                            --even cycle is write data.
-                            s_oam_addr <= nes_x(5 downto 1);
-                        end if;
-                        s_oam_r_n <= '1';
-                        s_oam_w_n <= '0';
-                        s_oam_data <= (others => '1');
-                        p_oam_cnt_res_n <= '0';
-                        p_oam_cnt_ce_n <= '1';
-                        s_oam_cnt_ce_n <= '1';
-                        oam_ev_status <= EV_STAT_COMP;
-
-                    --sprite evaluation and secondary oam copy.
-                    elsif (nes_x > conv_std_logic_vector(HSCAN_OAM_EVA_START, X_SIZE) and 
-                            nes_x <= conv_std_logic_vector(HSCAN, X_SIZE)) then
-                        p_oam_cnt_res_n <= '1';
-                        s_oam_r_n <= '1';
-
-                        --TODO: sprite evaluation is simplified!!
-                        --not complying the original NES spec at
-                        --http://wiki.nesdev.com/w/index.php/PPU_sprite_evaluation
-                        --e.g., when overflow happens, it just ignore subsequent entry.
-                        if (s_oam_cnt(5) = '1' or p_oam_cnt(8) = '1') then
-                            s_oam_cnt_ce_n <= '1';
-                            s_oam_w_n <= '1';
-                            s_oam_addr <= (others => 'Z');
-                            s_oam_data <= (others => 'Z');
-                        else
-                            --odd cycle copy from primary oam
-                            if (nes_x(0) = '1') then
-                                s_oam_w_n <= '1';
-                                if (oam_ev_status = EV_STAT_COMP) then
-                                    p_oam_addr_in <= p_oam_cnt(7 downto 0);
-                                    p_oam_cnt_ce_n <= '1';
-                                    s_oam_cnt_ce_n <= '1';
-                                elsif (oam_ev_status = EV_STAT_CP1) then
-                                    p_oam_addr_in <= p_oam_cnt(7 downto 0) + "00000001";
-                                    s_oam_cnt_ce_n <= '1';
-
-                                elsif (oam_ev_status = EV_STAT_CP2) then
-                                    p_oam_addr_in <= p_oam_cnt(7 downto 0) + "00000010";
-                                    s_oam_cnt_ce_n <= '1';
-
-                                elsif (oam_ev_status = EV_STAT_CP3) then
-                                    oam_ev_status <= EV_STAT_PRE_COMP;
-                                    p_oam_addr_in <= p_oam_cnt(7 downto 0) + "00000011";
-                                    s_oam_cnt_ce_n <= '1';
-                                end if;
-                            else
-                            --even cycle copy to secondary oam (if y is in range.)
-
-                                s_oam_w_n <= '0';
-                                s_oam_addr <= s_oam_cnt(4 downto 0);
-                                s_oam_data <= p_oam_data;
-
-                                if (oam_ev_status = EV_STAT_COMP) then
-                                    --check y range.
-                                    if (nes_y < "000000110" and p_oam_data <= nes_y + "000000001") or 
-                                        (nes_y >= "000000110" and p_oam_data <= nes_y + "000000001" and 
-                                                 p_oam_data >= nes_y - "000000110") then
-                                        oam_ev_status <= EV_STAT_CP1;
-                                        s_oam_cnt_ce_n <= '0';
-                                        --copy remaining oam entry.
-                                        p_oam_cnt_ce_n <= '1';
-                                        
-                                        --check sprite 0 is used.
-                                        if (p_oam_cnt(7 downto 0) = "00000000") then
-                                            sprite0_evaluated <= '1';
-                                        end if;
-                                    else
-                                        --goto next entry
-                                        p_oam_cnt_ce_n <= '0';
-                                    end if;
-                                elsif (oam_ev_status = EV_STAT_CP1) then
-                                    s_oam_cnt_ce_n <= '0';
-                                    oam_ev_status <= EV_STAT_CP2;
-                                elsif (oam_ev_status = EV_STAT_CP2) then
-                                    s_oam_cnt_ce_n <= '0';
-                                    oam_ev_status <= EV_STAT_CP3;
-                                elsif (oam_ev_status = EV_STAT_CP3) then
-                                    s_oam_cnt_ce_n <= '0';
-                                elsif (oam_ev_status = EV_STAT_PRE_COMP) then
-                                    oam_ev_status <= EV_STAT_COMP;
-                                    s_oam_cnt_ce_n <= '0';
-                                    p_oam_cnt_ce_n <= '0';
-                                end if;
-                            end if;--if (nes_x(0) = '1') then
-                        end if;--(s_oam_cnt(5) = '1' or p_oam_cnt(8) = '') then
-
-                        --prepare for next step
-                        s_oam_addr_cpy_n <= '1';
-                        spr_y_we_n <= '1';
-                        spr_tile_we_n <= '1';
-                        spr_x_we_n <= "11111111";
-                        spr_attr_we_n <= "11111111";
-                        spr_ptn_l_we_n <= "11111111";
-                        spr_ptn_h_we_n <= "11111111";
-
-                    --sprite pattern fetch
-                    elsif (nes_x > conv_std_logic_vector(HSCAN, X_SIZE) and 
-                            nes_x < conv_std_logic_vector(HSCAN_SPR_MAX, X_SIZE)) then
-
-                        s_oam_addr_cpy_n <= '0';
-                        s_oam_r_n <= '0';
-                        s_oam_w_n <= '1';
-                        s_oam_addr <= s_oam_addr_cpy;
-
-                        ----fetch y-cordinate from secondary oam
-                        if (nes_x (2 downto 0) = "001" ) then
-                            s_oam_addr_cpy_ce_n <= '0';
-                            spr_y_we_n <= '0';
-                        else
-                            spr_y_we_n <= '1';
-                        end if;
-
-                        ----fetch tile number
-                        if (nes_x (2 downto 0) = "010" ) then
-                            spr_tile_we_n <= '0';
-                        else
-                            spr_tile_we_n <= '1';
-                        end if;
-
-                        ----fetch attribute
-                        if (nes_x (2 downto 0) = "011" ) then
-                            spr_attr_we_n(conv_integer(s_oam_addr_cpy(4 downto 2))) <= '0';
-                        else
-                            spr_attr_we_n(conv_integer(s_oam_addr_cpy(4 downto 2))) <= '1';
-                        end if;--if (nes_x (2 downto 0) = "010" ) then
-
-                        ----fetch x-cordinate
-                        if (nes_x (2 downto 0) = "100" ) then
-                            s_oam_addr_cpy_ce_n <= '1';
-                            spr_x_we_n(conv_integer(s_oam_addr_cpy(4 downto 2))) <= '0';
-                        else
-                            spr_x_we_n(conv_integer(s_oam_addr_cpy(4 downto 2))) <= '1';
-                        end if;
-
-                        --pattern tbl low vale.
-                        if (nes_x (2 downto 0) = "110" ) then
-                            spr_ptn_l_we_n(conv_integer(s_oam_addr_cpy(4 downto 2))) <= '0';
-                        else
-                            spr_ptn_l_we_n(conv_integer(s_oam_addr_cpy(4 downto 2))) <= '1';
-                        end if;
-
-                        --pattern tbl high vale.
-                        if (nes_x (2 downto 0) = "000") then
-                            spr_ptn_h_we_n(conv_integer(s_oam_addr_cpy(4 downto 2))) <= '0';
-                            s_oam_addr_cpy_ce_n <= '0';
-                        else
-                            spr_ptn_h_we_n(conv_integer(s_oam_addr_cpy(4 downto 2) - "001")) <= '1';
-                        end if;
-                        
-                        --check sprite 0 is used in the next line.
-                        if (sprite0_evaluated = '1') then
-                            sprite0_displayed <= '1';
-                        end if;
-
-                    elsif (nes_x > conv_std_logic_vector(HSCAN_SPR_MAX, X_SIZE)) then
-                        --clear last write enable.
-                        spr_ptn_h_we_n <= "11111111";
-                    end if;--if (nes_x <= conv_std_logic_vector(HSCAN_OAM_EVA_START, X_SIZE))
-
-                    --display sprite.
-                    if ((nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
-                        (nes_y < conv_std_logic_vector(VSCAN, X_SIZE))) then
-                        --start counter.
-                        if (nes_x = "000000000") then
-                            spr_x_ce_n <= "00000000";
-                        end if;
-
-                        for i in 0 to 7 loop
-                            if (spr_x_cnt(i) = "00000000") then
-                                --active sprite, start shifting..
-                                spr_x_ce_n(i) <= '1';
-                                spr_ptn_ce_n(i) <= '0';
-                            end if;
-                        end loop;
-                    else
-                        spr_x_ce_n <= "11111111";
-                        spr_ptn_ce_n <= "11111111";
-                    end if; --if ((nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) 
-                else
-                    --sprite evaluation are cleared during the blank line.
-                    sprite0_evaluated <= '0';
-                    sprite0_displayed <= '0';
-                end if; --if (ppu_mask(PPUSSP) = '1') 
-                        --(nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
-                        --nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE))) then
-                
-            end if; --if (rising_edge(emu_ppu_clk)) then
-
-        end if;--if (rst_n = '0') then
-    end process;--spr_main_p 
-
-
-    
-    -----------------------------------------
-    ---bg display variables...
-    -----------------------------------------
-    ---bg prefetch x pos is 16 + scroll cycle ahead of current pos.
-    prf_x <= nes_x + ppu_scroll_x + "000010000" 
-                    when nes_x < conv_std_logic_vector(HSCAN, X_SIZE) else
-             nes_x + ppu_scroll_x + "010111011"; -- +16 -341
-
-    prf_y <= nes_y + ppu_scroll_y
-                    when nes_x < conv_std_logic_vector(HSCAN, X_SIZE) and
-                         nes_y < conv_std_logic_vector(VSCAN, X_SIZE) else
-             nes_y + ppu_scroll_y + "000000001" 
-                    when nes_y < conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE) else
-             "000000000"; 
-
-    --name tbl, attr tbl, pattern tble values..
-    nt_inst : d_flip_flop generic map(dsize)
-            port map (emu_ppu_clk_n, rst_n, '1', nt_we_n, vram_ad, disp_nt);
-
-    at_inst : d_flip_flop generic map(dsize)
-            port map (emu_ppu_clk_n, rst_n, '1', attr_we_n, vram_ad, attr_val);
-
-    disp_at_inst : shift_register generic map(dsize, 2)
-            port map (emu_ppu_clk_n, rst_n, attr_ce_n, disp_attr_we_n, attr_val, disp_attr);
-
-    --chr rom data's bit is stored in opposite direction.
-    --reverse bit when loading...
-    ptn_l_in <= (vram_ad(0) & vram_ad(1) & vram_ad(2) & vram_ad(3) & 
-                 vram_ad(4) & vram_ad(5) & vram_ad(6) & vram_ad(7));
-    ptn_h_in <= (vram_ad(0) & vram_ad(1) & vram_ad(2) & vram_ad(3) & 
-                 vram_ad(4) & vram_ad(5) & vram_ad(6) & vram_ad(7)) & 
-                disp_ptn_h (dsize downto 1);
-
-    ptn_l_inst : d_flip_flop generic map(dsize)
-            port map (emu_ppu_clk_n, rst_n, '1', ptn_l_we_n, ptn_l_in, ptn_l_val);
-
-    disp_ptn_l_in <= ptn_l_val & disp_ptn_l (dsize downto 1);
-    disp_ptn_l_inst : shift_register generic map(dsize * 2, 1)
-            port map (emu_ppu_clk_n, rst_n, '0', ptn_h_we_n, disp_ptn_l_in, disp_ptn_l);
-
-    ptn_h_inst : shift_register generic map(dsize * 2, 1)
-            port map (emu_ppu_clk_n, rst_n, '0', ptn_h_we_n, ptn_h_in, disp_ptn_h);
-
-
-    -----------------------------------------
-    ---bg main process
-    -----------------------------------------
-    bg_main_p : process (rst_n, emu_ppu_clk)
-    begin
-        if (rst_n = '0') then
-            nt_we_n <= '1';
-            attr_we_n <= '1';
-            disp_attr_we_n <= '1';
-            attr_ce_n <= '1';
-            ptn_l_we_n <= '1';
-            ptn_h_we_n <= '1';
-        else
-            if (rising_edge(emu_ppu_clk)) then
-
-                --fetch bg pattern and display.
-                if (ppu_mask(PPUSBG) = '1' and 
-                        (nes_x <= conv_std_logic_vector(HSCAN, X_SIZE) or
-                        nes_x > conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE)) and
-                        (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
-                        nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE))) then
-                    --visible area bg image
-
-                    d_print("*");
-                    d_print("nes_x: " & conv_hex16(conv_integer(nes_x)));
-                    d_print("nes_y: " & conv_hex16(conv_integer(nes_y)));
-
-                    ----fetch next tile byte.
-                    if (prf_x (2 downto 0) = "010") then
-                        nt_we_n <= '0';
-                    else
-                        nt_we_n <= '1';
-                    end if;
-
-                    ----fetch attr table byte.
-                    if (prf_x (4 downto 0) = "00100") then
-                        attr_we_n <= '0';
-                    else
-                        attr_we_n <= '1';
-                    end if;
-                    if (prf_x (4 downto 0) = "10000") then
-                        disp_attr_we_n <= '0';
-                    else
-                        disp_attr_we_n <= '1';
-                    end if;
-                    ---attribute is shifted every 16 bit.
-                    if (prf_x (3 downto 0) = "0000") then
-                        attr_ce_n <= '0';
-                    else
-                        attr_ce_n <= '1';
-                    end if;
-
-                    ----fetch pattern table low byte.
-                    if (prf_x (2 downto 0) = "110") then
-                         ptn_l_we_n <= '0';
-                    else
-                         ptn_l_we_n <= '1';
-                    end if;
-
-                    ----fetch pattern table high byte.
-                    if (prf_x (2 downto 0) = "000") then
-                         ptn_h_we_n <= '0';
-                    else
-                         ptn_h_we_n <= '1';
-                    end if;
-
-                else
-                    nt_we_n <= '1';
-                    attr_we_n <= '1';
-                    disp_attr_we_n <= '1';
-                    attr_ce_n <= '1';
-                    ptn_l_we_n <= '1';
-                    ptn_h_we_n <= '1';
-                end if;--if (ppu_mask(PPUSBG) = '1') and
-            end if;--if (rising_edge(emu_ppu_clk)) then
-        end if;--if (rst_n = '0') then
-    end process;--bg_main_p 
-
-    
-    -----------------------------------------
-    ---vram addr access process
-    -----------------------------------------
-    vaddr_p : process (rst_n, emu_ppu_clk)
-    begin
-        if (rst_n = '0') then
-            vram_addr <= (others => 'Z');
-        else
-            if (rising_edge(emu_ppu_clk)) then
-
-                if (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
-                     nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)) then
-
-                    --------------------------
-                    --bg pattern fetch.
-                    --------------------------
-                    if (ppu_mask(PPUSBG) = '1' and (
-                        (nes_x > conv_std_logic_vector(1, X_SIZE) and 
-                         nes_x <= conv_std_logic_vector(HSCAN, X_SIZE))
-                         or
-                        (nes_x >= conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE))
-                        )) then
-
-                        ----fetch next tile byte.
-                        if (prf_x (2 downto 0) = "001") then
-                            --vram addr is incremented every 8 cycle.
-                            --name table at 0x2000
-                            vram_addr(9 downto 0) 
-                                <= prf_y(dsize - 1 downto 3) 
-                                    & prf_x(dsize - 1 downto 3);
-                            vram_addr(asize - 1 downto 10) <= "10" & ppu_ctrl(PPUBNA downto 0) 
-                                                            + ("000" & prf_x(dsize));
-                        ----fetch attr table byte.
-                        elsif (prf_x (4 downto 0) = "00011") then
-                            --attribute table is loaded every 32 cycle.
-                            --attr table at 0x23c0
-                            vram_addr(dsize - 1 downto 0) <= "11000000" +
-                                    ("00" & prf_y(7 downto 5) & prf_x(7 downto 5));
-                            vram_addr(asize - 1 downto dsize) <= "10" &
-                                    ppu_ctrl(PPUBNA downto 0) & "11"
-                                        + ("000" & prf_x(dsize) & "00");
-                        ----fetch pattern table low byte.
-                        elsif (prf_x (2 downto 0) = "101") then
-                             --vram addr is incremented every 8 cycle.
-                             vram_addr <= "0" & ppu_ctrl(PPUBPA) & 
-                                                  disp_nt(dsize - 1 downto 0) 
-                                                        & "0"  & prf_y(2  downto 0);
-                        ----fetch pattern table high byte.
-                        elsif (prf_x (2 downto 0) = "111") then
-                             --vram addr is incremented every 8 cycle.
-                             vram_addr <= "0" & ppu_ctrl(PPUBPA) & 
-                                                  disp_nt(dsize - 1 downto 0) 
-                                                        & "0"  & prf_y(2 downto 0) + "00000000001000";
-                        end if;
-
-                    --------------------------
-                    --sprite pattern fetch.
-                    --------------------------
-                    elsif (ppu_mask(PPUSSP) = '1' and (nes_x > conv_std_logic_vector(HSCAN, X_SIZE) and 
-                        nes_x <= conv_std_logic_vector(HSCAN_SPR_MAX, X_SIZE))) then
-                        
-                        ----fetch pattern table low byte.
-                        if (nes_x (2 downto 0) = "101" ) then
-                            if (spr_attr(conv_integer(s_oam_addr_cpy(4 downto 2)))(SPRVFL) = '0') then
-                                vram_addr <= "0" & ppu_ctrl(PPUSPA) & 
-                                            spr_tile_tmp(dsize - 1 downto 0) & "0" & 
-                                            (nes_y(2 downto 0) + "001" - spr_y_tmp(2 downto 0));
-                            else
-                                --flip sprite vertically.
-                                vram_addr <= "0" & ppu_ctrl(PPUSPA) & 
-                                            spr_tile_tmp(dsize - 1 downto 0) & "0" & 
-                                            (spr_y_tmp(2 downto 0) - nes_y(2 downto 0) - "010");
-                            end if;
-                        
-                        ----fetch pattern table high byte.
-                        elsif (nes_x (2 downto 0) = "111" ) then
-                            if (spr_attr(conv_integer(s_oam_addr_cpy(4 downto 2)))(SPRVFL) = '0') then
-                                vram_addr <= "0" & ppu_ctrl(PPUSPA) & 
-                                            spr_tile_tmp(dsize - 1 downto 0) & "0" & 
-                                            (nes_y(2 downto 0) + "001" - spr_y_tmp(2 downto 0))
-                                                + "00000000001000";
-                            else
-                                --flip sprite vertically.
-                                vram_addr <= "0" & ppu_ctrl(PPUSPA) & 
-                                            spr_tile_tmp(dsize - 1 downto 0) & "0"  & 
-                                            (spr_y_tmp(2 downto 0) - nes_y(2 downto 0) - "010")
-                                                + "00000000001000";
-                            end if;
-                        end if;
-                    else
-                        vram_addr <= (others => 'Z');
-                    end if; --if (nes_x > conv_std_logic_vector(HSCAN, X_SIZE) and 
-                                --nes_x <= conv_std_logic_vector(HSCAN_SPR_MAX, X_SIZE)) then
-                else
-                    vram_addr <= (others => 'Z');
-                end if; --(nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
-                        --nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE))) then
-            end if; --if (rising_edge(emu_ppu_clk)) then
-        end if;--if (rst_n = '0') then
-    end process;--vaddr_p 
-
-
+--    -----------------------------------------
+--    ---vram access signals
+--    -----------------------------------------
+--    reset_p : process (rst_n, emu_ppu_clk)
+--    begin
+--        if (rst_n = '0') then
+--            io_cnt_rst_n <= '0';
+--        else
+--            if (falling_edge(emu_ppu_clk)) then
+--                if (nes_x >= conv_std_logic_vector(VGA_W_MAX / 2 - 1, X_SIZE)) then io_cnt_rst_n <= '0';
+--                else io_cnt_rst_n <= '1';
+--                end if; 
+--            end if;
+--        end if;
+--    end process;
+--
+--    io_cnt_inst : counter_register generic map (1, 1)
+--            port map (emu_ppu_clk, io_cnt_rst_n, '0', '1', (others => '0'), io_cnt);
+--
+--    ale <= 
+--            not io_cnt(0) when (
+--                ((ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
+--                (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+--                nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
+--            'Z';
+--    rd_n <= 
+--            not io_cnt(0) when (
+--                ((ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
+--                (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+--                nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
+--            'Z';
+--    wr_n <= 
+--            '1' when (
+--                ((ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
+--                (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+--                nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
+--            'Z';
+--    al_oe_n <= 
+--            io_cnt(0) when (
+--                ((ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
+--                (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+--                nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
+--               '1';
+--    ah_oe_n <= 
+--            '0' when (
+--                ((ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
+--                (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+--                nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
+--            '1';
+--    v_bus_busy_n <= ah_oe_n;
+--
+--
+--    -----------------------------------------
+--    --vram i/o
+--    -----------------------------------------
+--    vram_io_buf : tri_state_buffer generic map (dsize)
+--            port map (al_oe_n, vram_addr(dsize - 1 downto 0), vram_ad);
+--
+--    vram_a_buf : tri_state_buffer generic map (6)
+--            port map (ah_oe_n, vram_addr(asize - 1 downto dsize), vram_a);
+--
+--
+--    -----------------------------------------
+--    ---palette ram
+--    -----------------------------------------
+--    r_n <= not r_nw;
+--
+--    plt_ram_ce_n <= '0' when plt_bus_ce_n = '0' and r_nw = '0' else 
+--                    '0' when plt_bus_ce_n = '0' and r_nw = '1' else
+--                    '0' when ppu_mask(PPUSBG) = '1' and 
+--                            (nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) and 
+--                            (nes_y < conv_std_logic_vector(VSCAN, X_SIZE)) else
+--                    '1';
+--
+--    plt_addr <= oam_plt_addr(4 downto 0) when plt_bus_ce_n = '0' else
+--                "1" & spr_attr(0)(1 downto 0) & spr_ptn_h(0)(0) & spr_ptn_l(0)(0)
+--                    when ppu_mask(PPUSSP) = '1' and
+--                        (nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
+--                        (nes_y < conv_std_logic_vector(VSCAN, X_SIZE)) and
+--                        spr_x_cnt(0) = "00000000" and 
+--                        (spr_ptn_h(0)(0) or spr_ptn_l(0)(0)) = '1' else
+--                "1" & spr_attr(1)(1 downto 0) & spr_ptn_h(1)(0) & spr_ptn_l(1)(0)
+--                    when ppu_mask(PPUSSP) = '1' and
+--                        (nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
+--                        (nes_y < conv_std_logic_vector(VSCAN, X_SIZE)) and
+--                        spr_x_cnt(1) = "00000000" and 
+--                        (spr_ptn_h(1)(0) or spr_ptn_l(1)(0)) = '1' else
+--                "1" & spr_attr(2)(1 downto 0) & spr_ptn_h(2)(0) & spr_ptn_l(2)(0)
+--                    when ppu_mask(PPUSSP) = '1' and 
+--                        (nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
+--                        (nes_y < conv_std_logic_vector(VSCAN, X_SIZE)) and
+--                        spr_x_cnt(2) = "00000000" and
+--                        (spr_ptn_h(2)(0) or spr_ptn_l(2)(0)) = '1' else
+--                "1" & spr_attr(3)(1 downto 0) & spr_ptn_h(3)(0) & spr_ptn_l(3)(0)
+--                    when ppu_mask(PPUSSP) = '1' and
+--                        (nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
+--                        (nes_y < conv_std_logic_vector(VSCAN, X_SIZE)) and
+--                        spr_x_cnt(3) = "00000000" and
+--                        (spr_ptn_h(3)(0) or spr_ptn_l(3)(0)) = '1' else
+--                "1" & spr_attr(4)(1 downto 0) & spr_ptn_h(4)(0) & spr_ptn_l(4)(0)
+--                    when ppu_mask(PPUSSP) = '1' and
+--                        (nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
+--                        (nes_y < conv_std_logic_vector(VSCAN, X_SIZE)) and
+--                        spr_x_cnt(4) = "00000000" and
+--                        (spr_ptn_h(4)(0) or spr_ptn_l(4)(0)) = '1' else
+--                "1" & spr_attr(5)(1 downto 0) & spr_ptn_h(5)(0) & spr_ptn_l(5)(0)
+--                    when ppu_mask(PPUSSP) = '1' and
+--                        (nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
+--                        (nes_y < conv_std_logic_vector(VSCAN, X_SIZE)) and
+--                        spr_x_cnt(5) = "00000000" and
+--                        (spr_ptn_h(5)(0) or spr_ptn_l(5)(0)) = '1' else
+--                "1" & spr_attr(6)(1 downto 0) & spr_ptn_h(6)(0) & spr_ptn_l(6)(0)
+--                    when ppu_mask(PPUSSP) = '1' and
+--                        (nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
+--                        (nes_y < conv_std_logic_vector(VSCAN, X_SIZE)) and
+--                        spr_x_cnt(6) = "00000000" and
+--                        (spr_ptn_h(6)(0) or spr_ptn_l(6)(0)) = '1' else
+--                "1" & spr_attr(7)(1 downto 0) & spr_ptn_h(7)(0) & spr_ptn_l(7)(0)
+--                    when ppu_mask(PPUSSP) = '1' and
+--                        (nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
+--                        (nes_y < conv_std_logic_vector(VSCAN, X_SIZE)) and
+--                        spr_x_cnt(7) = "00000000" and
+--                        (spr_ptn_h(7)(0) or spr_ptn_l(7)(0)) = '1' else
+--                "0" & disp_attr(1 downto 0) & disp_ptn_h(0) & disp_ptn_l(0) 
+--                    when ppu_mask(PPUSBG) = '1' and nes_y(4) = '0' and
+--                        ((disp_ptn_h(0) or disp_ptn_l(0)) = '1') and
+--                        (nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
+--                        (nes_y < conv_std_logic_vector(VSCAN, X_SIZE)) else
+--                "0" & disp_attr(5 downto 4) & disp_ptn_h(0) & disp_ptn_l(0)
+--                    when ppu_mask(PPUSBG) = '1' and nes_y(4) = '1' and
+--                        ((disp_ptn_h(0) or disp_ptn_l(0)) = '1') and
+--                        (nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
+--                        (nes_y < conv_std_logic_vector(VSCAN, X_SIZE)) else
+--                ---else: no output color >> universal bg color output.
+--                --0x3f00 is the universal bg palette.
+--                (others => '0');    
+--
+--    plt_r_n <= not r_nw when plt_bus_ce_n = '0' else
+--                '0' when ppu_mask(PPUSBG) = '1' else
+--                '1';
+--    plt_w_n <= r_nw when plt_bus_ce_n = '0' else
+--                '1';
+--    plt_d_buf_w : tri_state_buffer generic map (dsize)
+--            port map (plt_w_n, oam_plt_data, plt_data);
+--    plt_d_buf_r : tri_state_buffer generic map (dsize)
+--            port map (plt_r_n, plt_data, oam_plt_data);
+--    palette_inst : palette_ram generic map (5, dsize)
+--            port map (emu_ppu_clk, plt_ram_ce_n, plt_r_n, plt_w_n, plt_addr, plt_data);
+--
+--
+--    -----------------------------------------
+--    ---primary oam implementation...
+--    -----------------------------------------
+--    p_oam_ram_ce_n <=
+--                    '0' when oam_bus_ce_n = '0' else
+--                    '0' when ppu_mask(PPUSSP) = '1' and
+--                         (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+--                         nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)) and
+--                         nes_x > conv_std_logic_vector(HSCAN_OAM_EVA_START, X_SIZE) and 
+--                         nes_x <= conv_std_logic_vector(HSCAN, X_SIZE) else
+--                    '1';
+--    p_oam_addr <= oam_plt_addr when oam_bus_ce_n = '0' else
+--                p_oam_addr_in when ppu_mask(PPUSSP) = '1' and 
+--                         (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+--                         nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)) and
+--                         nes_x > conv_std_logic_vector(HSCAN_OAM_EVA_START, X_SIZE) and 
+--                         nes_x <= conv_std_logic_vector(HSCAN, X_SIZE) else
+--                (others => 'Z');
+--    p_oam_r_n <= not r_nw when oam_bus_ce_n = '0' else
+--                '0' when ppu_mask(PPUSSP) = '1' and 
+--                         (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+--                         nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)) and
+--                         nes_x > conv_std_logic_vector(HSCAN_OAM_EVA_START, X_SIZE) and 
+--                         nes_x <= conv_std_logic_vector(HSCAN, X_SIZE) else
+--                '1';
+--    p_oam_w_n <= r_nw when oam_bus_ce_n = '0' else
+--                '1';
+--    oam_d_buf_w : tri_state_buffer generic map (dsize)
+--            port map (p_oam_w_n, oam_plt_data, p_oam_data);
+--    oam_d_buf_r : tri_state_buffer generic map (dsize)
+--            port map (p_oam_r_n, p_oam_data, oam_plt_data);
+--
+--    primary_oam_inst : ram generic map (dsize, dsize)
+--            port map (emu_ppu_clk, p_oam_ram_ce_n, p_oam_r_n, p_oam_w_n, p_oam_addr, p_oam_data);
+--
+--    -----------------------------------------
+--    ---secondary oam implementation
+--    -----------------------------------------
+--    --primary oam copy count
+--    p_oam_cnt_inst : counter_register generic map (dsize + 1, 4)
+--            port map (emu_ppu_clk_n, p_oam_cnt_res_n, p_oam_cnt_ce_n, '1', (others => '0'), p_oam_cnt);
+--    --primary oam copy count
+--    s_oam_cnt_inst : counter_register generic map (6, 1)
+--            port map (emu_ppu_clk_n, p_oam_cnt_res_n, s_oam_cnt_ce_n, '1', (others => '0'), s_oam_cnt);
+--    --secondary oam pattern index.
+--    s_oam_addr_cpy_inst : counter_register generic map (5, 1)
+--            port map (emu_ppu_clk_n, p_oam_cnt_res_n, s_oam_addr_cpy_ce_n, 
+--                    '1', (others => '0'), s_oam_addr_cpy);
+--
+--    s_oam_ram_ce_n <=
+--                      --enabled on clear only.
+--                      '0' when ppu_mask(PPUSSP) = '1' and nes_x(0) = '0' and
+--                                nes_x <= conv_std_logic_vector(HSCAN_OAM_EVA_START, X_SIZE) else
+--                      --enabled on copy only.
+--                      '0' when ppu_mask(PPUSSP) = '1' and nes_x(0) = '0' and
+--                                nes_x > conv_std_logic_vector(HSCAN_OAM_EVA_START, X_SIZE) and
+--                                nes_x <= conv_std_logic_vector(HSCAN, X_SIZE) else
+--                      --enabled all the time for reference.
+--                      '0' when ppu_mask(PPUSSP) = '1' and
+--                                nes_x > conv_std_logic_vector(HSCAN, X_SIZE) and
+--                                nes_x <= conv_std_logic_vector(HSCAN_SPR_MAX, X_SIZE) and
+--                                s_oam_addr_cpy_n = '0' else
+--                      '1';
+--
+--    secondary_oam_inst : ram generic map (5, dsize)
+--            port map (emu_ppu_clk, s_oam_ram_ce_n, s_oam_r_n, s_oam_w_n, s_oam_addr, s_oam_data);
+--
+--    --sprite y tmp val
+--    spr_y_inst : d_flip_flop generic map(dsize)
+--            port map (emu_ppu_clk_n, p_oam_cnt_res_n, '1', spr_y_we_n, s_oam_data, spr_y_tmp);
+--    --sprite pattern tmp val
+--    spr_tile_inst : d_flip_flop generic map(dsize)
+--            port map (emu_ppu_clk_n, p_oam_cnt_res_n, '1', spr_tile_we_n, s_oam_data, spr_tile_tmp);
+--
+--
+--    --reverse bit when NOT SPRHFL is set (.nes file format bit endian).
+--    spr_ptn_in <= vram_ad when spr_attr(conv_integer(s_oam_addr_cpy(4 downto 2)))(SPRHFL) = '1' else
+--                (vram_ad(0) & vram_ad(1) & vram_ad(2) & vram_ad(3) & 
+--                 vram_ad(4) & vram_ad(5) & vram_ad(6) & vram_ad(7));
+--    --oam array instances...
+--    spr_inst : for i in 0 to 7 generate
+--        spr_x_inst : counter_register generic map(dsize, 16#ff#)
+--                port map (emu_ppu_clk_n, rst_n, spr_x_ce_n(i), spr_x_we_n(i), s_oam_data, spr_x_cnt(i));
+--
+--        spr_attr_inst : d_flip_flop generic map(dsize)
+--                port map (emu_ppu_clk_n, rst_n, '1', spr_attr_we_n(i), s_oam_data, spr_attr(i));
+--
+--        spr_ptn_l_inst : shift_register generic map(dsize, 1)
+--                port map (emu_ppu_clk_n, rst_n, spr_ptn_ce_n(i), spr_ptn_l_we_n(i), spr_ptn_in, spr_ptn_l(i));
+--
+--        spr_ptn_h_inst : shift_register generic map(dsize, 1)
+--                port map (emu_ppu_clk_n, rst_n, spr_ptn_ce_n(i), spr_ptn_h_we_n(i), spr_ptn_in, spr_ptn_h(i));
+--    end generate;
+--
+--
+--    -----------------------------------------
+--    ---sprite main process
+--    -----------------------------------------
+--    spr_main_p : process (rst_n, emu_ppu_clk)
+--    begin
+--        if (rst_n = '0') then
+--            s_oam_addr <= (others => 'Z');
+--            s_oam_data <= (others => 'Z');
+--
+--            s_oam_r_n <= '1';
+--            s_oam_w_n <= '1';
+--            p_oam_cnt_res_n <= '1';
+--            p_oam_cnt_ce_n <= '1';
+--            s_oam_cnt_ce_n <= '1';
+--            oam_ev_status <= EV_STAT_COMP;
+--            p_oam_addr_in <= (others => 'Z');
+--
+--            s_oam_addr_cpy_n <= '1';
+--            spr_y_we_n <= '1';
+--            spr_tile_we_n <= '1';
+--            spr_x_we_n <= (others => '1');
+--            spr_attr_we_n <= (others => '1');
+--            spr_ptn_l_we_n <= (others => '1');
+--            spr_ptn_h_we_n <= (others => '1');
+--            s_oam_addr_cpy_ce_n <= '1';
+--            spr_x_ce_n <= (others => '1');
+--            spr_ptn_ce_n <= (others => '1');
+--
+--            sprite0_evaluated <= '0';
+--            sprite0_displayed <= '0';
+--
+--        else
+--
+--            if (rising_edge(emu_ppu_clk)) then
+--
+--                if (ppu_mask(PPUSSP) = '1' and
+--                        (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+--                        nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE))) then
+--                    --secondary oam clear
+--                    if (nes_x <= conv_std_logic_vector(HSCAN_OAM_EVA_START, X_SIZE)) then
+--                        if (nes_x(0) = '1') then
+--                            --odd cycle is set address.
+--                            --even cycle is write data.
+--                            s_oam_addr <= nes_x(5 downto 1);
+--                        end if;
+--                        s_oam_r_n <= '1';
+--                        s_oam_w_n <= '0';
+--                        s_oam_data <= (others => '1');
+--                        p_oam_cnt_res_n <= '0';
+--                        p_oam_cnt_ce_n <= '1';
+--                        s_oam_cnt_ce_n <= '1';
+--                        oam_ev_status <= EV_STAT_COMP;
+--
+--                    --sprite evaluation and secondary oam copy.
+--                    elsif (nes_x > conv_std_logic_vector(HSCAN_OAM_EVA_START, X_SIZE) and 
+--                            nes_x <= conv_std_logic_vector(HSCAN, X_SIZE)) then
+--                        p_oam_cnt_res_n <= '1';
+--                        s_oam_r_n <= '1';
+--
+--                        --TODO: sprite evaluation is simplified!!
+--                        --not complying the original NES spec at
+--                        --http://wiki.nesdev.com/w/index.php/PPU_sprite_evaluation
+--                        --e.g., when overflow happens, it just ignore subsequent entry.
+--                        if (s_oam_cnt(5) = '1' or p_oam_cnt(8) = '1') then
+--                            s_oam_cnt_ce_n <= '1';
+--                            s_oam_w_n <= '1';
+--                            s_oam_addr <= (others => 'Z');
+--                            s_oam_data <= (others => 'Z');
+--                        else
+--                            --odd cycle copy from primary oam
+--                            if (nes_x(0) = '1') then
+--                                s_oam_w_n <= '1';
+--                                if (oam_ev_status = EV_STAT_COMP) then
+--                                    p_oam_addr_in <= p_oam_cnt(7 downto 0);
+--                                    p_oam_cnt_ce_n <= '1';
+--                                    s_oam_cnt_ce_n <= '1';
+--                                elsif (oam_ev_status = EV_STAT_CP1) then
+--                                    p_oam_addr_in <= p_oam_cnt(7 downto 0) + "00000001";
+--                                    s_oam_cnt_ce_n <= '1';
+--
+--                                elsif (oam_ev_status = EV_STAT_CP2) then
+--                                    p_oam_addr_in <= p_oam_cnt(7 downto 0) + "00000010";
+--                                    s_oam_cnt_ce_n <= '1';
+--
+--                                elsif (oam_ev_status = EV_STAT_CP3) then
+--                                    oam_ev_status <= EV_STAT_PRE_COMP;
+--                                    p_oam_addr_in <= p_oam_cnt(7 downto 0) + "00000011";
+--                                    s_oam_cnt_ce_n <= '1';
+--                                end if;
+--                            else
+--                            --even cycle copy to secondary oam (if y is in range.)
+--
+--                                s_oam_w_n <= '0';
+--                                s_oam_addr <= s_oam_cnt(4 downto 0);
+--                                s_oam_data <= p_oam_data;
+--
+--                                if (oam_ev_status = EV_STAT_COMP) then
+--                                    --check y range.
+--                                    if (nes_y < "000000110" and p_oam_data <= nes_y + "000000001") or 
+--                                        (nes_y >= "000000110" and p_oam_data <= nes_y + "000000001" and 
+--                                                 p_oam_data >= nes_y - "000000110") then
+--                                        oam_ev_status <= EV_STAT_CP1;
+--                                        s_oam_cnt_ce_n <= '0';
+--                                        --copy remaining oam entry.
+--                                        p_oam_cnt_ce_n <= '1';
+--                                        
+--                                        --check sprite 0 is used.
+--                                        if (p_oam_cnt(7 downto 0) = "00000000") then
+--                                            sprite0_evaluated <= '1';
+--                                        end if;
+--                                    else
+--                                        --goto next entry
+--                                        p_oam_cnt_ce_n <= '0';
+--                                    end if;
+--                                elsif (oam_ev_status = EV_STAT_CP1) then
+--                                    s_oam_cnt_ce_n <= '0';
+--                                    oam_ev_status <= EV_STAT_CP2;
+--                                elsif (oam_ev_status = EV_STAT_CP2) then
+--                                    s_oam_cnt_ce_n <= '0';
+--                                    oam_ev_status <= EV_STAT_CP3;
+--                                elsif (oam_ev_status = EV_STAT_CP3) then
+--                                    s_oam_cnt_ce_n <= '0';
+--                                elsif (oam_ev_status = EV_STAT_PRE_COMP) then
+--                                    oam_ev_status <= EV_STAT_COMP;
+--                                    s_oam_cnt_ce_n <= '0';
+--                                    p_oam_cnt_ce_n <= '0';
+--                                end if;
+--                            end if;--if (nes_x(0) = '1') then
+--                        end if;--(s_oam_cnt(5) = '1' or p_oam_cnt(8) = '') then
+--
+--                        --prepare for next step
+--                        s_oam_addr_cpy_n <= '1';
+--                        spr_y_we_n <= '1';
+--                        spr_tile_we_n <= '1';
+--                        spr_x_we_n <= "11111111";
+--                        spr_attr_we_n <= "11111111";
+--                        spr_ptn_l_we_n <= "11111111";
+--                        spr_ptn_h_we_n <= "11111111";
+--
+--                    --sprite pattern fetch
+--                    elsif (nes_x > conv_std_logic_vector(HSCAN, X_SIZE) and 
+--                            nes_x < conv_std_logic_vector(HSCAN_SPR_MAX, X_SIZE)) then
+--
+--                        s_oam_addr_cpy_n <= '0';
+--                        s_oam_r_n <= '0';
+--                        s_oam_w_n <= '1';
+--                        s_oam_addr <= s_oam_addr_cpy;
+--
+--                        ----fetch y-cordinate from secondary oam
+--                        if (nes_x (2 downto 0) = "001" ) then
+--                            s_oam_addr_cpy_ce_n <= '0';
+--                            spr_y_we_n <= '0';
+--                        else
+--                            spr_y_we_n <= '1';
+--                        end if;
+--
+--                        ----fetch tile number
+--                        if (nes_x (2 downto 0) = "010" ) then
+--                            spr_tile_we_n <= '0';
+--                        else
+--                            spr_tile_we_n <= '1';
+--                        end if;
+--
+--                        ----fetch attribute
+--                        if (nes_x (2 downto 0) = "011" ) then
+--                            spr_attr_we_n(conv_integer(s_oam_addr_cpy(4 downto 2))) <= '0';
+--                        else
+--                            spr_attr_we_n(conv_integer(s_oam_addr_cpy(4 downto 2))) <= '1';
+--                        end if;--if (nes_x (2 downto 0) = "010" ) then
+--
+--                        ----fetch x-cordinate
+--                        if (nes_x (2 downto 0) = "100" ) then
+--                            s_oam_addr_cpy_ce_n <= '1';
+--                            spr_x_we_n(conv_integer(s_oam_addr_cpy(4 downto 2))) <= '0';
+--                        else
+--                            spr_x_we_n(conv_integer(s_oam_addr_cpy(4 downto 2))) <= '1';
+--                        end if;
+--
+--                        --pattern tbl low vale.
+--                        if (nes_x (2 downto 0) = "110" ) then
+--                            spr_ptn_l_we_n(conv_integer(s_oam_addr_cpy(4 downto 2))) <= '0';
+--                        else
+--                            spr_ptn_l_we_n(conv_integer(s_oam_addr_cpy(4 downto 2))) <= '1';
+--                        end if;
+--
+--                        --pattern tbl high vale.
+--                        if (nes_x (2 downto 0) = "000") then
+--                            spr_ptn_h_we_n(conv_integer(s_oam_addr_cpy(4 downto 2))) <= '0';
+--                            s_oam_addr_cpy_ce_n <= '0';
+--                        else
+--                            spr_ptn_h_we_n(conv_integer(s_oam_addr_cpy(4 downto 2) - "001")) <= '1';
+--                        end if;
+--                        
+--                        --check sprite 0 is used in the next line.
+--                        if (sprite0_evaluated = '1') then
+--                            sprite0_displayed <= '1';
+--                        end if;
+--
+--                    elsif (nes_x > conv_std_logic_vector(HSCAN_SPR_MAX, X_SIZE)) then
+--                        --clear last write enable.
+--                        spr_ptn_h_we_n <= "11111111";
+--                    end if;--if (nes_x <= conv_std_logic_vector(HSCAN_OAM_EVA_START, X_SIZE))
+--
+--                    --display sprite.
+--                    if ((nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
+--                        (nes_y < conv_std_logic_vector(VSCAN, X_SIZE))) then
+--                        --start counter.
+--                        if (nes_x = "000000000") then
+--                            spr_x_ce_n <= "00000000";
+--                        end if;
+--
+--                        for i in 0 to 7 loop
+--                            if (spr_x_cnt(i) = "00000000") then
+--                                --active sprite, start shifting..
+--                                spr_x_ce_n(i) <= '1';
+--                                spr_ptn_ce_n(i) <= '0';
+--                            end if;
+--                        end loop;
+--                    else
+--                        spr_x_ce_n <= "11111111";
+--                        spr_ptn_ce_n <= "11111111";
+--                    end if; --if ((nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) 
+--                else
+--                    --sprite evaluation are cleared during the blank line.
+--                    sprite0_evaluated <= '0';
+--                    sprite0_displayed <= '0';
+--                end if; --if (ppu_mask(PPUSSP) = '1') 
+--                        --(nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+--                        --nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE))) then
+--                
+--            end if; --if (rising_edge(emu_ppu_clk)) then
+--
+--        end if;--if (rst_n = '0') then
+--    end process;--spr_main_p 
+--
+--
+--    
+--    -----------------------------------------
+--    ---bg display variables...
+--    -----------------------------------------
+--    ---bg prefetch x pos is 16 + scroll cycle ahead of current pos.
+--    prf_x <= nes_x + ppu_scroll_x + "000010000" 
+--                    when nes_x < conv_std_logic_vector(HSCAN, X_SIZE) else
+--             nes_x + ppu_scroll_x + "010111011"; -- +16 -341
+--
+--    prf_y <= nes_y + ppu_scroll_y
+--                    when nes_x < conv_std_logic_vector(HSCAN, X_SIZE) and
+--                         nes_y < conv_std_logic_vector(VSCAN, X_SIZE) else
+--             nes_y + ppu_scroll_y + "000000001" 
+--                    when nes_y < conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE) else
+--             "000000000"; 
+--
+--    --name tbl, attr tbl, pattern tble values..
+--    nt_inst : d_flip_flop generic map(dsize)
+--            port map (emu_ppu_clk_n, rst_n, '1', nt_we_n, vram_ad, disp_nt);
+--
+--    at_inst : d_flip_flop generic map(dsize)
+--            port map (emu_ppu_clk_n, rst_n, '1', attr_we_n, vram_ad, attr_val);
+--
+--    disp_at_inst : shift_register generic map(dsize, 2)
+--            port map (emu_ppu_clk_n, rst_n, attr_ce_n, disp_attr_we_n, attr_val, disp_attr);
+--
+--    --chr rom data's bit is stored in opposite direction.
+--    --reverse bit when loading...
+--    ptn_l_in <= (vram_ad(0) & vram_ad(1) & vram_ad(2) & vram_ad(3) & 
+--                 vram_ad(4) & vram_ad(5) & vram_ad(6) & vram_ad(7));
+--    ptn_h_in <= (vram_ad(0) & vram_ad(1) & vram_ad(2) & vram_ad(3) & 
+--                 vram_ad(4) & vram_ad(5) & vram_ad(6) & vram_ad(7)) & 
+--                disp_ptn_h (dsize downto 1);
+--
+--    ptn_l_inst : d_flip_flop generic map(dsize)
+--            port map (emu_ppu_clk_n, rst_n, '1', ptn_l_we_n, ptn_l_in, ptn_l_val);
+--
+--    disp_ptn_l_in <= ptn_l_val & disp_ptn_l (dsize downto 1);
+--    disp_ptn_l_inst : shift_register generic map(dsize * 2, 1)
+--            port map (emu_ppu_clk_n, rst_n, '0', ptn_h_we_n, disp_ptn_l_in, disp_ptn_l);
+--
+--    ptn_h_inst : shift_register generic map(dsize * 2, 1)
+--            port map (emu_ppu_clk_n, rst_n, '0', ptn_h_we_n, ptn_h_in, disp_ptn_h);
+--
+--
+--    -----------------------------------------
+--    ---bg main process
+--    -----------------------------------------
+--    bg_main_p : process (rst_n, emu_ppu_clk)
+--    begin
+--        if (rst_n = '0') then
+--            nt_we_n <= '1';
+--            attr_we_n <= '1';
+--            disp_attr_we_n <= '1';
+--            attr_ce_n <= '1';
+--            ptn_l_we_n <= '1';
+--            ptn_h_we_n <= '1';
+--        else
+--            if (rising_edge(emu_ppu_clk)) then
+--
+--                --fetch bg pattern and display.
+--                if (ppu_mask(PPUSBG) = '1' and 
+--                        (nes_x <= conv_std_logic_vector(HSCAN, X_SIZE) or
+--                        nes_x > conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE)) and
+--                        (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+--                        nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE))) then
+--                    --visible area bg image
+--
+--                    d_print("*");
+--                    d_print("nes_x: " & conv_hex16(conv_integer(nes_x)));
+--                    d_print("nes_y: " & conv_hex16(conv_integer(nes_y)));
+--
+--                    ----fetch next tile byte.
+--                    if (prf_x (2 downto 0) = "010") then
+--                        nt_we_n <= '0';
+--                    else
+--                        nt_we_n <= '1';
+--                    end if;
+--
+--                    ----fetch attr table byte.
+--                    if (prf_x (4 downto 0) = "00100") then
+--                        attr_we_n <= '0';
+--                    else
+--                        attr_we_n <= '1';
+--                    end if;
+--                    if (prf_x (4 downto 0) = "10000") then
+--                        disp_attr_we_n <= '0';
+--                    else
+--                        disp_attr_we_n <= '1';
+--                    end if;
+--                    ---attribute is shifted every 16 bit.
+--                    if (prf_x (3 downto 0) = "0000") then
+--                        attr_ce_n <= '0';
+--                    else
+--                        attr_ce_n <= '1';
+--                    end if;
+--
+--                    ----fetch pattern table low byte.
+--                    if (prf_x (2 downto 0) = "110") then
+--                         ptn_l_we_n <= '0';
+--                    else
+--                         ptn_l_we_n <= '1';
+--                    end if;
+--
+--                    ----fetch pattern table high byte.
+--                    if (prf_x (2 downto 0) = "000") then
+--                         ptn_h_we_n <= '0';
+--                    else
+--                         ptn_h_we_n <= '1';
+--                    end if;
+--
+--                else
+--                    nt_we_n <= '1';
+--                    attr_we_n <= '1';
+--                    disp_attr_we_n <= '1';
+--                    attr_ce_n <= '1';
+--                    ptn_l_we_n <= '1';
+--                    ptn_h_we_n <= '1';
+--                end if;--if (ppu_mask(PPUSBG) = '1') and
+--            end if;--if (rising_edge(emu_ppu_clk)) then
+--        end if;--if (rst_n = '0') then
+--    end process;--bg_main_p 
+--
+--    
+--    -----------------------------------------
+--    ---vram addr access process
+--    -----------------------------------------
+--    vaddr_p : process (rst_n, emu_ppu_clk)
+--    begin
+--        if (rst_n = '0') then
+--            vram_addr <= (others => 'Z');
+--        else
+--            if (rising_edge(emu_ppu_clk)) then
+--
+--                if (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+--                     nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)) then
+--
+--                    --------------------------
+--                    --bg pattern fetch.
+--                    --------------------------
+--                    if (ppu_mask(PPUSBG) = '1' and (
+--                        (nes_x > conv_std_logic_vector(1, X_SIZE) and 
+--                         nes_x <= conv_std_logic_vector(HSCAN, X_SIZE))
+--                         or
+--                        (nes_x >= conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE))
+--                        )) then
+--
+--                        ----fetch next tile byte.
+--                        if (prf_x (2 downto 0) = "001") then
+--                            --vram addr is incremented every 8 cycle.
+--                            --name table at 0x2000
+--                            vram_addr(9 downto 0) 
+--                                <= prf_y(dsize - 1 downto 3) 
+--                                    & prf_x(dsize - 1 downto 3);
+--                            vram_addr(asize - 1 downto 10) <= "10" & ppu_ctrl(PPUBNA downto 0) 
+--                                                            + ("000" & prf_x(dsize));
+--                        ----fetch attr table byte.
+--                        elsif (prf_x (4 downto 0) = "00011") then
+--                            --attribute table is loaded every 32 cycle.
+--                            --attr table at 0x23c0
+--                            vram_addr(dsize - 1 downto 0) <= "11000000" +
+--                                    ("00" & prf_y(7 downto 5) & prf_x(7 downto 5));
+--                            vram_addr(asize - 1 downto dsize) <= "10" &
+--                                    ppu_ctrl(PPUBNA downto 0) & "11"
+--                                        + ("000" & prf_x(dsize) & "00");
+--                        ----fetch pattern table low byte.
+--                        elsif (prf_x (2 downto 0) = "101") then
+--                             --vram addr is incremented every 8 cycle.
+--                             vram_addr <= "0" & ppu_ctrl(PPUBPA) & 
+--                                                  disp_nt(dsize - 1 downto 0) 
+--                                                        & "0"  & prf_y(2  downto 0);
+--                        ----fetch pattern table high byte.
+--                        elsif (prf_x (2 downto 0) = "111") then
+--                             --vram addr is incremented every 8 cycle.
+--                             vram_addr <= "0" & ppu_ctrl(PPUBPA) & 
+--                                                  disp_nt(dsize - 1 downto 0) 
+--                                                        & "0"  & prf_y(2 downto 0) + "00000000001000";
+--                        end if;
+--
+--                    --------------------------
+--                    --sprite pattern fetch.
+--                    --------------------------
+--                    elsif (ppu_mask(PPUSSP) = '1' and (nes_x > conv_std_logic_vector(HSCAN, X_SIZE) and 
+--                        nes_x <= conv_std_logic_vector(HSCAN_SPR_MAX, X_SIZE))) then
+--                        
+--                        ----fetch pattern table low byte.
+--                        if (nes_x (2 downto 0) = "101" ) then
+--                            if (spr_attr(conv_integer(s_oam_addr_cpy(4 downto 2)))(SPRVFL) = '0') then
+--                                vram_addr <= "0" & ppu_ctrl(PPUSPA) & 
+--                                            spr_tile_tmp(dsize - 1 downto 0) & "0" & 
+--                                            (nes_y(2 downto 0) + "001" - spr_y_tmp(2 downto 0));
+--                            else
+--                                --flip sprite vertically.
+--                                vram_addr <= "0" & ppu_ctrl(PPUSPA) & 
+--                                            spr_tile_tmp(dsize - 1 downto 0) & "0" & 
+--                                            (spr_y_tmp(2 downto 0) - nes_y(2 downto 0) - "010");
+--                            end if;
+--                        
+--                        ----fetch pattern table high byte.
+--                        elsif (nes_x (2 downto 0) = "111" ) then
+--                            if (spr_attr(conv_integer(s_oam_addr_cpy(4 downto 2)))(SPRVFL) = '0') then
+--                                vram_addr <= "0" & ppu_ctrl(PPUSPA) & 
+--                                            spr_tile_tmp(dsize - 1 downto 0) & "0" & 
+--                                            (nes_y(2 downto 0) + "001" - spr_y_tmp(2 downto 0))
+--                                                + "00000000001000";
+--                            else
+--                                --flip sprite vertically.
+--                                vram_addr <= "0" & ppu_ctrl(PPUSPA) & 
+--                                            spr_tile_tmp(dsize - 1 downto 0) & "0"  & 
+--                                            (spr_y_tmp(2 downto 0) - nes_y(2 downto 0) - "010")
+--                                                + "00000000001000";
+--                            end if;
+--                        end if;
+--                    else
+--                        vram_addr <= (others => 'Z');
+--                    end if; --if (nes_x > conv_std_logic_vector(HSCAN, X_SIZE) and 
+--                                --nes_x <= conv_std_logic_vector(HSCAN_SPR_MAX, X_SIZE)) then
+--                else
+--                    vram_addr <= (others => 'Z');
+--                end if; --(nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+--                        --nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE))) then
+--            end if; --if (rising_edge(emu_ppu_clk)) then
+--        end if;--if (rst_n = '0') then
+--    end process;--vaddr_p 
+--
+--
     -----------------------------------------
     ---rgb output / flag set process
     -----------------------------------------
@@ -1229,7 +1229,6 @@ end;
         if (rst_n = '0') then
             ppu_status <= (others => '0');
         else
-
             if (rising_edge(emu_ppu_clk)) then
                 --output visible area only.
                 output_rgb;
@@ -1246,12 +1245,6 @@ end;
                     --vblank end
                     ppu_status(ST_VBL) <= '0';
                 end if;
-                
---            if (read_status'event and read_status = '1') then
---                --reading ppu status clears vblank bit.
---                ppu_status(ST_VBL) <= '0';
---            end if;
-
             end if; --if (rising_edge(emu_ppu_clk)) then
         end if;--if (rst_n = '0') then
     end process;--output_p

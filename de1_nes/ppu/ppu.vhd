@@ -99,10 +99,12 @@ component vga_ppu_render
 
             --ppu internal ram access
             r_nw            : in std_logic;
-            oam_bus_ce_n    : in std_logic;
             plt_bus_ce_n    : in std_logic;
-            oam_plt_addr    : in std_logic_vector (7 downto 0);
-            oam_plt_data    : inout std_logic_vector (7 downto 0);
+            plt_addr_in     : in std_logic_vector (4 downto 0);
+            plt_data_in     : in std_logic_vector (7 downto 0);
+            oam_bus_ce_n    : in std_logic;
+            oam_addr_in     : in std_logic_vector (7 downto 0);
+            oam_data_in     : in std_logic_vector (7 downto 0);
             v_bus_busy_n    : out std_logic
     );
 end component;
@@ -200,6 +202,10 @@ signal ppu_scr_wr_cycle    : std_logic_vector (0 downto 0);
 
 signal oam_bus_ce_n     : std_logic;
 signal plt_bus_ce_n     : std_logic;
+
+signal rnd_rd_n, rnd_wr_n, rnd_ale : std_logic;
+signal rnd_vram_ad  : std_logic_vector (7 downto 0);
+signal rnd_vram_a   : std_logic_vector (13 downto 8);
 
 signal v_bus_busy_n     : std_logic;
 
@@ -367,34 +373,28 @@ begin
 
     cpu_d <= (others => 'Z');
 
-    h_sync_n    <= 'Z';
-    v_sync_n    <= 'Z';
-    r           <= (others => 'Z');
-    g           <= (others => 'Z');
-    b           <= (others => 'Z');
-
---    vga_render_inst : vga_ppu_render port map (
---    dbg_nes_x                        ,
---    dbg_vga_x                        ,
---    dbg_nes_y                        ,
---    dbg_vga_y                        ,
---    dbg_disp_nt, dbg_disp_attr, dbg_disp_ptn_h, dbg_disp_ptn_l,
---    dbg_plt_ce_rn_wn                 ,
---    dbg_plt_addr                     ,
---    dbg_plt_data                     ,
---    dbg_p_oam_ce_rn_wn              ,
---    dbg_p_oam_addr                  ,
---    dbg_p_oam_data                  ,
---    dbg_s_oam_ce_rn_wn              ,
---    dbg_s_oam_addr                  ,
---    dbg_s_oam_data                  ,
---    
---            vga_clk, emu_ppu_clk, rst_n,
---            rd_n, wr_n, ale, vram_ad, vram_a,
---            h_sync_n, v_sync_n, r, g, b, 
---            ppu_ctrl, ppu_mask, read_status, ppu_status, ppu_scroll_x, ppu_scroll_y,
---            r_nw, oam_bus_ce_n, plt_bus_ce_n, 
---            oam_plt_addr, oam_plt_data, v_bus_busy_n);
+    vga_render_inst : vga_ppu_render port map (
+    dbg_nes_x                        ,
+    dbg_vga_x                        ,
+    dbg_nes_y                        ,
+    dbg_vga_y                        ,
+    dbg_disp_nt, dbg_disp_attr, dbg_disp_ptn_h, dbg_disp_ptn_l,
+    dbg_plt_ce_rn_wn                 ,
+    dbg_plt_addr                     ,
+    dbg_plt_data                     ,
+    dbg_p_oam_ce_rn_wn              ,
+    dbg_p_oam_addr                  ,
+    dbg_p_oam_data                  ,
+    dbg_s_oam_ce_rn_wn              ,
+    dbg_s_oam_addr                  ,
+    dbg_s_oam_data                  ,
+    
+            vga_clk, emu_ppu_clk, rst_n,
+            rnd_rd_n, rnd_wr_n, rnd_ale, rnd_vram_ad, rnd_vram_a,
+            h_sync_n, v_sync_n, r, g, b, 
+            ppu_ctrl, ppu_mask, read_status, ppu_status, ppu_scroll_x, ppu_scroll_y,
+            r_nw, plt_bus_ce_n, ppu_addr(4 downto 0), cpu_d, 
+            oam_bus_ce_n, oam_addr, cpu_d, v_bus_busy_n);
 
 end rtl;
 
