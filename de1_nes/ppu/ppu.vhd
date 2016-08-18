@@ -92,7 +92,6 @@ component vga_ppu_render
             --upper ppu i/f
             ppu_ctrl        : in std_logic_vector (7 downto 0);
             ppu_mask        : in std_logic_vector (7 downto 0);
-            read_status     : in std_logic;
             ppu_status      : out std_logic_vector (7 downto 0);
             ppu_scroll_x    : in std_logic_vector (7 downto 0);
             ppu_scroll_y    : in std_logic_vector (7 downto 0);
@@ -187,9 +186,8 @@ signal ppu_addr_inc32   : std_logic_vector (13 downto 0);
 signal ppu_addr_in      : std_logic_vector (13 downto 0);
 signal ppu_addr_wr_cycle    : std_logic_vector (0 downto 0);
 
-signal read_status      : std_logic;
 signal ppu_status       : std_logic_vector (dsize - 1 downto 0);
-signal ppu_stat_out     : std_logic_vector (dsize - 1 downto 0);
+signal rdr_ppu_stat     : std_logic_vector (dsize - 1 downto 0);
 
 signal ppu_data         : std_logic_vector (dsize - 1 downto 0);
 signal ppu_data_in      : std_logic_vector (dsize - 1 downto 0);
@@ -237,7 +235,7 @@ begin
             port map (dl_cpu_clk, rst_n, '1', ppu_mask_we_n, cpu_d, ppu_mask);
 
     ppu_status_inst : d_flip_flop generic map(dsize)
-            port map (read_status, rst_n, '1', '0', ppu_status, ppu_stat_out);
+            port map (emu_ppu_clk, rst_n, '1', '0', rdr_ppu_stat, ppu_status);
 
     --ppu addr reg.
     ppu_addr_in <=  cpu_d(5 downto 0) & ppu_addr(7 downto 0)
@@ -357,7 +355,7 @@ begin
         if (rst_n = '0') then
             vblank_n <= '1';
         elsif (rising_edge(ppu_clk)) then
-            if (ppu_status(ST_VBL) = '1' and ppu_ctrl(PPUNEN) = '1') then
+            if (rdr_ppu_stat(ST_VBL) = '1' and ppu_ctrl(PPUNEN) = '1') then
                 --nmi takes place only when ST_VBL arises...
                 --doesn't work....
 --                if (ST_VBL_old = '0') then
@@ -392,7 +390,7 @@ begin
             vga_clk, emu_ppu_clk, rst_n,
             rnd_rd_n, rnd_wr_n, rnd_ale, rnd_vram_ad, rnd_vram_a,
             h_sync_n, v_sync_n, r, g, b, 
-            ppu_ctrl, ppu_mask, read_status, ppu_status, ppu_scroll_x, ppu_scroll_y,
+            ppu_ctrl, ppu_mask, rdr_ppu_stat, ppu_scroll_x, ppu_scroll_y,
             r_nw, plt_bus_ce_n, ppu_addr(4 downto 0), cpu_d, 
             oam_bus_ce_n, oam_addr, cpu_d, v_bus_busy_n);
 

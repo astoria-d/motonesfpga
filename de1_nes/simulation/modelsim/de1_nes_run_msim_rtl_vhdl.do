@@ -85,6 +85,8 @@ add wave -label b -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/b
 
 add wave -divider ppu
 #add wave  -radix hex  sim:/testbench_motones_sim/sim_board/ppu_inst/*
+#add wave  -radix hex  sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/*
+
 
 #add wave -label reset_n  sim:/testbench_motones_sim/sim_board/clock_inst/reset_n
 #add wave -label base_clk  sim:/testbench_motones_sim/sim_board/clock_inst/base_clk
