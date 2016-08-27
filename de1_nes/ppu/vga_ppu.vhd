@@ -37,7 +37,7 @@ entity vga_ppu_render is
             --vram i/f
             rd_n        : out std_logic;
             wr_n        : out std_logic;
-            ale         : out std_logic;
+            ale_n       : out std_logic;
             vram_addr   : out std_logic_vector (13 downto 0);
             vram_data   : in std_logic_vector (7 downto 0);
 
@@ -567,12 +567,12 @@ begin
     io_cnt_inst : counter_register generic map (1, 1)
             port map (emu_ppu_clk, io_cnt_rst_n, '0', '1', (others => '0'), io_cnt);
 
-    ale <= 
-            io_cnt(0) when (
+    ale_n <= 
+            not io_cnt(0) when (
                 ((ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
                 (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                 nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
-            '0';
+            '1'; --else no latch, keep addr val.
     rd_n <= 
             io_cnt(0) when (
                 ((ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and

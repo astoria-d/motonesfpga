@@ -164,7 +164,7 @@ architecture rtl of de1_nes is
                 vblank_n    : out std_logic;
                 rd_n        : out std_logic;
                 wr_n        : out std_logic;
-                ale         : out std_logic;
+                ale_n       : out std_logic;
                 vram_addr   : out std_logic_vector (13 downto 0);
                 vram_data   : inout std_logic_vector (7 downto 0);
 
@@ -251,7 +251,6 @@ architecture rtl of de1_nes is
 
     signal rd_n     : std_logic;
     signal wr_n     : std_logic;
-    signal ale      : std_logic;
     signal ale_n    : std_logic;
     signal v_addr   : std_logic_vector (13 downto 0);
     signal v_addr_ppu   : std_logic_vector (13 downto 0);
@@ -372,7 +371,7 @@ begin
                 nmi_n    ,
                 rd_n        ,
                 wr_n        ,
-                ale         ,
+                ale_n       ,
                 v_addr_ppu      ,
                 v_data      ,
 
@@ -388,9 +387,8 @@ begin
         port map (v_addr, nt_v_mirror, pt_ce_n, nt0_ce_n, nt1_ce_n);
 
     --transparent d-latch
-    --ale=1 >> addr latch
-    --ale=0 >> addr output.
-    ale_n <= not ale;
+    --ale_n=0 >> addr latch
+    --ale_n=1 >> addr output.
 	vram_latch : d_flip_flop generic map (vram_size14)
                 port map(emu_ppu_clk, rst_n, '1', ale_n, v_addr_ppu, v_addr);
 
@@ -428,7 +426,7 @@ begin
     --dbg_ppu_scrl_y <= dbg_s_oam_data;
     dbg_ppu_scrl_y <= dbg_ppu_scrl_y_dummy;
 
-    dbg_ppu_scrl_x(0) <= ale;
+    dbg_ppu_scrl_x(0) <= ale_n;
     dbg_ppu_scrl_x(1) <= rd_n;
     dbg_ppu_scrl_x(2) <= wr_n;
     dbg_ppu_scrl_x(3) <= nt0_ce_n;

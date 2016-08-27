@@ -38,7 +38,7 @@ entity ppu is
             vblank_n    : out std_logic;
             rd_n        : out std_logic;
             wr_n        : out std_logic;
-            ale         : out std_logic;
+            ale_n       : out std_logic;
             vram_addr   : out std_logic_vector (13 downto 0);
             vram_data   : inout std_logic_vector (7 downto 0);
 
@@ -78,7 +78,7 @@ component vga_ppu_render
             --vram i/f
             rd_n        : out std_logic;
             wr_n        : out std_logic;
-            ale         : out std_logic;
+            ale_n       : out std_logic;
             vram_addr   : out std_logic_vector (13 downto 0);
             vram_data   : in std_logic_vector (7 downto 0);
 
@@ -205,7 +205,7 @@ signal ppu_scr_wr_cycle    : std_logic_vector (0 downto 0);
 signal oam_bus_ce_n     : std_logic;
 signal plt_bus_ce_n     : std_logic;
 
-signal rnd_rd_n, rnd_wr_n, rnd_ale : std_logic;
+signal rnd_rd_n, rnd_wr_n, rnd_ale_n : std_logic;
 signal rnd_vram_addr    : std_logic_vector (13 downto 0);
 signal rnd_vram_data    : std_logic_vector (7 downto 0);
 
@@ -339,10 +339,10 @@ begin
 
     ppu_addr_upd_en_inst : d_flip_flop_bit
             port map (dl_cpu_clk, rst_n, '1', '0', ppu_addr_inc_n, ppu_addr_upd_n);
-    ale <= '1' when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
+    ale_n <= '1' when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
            '1' when ppu_addr_upd_n = '0' else
            '0' when ce_n = '0' and cpu_addr = PPUDATA and r_nw = '0' else
-           rnd_ale;
+           rnd_ale_n;
     wr_n <= '0' when ce_n = '0' and cpu_addr = PPUDATA and r_nw = '0' else
             '1' when ppu_addr_upd_n = '0' else
             '1' when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
@@ -353,7 +353,7 @@ begin
 
     vram_addr <= ppu_addr when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
               ppu_addr when ppu_addr_upd_n = '0' else
-              rnd_vram_addr when rnd_ale = '1' else
+              rnd_vram_addr when rnd_ale_n = '0' else
               (others => 'Z');
     vram_data <= cpu_d when ce_n = '0' and cpu_addr = PPUDATA and r_nw = '0' else
                (others => 'Z');
@@ -408,7 +408,7 @@ begin
     dbg_s_oam_data                  ,
     
             vga_clk, emu_ppu_clk, rst_n,
-            rnd_rd_n, rnd_wr_n, rnd_ale, rnd_vram_addr, rnd_vram_data,
+            rnd_rd_n, rnd_wr_n, rnd_ale_n, rnd_vram_addr, rnd_vram_data,
             h_sync_n, v_sync_n, r, g, b, 
             ppu_ctrl, ppu_mask, rdr_ppu_stat, ppu_scroll_x, ppu_scroll_y,
             r_nw,
