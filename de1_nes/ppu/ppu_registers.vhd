@@ -103,8 +103,8 @@ component tri_state_buffer
         );
 end component;
 
-signal d_in, q_out : std_logic_vector(13 downto 0);
-signal we_n, oe_n : std_logic;
+signal d_in         : std_logic_vector(13 downto 0);
+signal we_n, oe_n   : std_logic;
 
 begin
     dbg_vl_we_n <= we_n;
@@ -115,8 +115,6 @@ begin
     oe_n <= '0' when ale = '0' else
             '1';
     out_reg_inst : d_flip_flop generic map (14)
-            port map (clk, rst_n, '1', we_n, d_in, q_out);
-    out_tss_inst : tri_state_buffer generic map (14)
-            port map (oe_n, q_out, v_addr);
+            port map (clk, rst_n, '1', we_n, d_in, v_addr);
 end rtl;
 
