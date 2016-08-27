@@ -106,6 +106,8 @@ component vga_ppu_render
             oam_bus_ce_n    : in std_logic;
             oam_addr_in     : in std_logic_vector (7 downto 0);
             oam_data_in     : in std_logic_vector (7 downto 0);
+            oam_data_out    : out std_logic_vector (7 downto 0);
+
             v_bus_busy_n    : out std_logic
     );
 end component;
@@ -207,7 +209,8 @@ signal rnd_rd_n, rnd_wr_n, rnd_ale : std_logic;
 signal rnd_vram_ad  : std_logic_vector (7 downto 0);
 signal rnd_vram_a   : std_logic_vector (13 downto 8);
 
-signal rnd_plt_data_out    : std_logic_vector (7 downto 0);
+signal rnd_plt_data_out     : std_logic_vector (7 downto 0);
+signal rnd_oam_data_out     : std_logic_vector (7 downto 0);
 
 signal v_bus_busy_n     : std_logic;
 
@@ -304,12 +307,16 @@ begin
     oma_addr_inst : counter_register generic map(dsize, 1)
             port map (dl_cpu_clk, rst_n, oam_addr_inc_n, oam_addr_we_n, cpu_d, oam_addr);
 
-    --oam datsa reg.
+    --oam data reg.
     oam_data_we_n <= '0' when ce_n = '0' and cpu_addr = OAMDATA and r_nw = '0' else
                      '1';
     oma_data_inst : d_flip_flop generic map(dsize)
             port map (dl_cpu_clk, rst_n, '1', oam_data_we_n, cpu_d, oam_data);
 
+    --oam chip enable.
+    oam_bus_ce_n <= '0' when ce_n = '0' and cpu_addr = OAMDATA else
+                    '1';
+    
     --scroll reg.
     ppu_scroll_x_we_n <= '0' when ce_n = '0' and cpu_addr = PPUSCROLL and 
                                   r_nw = '0' and ppu_scr_wr_cycle = WR0 else
@@ -402,8 +409,10 @@ begin
             rnd_rd_n, rnd_wr_n, rnd_ale, rnd_vram_ad, rnd_vram_a,
             h_sync_n, v_sync_n, r, g, b, 
             ppu_ctrl, ppu_mask, rdr_ppu_stat, ppu_scroll_x, ppu_scroll_y,
-            r_nw, plt_bus_ce_n, ppu_addr(4 downto 0), cpu_d, rnd_plt_data_out,
-            oam_bus_ce_n, oam_addr, cpu_d, v_bus_busy_n);
+            r_nw,
+            plt_bus_ce_n, ppu_addr(4 downto 0), cpu_d, rnd_plt_data_out,
+            oam_bus_ce_n, oam_addr, cpu_d, rnd_oam_data_out,
+            v_bus_busy_n);
 
 end rtl;
 
