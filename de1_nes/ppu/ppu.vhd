@@ -350,9 +350,11 @@ begin
     rd_n <= '1' when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
             '1' when ppu_addr_upd_n = '0' else
             rnd_rd_n;
+    --rnd_vram_addr is set only when address latch is set by the renderer.
     vram_a <= ppu_addr(13 downto 8) when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
               ppu_addr(13 downto 8) when ppu_addr_upd_n = '0' else
-              rnd_vram_addr(13 downto 8);
+              rnd_vram_addr(13 downto 8) when rnd_ale = '1' else
+              (others => 'Z');
     vram_ad <= cpu_d when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
                ppu_addr(7 downto 0) when ppu_addr_upd_n = '0' else
                cpu_d when ce_n = '0' and cpu_addr = PPUDATA and r_nw = '0' else
