@@ -55,25 +55,19 @@ add wave -label ale sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x(0)
 add wave -label rd_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x(1)
 add wave -label wr_n sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_x(2)
 
-add wave  -radix hex -label vram_a sim:/testbench_motones_sim/sim_board/dbg_vram_a
-add wave  -radix hex -label vram_ad sim:/testbench_motones_sim/sim_board/dbg_vram_ad
-#add wave  -radix hex -label v_addr_h  {sim:/testbench_motones_sim/sim_board/dbg_sp (5 downto 0)}
-#add wave  -radix hex -label v_addr_l  sim:/testbench_motones_sim/sim_board/dbg_x
 add wave -label emu_ppu_clk     sim:/testbench_motones_sim/sim_board/dbg_emu_ppu_clk
-#add wave -label dbg_vl_we_n     sim:/testbench_motones_sim/sim_board/dbg_sp(6)
-add wave  -radix hex -label v_addr  {sim:/testbench_motones_sim/sim_board/dbg_sp (5 downto 0) & 
-                                     sim:/testbench_motones_sim/sim_board/dbg_x (7 downto 0)}
+add wave  -radix hex -label v_addr sim:/testbench_motones_sim/sim_board/dbg_v_addr
+add wave  -radix hex -label vram_ad sim:/testbench_motones_sim/sim_board/dbg_v_data
 
 #add wave -label ppu_data_we_n   sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_y(2)
 #add wave -label ppu_addr_inc_n  sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_y(1)
 #add wave -label ppu_addr_upd_n  sim:/testbench_motones_sim/sim_board/dbg_ppu_scrl_y(0)
 
-#add wave -divider vga_pos
-#add wave -label emu_ppu_clk     sim:/testbench_motones_sim/sim_board/dbg_emu_ppu_clk
-#add wave -label nes_x           -radix decimal -unsigned  {sim:/testbench_motones_sim/sim_board/dbg_exec_cycle(0) & 
-#                                                           sim:/testbench_motones_sim/sim_board/dbg_instruction(7 downto 0)}
-#add wave -label nes_y           -radix decimal -unsigned  {sim:/testbench_motones_sim/sim_board/dbg_exec_cycle(4) & 
-#                                                           sim:/testbench_motones_sim/sim_board/dbg_status(7 downto 0)}
+add wave -divider vga_pos
+add wave -label nes_x           -radix decimal -unsigned  {sim:/testbench_motones_sim/sim_board/dbg_exec_cycle(0) & 
+                                                           sim:/testbench_motones_sim/sim_board/dbg_instruction(7 downto 0)}
+add wave -label nes_y           -radix decimal -unsigned  {sim:/testbench_motones_sim/sim_board/dbg_exec_cycle(4) & 
+                                                           sim:/testbench_motones_sim/sim_board/dbg_status(7 downto 0)}
 #add wave -label dbg_disp_nt     -radix hex sim:/testbench_motones_sim/sim_board/dbg_disp_nt
 #add wave -label dbg_disp_attr   -radix hex sim:/testbench_motones_sim/sim_board/dbg_disp_attr
 #add wave -label dbg_disp_ptn_h  -radix hex sim:/testbench_motones_sim/sim_board/dbg_disp_ptn_h
