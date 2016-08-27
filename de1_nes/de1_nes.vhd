@@ -34,7 +34,7 @@ entity de1_nes is
 
 --ppu debug pins
     signal dbg_ppu_ce_n    : out std_logic;
-    signal dbg_ppu_ctrl, dbg_ppu_ctrl_dummy, dbg_ppu_mask, dbg_ppu_mask_dummy, dbg_ppu_status : out std_logic_vector (7 downto 0);
+    signal dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status : out std_logic_vector (7 downto 0);
     signal dbg_ppu_addr : out std_logic_vector (13 downto 0);
     signal dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y : out std_logic_vector (7 downto 0);
     signal dbg_disp_nt, dbg_disp_attr : out std_logic_vector (7 downto 0);
@@ -293,7 +293,6 @@ architecture rtl of de1_nes is
     signal dbg_status_dummy       : std_logic_vector(7 downto 0);
     signal dbg_sp_dummy, dbg_x_dummy, dbg_y_dummy, dbg_acc_dummy       : std_logic_vector(7 downto 0);
 
-    signal dbg_vl_we_n     : std_logic;
 
 begin
 
@@ -325,9 +324,6 @@ begin
                 addr, d_io);
 
     --main ROM/RAM instance
---    prg_rom_inst : prg_rom generic map (rom_32k, data_size)
---            port map (cpu_clk, rom_ce_n, addr(rom_32k - 1 downto 0), d_io);
-
     prg_rom_inst : prg_rom generic map (rom_8k, data_size)
             port map (cpu_mem_clk, rom_ce_n, addr(rom_8k - 1 downto 0), d_io);
 
@@ -431,7 +427,6 @@ begin
     dbg_ppu_scrl_x(2) <= wr_n;
     dbg_ppu_scrl_x(3) <= nt0_ce_n;
 
-    dbg_sp(6) <= dbg_vl_we_n;
     --nmi_n <= dummy_nmi;
     ---------------
 
