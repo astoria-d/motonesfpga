@@ -86,7 +86,6 @@ begin
                 cpu_mem_clk_wk <= cpu_dl_clk_wk;
             end if;
         end if;
-
     end process;
 
     --one phase delayed clock for memory...
@@ -94,7 +93,16 @@ begin
     --two phase delayed clock for cpu register...
     cpu_recv_clk <= not cpu_dl_clk_wk;
 
-    emu_ppu_mem_clk <= not loop16(1);
+    delay_vram_clk_p : process (base_clk)
+    begin
+        if (reset_n = '0') then
+            emu_ppu_mem_clk <= '0';
+        else
+            if (falling_edge(base_clk)) then
+                emu_ppu_mem_clk <= not loop16(1);
+            end if;
+        end if;
+    end process;
 
 
 end rtl;

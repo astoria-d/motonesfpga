@@ -390,17 +390,17 @@ begin
     --ale_n=0 >> addr latch
     --ale_n=1 >> addr output.
 	vram_latch : d_flip_flop generic map (vram_size14)
-                port map(emu_ppu_clk, rst_n, '1', ale_n, v_addr_ppu, v_addr);
+                port map(emu_ppu_mem_clk, rst_n, '1', ale_n, v_addr_ppu, v_addr);
 
     vchr_rom : chr_rom generic map (chr_rom_8k, data_size)
-            port map (emu_ppu_clk, pt_ce_n, v_addr(chr_rom_8k - 1 downto 0), v_data);
+            port map (emu_ppu_mem_clk, pt_ce_n, v_addr(chr_rom_8k - 1 downto 0), v_data);
 
     --name table/attr table
     vram_nt0 : ram generic map (vram_1k, data_size)
-            port map (emu_ppu_clk, nt0_ce_n, rd_n, wr_n, v_addr(vram_1k - 1 downto 0), v_data);
+            port map (emu_ppu_mem_clk, nt0_ce_n, rd_n, wr_n, v_addr(vram_1k - 1 downto 0), v_data);
 
     vram_nt1 : ram generic map (vram_1k, data_size)
-            port map (emu_ppu_clk, nt1_ce_n, rd_n, wr_n, v_addr(vram_1k - 1 downto 0), v_data);
+            port map (emu_ppu_mem_clk, nt1_ce_n, rd_n, wr_n, v_addr(vram_1k - 1 downto 0), v_data);
 
     --APU/DMA instance
     apu_inst : apu
