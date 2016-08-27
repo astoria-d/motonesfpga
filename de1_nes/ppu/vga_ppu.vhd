@@ -164,7 +164,7 @@ constant dsize        : integer := 8;
 constant asize        : integer := 14;
 constant HSCAN        : integer := 256;
 constant VSCAN        : integer := 240;
-constant HSCAN_NEXT_START    : integer := 383;
+constant HSCAN_NEXT_START    : integer := 382;
 constant VSCAN_NEXT_START    : integer := 262;
 constant HSCAN_SPR_MAX       : integer := 321;
 constant HSCAN_OAM_EVA_START       : integer := 64;
@@ -929,7 +929,7 @@ begin
     ---bg prefetch x pos is 16 + scroll cycle ahead of current pos.
     prf_x <= nes_x + ppu_scroll_x + "000010000" 
                     when nes_x < conv_std_logic_vector(HSCAN, X_SIZE) else
-             nes_x + ppu_scroll_x + "010000001"; -- +16 -399
+             nes_x + ppu_scroll_x + "010000010"; -- -382
 
     prf_y <= nes_y + ppu_scroll_y
                     when nes_x < conv_std_logic_vector(HSCAN, X_SIZE) and
@@ -995,39 +995,39 @@ begin
                     d_print("nes_y: " & conv_hex16(conv_integer(nes_y)));
 
                     ----fetch next tile byte.
-                    if (prf_x (2 downto 0) = "010") then
+                    if (nes_x (2 downto 0) = "010") then
                         nt_we_n <= '0';
                     else
                         nt_we_n <= '1';
                     end if;
 
                     ----fetch attr table byte.
-                    if (prf_x (4 downto 0) = "00100") then
+                    if (nes_x (4 downto 0) = "00100") then
                         attr_we_n <= '0';
                     else
                         attr_we_n <= '1';
                     end if;
-                    if (prf_x (4 downto 0) = "10000") then
+                    if (nes_x (4 downto 0) = "10000") then
                         disp_attr_we_n <= '0';
                     else
                         disp_attr_we_n <= '1';
                     end if;
                     ---attribute is shifted every 16 bit.
-                    if (prf_x (3 downto 0) = "0000") then
+                    if (nes_x (3 downto 0) = "0000") then
                         attr_ce_n <= '0';
                     else
                         attr_ce_n <= '1';
                     end if;
 
                     ----fetch pattern table low byte.
-                    if (prf_x (2 downto 0) = "110") then
+                    if (nes_x (2 downto 0) = "110") then
                          ptn_l_we_n <= '0';
                     else
                          ptn_l_we_n <= '1';
                     end if;
 
                     ----fetch pattern table high byte.
-                    if (prf_x (2 downto 0) = "000") then
+                    if (nes_x (2 downto 0) = "000") then
                          ptn_h_we_n <= '0';
                     else
                          ptn_h_we_n <= '1';
@@ -1070,7 +1070,7 @@ begin
                         )) then
 
                         ----fetch next tile byte.
-                        if (prf_x (2 downto 0) = "001") then
+                        if (nes_x (2 downto 0) = "001") then
                             --vram addr is incremented every 8 cycle.
                             --name table at 0x2000
                             vram_addr(9 downto 0) 
@@ -1079,7 +1079,7 @@ begin
                             vram_addr(asize - 1 downto 10) <= "10" & ppu_ctrl(PPUBNA downto 0) 
                                                             + ("000" & prf_x(dsize));
                         ----fetch attr table byte.
-                        elsif (prf_x (2 downto 0) = "011") then
+                        elsif (nes_x (2 downto 0) = "011") then
                             --attr table at 0x23c0
                             vram_addr(dsize - 1 downto 0) <= "11000000" +
                                     ("00" & prf_y(7 downto 5) & prf_x(7 downto 5));
@@ -1087,13 +1087,13 @@ begin
                                     ppu_ctrl(PPUBNA downto 0) & "11"
                                         + ("000" & prf_x(dsize) & "00");
                         ----fetch pattern table low byte.
-                        elsif (prf_x (2 downto 0) = "101") then
+                        elsif (nes_x (2 downto 0) = "101") then
                              --vram addr is incremented every 8 cycle.
                              vram_addr <= "0" & ppu_ctrl(PPUBPA) & 
                                                   disp_nt(dsize - 1 downto 0) 
                                                         & "0"  & prf_y(2  downto 0);
                         ----fetch pattern table high byte.
-                        elsif (prf_x (2 downto 0) = "111") then
+                        elsif (nes_x (2 downto 0) = "111") then
                              --vram addr is incremented every 8 cycle.
                              vram_addr <= "0" & ppu_ctrl(PPUBPA) & 
                                                   disp_nt(dsize - 1 downto 0) 

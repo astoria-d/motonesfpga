@@ -91,6 +91,7 @@ add wave -divider ppu
 
 #add wave  -radix hex  sim:/testbench_motones_sim/sim_board/ppu_inst/*
 #add wave  -radix hex  sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/*
+add wave  -label prf_x -radix decimal sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/prf_x
 
 #add wave -radix hex sim:/testbench_motones_sim/sim_board/vram_latch/*
 #add wave -label v_addr_ppu -radix hex sim:/testbench_motones_sim/sim_board/v_addr_ppu
