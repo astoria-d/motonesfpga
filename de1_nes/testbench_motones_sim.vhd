@@ -16,25 +16,19 @@ architecture stimulus of testbench_motones_sim is
     signal dbg_r_nw     : out std_logic;
     signal dbg_addr     : out std_logic_vector( 16 - 1 downto 0);
     signal dbg_d_io     : out std_logic_vector( 8 - 1 downto 0);
-    signal dbg_vram_ad  : out std_logic_vector (7 downto 0);
-    signal dbg_vram_a   : out std_logic_vector (13 downto 8);
+    signal dbg_v_addr   : out std_logic_vector (13 downto 0);
+    signal dbg_v_data   : out std_logic_vector (7 downto 0);
 
 ---monitor inside cpu
     signal dbg_instruction  : out std_logic_vector(7 downto 0);
     signal dbg_int_d_bus    : out std_logic_vector(7 downto 0);
     signal dbg_exec_cycle   : out std_logic_vector (5 downto 0);
     signal dbg_ea_carry     : out std_logic;
---    signal dbg_index_bus    : out std_logic_vector(7 downto 0);
---    signal dbg_acc_bus      : out std_logic_vector(7 downto 0);
     signal dbg_status       : out std_logic_vector(7 downto 0);
---    signal dbg_pcl, dbg_pch : out std_logic_vector(7 downto 0);
     signal dbg_sp, dbg_x, dbg_y, dbg_acc       : out std_logic_vector(7 downto 0);
     signal dbg_dec_oe_n    : out std_logic;
     signal dbg_dec_val     : out std_logic_vector (7 downto 0);
     signal dbg_int_dbus    : out std_logic_vector (7 downto 0);
---    signal dbg_status_val    : out std_logic_vector (7 downto 0);
---    signal dbg_stat_we_n    : out std_logic;
---    signal dbg_idl_h, dbg_idl_l, dbg_dbb_r, dbg_dbb_w    : out std_logic_vector (7 downto 0);
 
 --ppu debug pins
     signal dbg_ppu_ce_n    : out std_logic;
@@ -92,8 +86,8 @@ architecture stimulus of testbench_motones_sim is
     signal dbg_r_nw     : std_logic;
     signal dbg_addr : std_logic_vector( 16 - 1 downto 0);
     signal dbg_d_io : std_logic_vector( 8 - 1 downto 0);
-    signal dbg_vram_ad  : std_logic_vector (7 downto 0);
-    signal dbg_vram_a   : std_logic_vector (13 downto 8);
+    signal dbg_v_addr   : std_logic_vector (13 downto 0);
+    signal dbg_v_data   : std_logic_vector (7 downto 0);
     signal dbg_instruction  : std_logic_vector(7 downto 0);
     signal dbg_int_d_bus  : std_logic_vector(7 downto 0);
     signal dbg_exec_cycle   : std_logic_vector (5 downto 0);
@@ -127,8 +121,8 @@ dbg_cpu_mem_clk,
 dbg_r_nw,
 dbg_addr,
 dbg_d_io,
-dbg_vram_ad,
-dbg_vram_a,
+dbg_v_addr   ,
+dbg_v_data   ,
 dbg_instruction,
 dbg_int_d_bus,
 dbg_exec_cycle   ,
