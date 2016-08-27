@@ -39,8 +39,8 @@ entity ppu is
             rd_n        : out std_logic;
             wr_n        : out std_logic;
             ale         : out std_logic;
-            vram_ad     : inout std_logic_vector (7 downto 0);
-            vram_a      : out std_logic_vector (13 downto 8);
+            vram_addr   : out std_logic_vector (13 downto 0);
+            vram_data   : inout std_logic_vector (7 downto 0);
 
             h_sync_n    : out std_logic;
             v_sync_n    : out std_logic;
@@ -350,18 +350,15 @@ begin
     rd_n <= '1' when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
             '1' when ppu_addr_upd_n = '0' else
             rnd_rd_n;
-    --rnd_vram_addr is set only when address latch is set by the renderer.
-    vram_a <= ppu_addr(13 downto 8) when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
-              ppu_addr(13 downto 8) when ppu_addr_upd_n = '0' else
-              rnd_vram_addr(13 downto 8) when rnd_ale = '1' else
+
+    vram_addr <= ppu_addr when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
+              ppu_addr when ppu_addr_upd_n = '0' else
+              rnd_vram_addr when rnd_ale = '1' else
               (others => 'Z');
-    vram_ad <= cpu_d when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
-               ppu_addr(7 downto 0) when ppu_addr_upd_n = '0' else
-               cpu_d when ce_n = '0' and cpu_addr = PPUDATA and r_nw = '0' else
-               rnd_vram_addr(7 downto 0) when rnd_ale = '1' else
+    vram_data <= cpu_d when ce_n = '0' and cpu_addr = PPUDATA and r_nw = '0' else
                (others => 'Z');
 
-   rnd_vram_data <= vram_ad;
+   rnd_vram_data <= vram_data;
 
 
     -----------------------------

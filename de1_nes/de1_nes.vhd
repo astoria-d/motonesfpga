@@ -165,8 +165,8 @@ architecture rtl of de1_nes is
                 rd_n        : out std_logic;
                 wr_n        : out std_logic;
                 ale         : out std_logic;
-                vram_ad     : inout std_logic_vector (7 downto 0);
-                vram_a      : out std_logic_vector (13 downto 8);
+                vram_addr   : out std_logic_vector (13 downto 0);
+                vram_data   : inout std_logic_vector (7 downto 0);
 
                 h_sync_n    : out std_logic;
                 v_sync_n    : out std_logic;
@@ -197,16 +197,17 @@ architecture rtl of de1_nes is
         );
     end component;
 
-    component ls373
-        port (
-                dbg_vl_we_n     : out std_logic;
-                clk         : in std_logic;
-                rst_n       : in std_logic;
-                ale         : in std_logic;
-                vram_a      : in std_logic_vector (13 downto 8);
-                vram_ad     : in std_logic_vector (7 downto 0);
-                v_addr      : out std_logic_vector (13 downto 0)
-        );
+    component d_flip_flop
+        generic (
+                dsize : integer := 8
+                );
+        port (  clk     : in std_logic;
+                res_n   : in std_logic;
+                set_n   : in std_logic;
+                we_n    : in std_logic;
+                d       : in std_logic_vector (dsize - 1 downto 0);
+                q       : out std_logic_vector (dsize - 1 downto 0)
+            );
     end component;
 
     component apu
@@ -251,9 +252,10 @@ architecture rtl of de1_nes is
     signal rd_n     : std_logic;
     signal wr_n     : std_logic;
     signal ale      : std_logic;
-    signal vram_ad  : std_logic_vector (7 downto 0);
-    signal vram_a   : std_logic_vector (13 downto 8);
+    signal ale_n    : std_logic;
     signal v_addr   : std_logic_vector (13 downto 0);
+    signal v_addr_ppu   : std_logic_vector (13 downto 0);
+    signal v_data   : std_logic_vector (7 downto 0);
     signal pt_ce_n  : std_logic;
     signal nt0_ce_n : std_logic;
     signal nt1_ce_n : std_logic;
@@ -371,8 +373,8 @@ begin
                 rd_n        ,
                 wr_n        ,
                 ale         ,
-                vram_ad     ,
-                vram_a      ,
+                v_addr_ppu      ,
+                v_data      ,
 
                 h_sync_n    ,
                 v_sync_n    ,
@@ -388,18 +390,19 @@ begin
     --transparent d-latch
     --ale=1 >> addr latch
     --ale=0 >> addr output.
-	vram_latch : ls373
-                port map(dbg_vl_we_n, emu_ppu_clk, rst_n, ale, vram_a, vram_ad, v_addr);
+    ale_n <= not ale;
+	vram_latch : d_flip_flop generic map (vram_size14)
+                port map(emu_ppu_clk, rst_n, '1', ale_n, v_addr_ppu, v_addr);
 
     vchr_rom : chr_rom generic map (chr_rom_8k, data_size)
-            port map (emu_ppu_clk, pt_ce_n, v_addr(chr_rom_8k - 1 downto 0), vram_ad);
+            port map (emu_ppu_clk, pt_ce_n, v_addr(chr_rom_8k - 1 downto 0), v_data);
 
     --name table/attr table
     vram_nt0 : ram generic map (vram_1k, data_size)
-            port map (emu_ppu_clk, nt0_ce_n, rd_n, wr_n, v_addr(vram_1k - 1 downto 0), vram_ad);
+            port map (emu_ppu_clk, nt0_ce_n, rd_n, wr_n, v_addr(vram_1k - 1 downto 0), v_data);
 
     vram_nt1 : ram generic map (vram_1k, data_size)
-            port map (emu_ppu_clk, nt1_ce_n, rd_n, wr_n, v_addr(vram_1k - 1 downto 0), vram_ad);
+            port map (emu_ppu_clk, nt1_ce_n, rd_n, wr_n, v_addr(vram_1k - 1 downto 0), v_data);
 
     --APU/DMA instance
     apu_inst : apu
@@ -444,7 +447,7 @@ begin
     dbg_addr <= addr;
     dbg_d_io <= d_io;
     dbg_v_addr <= v_addr;
-    dbg_v_data <= vram_ad ;
+    dbg_v_data <= v_data;
     dbg_nmi <= nmi_n;
 
     ----cpu...
