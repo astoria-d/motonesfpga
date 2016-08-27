@@ -210,8 +210,6 @@ signal nes_y        : std_logic_vector (8 downto 0);
 --vram i/o
 signal io_cnt_rst_n     : std_logic;
 signal io_cnt           : std_logic_vector(0 downto 0);
-signal al_oe_n          : std_logic;
-signal ah_oe_n          : std_logic;
 
 --bg prefetch position (scroll + 16 cycle ahead of current pos)
 --511 x 239 (or 255 x 479)
@@ -587,30 +585,12 @@ begin
                 (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                 nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
             '1';
-    al_oe_n <= 
-            io_cnt(0) when (
-                ((ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
-                (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
-                nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
-               '1';
-    ah_oe_n <= 
+    v_bus_busy_n <= 
             '0' when (
                 ((ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
                 (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                 nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
             '1';
-    v_bus_busy_n <= ah_oe_n;
-
-
---    -----------------------------------------
---    --vram i/o
---    -----------------------------------------
---    vram_io_buf : tri_state_buffer generic map (dsize)
---            port map (al_oe_n, vram_addr(dsize - 1 downto 0), vram_ad);
---
---    vram_a_buf : tri_state_buffer generic map (6)
---            port map (ah_oe_n, vram_addr(asize - 1 downto dsize), vram_a);
-
 
     -----------------------------------------
     ---primary oam implementation...
@@ -943,127 +923,127 @@ begin
     end process;--spr_main_p 
 
 
---    -----------------------------------------
---    ---bg display variables...
---    -----------------------------------------
---    ---bg prefetch x pos is 16 + scroll cycle ahead of current pos.
---    prf_x <= nes_x + ppu_scroll_x + "000010000" 
---                    when nes_x < conv_std_logic_vector(HSCAN, X_SIZE) else
---             nes_x + ppu_scroll_x + "010111011"; -- +16 -341
---
---    prf_y <= nes_y + ppu_scroll_y
---                    when nes_x < conv_std_logic_vector(HSCAN, X_SIZE) and
---                         nes_y < conv_std_logic_vector(VSCAN, X_SIZE) else
---             nes_y + ppu_scroll_y + "000000001" 
---                    when nes_y < conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE) else
---             "000000000"; 
---
---    --name tbl, attr tbl, pattern tble values..
---    nt_inst : d_flip_flop generic map(dsize)
---            port map (emu_ppu_clk, rst_n, '1', nt_we_n, vram_data, disp_nt);
---
---    at_inst : d_flip_flop generic map(dsize)
---            port map (emu_ppu_clk, rst_n, '1', attr_we_n, vram_data, attr_val);
---
---    disp_at_inst : shift_register generic map(dsize, 2)
---            port map (emu_ppu_clk, rst_n, attr_ce_n, disp_attr_we_n, attr_val, disp_attr);
---
---    --chr rom data's bit is stored in opposite direction.
---    --reverse bit when loading...
---    ptn_l_in <= (vram_data(0) & vram_data(1) & vram_data(2) & vram_data(3) & 
---                 vram_data(4) & vram_data(5) & vram_data(6) & vram_data(7));
---    ptn_h_in <= (vram_data(0) & vram_data(1) & vram_data(2) & vram_data(3) & 
---                 vram_data(4) & vram_data(5) & vram_data(6) & vram_data(7)) & 
---                disp_ptn_h (dsize downto 1);
---
---    ptn_l_inst : d_flip_flop generic map(dsize)
---            port map (emu_ppu_clk, rst_n, '1', ptn_l_we_n, ptn_l_in, ptn_l_val);
---
---    disp_ptn_l_in <= ptn_l_val & disp_ptn_l (dsize downto 1);
---    disp_ptn_l_inst : shift_register generic map(dsize * 2, 1)
---            port map (emu_ppu_clk, rst_n, '0', ptn_h_we_n, disp_ptn_l_in, disp_ptn_l);
---
---    ptn_h_inst : shift_register generic map(dsize * 2, 1)
---            port map (emu_ppu_clk, rst_n, '0', ptn_h_we_n, ptn_h_in, disp_ptn_h);
---
---
---    -----------------------------------------
---    ---bg main process
---    -----------------------------------------
---    bg_main_p : process (rst_n, emu_ppu_clk)
---    begin
---        if (rst_n = '0') then
---            nt_we_n <= '1';
---            attr_we_n <= '1';
---            disp_attr_we_n <= '1';
---            attr_ce_n <= '1';
---            ptn_l_we_n <= '1';
---            ptn_h_we_n <= '1';
---        else
---            if (rising_edge(emu_ppu_clk)) then
---
---                --fetch bg pattern and display.
---                if (ppu_mask(PPUSBG) = '1' and 
---                        (nes_x <= conv_std_logic_vector(HSCAN, X_SIZE) or
---                        nes_x > conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE)) and
---                        (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
---                        nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE))) then
---                    --visible area bg image
---
---                    d_print("*");
---                    d_print("nes_x: " & conv_hex16(conv_integer(nes_x)));
---                    d_print("nes_y: " & conv_hex16(conv_integer(nes_y)));
---
---                    ----fetch next tile byte.
---                    if (prf_x (2 downto 0) = "010") then
---                        nt_we_n <= '0';
---                    else
---                        nt_we_n <= '1';
---                    end if;
---
---                    ----fetch attr table byte.
---                    if (prf_x (4 downto 0) = "00100") then
---                        attr_we_n <= '0';
---                    else
---                        attr_we_n <= '1';
---                    end if;
---                    if (prf_x (4 downto 0) = "10000") then
---                        disp_attr_we_n <= '0';
---                    else
---                        disp_attr_we_n <= '1';
---                    end if;
---                    ---attribute is shifted every 16 bit.
---                    if (prf_x (3 downto 0) = "0000") then
---                        attr_ce_n <= '0';
---                    else
---                        attr_ce_n <= '1';
---                    end if;
---
---                    ----fetch pattern table low byte.
---                    if (prf_x (2 downto 0) = "110") then
---                         ptn_l_we_n <= '0';
---                    else
---                         ptn_l_we_n <= '1';
---                    end if;
---
---                    ----fetch pattern table high byte.
---                    if (prf_x (2 downto 0) = "000") then
---                         ptn_h_we_n <= '0';
---                    else
---                         ptn_h_we_n <= '1';
---                    end if;
---
---                else
---                    nt_we_n <= '1';
---                    attr_we_n <= '1';
---                    disp_attr_we_n <= '1';
---                    attr_ce_n <= '1';
---                    ptn_l_we_n <= '1';
---                    ptn_h_we_n <= '1';
---                end if;--if (ppu_mask(PPUSBG) = '1') and
---            end if;--if (rising_edge(emu_ppu_clk)) then
---        end if;--if (rst_n = '0') then
---    end process;--bg_main_p 
+    -----------------------------------------
+    ---bg display variables...
+    -----------------------------------------
+    ---bg prefetch x pos is 16 + scroll cycle ahead of current pos.
+    prf_x <= nes_x + ppu_scroll_x + "000010000" 
+                    when nes_x < conv_std_logic_vector(HSCAN, X_SIZE) else
+             nes_x + ppu_scroll_x + "010111011"; -- +16 -341
+
+    prf_y <= nes_y + ppu_scroll_y
+                    when nes_x < conv_std_logic_vector(HSCAN, X_SIZE) and
+                         nes_y < conv_std_logic_vector(VSCAN, X_SIZE) else
+             nes_y + ppu_scroll_y + "000000001" 
+                    when nes_y < conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE) else
+             "000000000"; 
+
+    --name tbl, attr tbl, pattern tble values..
+    nt_inst : d_flip_flop generic map(dsize)
+            port map (emu_ppu_clk, rst_n, '1', nt_we_n, vram_data, disp_nt);
+
+    at_inst : d_flip_flop generic map(dsize)
+            port map (emu_ppu_clk, rst_n, '1', attr_we_n, vram_data, attr_val);
+
+    disp_at_inst : shift_register generic map(dsize, 2)
+            port map (emu_ppu_clk, rst_n, attr_ce_n, disp_attr_we_n, attr_val, disp_attr);
+
+    --chr rom data's bit is stored in opposite direction.
+    --reverse bit when loading...
+    ptn_l_in <= (vram_data(0) & vram_data(1) & vram_data(2) & vram_data(3) & 
+                 vram_data(4) & vram_data(5) & vram_data(6) & vram_data(7));
+    ptn_h_in <= (vram_data(0) & vram_data(1) & vram_data(2) & vram_data(3) & 
+                 vram_data(4) & vram_data(5) & vram_data(6) & vram_data(7)) & 
+                disp_ptn_h (dsize downto 1);
+
+    ptn_l_inst : d_flip_flop generic map(dsize)
+            port map (emu_ppu_clk, rst_n, '1', ptn_l_we_n, ptn_l_in, ptn_l_val);
+
+    disp_ptn_l_in <= ptn_l_val & disp_ptn_l (dsize downto 1);
+    disp_ptn_l_inst : shift_register generic map(dsize * 2, 1)
+            port map (emu_ppu_clk, rst_n, '0', ptn_h_we_n, disp_ptn_l_in, disp_ptn_l);
+
+    ptn_h_inst : shift_register generic map(dsize * 2, 1)
+            port map (emu_ppu_clk, rst_n, '0', ptn_h_we_n, ptn_h_in, disp_ptn_h);
+
+
+    -----------------------------------------
+    ---bg main process
+    -----------------------------------------
+    bg_main_p : process (rst_n, emu_ppu_clk)
+    begin
+        if (rst_n = '0') then
+            nt_we_n <= '1';
+            attr_we_n <= '1';
+            disp_attr_we_n <= '1';
+            attr_ce_n <= '1';
+            ptn_l_we_n <= '1';
+            ptn_h_we_n <= '1';
+        else
+            if (rising_edge(emu_ppu_clk)) then
+
+                --fetch bg pattern and display.
+                if (ppu_mask(PPUSBG) = '1' and 
+                        (nes_x <= conv_std_logic_vector(HSCAN, X_SIZE) or
+                        nes_x > conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE)) and
+                        (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+                        nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE))) then
+                    --visible area bg image
+
+                    d_print("*");
+                    d_print("nes_x: " & conv_hex16(conv_integer(nes_x)));
+                    d_print("nes_y: " & conv_hex16(conv_integer(nes_y)));
+
+                    ----fetch next tile byte.
+                    if (prf_x (2 downto 0) = "010") then
+                        nt_we_n <= '0';
+                    else
+                        nt_we_n <= '1';
+                    end if;
+
+                    ----fetch attr table byte.
+                    if (prf_x (4 downto 0) = "00100") then
+                        attr_we_n <= '0';
+                    else
+                        attr_we_n <= '1';
+                    end if;
+                    if (prf_x (4 downto 0) = "10000") then
+                        disp_attr_we_n <= '0';
+                    else
+                        disp_attr_we_n <= '1';
+                    end if;
+                    ---attribute is shifted every 16 bit.
+                    if (prf_x (3 downto 0) = "0000") then
+                        attr_ce_n <= '0';
+                    else
+                        attr_ce_n <= '1';
+                    end if;
+
+                    ----fetch pattern table low byte.
+                    if (prf_x (2 downto 0) = "110") then
+                         ptn_l_we_n <= '0';
+                    else
+                         ptn_l_we_n <= '1';
+                    end if;
+
+                    ----fetch pattern table high byte.
+                    if (prf_x (2 downto 0) = "000") then
+                         ptn_h_we_n <= '0';
+                    else
+                         ptn_h_we_n <= '1';
+                    end if;
+
+                else
+                    nt_we_n <= '1';
+                    attr_we_n <= '1';
+                    disp_attr_we_n <= '1';
+                    attr_ce_n <= '1';
+                    ptn_l_we_n <= '1';
+                    ptn_h_we_n <= '1';
+                end if;--if (ppu_mask(PPUSBG) = '1') and
+            end if;--if (rising_edge(emu_ppu_clk)) then
+        end if;--if (rst_n = '0') then
+    end process;--bg_main_p 
 
 
     -----------------------------------------
