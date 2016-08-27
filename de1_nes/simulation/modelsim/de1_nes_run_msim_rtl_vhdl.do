@@ -39,18 +39,16 @@ add wave -label ppu_addr -radix hex sim:/testbench_motones_sim/sim_board/ppu_ins
 add wave -label ppu_data -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/ppu_data
 add wave -label oam_addr -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/oam_addr
 add wave -label oam_data -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/oam_data
-#add wave -label ppu_scr_x -radix decimal -unsigned sim:/testbench_motones_sim/sim_board/ppu_inst/ppu_scroll_x
-#add wave -label ppu_scr_y -radix decimal -unsigned sim:/testbench_motones_sim/sim_board/ppu_inst/ppu_scroll_y
+add wave -label ppu_scr_x -radix decimal -unsigned sim:/testbench_motones_sim/sim_board/ppu_inst/ppu_scroll_x
+add wave -label ppu_scr_y -radix decimal -unsigned sim:/testbench_motones_sim/sim_board/ppu_inst/ppu_scroll_y
 
 add wave -divider vram
 add wave -label emu_ppu_clk sim:/testbench_motones_sim/sim_board/ppu_inst/emu_ppu_clk
-add wave -label ale sim:/testbench_motones_sim/sim_board/ppu_inst/ale
+add wave -label ale_n sim:/testbench_motones_sim/sim_board/ppu_inst/ale_n
 add wave -label rd_n sim:/testbench_motones_sim/sim_board/ppu_inst/rd_n
 add wave -label wr_n sim:/testbench_motones_sim/sim_board/ppu_inst/wr_n
-add wave -label vram_a -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/vram_a
-add wave -label vram_ad -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/vram_ad
 add wave -label v_addr -radix hex sim:/testbench_motones_sim/sim_board/v_addr
-
+add wave -label v_data -radix hex sim:/testbench_motones_sim/sim_board/v_data
 
 add wave -divider render
 #add wave -label vba_x -radix decimal -unsigned sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/vga_x
@@ -83,15 +81,26 @@ add wave -label nes_y -radix decimal -unsigned sim:/testbench_motones_sim/sim_bo
 #add wave -divider apu
 #add wave  -radix hex  sim:/testbench_motones_sim/sim_board/apu_inst/*
 
-add wave -divider ppu
-#add wave  -radix hex  sim:/testbench_motones_sim/sim_board/ppu_inst/*
+#add wave  -radix hex  sim:/testbench_motones_sim/sim_board/ppu_addr_decoder/*
 #add wave  -radix hex  sim:/testbench_motones_sim/sim_board/vram_nt0/*
+
+add wave -divider ppu
+#add wave  -label emu_ppu_mem_clk  sim:/testbench_motones_sim/sim_board/emu_ppu_mem_clk
+
+
+
+#add wave  -radix hex  sim:/testbench_motones_sim/sim_board/ppu_inst/*
+#add wave  -radix hex  sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/*
+
+#add wave -radix hex sim:/testbench_motones_sim/sim_board/vram_latch/*
+#add wave -label v_addr_ppu -radix hex sim:/testbench_motones_sim/sim_board/v_addr_ppu
+
 
 
 view structure
 view signals
 
-run 6 us
+run 4 us
 wave zoom full
 run 70 us
 
