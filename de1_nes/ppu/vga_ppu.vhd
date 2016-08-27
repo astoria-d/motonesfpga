@@ -38,8 +38,8 @@ entity vga_ppu_render is
             rd_n        : out std_logic;
             wr_n        : out std_logic;
             ale         : out std_logic;
-            vram_ad     : inout  std_logic_vector (7 downto 0);
-            vram_a      : out std_logic_vector (13 downto 8);
+            vram_addr   : out std_logic_vector (13 downto 0);
+            vram_data   : in std_logic_vector (7 downto 0);
 
             --vga output
             h_sync_n    : out std_logic;
@@ -239,7 +239,6 @@ signal disp_ptn_h       : std_logic_vector (dsize * 2 - 1 downto 0);
 
 --signals for palette / oam access from cpu
 signal r_n              : std_logic;
-signal vram_addr        : std_logic_vector (asize - 1 downto 0);
 
 --palette
 signal plt_ram_ce_n     : std_logic;
@@ -603,14 +602,14 @@ begin
     v_bus_busy_n <= ah_oe_n;
 
 
-    -----------------------------------------
-    --vram i/o
-    -----------------------------------------
-    vram_io_buf : tri_state_buffer generic map (dsize)
-            port map (al_oe_n, vram_addr(dsize - 1 downto 0), vram_ad);
-
-    vram_a_buf : tri_state_buffer generic map (6)
-            port map (ah_oe_n, vram_addr(asize - 1 downto dsize), vram_a);
+--    -----------------------------------------
+--    --vram i/o
+--    -----------------------------------------
+--    vram_io_buf : tri_state_buffer generic map (dsize)
+--            port map (al_oe_n, vram_addr(dsize - 1 downto 0), vram_ad);
+--
+--    vram_a_buf : tri_state_buffer generic map (6)
+--            port map (ah_oe_n, vram_addr(asize - 1 downto dsize), vram_a);
 
 
     -----------------------------------------
@@ -689,9 +688,9 @@ begin
 
 
     --reverse bit when NOT SPRHFL is set (.nes file format bit endian).
-    spr_ptn_in <= vram_ad when spr_attr(conv_integer(s_oam_addr_cpy(4 downto 2)))(SPRHFL) = '1' else
-                (vram_ad(0) & vram_ad(1) & vram_ad(2) & vram_ad(3) & 
-                 vram_ad(4) & vram_ad(5) & vram_ad(6) & vram_ad(7));
+    spr_ptn_in <= vram_data when spr_attr(conv_integer(s_oam_addr_cpy(4 downto 2)))(SPRHFL) = '1' else
+                (vram_data(0) & vram_data(1) & vram_data(2) & vram_data(3) & 
+                 vram_data(4) & vram_data(5) & vram_data(6) & vram_data(7));
     --oam array instances...
     spr_inst : for i in 0 to 7 generate
         spr_x_inst : counter_register generic map(dsize, 16#ff#)
@@ -961,20 +960,20 @@ begin
 --
 --    --name tbl, attr tbl, pattern tble values..
 --    nt_inst : d_flip_flop generic map(dsize)
---            port map (emu_ppu_clk, rst_n, '1', nt_we_n, vram_ad, disp_nt);
+--            port map (emu_ppu_clk, rst_n, '1', nt_we_n, vram_data, disp_nt);
 --
 --    at_inst : d_flip_flop generic map(dsize)
---            port map (emu_ppu_clk, rst_n, '1', attr_we_n, vram_ad, attr_val);
+--            port map (emu_ppu_clk, rst_n, '1', attr_we_n, vram_data, attr_val);
 --
 --    disp_at_inst : shift_register generic map(dsize, 2)
 --            port map (emu_ppu_clk, rst_n, attr_ce_n, disp_attr_we_n, attr_val, disp_attr);
 --
 --    --chr rom data's bit is stored in opposite direction.
 --    --reverse bit when loading...
---    ptn_l_in <= (vram_ad(0) & vram_ad(1) & vram_ad(2) & vram_ad(3) & 
---                 vram_ad(4) & vram_ad(5) & vram_ad(6) & vram_ad(7));
---    ptn_h_in <= (vram_ad(0) & vram_ad(1) & vram_ad(2) & vram_ad(3) & 
---                 vram_ad(4) & vram_ad(5) & vram_ad(6) & vram_ad(7)) & 
+--    ptn_l_in <= (vram_data(0) & vram_data(1) & vram_data(2) & vram_data(3) & 
+--                 vram_data(4) & vram_data(5) & vram_data(6) & vram_data(7));
+--    ptn_h_in <= (vram_data(0) & vram_data(1) & vram_data(2) & vram_data(3) & 
+--                 vram_data(4) & vram_data(5) & vram_data(6) & vram_data(7)) & 
 --                disp_ptn_h (dsize downto 1);
 --
 --    ptn_l_inst : d_flip_flop generic map(dsize)

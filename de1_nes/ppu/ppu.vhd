@@ -79,8 +79,8 @@ component vga_ppu_render
             rd_n        : out std_logic;
             wr_n        : out std_logic;
             ale         : out std_logic;
-            vram_ad     : inout  std_logic_vector (7 downto 0);
-            vram_a      : out std_logic_vector (13 downto 8);
+            vram_addr   : out std_logic_vector (13 downto 0);
+            vram_data   : in std_logic_vector (7 downto 0);
 
             --vga output
             h_sync_n    : out std_logic;
@@ -206,8 +206,8 @@ signal oam_bus_ce_n     : std_logic;
 signal plt_bus_ce_n     : std_logic;
 
 signal rnd_rd_n, rnd_wr_n, rnd_ale : std_logic;
-signal rnd_vram_ad  : std_logic_vector (7 downto 0);
-signal rnd_vram_a   : std_logic_vector (13 downto 8);
+signal rnd_vram_addr    : std_logic_vector (13 downto 0);
+signal rnd_vram_data    : std_logic_vector (7 downto 0);
 
 signal rnd_plt_data_out     : std_logic_vector (7 downto 0);
 signal rnd_oam_data_out     : std_logic_vector (7 downto 0);
@@ -352,11 +352,14 @@ begin
             rnd_rd_n;
     vram_a <= ppu_addr(13 downto 8) when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
               ppu_addr(13 downto 8) when ppu_addr_upd_n = '0' else
-              rnd_vram_a;
+              rnd_vram_addr(13 downto 8);
     vram_ad <= cpu_d when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
                ppu_addr(7 downto 0) when ppu_addr_upd_n = '0' else
                cpu_d when ce_n = '0' and cpu_addr = PPUDATA and r_nw = '0' else
-               rnd_vram_ad;
+               rnd_vram_addr(7 downto 0) when rnd_ale = '1' else
+               (others => 'Z');
+
+   rnd_vram_data <= vram_ad;
 
 
     -----------------------------
@@ -406,7 +409,7 @@ begin
     dbg_s_oam_data                  ,
     
             vga_clk, emu_ppu_clk, rst_n,
-            rnd_rd_n, rnd_wr_n, rnd_ale, rnd_vram_ad, rnd_vram_a,
+            rnd_rd_n, rnd_wr_n, rnd_ale, rnd_vram_addr, rnd_vram_data,
             h_sync_n, v_sync_n, r, g, b, 
             ppu_ctrl, ppu_mask, rdr_ppu_stat, ppu_scroll_x, ppu_scroll_y,
             r_nw,

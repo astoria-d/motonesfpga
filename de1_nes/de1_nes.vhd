@@ -17,8 +17,8 @@ entity de1_nes is
     signal dbg_r_nw     : out std_logic;
     signal dbg_addr     : out std_logic_vector( 16 - 1 downto 0);
     signal dbg_d_io     : out std_logic_vector( 8 - 1 downto 0);
-    signal dbg_vram_ad  : out std_logic_vector (7 downto 0);
-    signal dbg_vram_a   : out std_logic_vector (13 downto 8);
+    signal dbg_v_addr   : out std_logic_vector (13 downto 0);
+    signal dbg_v_data   : out std_logic_vector (7 downto 0);
 
 ---monitor inside cpu
     signal dbg_instruction  : out std_logic_vector(7 downto 0);
@@ -430,8 +430,6 @@ begin
     dbg_ppu_scrl_x(2) <= wr_n;
     dbg_ppu_scrl_x(3) <= nt0_ce_n;
 
-    dbg_sp(5 downto 0) <= v_addr(13 downto 8);
-    dbg_x <= v_addr(7 downto 0);
     dbg_sp(6) <= dbg_vl_we_n;
     --nmi_n <= dummy_nmi;
     ---------------
@@ -445,8 +443,8 @@ begin
     dbg_r_nw <= r_nw;
     dbg_addr <= addr;
     dbg_d_io <= d_io;
-    dbg_vram_ad  <= vram_ad ;
-    dbg_vram_a  <= vram_a ;
+    dbg_v_addr <= v_addr;
+    dbg_v_data <= vram_ad ;
     dbg_nmi <= nmi_n;
 
     ----cpu...
