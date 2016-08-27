@@ -87,14 +87,16 @@ begin
              '1' ;
 
     --name table0
-    nt0_ce_n <=     '1' when (v_addr(13 downto 8) = "111111") else
+    nt0_ce_n <=     '1' when (v_addr(13) = '0') else
+                    '1' when (v_addr(13 downto 8) = "111111") else
                     '0' when (((v_addr(11) or v_addr(10)) = '0') 
                         or (nt_v_mirror = '1' and v_addr(11) = '1' and v_addr(10) = '0')
                         or (nt_v_mirror = '0' and v_addr(11) = '0' and v_addr(10) = '1')) else
                     '1';
 
     --name table1
-    nt1_ce_n <=     '1' when (v_addr(13 downto 8) = "111111") else
+    nt1_ce_n <=     '1' when (v_addr(13) = '0') else
+                    '1' when (v_addr(13 downto 8) = "111111") else
                     '0' when (((v_addr(11) and v_addr(10)) = '1') 
                     or (nt_v_mirror = '1' and v_addr(11) = '0' and v_addr(10) = '1')
                     or (nt_v_mirror = '0' and v_addr(11) = '1' and v_addr(10) = '0')) else
