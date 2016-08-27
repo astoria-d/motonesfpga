@@ -39,8 +39,8 @@ add wave -label ppu_addr -radix hex sim:/testbench_motones_sim/sim_board/ppu_ins
 add wave -label ppu_data -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/ppu_data
 add wave -label oam_addr -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/oam_addr
 add wave -label oam_data -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/oam_data
-add wave -label ppu_scr_x -radix decimal -unsigned sim:/testbench_motones_sim/sim_board/ppu_inst/ppu_scroll_x
-add wave -label ppu_scr_y -radix decimal -unsigned sim:/testbench_motones_sim/sim_board/ppu_inst/ppu_scroll_y
+#add wave -label ppu_scr_x -radix decimal -unsigned sim:/testbench_motones_sim/sim_board/ppu_inst/ppu_scroll_x
+#add wave -label ppu_scr_y -radix decimal -unsigned sim:/testbench_motones_sim/sim_board/ppu_inst/ppu_scroll_y
 
 add wave -divider vram
 add wave -label emu_ppu_clk sim:/testbench_motones_sim/sim_board/ppu_inst/emu_ppu_clk
@@ -62,12 +62,12 @@ add wave -label nes_y -radix decimal -unsigned sim:/testbench_motones_sim/sim_bo
 #add wave -label attr_val -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/ppu_render_inst/attr_val
 
 
-add wave -divider vga
-add wave -label h_sync_n sim:/testbench_motones_sim/sim_board/ppu_inst/h_sync_n
-add wave -label v_sync_n sim:/testbench_motones_sim/sim_board/ppu_inst/v_sync_n
-add wave -label r -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/r
-add wave -label g -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/g
-add wave -label b -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/b
+#add wave -divider vga
+#add wave -label h_sync_n sim:/testbench_motones_sim/sim_board/ppu_inst/h_sync_n
+#add wave -label v_sync_n sim:/testbench_motones_sim/sim_board/ppu_inst/v_sync_n
+#add wave -label r -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/r
+#add wave -label g -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/g
+#add wave -label b -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/b
 
 
 
@@ -85,23 +85,13 @@ add wave -label b -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/b
 
 add wave -divider ppu
 #add wave  -radix hex  sim:/testbench_motones_sim/sim_board/ppu_inst/*
-#add wave  -radix hex  sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/*
+#add wave  -radix hex  sim:/testbench_motones_sim/sim_board/vram_nt0/*
 
-
-#add wave -label reset_n  sim:/testbench_motones_sim/sim_board/clock_inst/reset_n
-#add wave -label base_clk  sim:/testbench_motones_sim/sim_board/clock_inst/base_clk
-#add wave -label vga_clk  sim:/testbench_motones_sim/sim_board/clock_inst/vga_clk
-#add wave -label ppu_clk  sim:/testbench_motones_sim/sim_board/clock_inst/ppu_clk
-#add wave -label loop16  -radix hex  sim:/testbench_motones_sim/sim_board/clock_inst/loop16
-#add wave -label emu_ppu_clk  sim:/testbench_motones_sim/sim_board/clock_inst/emu_ppu_clk
-#add wave -label cpu_clk  sim:/testbench_motones_sim/sim_board/clock_inst/cpu_clk
-#add wave -label cpu_mem_clk  sim:/testbench_motones_sim/sim_board/clock_inst/cpu_mem_clk
-#add wave -label cpu_recv_clk  sim:/testbench_motones_sim/sim_board/clock_inst/cpu_recv_clk
 
 view structure
 view signals
 
 run 6 us
 wave zoom full
-run 55 us
+run 70 us
 
