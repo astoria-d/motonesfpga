@@ -425,8 +425,8 @@ begin
 ------------------debug pin setting....--------------------    
 -----------------------------------------------------------
 -----------------------------------------------------------
-    clock_counter_inst : counter_register generic map (64) port map 
-        (cpu_clk, rst_n, '0', '1', (others=>'0'), clock_counter);
+--    clock_counter_inst : counter_register generic map (64) port map 
+--        (cpu_clk, rst_n, '0', '1', (others=>'0'), clock_counter);
 
 --    led_test : counter_register generic map (24) port map 
 --        (base_clk, rst_n, '0', '1', (others=>'0'), loop24);
