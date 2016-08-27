@@ -101,6 +101,8 @@ component vga_ppu_render
             plt_bus_ce_n    : in std_logic;
             plt_addr_in     : in std_logic_vector (4 downto 0);
             plt_data_in     : in std_logic_vector (7 downto 0);
+            plt_data_out    : out std_logic_vector (7 downto 0);
+
             oam_bus_ce_n    : in std_logic;
             oam_addr_in     : in std_logic_vector (7 downto 0);
             oam_data_in     : in std_logic_vector (7 downto 0);
@@ -204,6 +206,8 @@ signal plt_bus_ce_n     : std_logic;
 signal rnd_rd_n, rnd_wr_n, rnd_ale : std_logic;
 signal rnd_vram_ad  : std_logic_vector (7 downto 0);
 signal rnd_vram_a   : std_logic_vector (13 downto 8);
+
+signal rnd_plt_data_out    : std_logic_vector (7 downto 0);
 
 signal v_bus_busy_n     : std_logic;
 
@@ -331,21 +335,28 @@ begin
     ale <= '1' when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
            '1' when ppu_addr_upd_n = '0' else
            '0' when ce_n = '0' and cpu_addr = PPUDATA and r_nw = '0' else
-           '0';
+           rnd_ale;
     wr_n <= '0' when ce_n = '0' and cpu_addr = PPUDATA and r_nw = '0' else
             '1' when ppu_addr_upd_n = '0' else
             '1' when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
-            '1';
+            rnd_wr_n;
     rd_n <= '1' when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
             '1' when ppu_addr_upd_n = '0' else
-            '1';
+            rnd_rd_n;
     vram_a <= ppu_addr(13 downto 8) when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
               ppu_addr(13 downto 8) when ppu_addr_upd_n = '0' else
-              (others => 'Z');
+              rnd_vram_a;
     vram_ad <= cpu_d when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
                ppu_addr(7 downto 0) when ppu_addr_upd_n = '0' else
                cpu_d when ce_n = '0' and cpu_addr = PPUDATA and r_nw = '0' else
-               (others => 'Z');
+               rnd_vram_ad;
+
+
+    -----------------------------
+    --palette ram access..
+    -----------------------------
+    plt_bus_ce_n <= '0' when ce_n = '0' and cpu_addr = PPUDATA and ppu_addr(13 downto 8) = "111111" else
+                    '1';
 
     -----------------------------
     --cpu nmi generation...
@@ -391,7 +402,7 @@ begin
             rnd_rd_n, rnd_wr_n, rnd_ale, rnd_vram_ad, rnd_vram_a,
             h_sync_n, v_sync_n, r, g, b, 
             ppu_ctrl, ppu_mask, rdr_ppu_stat, ppu_scroll_x, ppu_scroll_y,
-            r_nw, plt_bus_ce_n, ppu_addr(4 downto 0), cpu_d, 
+            r_nw, plt_bus_ce_n, ppu_addr(4 downto 0), cpu_d, rnd_plt_data_out,
             oam_bus_ce_n, oam_addr, cpu_d, v_bus_busy_n);
 
 end rtl;

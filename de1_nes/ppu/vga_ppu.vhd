@@ -60,6 +60,8 @@ entity vga_ppu_render is
             plt_bus_ce_n    : in std_logic;
             plt_addr_in     : in std_logic_vector (4 downto 0);
             plt_data_in     : in std_logic_vector (7 downto 0);
+            plt_data_out    : out std_logic_vector (7 downto 0);
+
             oam_bus_ce_n    : in std_logic;
             oam_addr_in     : in std_logic_vector (7 downto 0);
             oam_data_in     : in std_logic_vector (7 downto 0);
@@ -140,15 +142,6 @@ component palette_ram
             addr              : in std_logic_vector (abus_size - 1 downto 0);
             d_io              : inout std_logic_vector (dbus_size - 1 downto 0)
     );
-end component;
-
-component ram_ctrl
-    generic (wr_en_timing : integer);
-    port (  
-            clk              : in std_logic;
-            ce_n, oe_n, we_n : in std_logic;
-            sync_ce_n        : out std_logic
-        );
 end component;
 
 --------- VGA screen constant -----------
@@ -467,81 +460,19 @@ begin
     --nes_y <= vga_y(8 downto 0);
 
 
---    -----------------------------------------
---    ---vram access signals
---    -----------------------------------------
---    reset_p : process (rst_n, emu_ppu_clk)
---    begin
---        if (rst_n = '0') then
---            io_cnt_rst_n <= '0';
---        else
---            if (falling_edge(emu_ppu_clk)) then
---                if (nes_x >= conv_std_logic_vector(VGA_W_MAX / 2 - 1, X_SIZE)) then io_cnt_rst_n <= '0';
---                else io_cnt_rst_n <= '1';
---                end if; 
---            end if;
---        end if;
---    end process;
---
---    io_cnt_inst : counter_register generic map (1, 1)
---            port map (emu_ppu_clk, io_cnt_rst_n, '0', '1', (others => '0'), io_cnt);
---
---    ale <= 
---            not io_cnt(0) when (
---                ((ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
---                (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
---                nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
---            'Z';
---    rd_n <= 
---            not io_cnt(0) when (
---                ((ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
---                (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
---                nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
---            'Z';
---    wr_n <= 
---            '1' when (
---                ((ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
---                (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
---                nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
---            'Z';
---    al_oe_n <= 
---            io_cnt(0) when (
---                ((ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
---                (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
---                nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
---               '1';
---    ah_oe_n <= 
---            '0' when (
---                ((ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
---                (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
---                nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
---            '1';
---    v_bus_busy_n <= ah_oe_n;
---
---
---    -----------------------------------------
---    --vram i/o
---    -----------------------------------------
---    vram_io_buf : tri_state_buffer generic map (dsize)
---            port map (al_oe_n, vram_addr(dsize - 1 downto 0), vram_ad);
---
---    vram_a_buf : tri_state_buffer generic map (6)
---            port map (ah_oe_n, vram_addr(asize - 1 downto dsize), vram_a);
---
---
---    -----------------------------------------
---    ---palette ram
---    -----------------------------------------
---    r_n <= not r_nw;
---
---    plt_ram_ce_n <= '0' when plt_bus_ce_n = '0' and r_nw = '0' else 
---                    '0' when plt_bus_ce_n = '0' and r_nw = '1' else
---                    '0' when ppu_mask(PPUSBG) = '1' and 
---                            (nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) and 
---                            (nes_y < conv_std_logic_vector(VSCAN, X_SIZE)) else
---                    '1';
---
---    plt_addr <= oam_plt_addr(4 downto 0) when plt_bus_ce_n = '0' else
+    -----------------------------------------
+    ---palette ram
+    -----------------------------------------
+    r_n <= not r_nw;
+
+    plt_ram_ce_n <= '0' when plt_bus_ce_n = '0' and r_nw = '0' else 
+                    '0' when plt_bus_ce_n = '0' and r_nw = '1' else
+                    '0' when ppu_mask(PPUSBG) = '1' and 
+                            (nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) and 
+                            (nes_y < conv_std_logic_vector(VSCAN, X_SIZE)) else
+                    '1';
+
+    plt_addr <= plt_addr_in when plt_bus_ce_n = '0' else
 --                "1" & spr_attr(0)(1 downto 0) & spr_ptn_h(0)(0) & spr_ptn_l(0)(0)
 --                    when ppu_mask(PPUSSP) = '1' and
 --                        (nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
@@ -600,21 +531,84 @@ begin
 --                        ((disp_ptn_h(0) or disp_ptn_l(0)) = '1') and
 --                        (nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
 --                        (nes_y < conv_std_logic_vector(VSCAN, X_SIZE)) else
---                ---else: no output color >> universal bg color output.
---                --0x3f00 is the universal bg palette.
---                (others => '0');    
+                ---else: no output color >> universal bg color output.
+                --0x3f00 is the universal bg palette.
+                (others => '0');    
+
+    plt_r_n <= not r_nw when plt_bus_ce_n = '0' else
+                '0' when ppu_mask(PPUSBG) = '1' else
+                '1';
+    plt_w_n <= r_nw when plt_bus_ce_n = '0' else
+                '1';
+    plt_d_buf_w : tri_state_buffer generic map (dsize)
+            port map (plt_w_n, plt_data_in, plt_data);
+    plt_d_buf_r : tri_state_buffer generic map (dsize)
+            port map (plt_r_n, plt_data, plt_data_out);
+    palette_inst : palette_ram generic map (5, dsize)
+            port map (emu_ppu_clk, plt_ram_ce_n, plt_r_n, plt_w_n, plt_addr, plt_data);
+
+
+
+    -----------------------------------------
+    ---vram access signals
+    -----------------------------------------
+    reset_p : process (rst_n, emu_ppu_clk)
+    begin
+        if (rst_n = '0') then
+            io_cnt_rst_n <= '0';
+        else
+            if (rising_edge(emu_ppu_clk)) then
+                if (nes_x >= conv_std_logic_vector(VGA_W_MAX / 2 - 1, X_SIZE)) then io_cnt_rst_n <= '0';
+                else io_cnt_rst_n <= '1';
+                end if; 
+            end if;
+        end if;
+    end process;
+
+    io_cnt_inst : counter_register generic map (1, 1)
+            port map (emu_ppu_clk, io_cnt_rst_n, '0', '1', (others => '0'), io_cnt);
+
+    ale <= 
+            not io_cnt(0) when (
+                ((ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
+                (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+                nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
+            'Z';
+    rd_n <= 
+            not io_cnt(0) when (
+                ((ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
+                (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+                nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
+            'Z';
+    wr_n <= 
+            '1' when (
+                ((ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
+                (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+                nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
+            'Z';
+    al_oe_n <= 
+            io_cnt(0) when (
+                ((ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
+                (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+                nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
+               '1';
+    ah_oe_n <= 
+            '0' when (
+                ((ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
+                (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+                nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
+            '1';
+    v_bus_busy_n <= ah_oe_n;
+
+
+--    -----------------------------------------
+--    --vram i/o
+--    -----------------------------------------
+--    vram_io_buf : tri_state_buffer generic map (dsize)
+--            port map (al_oe_n, vram_addr(dsize - 1 downto 0), vram_ad);
 --
---    plt_r_n <= not r_nw when plt_bus_ce_n = '0' else
---                '0' when ppu_mask(PPUSBG) = '1' else
---                '1';
---    plt_w_n <= r_nw when plt_bus_ce_n = '0' else
---                '1';
---    plt_d_buf_w : tri_state_buffer generic map (dsize)
---            port map (plt_w_n, oam_plt_data, plt_data);
---    plt_d_buf_r : tri_state_buffer generic map (dsize)
---            port map (plt_r_n, plt_data, oam_plt_data);
---    palette_inst : palette_ram generic map (5, dsize)
---            port map (emu_ppu_clk, plt_ram_ce_n, plt_r_n, plt_w_n, plt_addr, plt_data);
+--    vram_a_buf : tri_state_buffer generic map (6)
+--            port map (ah_oe_n, vram_addr(asize - 1 downto dsize), vram_a);
 --
 --
 --    -----------------------------------------
