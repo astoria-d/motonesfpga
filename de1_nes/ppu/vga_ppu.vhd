@@ -568,13 +568,13 @@ begin
             port map (emu_ppu_clk, io_cnt_rst_n, '0', '1', (others => '0'), io_cnt);
 
     ale <= 
-            not io_cnt(0) when (
+            io_cnt(0) when (
                 ((ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
                 (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                 nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
             '0';
     rd_n <= 
-            not io_cnt(0) when (
+            io_cnt(0) when (
                 ((ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
                 (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                 nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
@@ -1063,7 +1063,7 @@ begin
                     --bg pattern fetch.
                     --------------------------
                     if (ppu_mask(PPUSBG) = '1' and (
-                        (nes_x > conv_std_logic_vector(1, X_SIZE) and 
+                        (nes_x > conv_std_logic_vector(0, X_SIZE) and 
                          nes_x <= conv_std_logic_vector(HSCAN, X_SIZE))
                          or
                         (nes_x >= conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE))
@@ -1079,8 +1079,7 @@ begin
                             vram_addr(asize - 1 downto 10) <= "10" & ppu_ctrl(PPUBNA downto 0) 
                                                             + ("000" & prf_x(dsize));
                         ----fetch attr table byte.
-                        elsif (prf_x (4 downto 0) = "00011") then
-                            --attribute table is loaded every 32 cycle.
+                        elsif (prf_x (2 downto 0) = "011") then
                             --attr table at 0x23c0
                             vram_addr(dsize - 1 downto 0) <= "11000000" +
                                     ("00" & prf_y(7 downto 5) & prf_x(7 downto 5));
