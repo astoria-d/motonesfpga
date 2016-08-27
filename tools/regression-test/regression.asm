@@ -779,7 +779,7 @@ y_loop:
 
 nmi_test:
     jsr update_counter
-;    jsr update_scroll
+    jsr update_scroll
     jsr update_dma
 
     rti

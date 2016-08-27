@@ -164,7 +164,7 @@ constant dsize        : integer := 8;
 constant asize        : integer := 14;
 constant HSCAN        : integer := 256;
 constant VSCAN        : integer := 240;
-constant HSCAN_NEXT_START    : integer := 377;
+constant HSCAN_NEXT_START    : integer := 383;
 constant VSCAN_NEXT_START    : integer := 262;
 constant HSCAN_SPR_MAX       : integer := 321;
 constant HSCAN_OAM_EVA_START       : integer := 64;
@@ -929,7 +929,7 @@ begin
     ---bg prefetch x pos is 16 + scroll cycle ahead of current pos.
     prf_x <= nes_x + ppu_scroll_x + "000010000" 
                     when nes_x < conv_std_logic_vector(HSCAN, X_SIZE) else
-             nes_x + ppu_scroll_x + "010111011"; -- +16 -341
+             nes_x + ppu_scroll_x + "010000001"; -- +16 -399
 
     prf_y <= nes_y + ppu_scroll_y
                     when nes_x < conv_std_logic_vector(HSCAN, X_SIZE) and
@@ -985,7 +985,7 @@ begin
                 --fetch bg pattern and display.
                 if (ppu_mask(PPUSBG) = '1' and 
                         (nes_x <= conv_std_logic_vector(HSCAN, X_SIZE) or
-                        nes_x > conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE)) and
+                        nes_x >= conv_std_logic_vector(HSCAN_NEXT_START, X_SIZE)) and
                         (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                         nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE))) then
                     --visible area bg image
