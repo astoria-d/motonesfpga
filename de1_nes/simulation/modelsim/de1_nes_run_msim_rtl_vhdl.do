@@ -96,9 +96,6 @@ add wave -divider ppu
 #add wave -radix hex sim:/testbench_motones_sim/sim_board/vram_latch/*
 #add wave -label v_addr_ppu -radix hex sim:/testbench_motones_sim/sim_board/v_addr_ppu
 
-add wave -label vram_addr_in -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/vram_addr_in
-add wave -label vram_addr -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/vram_addr
-
 
 view structure
 view signals
