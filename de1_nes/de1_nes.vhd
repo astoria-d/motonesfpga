@@ -109,6 +109,16 @@ architecture rtl of de1_nes is
     );
     end component;
 
+    component tss_ram
+        generic (abus_size : integer := 16; dbus_size : integer := 8);
+        port (  
+                clk               : in std_logic;
+                ce_n, oe_n, we_n  : in std_logic;   --select pin active low.
+                addr              : in std_logic_vector (abus_size - 1 downto 0);
+                d_io              : inout std_logic_vector (dbus_size - 1 downto 0)
+        );
+    end component;
+
     component ram
         generic (abus_size : integer := 16; dbus_size : integer := 8);
         port (  
@@ -329,7 +339,7 @@ begin
             port map (cpu_mem_clk, rom_ce_n, addr(rom_8k - 1 downto 0), d_io);
 
     ram_oe_n <= not R_nW;
-    prg_ram_inst : ram generic map (ram_2k, data_size)
+    prg_ram_inst : tss_ram generic map (ram_2k, data_size)
             port map (cpu_mem_clk, ram_ce_n, ram_oe_n, R_nW, addr(ram_2k - 1 downto 0), d_io);
 
     --nes ppu instance

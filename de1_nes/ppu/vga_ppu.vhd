@@ -1014,7 +1014,6 @@ begin
                     d_print("*");
                     d_print("nes_x: " & conv_hex16(conv_integer(nes_x)));
                     d_print("nes_y: " & conv_hex16(conv_integer(nes_y)));
-                    --all cycls is delayed by two clocks.
 
                     ----fetch next tile byte.
                     if (prf_x (2 downto 0) = "010") then
