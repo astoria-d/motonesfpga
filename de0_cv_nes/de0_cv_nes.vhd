@@ -324,11 +324,11 @@ begin
     --mos 6502 cpu instance
     cpu_inst : mos6502 generic map (data_size, addr_size) 
         port map (
-    dbg_instruction_dummy,
-    dbg_int_d_bus_dummy,
-    dbg_exec_cycle_dummy,
+    dbg_instruction,
+    dbg_int_d_bus,
+    dbg_exec_cycle,
     dbg_ea_carry,
-    dbg_status_dummy,
+    dbg_status,
     dbg_pcl, dbg_pch, dbg_sp_dummy, dbg_x_dummy, dbg_y, dbg_acc,
     dbg_dec_oe_n,
     dbg_dec_val,
@@ -425,8 +425,8 @@ begin
 ------------------debug pin setting....--------------------    
 -----------------------------------------------------------
 -----------------------------------------------------------
---    clock_counter_inst : counter_register generic map (64) port map 
---        (cpu_clk, rst_n, '0', '1', (others=>'0'), clock_counter);
+    clock_counter_inst : counter_register generic map (64) port map 
+        (cpu_clk, rst_n, '0', '1', (others=>'0'), clock_counter);
 
 --    led_test : counter_register generic map (24) port map 
 --        (base_clk, rst_n, '0', '1', (others=>'0'), loop24);
@@ -436,21 +436,21 @@ begin
 
 
     --ppu debug....
-    dbg_exec_cycle(0) <= dbg_nes_x(8);
-    dbg_instruction <= dbg_nes_x(7 downto 0);
-    dbg_exec_cycle(4) <= dbg_nes_y(8);
-    dbg_status <= dbg_nes_y(7 downto 0);
-
-    dbg_disp_ptn_l (7 downto 0) <= dbg_p_oam_addr;
-    dbg_disp_ptn_l (15 downto 8) <= dbg_p_oam_data;
-    dbg_int_d_bus(4 downto 0) <= dbg_s_oam_addr(4 downto 0);
-    --dbg_ppu_scrl_y <= dbg_s_oam_data;
-    dbg_ppu_scrl_y <= dbg_ppu_scrl_y_dummy;
-
-    dbg_ppu_scrl_x(0) <= ale_n;
-    dbg_ppu_scrl_x(1) <= rd_n;
-    dbg_ppu_scrl_x(2) <= wr_n;
-    dbg_ppu_scrl_x(3) <= nt0_ce_n;
+--    dbg_exec_cycle(0) <= dbg_nes_x(8);
+--    dbg_instruction <= dbg_nes_x(7 downto 0);
+--    dbg_exec_cycle(4) <= dbg_nes_y(8);
+--    dbg_status <= dbg_nes_y(7 downto 0);
+--
+--    dbg_disp_ptn_l (7 downto 0) <= dbg_p_oam_addr;
+--    dbg_disp_ptn_l (15 downto 8) <= dbg_p_oam_data;
+--    dbg_int_d_bus(4 downto 0) <= dbg_s_oam_addr(4 downto 0);
+--    --dbg_ppu_scrl_y <= dbg_s_oam_data;
+--    dbg_ppu_scrl_y <= dbg_ppu_scrl_y_dummy;
+--
+--    dbg_ppu_scrl_x(0) <= ale_n;
+--    dbg_ppu_scrl_x(1) <= rd_n;
+--    dbg_ppu_scrl_x(2) <= wr_n;
+--    dbg_ppu_scrl_x(3) <= nt0_ce_n;
 
     --nmi_n <= dummy_nmi;
     ---------------
