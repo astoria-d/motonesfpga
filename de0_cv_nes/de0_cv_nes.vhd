@@ -259,7 +259,6 @@ architecture rtl of de0_cv_nes is
     signal dbg_stat_we_n    : std_logic;
     signal dbg_idl_h, dbg_idl_l     : std_logic_vector (7 downto 0);
 
-    signal dbg_vga_clk                      : std_logic;
     signal dbg_ppu_addr_dummy               : std_logic_vector (13 downto 0);
     signal dbg_nes_x                        : std_logic_vector (8 downto 0);
     signal dbg_vga_x                        : std_logic_vector (9 downto 0);
@@ -329,7 +328,7 @@ begin
     dbg_exec_cycle,
     dbg_ea_carry,
     dbg_status,
-    dbg_pcl, dbg_pch, dbg_sp_dummy, dbg_x_dummy, dbg_y, dbg_acc,
+    dbg_pcl, dbg_pch, dbg_sp, dbg_x, dbg_y, dbg_acc,
     dbg_dec_oe_n,
     dbg_dec_val,
     dbg_stat_we_n    ,
@@ -352,14 +351,14 @@ begin
         dbg_ppu_ce_n                                        ,
         dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status          ,
         dbg_ppu_addr                                        ,
-        dbg_ppu_data, dbg_ppu_scrl_x_dummy, dbg_ppu_scrl_y_dummy        ,
+        dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y        ,
 
         dbg_nes_x                        ,
         dbg_vga_x                        ,
         dbg_nes_y                        ,
         dbg_vga_y                        ,
         dbg_disp_nt, dbg_disp_attr                          ,
-        dbg_disp_ptn_h, dbg_disp_ptn_l_dummy     ,
+        dbg_disp_ptn_h, dbg_disp_ptn_l     ,
         dbg_plt_ce_rn_wn                 ,
         dbg_plt_addr                     ,
         dbg_plt_data                     ,
@@ -426,7 +425,7 @@ begin
 -----------------------------------------------------------
 -----------------------------------------------------------
     --for debugging cpu timing, use ppu clock for jtag clock.
-    dbg_base_clk <= ppu_clk;
+    dbg_base_clk <= base_clk;
 
     clock_counter_inst : counter_register generic map (64) port map 
         (cpu_clk, rst_n, '0', '1', (others=>'0'), clock_counter);
@@ -437,6 +436,23 @@ begin
 --    dbg_ppu_clk <= loop24(22);
 --    dbg_mem_clk <= loop24(21);
 
+
+    ----general...
+    dbg_cpu_clk <= cpu_clk;
+    dbg_ppu_clk <= ppu_clk;
+    dbg_emu_ppu_clk <= emu_ppu_clk;
+    dbg_cpu_mem_clk <= cpu_mem_clk;
+    dbg_r_nw <= r_nw;
+    dbg_addr <= addr;
+    dbg_d_io <= d_io;
+    dbg_v_addr <= v_addr;
+    dbg_v_data <= v_data;
+    dbg_nmi <= nmi_n;
+
+    ----cpu...
+--    dbg_ppu_ctrl <= dbg_pcl;
+--    dbg_ppu_data <= dbg_idl_l;
+--    dbg_ppu_mask <= dbg_idl_h;
 
     --ppu debug....
 --    dbg_exec_cycle(0) <= dbg_nes_x(8);
@@ -457,24 +473,6 @@ begin
 
     --nmi_n <= dummy_nmi;
     ---------------
-
-    ----general...
-    dbg_cpu_clk <= cpu_clk;
-    dbg_ppu_clk <= ppu_clk;
-    dbg_emu_ppu_clk <= emu_ppu_clk;
-    dbg_cpu_mem_clk <= cpu_mem_clk;
-    dbg_vga_clk <= vga_clk;
-    dbg_r_nw <= r_nw;
-    dbg_addr <= addr;
-    dbg_d_io <= d_io;
-    dbg_v_addr <= v_addr;
-    dbg_v_data <= v_data;
-    dbg_nmi <= nmi_n;
-
-    ----cpu...
---    dbg_ppu_ctrl <= dbg_pcl;
---    dbg_ppu_data <= dbg_idl_l;
---    dbg_ppu_mask <= dbg_idl_h;
 
 end rtl;
 
