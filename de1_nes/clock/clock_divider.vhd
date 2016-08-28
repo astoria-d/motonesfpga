@@ -93,16 +93,8 @@ begin
     --two phase delayed clock for cpu register...
     cpu_recv_clk <= not cpu_dl_clk_wk;
 
-    delay_vram_clk_p : process (base_clk)
-    begin
-        if (reset_n = '0') then
-            emu_ppu_mem_clk <= '0';
-        else
-            if (falling_edge(base_clk)) then
-                emu_ppu_mem_clk <= not loop16(1);
-            end if;
-        end if;
-    end process;
+    --vram access is half phase delay.
+	emu_ppu_mem_clk <= loop16(1);
 
 
 end rtl;

@@ -1,9 +1,13 @@
+-----------------------------------------------------
+-----------------------------------------------------
+-------------------- ram ---------------------------- 
+-----------------------------------------------------
+-----------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.conv_integer;
---use std.textio.all;
 
-----SRAM asyncronous memory.
+----SRAM syncronous memory.
 entity ram is 
     generic (abus_size : integer := 16; dbus_size : integer := 8);
     port (  
@@ -23,8 +27,59 @@ type ram_array is array (0 to 2**abus_size - 1) of ram_data;
 ---ram is initialized with 0.
 signal work_ram : ram_array := (others => (others => '0'));
 
-constant RAM_TAOE : time := 25 ns;      --OE access time
-constant RAM_TOH : time := 10 ns;       --write data hold time
+begin
+    p_write : process (clk)
+    begin
+    if (rising_edge(clk)) then
+        if (ce_n = '0' and we_n = '0') then
+            work_ram(conv_integer(addr)) <= d_io;
+        end if;
+    end if;
+    end process;
+
+    p_read : process (clk)
+    begin
+    if (rising_edge(clk)) then
+        if (ce_n= '0' and we_n = '1' and oe_n = '0') then
+            d_io <= work_ram(conv_integer(addr));
+        else
+            d_io <= (others => 'Z');
+        end if;
+    end if;
+    end process;
+    
+end rtl;
+
+-----------------------------------------------------
+-----------------------------------------------------
+-------------------- tss ram ------------------------
+-----------------------------------------------------
+-----------------------------------------------------
+----SRAM syncronous memory with tristate buffer.
+
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.conv_integer;
+
+----SRAM syncronous memory.
+entity tss_ram is 
+    generic (abus_size : integer := 16; dbus_size : integer := 8);
+    port (  
+            clk              : in std_logic;
+            ce_n, oe_n, we_n : in std_logic;   --select pin active low.
+            addr             : in std_logic_vector (abus_size - 1 downto 0);
+            d_io             : inout std_logic_vector (dbus_size - 1 downto 0)
+        );
+end tss_ram;
+
+architecture rtl of tss_ram is
+
+subtype ram_data is std_logic_vector (dbus_size -1 downto 0);
+type ram_array is array (0 to 2**abus_size - 1) of ram_data;
+--type ram_array is array (0 to 16#0800#) of ram_data;
+
+---ram is initialized with 0.
+signal work_ram : ram_array := (others => (others => '0'));
 
 signal wk_d_io    : std_logic_vector (dbus_size - 1 downto 0);
 
