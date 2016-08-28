@@ -89,13 +89,13 @@ set_global_assignment -name VHDL_FILE ppu/ppu.vhd
 #set_global_assignment -name VHDL_FILE "dummy-ppu.vhd"
 
 #cpu block...
-#set_global_assignment -name VHDL_FILE mem/prg_rom.vhd
-#set_global_assignment -name VHDL_FILE cpu/cpu_registers.vhd
-#set_global_assignment -name VHDL_FILE cpu/alu.vhd
-#set_global_assignment -name VHDL_FILE cpu/decoder.vhd
-#set_global_assignment -name VHDL_FILE cpu/mos6502.vhd
+set_global_assignment -name VHDL_FILE mem/prg_rom.vhd
+set_global_assignment -name VHDL_FILE cpu/cpu_registers.vhd
+set_global_assignment -name VHDL_FILE cpu/alu.vhd
+set_global_assignment -name VHDL_FILE cpu/decoder.vhd
+set_global_assignment -name VHDL_FILE cpu/mos6502.vhd
 
-set_global_assignment -name VHDL_FILE "dummy-mos6502.vhd"
+#set_global_assignment -name VHDL_FILE "dummy-mos6502.vhd"
 
 #entire motones element...
 set_global_assignment -name VHDL_FILE de1_nes.vhd
