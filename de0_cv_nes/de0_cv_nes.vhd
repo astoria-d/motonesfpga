@@ -425,6 +425,9 @@ begin
 ------------------debug pin setting....--------------------    
 -----------------------------------------------------------
 -----------------------------------------------------------
+    --for debugging cpu timing, use ppu clock for jtag clock.
+    dbg_base_clk <= ppu_clk;
+
     clock_counter_inst : counter_register generic map (64) port map 
         (cpu_clk, rst_n, '0', '1', (others=>'0'), clock_counter);
 
