@@ -549,7 +549,7 @@ begin
             port map (plt_r_n, plt_data, plt_data_out);
 
     plt_addr_inst : d_flip_flop generic map(5)
-            port map (emu_ppu_clk, rst_n, '1', '0', plt_addr_set, plt_addr);
+            port map (emu_ppu_clk_dl, rst_n, '1', '0', plt_addr_set, plt_addr);
 
     palette_inst : palette_ram generic map (5, dsize)
             port map (emu_ppu_clk, plt_ram_ce_n, plt_r_n, plt_w_n, plt_addr, plt_data);
@@ -1178,7 +1178,7 @@ begin
     ---rgb output / flag set process
     -----------------------------------------
     plt_data_inst : d_flip_flop generic map(dsize)
-            port map (emu_ppu_clk, rst_n, '1', '0', plt_data, plt_data_set);
+            port map (emu_ppu_clk_dl, rst_n, '1', '0', plt_data, plt_data_set);
 
     output_p : process (rst_n, emu_ppu_clk)
 
