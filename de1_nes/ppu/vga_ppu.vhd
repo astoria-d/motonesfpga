@@ -246,6 +246,8 @@ signal plt_r_n          : std_logic;
 signal plt_w_n          : std_logic;
 signal plt_addr         : std_logic_vector (4 downto 0);
 signal plt_data         : std_logic_vector (dsize - 1 downto 0);
+signal plt_addr_set     : std_logic_vector (4 downto 0);
+signal plt_data_set     : std_logic_vector (dsize - 1 downto 0);
 
 --primari / secondary oam
 signal p_oam_ram_ce_n       : std_logic;
@@ -473,7 +475,7 @@ begin
                             (nes_y < conv_std_logic_vector(VSCAN, X_SIZE)) else
                     '1';
 
-    plt_addr <= plt_addr_in when plt_bus_ce_n = '0' else
+    plt_addr_set <= plt_addr_in when plt_bus_ce_n = '0' else
                 "1" & spr_attr(0)(1 downto 0) & spr_ptn_h(0)(0) & spr_ptn_l(0)(0)
                     when ppu_mask(PPUSSP) = '1' and
                         (nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
@@ -545,6 +547,10 @@ begin
             port map (plt_w_n, plt_data_in, plt_data);
     plt_d_buf_r : tri_state_buffer generic map (dsize)
             port map (plt_r_n, plt_data, plt_data_out);
+
+    plt_addr_inst : d_flip_flop generic map(5)
+            port map (emu_ppu_clk, rst_n, '1', '0', plt_addr_set, plt_addr);
+
     palette_inst : palette_ram generic map (5, dsize)
             port map (emu_ppu_clk, plt_ram_ce_n, plt_r_n, plt_w_n, plt_addr, plt_data);
 
@@ -1171,6 +1177,9 @@ begin
     -----------------------------------------
     ---rgb output / flag set process
     -----------------------------------------
+    plt_data_inst : d_flip_flop generic map(dsize)
+            port map (emu_ppu_clk, rst_n, '1', '0', plt_data, plt_data_set);
+
     output_p : process (rst_n, emu_ppu_clk)
 
 procedure output_rgb is
@@ -1186,7 +1195,7 @@ begin
             (nes_y < conv_std_logic_vector(VSCAN, X_SIZE))) then
             --if or if not bg/sprite is shown, output color anyway 
             --sinse universal bg color is included..
-            pl_index := conv_integer(plt_data(5 downto 0));
+            pl_index := conv_integer(plt_data_set(5 downto 0));
             b <= nes_color_palette(pl_index) (11 downto 8);
             g <= nes_color_palette(pl_index) (7 downto 4);
             r <= nes_color_palette(pl_index) (3 downto 0);
