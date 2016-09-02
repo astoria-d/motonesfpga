@@ -280,9 +280,10 @@ end;
                         if (spr_step_cnt = 0) then
                             --set sprite addr=00 (first sprite)
                             io_out(16#2003#, 16#00#);
+                        
                         elsif (spr_step_cnt = 1 * cpu_io_multi) then
                             --set sprite data: y=02
-                            io_out(16#2004#, 16#01#);
+                            io_out(16#2004#, 16#02#);
                         elsif (spr_step_cnt = 2 * cpu_io_multi) then
                             --tile=0x4d (ascii 'M')
                             io_out(16#2004#, 16#4d#);
@@ -295,13 +296,13 @@ end;
 
                         elsif (spr_step_cnt = 5 * cpu_io_multi) then
                             --set sprite data: y=50
-                            io_out(16#2004#, 8);
+                            io_out(16#2004#, 1);
                         elsif (spr_step_cnt = 6 * cpu_io_multi) then
                             --tile=0x4d (ascii 'O')
                             io_out(16#2004#, 16#4f#);
                         elsif (spr_step_cnt = 7 * cpu_io_multi) then
-                            --set sprite attr=01
-                            io_out(16#2004#, 16#01#);
+                            --set sprite attr=03
+                            io_out(16#2004#, 16#03#);
                         elsif (spr_step_cnt = 8 * cpu_io_multi) then
                             --set sprite data: x=30
                             io_out(16#2004#, 16#1e#);
@@ -436,6 +437,12 @@ end;
                                 --scroll y++
 --                                io_out(16#2005#, nmi_scl_y);
                                 io_brk;
+                            elsif (nmi_step_cnt = 4 * cpu_io_multi) then
+                                --set sprite addr=00 (first sprite)
+                                io_out(16#2003#, 16#04#);
+                            elsif (nmi_step_cnt = 5 * cpu_io_multi) then
+                                --set sprite data: x=100
+                                io_out(16#2004#, nmi_oam_x);
                             else
                                 if (ref_cnt = 0) then
                                     nmi_oam_x := nmi_oam_x + 1;
@@ -444,7 +451,7 @@ end;
                                     nmi_scl_y := nmi_scl_y + 1;
                                 end if;
                                 io_brk;
-                                if (nmi_step_cnt > 3 * cpu_io_multi) then
+                                if (nmi_step_cnt > 5 * cpu_io_multi) then
                                     ref_cnt := ref_cnt + 1;
                                     global_step_cnt := global_step_cnt + 1;
                                 end if;

@@ -652,14 +652,14 @@ begin
             port map (p_oam_r_n, p_oam_data, oam_data_out);
 
     primary_oam_inst : ram generic map (dsize, dsize)
-            port map (emu_ppu_clk, p_oam_ram_ce_n, p_oam_r_n, p_oam_w_n, p_oam_addr, p_oam_data);
+            port map (emu_ppu_clk_dl, p_oam_ram_ce_n, p_oam_r_n, p_oam_w_n, p_oam_addr, p_oam_data);
 
     -----------------------------------------
     ---secondary oam implementation
     -----------------------------------------
     --primary oam copy count
     p_oam_cnt_inst : counter_register generic map (dsize + 1, 4)
-            port map (emu_ppu_clk, p_oam_cnt_res_n, p_oam_cnt_ce_n, '1', (others => '0'), p_oam_cnt);
+            port map (emu_ppu_clk_dl, p_oam_cnt_res_n, p_oam_cnt_ce_n, '1', (others => '0'), p_oam_cnt);
     --primary oam copy count
     s_oam_cnt_inst : counter_register generic map (6, 1)
             port map (emu_ppu_clk, p_oam_cnt_res_n, s_oam_cnt_ce_n, '1', (others => '0'), s_oam_cnt);
@@ -684,7 +684,7 @@ begin
                       '1';
 
     secondary_oam_inst : ram generic map (5, dsize)
-            port map (emu_ppu_clk, s_oam_ram_ce_n, s_oam_r_n, s_oam_w_n, s_oam_addr, s_oam_data);
+            port map (emu_ppu_clk_dl, s_oam_ram_ce_n, s_oam_r_n, s_oam_w_n, s_oam_addr, s_oam_data);
 
     --sprite y tmp val
     spr_y_inst : d_flip_flop generic map(dsize)
@@ -700,11 +700,11 @@ begin
                  vram_data(4) & vram_data(5) & vram_data(6) & vram_data(7));
     --oam array instances...
     spr_inst : for i in 0 to 7 generate
-        spr_x_inst : counter_register generic map(dsize, 16#ff#)
-                port map (emu_ppu_clk, rst_n, spr_x_ce_n(i), spr_x_we_n(i), s_oam_data, spr_x_cnt(i));
-
         spr_attr_inst : d_flip_flop generic map(dsize)
                 port map (emu_ppu_clk, rst_n, '1', spr_attr_we_n(i), s_oam_data, spr_attr(i));
+
+        spr_x_inst : counter_register generic map(dsize, 16#ff#)
+                port map (emu_ppu_clk, rst_n, spr_x_ce_n(i), spr_x_we_n(i), s_oam_data, spr_x_cnt(i));
 
         spr_ptn_l_inst : shift_register generic map(dsize, 1)
                 port map (emu_ppu_clk, rst_n, spr_ptn_ce_n(i), spr_ptn_l_we_n(i), spr_ptn_in, spr_ptn_l(i));
@@ -860,11 +860,16 @@ begin
                         s_oam_addr_cpy_n <= '0';
                         s_oam_r_n <= '0';
                         s_oam_w_n <= '1';
-                        s_oam_addr <= s_oam_addr_cpy;
+                        s_oam_addr <= s_oam_addr_cpy + 1;
+
+                        if (nes_x (2) = '0') then
+                            s_oam_addr_cpy_ce_n <= '0';
+                        else
+                            s_oam_addr_cpy_ce_n <= '1';
+                        end if;
 
                         ----fetch y-cordinate from secondary oam
                         if (nes_x (2 downto 0) = "001" ) then
-                            s_oam_addr_cpy_ce_n <= '0';
                             spr_y_we_n <= '0';
                         else
                             spr_y_we_n <= '1';
@@ -882,11 +887,10 @@ begin
                             spr_attr_we_n(conv_integer(s_oam_addr_cpy(4 downto 2))) <= '0';
                         else
                             spr_attr_we_n(conv_integer(s_oam_addr_cpy(4 downto 2))) <= '1';
-                        end if;--if (nes_x (2 downto 0) = "010" ) then
+                        end if;
 
                         ----fetch x-cordinate
                         if (nes_x (2 downto 0) = "100" ) then
-                            s_oam_addr_cpy_ce_n <= '1';
                             spr_x_we_n(conv_integer(s_oam_addr_cpy(4 downto 2))) <= '0';
                         else
                             spr_x_we_n(conv_integer(s_oam_addr_cpy(4 downto 2))) <= '1';
@@ -902,9 +906,8 @@ begin
                         --pattern tbl high vale.
                         if (nes_x (2 downto 0) = "000") then
                             spr_ptn_h_we_n(conv_integer(s_oam_addr_cpy(4 downto 2))) <= '0';
-                            s_oam_addr_cpy_ce_n <= '0';
                         else
-                            spr_ptn_h_we_n(conv_integer(s_oam_addr_cpy(4 downto 2) - "001")) <= '1';
+                            spr_ptn_h_we_n(conv_integer(s_oam_addr_cpy(4 downto 2))) <= '1';
                         end if;
                         
                         --check sprite 0 is used in the next line.
