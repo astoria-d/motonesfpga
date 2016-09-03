@@ -92,14 +92,11 @@ architecture stimulus of testbench_motones_sim is
     signal dbg_int_d_bus  : std_logic_vector(7 downto 0);
     signal dbg_exec_cycle   : std_logic_vector (5 downto 0);
     signal dbg_ea_carry     : std_logic;
---    signal dbg_index_bus    : std_logic_vector(7 downto 0);
---    signal dbg_acc_bus      : std_logic_vector(7 downto 0);
     signal dbg_status       : std_logic_vector(7 downto 0);
     signal dbg_pcl, dbg_pch, dbg_sp, dbg_x, dbg_y, dbg_acc       : std_logic_vector(7 downto 0);
     signal dbg_dec_oe_n    : std_logic;
     signal dbg_dec_val     : std_logic_vector (7 downto 0);
     signal dbg_int_dbus    : std_logic_vector (7 downto 0);
---    signal dbg_status_val    : std_logic_vector (7 downto 0);
     signal dbg_stat_we_n    : std_logic;
     signal dbg_idl_h, dbg_idl_l, dbg_dbb_r, dbg_dbb_w    : std_logic_vector (7 downto 0);
     signal dbg_ppu_ce_n    : std_logic;
@@ -127,17 +124,11 @@ dbg_instruction,
 dbg_int_d_bus,
 dbg_exec_cycle   ,
 dbg_ea_carry     ,
---dbg_index_bus    ,
---dbg_acc_bus      ,
 dbg_status       ,
---dbg_pcl, dbg_pch, 
 dbg_sp, dbg_x, dbg_y, dbg_acc       ,
 dbg_dec_oe_n    ,
 dbg_dec_val     ,
 dbg_int_dbus    ,
---dbg_status_val    ,
---dbg_stat_we_n    ,
---dbg_idl_h, dbg_idl_l, dbg_dbb_r, dbg_dbb_w,
 
 dbg_ppu_ce_n    ,
 dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status ,
@@ -145,8 +136,6 @@ dbg_ppu_addr ,
 dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y,
 dbg_disp_nt, dbg_disp_attr ,
 dbg_disp_ptn_h, dbg_disp_ptn_l ,
---dbg_ppu_addr_we_n,
---dbg_ppu_clk_cnt          ,
 dbg_nmi,
 dummy_nmi,
     

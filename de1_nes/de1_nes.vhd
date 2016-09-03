@@ -270,8 +270,6 @@ architecture rtl of de1_nes is
     signal nt0_ce_n : std_logic;
     signal nt1_ce_n : std_logic;
 
---    signal dbg_disp_nt, dbg_disp_attr : std_logic_vector (7 downto 0);
---    signal dbg_disp_ptn_h, dbg_disp_ptn_l : std_logic_vector (15 downto 0);
     signal dbg_pcl, dbg_pch : std_logic_vector(7 downto 0);
     signal dbg_stat_we_n    : std_logic;
     signal dbg_idl_h, dbg_idl_l     : std_logic_vector (7 downto 0);
@@ -303,6 +301,7 @@ architecture rtl of de1_nes is
     signal dbg_ea_carry_dummy     : std_logic;
     signal dbg_status_dummy       : std_logic_vector(7 downto 0);
     signal dbg_sp_dummy, dbg_x_dummy, dbg_y_dummy, dbg_acc_dummy       : std_logic_vector(7 downto 0);
+    signal dbg_dec_val_dummy     : std_logic_vector (7 downto 0);
 
 
 begin
@@ -326,7 +325,7 @@ begin
     dbg_status_dummy,
     dbg_pcl, dbg_pch, dbg_sp_dummy, dbg_x_dummy, dbg_y, dbg_acc,
     dbg_dec_oe_n,
-    dbg_dec_val,
+    dbg_dec_val_dummy,
     dbg_stat_we_n    ,
     dbg_idl_h, dbg_idl_l,
 
@@ -347,14 +346,14 @@ begin
         dbg_ppu_ce_n                                        ,
         dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status          ,
         dbg_ppu_addr                                        ,
-        dbg_ppu_data, dbg_ppu_scrl_x_dummy, dbg_ppu_scrl_y_dummy        ,
+        dbg_ppu_data, dbg_ppu_scrl_x_dummy, dbg_ppu_scrl_y        ,
 
         dbg_nes_x                        ,
         dbg_vga_x                        ,
         dbg_nes_y                        ,
         dbg_vga_y                        ,
         dbg_disp_nt, dbg_disp_attr                          ,
-        dbg_disp_ptn_h, dbg_disp_ptn_l_dummy     ,
+        dbg_disp_ptn_h, dbg_disp_ptn_l     ,
         dbg_plt_ce_rn_wn                 ,
         dbg_plt_addr                     ,
         dbg_plt_data                     ,
@@ -428,16 +427,16 @@ begin
     dbg_exec_cycle(4) <= dbg_nes_y(8);
     dbg_status <= dbg_nes_y(7 downto 0);
 
-    dbg_disp_ptn_l (7 downto 0) <= dbg_p_oam_addr;
-    dbg_disp_ptn_l (15 downto 8) <= dbg_p_oam_data;
-    dbg_int_d_bus(4 downto 0) <= dbg_s_oam_addr(4 downto 0);
-    --dbg_ppu_scrl_y <= dbg_s_oam_data;
-    dbg_ppu_scrl_y <= dbg_ppu_scrl_y_dummy;
-
     dbg_ppu_scrl_x(0) <= ale_n;
     dbg_ppu_scrl_x(1) <= rd_n;
     dbg_ppu_scrl_x(2) <= wr_n;
     dbg_ppu_scrl_x(3) <= nt0_ce_n;
+
+    dbg_sp <= dbg_p_oam_addr;
+    dbg_x <= dbg_p_oam_data;
+    dbg_int_d_bus(4 downto 0) <= dbg_s_oam_addr(4 downto 0);
+    dbg_dec_val <= dbg_s_oam_data;
+    --dbg_ppu_scrl_y <= dbg_ppu_scrl_y_dummy;
 
     --nmi_n <= dummy_nmi;
     ---------------

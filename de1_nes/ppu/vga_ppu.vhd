@@ -862,6 +862,7 @@ begin
                         s_oam_w_n <= '1';
                         s_oam_addr <= s_oam_addr_cpy + 1;
 
+                        --increment when nes_x = 0...3
                         if (nes_x (2) = '0') then
                             s_oam_addr_cpy_ce_n <= '0';
                         else
