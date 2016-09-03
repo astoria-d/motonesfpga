@@ -103,8 +103,8 @@ add wave -label spr_ptn_h -radix hex  sim:/testbench_motones_sim/sim_board/ppu_i
 #add wave  -radix hex  sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/*
 
 
-#add wave -radix hex sim:/testbench_motones_sim/sim_board/vram_latch/*
-#add wave -label v_addr_ppu -radix hex sim:/testbench_motones_sim/sim_board/v_addr_ppu
+add wave  -label plt_addr -radix hex  sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/plt_addr
+add wave  -label plt_data -radix hex  sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/plt_data
 
 
 view structure
@@ -112,5 +112,5 @@ view signals
 
 run 4 us
 wave zoom full
-run 88 us
+run 105 us
 

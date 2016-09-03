@@ -288,24 +288,24 @@ end;
                             --tile=0x4d (ascii 'M')
                             io_out(16#2004#, 16#4d#);
                         elsif (spr_step_cnt = 3 * cpu_io_multi) then
-                            --set sprite attr=03 (palette 03)
+                            --set sprite attr=01 (palette 01)
                             io_out(16#2004#, 16#01#);
                         elsif (spr_step_cnt = 4 * cpu_io_multi) then
-                            --set sprite data: x=100
-                            io_out(16#2004#, 16#64#);
+                            --set sprite data: x=60
+                            io_out(16#2004#, 16#3c#);
 
                         elsif (spr_step_cnt = 5 * cpu_io_multi) then
                             --set sprite data: y=50
                             io_out(16#2004#, 1);
                         elsif (spr_step_cnt = 6 * cpu_io_multi) then
-                            --tile=0x4d (ascii 'O')
+                            --tile=0x4f (ascii 'O')
                             io_out(16#2004#, 16#4f#);
                         elsif (spr_step_cnt = 7 * cpu_io_multi) then
                             --set sprite attr=03
                             io_out(16#2004#, 16#03#);
                         elsif (spr_step_cnt = 8 * cpu_io_multi) then
-                            --set sprite data: x=30
-                            io_out(16#2004#, 16#1e#);
+                            --set sprite data: x=100
+                            io_out(16#2004#, 16#64#);
 
                         elsif (spr_step_cnt = 9 * cpu_io_multi) then
                             --set sprite data: y=60
@@ -414,7 +414,7 @@ end;
                         else
                             io_brk;
                             if (enable_ppu_step_cnt > 1 * cpu_io_multi) then
-                                global_step_cnt := global_step_cnt + 1;
+                                global_step_cnt := global_step_cnt + 3;
                             end if;
                         end if;
                         enable_ppu_step_cnt := enable_ppu_step_cnt + 1;

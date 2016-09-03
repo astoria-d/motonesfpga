@@ -78,8 +78,8 @@ add wave -divider ppu_render
 add wave -label dbg_s_oam_addr_cpy  -radix decimal sim:/testbench_motones_sim/sim_board/dbg_acc
 add wave -label dbg_disp_nt     -radix hex sim:/testbench_motones_sim/sim_board/dbg_disp_nt
 add wave -label dbg_disp_attr   -radix hex sim:/testbench_motones_sim/sim_board/dbg_disp_attr
-add wave -label dbg_disp_ptn_l  -radix hex sim:/testbench_motones_sim/sim_board/dbg_disp_ptn_l
-add wave -label dbg_disp_ptn_h  -radix hex sim:/testbench_motones_sim/sim_board/dbg_disp_ptn_h
+add wave -label dbg_disp_ptn_l  -radix hex {sim:/testbench_motones_sim/sim_board/dbg_disp_ptn_l(7 downto 0)}
+add wave -label dbg_disp_ptn_h  -radix hex {sim:/testbench_motones_sim/sim_board/dbg_disp_ptn_h(7 downto 0)}
 
 #add wave -divider vga_out
 #add wave -label h_sync_n    sim:/testbench_motones_sim/sim_board/v_sync_n
@@ -94,7 +94,7 @@ view signals
 #run -all
 run 4 us
 wave zoom full
-run 88 us
+run 105 us
 
 #wave zoom range 3339700 ps 5138320 ps
 ##wave addcursor 907923400 ps
