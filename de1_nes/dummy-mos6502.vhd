@@ -414,7 +414,7 @@ end;
                         else
                             io_brk;
                             if (enable_ppu_step_cnt > 1 * cpu_io_multi) then
-                                global_step_cnt := global_step_cnt + 3;
+                                global_step_cnt := global_step_cnt + 1;
                             end if;
                         end if;
                         enable_ppu_step_cnt := enable_ppu_step_cnt + 1;

@@ -171,6 +171,7 @@ constant HSCAN_SPR_MAX       : integer := 321;
 constant HSCAN_OAM_EVA_START       : integer := 64;
 
 
+
 constant PPUBNA    : integer := 1;  --base name address
 constant PPUVAI    : integer := 2;  --vram address increment
 constant PPUSPA    : integer := 3;  --sprite pattern table address
@@ -937,7 +938,7 @@ begin
                         end if;
 
                         for i in 0 to 7 loop
-                            if (spr_x_cnt(i) = "00000000") then
+                            if (spr_x_cnt(i) = "00000001") then
                                 --active sprite, start shifting..
                                 spr_x_ce_n(i) <= '1';
                                 spr_ptn_ce_n(i) <= '0';
