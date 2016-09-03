@@ -264,6 +264,8 @@ signal s_oam_addr_cpy_ce_n  : std_logic;
 signal s_oam_addr_cpy_n     : std_logic;
 signal s_oam_addr           : std_logic_vector (4 downto 0);
 signal s_oam_addr_cpy       : std_logic_vector (4 downto 0);
+signal s_oam_addr_cpy_tmp   : std_logic_vector (2 downto 0);
+
 signal s_oam_data           : std_logic_vector (dsize - 1 downto 0);
 
 signal p_oam_cnt_res_n  : std_logic;
@@ -740,15 +742,17 @@ begin
                     (nes_x > conv_std_logic_vector(HSCAN, X_SIZE) and
                     nes_x < conv_std_logic_vector(HSCAN_SPR_MAX, X_SIZE)) else
            '1';
-    --pattern tbl low vale.
-    spr_ptn_h_we_n(conv_integer(s_oam_addr_cpy(4 downto 2)))
+    --pattern tbl high vale.
+    tmp_cpy_cnt : d_flip_flop generic map(3)
+            port map (emu_ppu_clk, rst_n, '1', '0', s_oam_addr_cpy(4 downto 2), s_oam_addr_cpy_tmp);
+    spr_ptn_h_we_n(conv_integer(s_oam_addr_cpy_tmp))
         <= '0' when nes_x (2 downto 0) = "001" and
                     (nes_x > conv_std_logic_vector(HSCAN, X_SIZE) and
                     nes_x < conv_std_logic_vector(HSCAN_SPR_MAX, X_SIZE)) else
            '1';
 
     --set sprite shift enable.
-    spr_shift_p : process (rst_n, emu_ppu_clk_dl)
+    spr_shift_p : process (rst_n, emu_ppu_clk)
     begin
         if (rst_n = '0') then
             spr_x_ce_n <= "11111111";

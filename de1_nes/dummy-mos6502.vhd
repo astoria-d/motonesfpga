@@ -283,10 +283,10 @@ end;
                         
                         elsif (spr_step_cnt = 1 * cpu_io_multi) then
                             --set sprite data: y=02
-                            io_out(16#2004#, 16#02#);
+                            io_out(16#2004#, 16#05#);
                         elsif (spr_step_cnt = 2 * cpu_io_multi) then
-                            --tile=0x4d (ascii 'M')
-                            io_out(16#2004#, 16#4d#);
+                            --tile=0x4d (ascii 'O')
+                            io_out(16#2004#, 16#4f#);
                         elsif (spr_step_cnt = 3 * cpu_io_multi) then
                             --set sprite attr=01 (palette 01)
                             io_out(16#2004#, 16#01#);
@@ -298,8 +298,8 @@ end;
                             --set sprite data: y=50
                             io_out(16#2004#, 1);
                         elsif (spr_step_cnt = 6 * cpu_io_multi) then
-                            --tile=0x4f (ascii 'O')
-                            io_out(16#2004#, 16#4f#);
+                            --tile=0x4f (ascii 'M')
+                            io_out(16#2004#, 16#4d#);
                         elsif (spr_step_cnt = 7 * cpu_io_multi) then
                             --set sprite attr=02
                             io_out(16#2004#, 16#02#);
