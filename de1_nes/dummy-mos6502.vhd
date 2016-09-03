@@ -301,8 +301,8 @@ end;
                             --tile=0x4f (ascii 'O')
                             io_out(16#2004#, 16#4f#);
                         elsif (spr_step_cnt = 7 * cpu_io_multi) then
-                            --set sprite attr=03
-                            io_out(16#2004#, 16#03#);
+                            --set sprite attr=02
+                            io_out(16#2004#, 16#02#);
                         elsif (spr_step_cnt = 8 * cpu_io_multi) then
                             --set sprite data: x=100
                             io_out(16#2004#, 16#64#);

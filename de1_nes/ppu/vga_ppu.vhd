@@ -387,7 +387,8 @@ constant nes_color_palette : nes_color_array := (
 begin
     dbg_vga_x <= vga_x;
     --dbg_vga_y <= vga_y;
-    dbg_vga_y <= "0000" & spr_y_we_n & spr_tile_we_n & spr_attr_we_n(0) & spr_x_we_n(0) & spr_ptn_l_we_n(0) & spr_ptn_h_we_n(0);
+    dbg_vga_y <= "000" & spr_y_we_n & spr_tile_we_n & spr_attr_we_n(0) & spr_x_we_n(0)
+               & spr_ptn_l_we_n(0) & spr_ptn_h_we_n(0) & spr_ptn_ce_n(0);
     dbg_nes_x <= nes_x;
     dbg_nes_y <= nes_y;
     dbg_plt_addr <= plt_addr;
@@ -671,6 +672,9 @@ begin
     --primary oam copy count
     s_oam_cnt_inst : counter_register generic map (6, 1)
             port map (emu_ppu_clk, p_oam_cnt_res_n, s_oam_cnt_ce_n, '1', (others => '0'), s_oam_cnt);
+
+    --increment when nes_x = 0...3
+    s_oam_addr_cpy_ce_n <= '0' when nes_x (2) = '0' else '1';
     --secondary oam pattern index.
     s_oam_addr_cpy_inst : counter_register generic map (5, 1)
             port map (emu_ppu_clk, p_oam_cnt_res_n, s_oam_addr_cpy_ce_n, 
@@ -694,9 +698,20 @@ begin
     secondary_oam_inst : ram generic map (5, dsize)
             port map (emu_ppu_clk_dl, s_oam_ram_ce_n, s_oam_r_n, s_oam_w_n, s_oam_addr, s_oam_data);
 
+    ----fetch y-cordinate from secondary oam
+    spr_y_we_n <= '0' when nes_x (2 downto 0) = "010" and
+                    (nes_x > conv_std_logic_vector(HSCAN, X_SIZE) and
+                    nes_x < conv_std_logic_vector(HSCAN_SPR_MAX, X_SIZE)) else
+                  '1';
     --sprite y tmp val
     spr_y_inst : d_flip_flop generic map(dsize)
             port map (emu_ppu_clk, p_oam_cnt_res_n, '1', spr_y_we_n, s_oam_data, spr_y_tmp);
+    
+    ----fetch tile number
+    spr_tile_we_n <= '0' when nes_x (2 downto 0) = "011" and
+                    (nes_x > conv_std_logic_vector(HSCAN, X_SIZE) and
+                    nes_x < conv_std_logic_vector(HSCAN_SPR_MAX, X_SIZE)) else
+                     '1';
     --sprite pattern tmp val
     spr_tile_inst : d_flip_flop generic map(dsize)
             port map (emu_ppu_clk, p_oam_cnt_res_n, '1', spr_tile_we_n, s_oam_data, spr_tile_tmp);
@@ -706,6 +721,65 @@ begin
     spr_ptn_in <= vram_data when spr_attr(conv_integer(s_oam_addr_cpy(4 downto 2)))(SPRHFL) = '1' else
                 (vram_data(0) & vram_data(1) & vram_data(2) & vram_data(3) & 
                  vram_data(4) & vram_data(5) & vram_data(6) & vram_data(7));
+
+    ----fetch attribute
+    spr_attr_we_n(conv_integer(s_oam_addr_cpy(4 downto 2)))
+        <= '0' when nes_x (2 downto 0) = "100" and
+                    (nes_x > conv_std_logic_vector(HSCAN, X_SIZE) and
+                    nes_x < conv_std_logic_vector(HSCAN_SPR_MAX, X_SIZE)) else
+           '1';
+    ----fetch x-cordinate
+    spr_x_we_n(conv_integer(s_oam_addr_cpy(4 downto 2)))
+        <= '0' when nes_x (2 downto 0) = "101" and
+                    (nes_x > conv_std_logic_vector(HSCAN, X_SIZE) and
+                    nes_x < conv_std_logic_vector(HSCAN_SPR_MAX, X_SIZE)) else
+           '1';
+    --pattern tbl low vale.
+    spr_ptn_l_we_n(conv_integer(s_oam_addr_cpy(4 downto 2)))
+        <= '0' when nes_x (2 downto 0) = "111" and
+                    (nes_x > conv_std_logic_vector(HSCAN, X_SIZE) and
+                    nes_x < conv_std_logic_vector(HSCAN_SPR_MAX, X_SIZE)) else
+           '1';
+    --pattern tbl low vale.
+    spr_ptn_h_we_n(conv_integer(s_oam_addr_cpy(4 downto 2)))
+        <= '0' when nes_x (2 downto 0) = "001" and
+                    (nes_x > conv_std_logic_vector(HSCAN, X_SIZE) and
+                    nes_x < conv_std_logic_vector(HSCAN_SPR_MAX, X_SIZE)) else
+           '1';
+
+    --set sprite shift enable.
+    spr_shift_p : process (rst_n, emu_ppu_clk_dl)
+    begin
+        if (rst_n = '0') then
+            spr_x_ce_n <= "11111111";
+            spr_ptn_ce_n <= "11111111";
+        else
+            if (rising_edge(emu_ppu_clk)) then
+                --display sprite.
+                if (ppu_mask(PPUSSP) = '1' and
+                    (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
+                    nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)) and
+                    (nes_x < conv_std_logic_vector(HSCAN, X_SIZE))) then
+                    --start counter.
+                    if (nes_x = "000000000") then
+                        spr_x_ce_n <= "00000000";
+                    end if;
+
+                    for i in 0 to 7 loop
+                        if (spr_x_cnt(i) = "00000001") then
+                            --active sprite, start shifting..
+                            spr_x_ce_n(i) <= '1';
+                            spr_ptn_ce_n(i) <= '0';
+                        end if;
+                    end loop;
+                else
+                    spr_x_ce_n <= "11111111";
+                    spr_ptn_ce_n <= "11111111";
+                end if; --if ((nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) 
+            end if;
+        end if;--if (rst_n = '0') then
+    end process;--spr_main_p
+
     --oam array instances...
     spr_inst : for i in 0 to 7 generate
         spr_attr_inst : d_flip_flop generic map(dsize)
@@ -740,15 +814,6 @@ begin
             p_oam_addr_in <= (others => 'Z');
 
             s_oam_addr_cpy_n <= '1';
-            spr_y_we_n <= '1';
-            spr_tile_we_n <= '1';
-            spr_x_we_n <= (others => '1');
-            spr_attr_we_n <= (others => '1');
-            spr_ptn_l_we_n <= (others => '1');
-            spr_ptn_h_we_n <= (others => '1');
-            s_oam_addr_cpy_ce_n <= '1';
-            spr_x_ce_n <= (others => '1');
-            spr_ptn_ce_n <= (others => '1');
 
             sprite0_evaluated <= '0';
             sprite0_displayed <= '0';
@@ -854,12 +919,6 @@ begin
 
                         --prepare for next step
                         s_oam_addr_cpy_n <= '1';
-                        spr_y_we_n <= '1';
-                        spr_tile_we_n <= '1';
-                        spr_x_we_n <= "11111111";
-                        spr_attr_we_n <= "11111111";
-                        spr_ptn_l_we_n <= "11111111";
-                        spr_ptn_h_we_n <= "11111111";
 
                     --sprite pattern fetch
                     elsif (nes_x > conv_std_logic_vector(HSCAN, X_SIZE) and 
@@ -870,84 +929,11 @@ begin
                         s_oam_w_n <= '1';
                         s_oam_addr <= s_oam_addr_cpy + 1;
 
-                        --increment when nes_x = 0...3
-                        if (nes_x (2) = '0') then
-                            s_oam_addr_cpy_ce_n <= '0';
-                        else
-                            s_oam_addr_cpy_ce_n <= '1';
-                        end if;
-
-                        ----fetch y-cordinate from secondary oam
-                        if (nes_x (2 downto 0) = "001" ) then
-                            spr_y_we_n <= '0';
-                        else
-                            spr_y_we_n <= '1';
-                        end if;
-
-                        ----fetch tile number
-                        if (nes_x (2 downto 0) = "010" ) then
-                            spr_tile_we_n <= '0';
-                        else
-                            spr_tile_we_n <= '1';
-                        end if;
-
-                        ----fetch attribute
-                        if (nes_x (2 downto 0) = "011" ) then
-                            spr_attr_we_n(conv_integer(s_oam_addr_cpy(4 downto 2))) <= '0';
-                        else
-                            spr_attr_we_n(conv_integer(s_oam_addr_cpy(4 downto 2))) <= '1';
-                        end if;
-
-                        ----fetch x-cordinate
-                        if (nes_x (2 downto 0) = "100" ) then
-                            spr_x_we_n(conv_integer(s_oam_addr_cpy(4 downto 2))) <= '0';
-                        else
-                            spr_x_we_n(conv_integer(s_oam_addr_cpy(4 downto 2))) <= '1';
-                        end if;
-
-                        --pattern tbl low vale.
-                        if (nes_x (2 downto 0) = "110" ) then
-                            spr_ptn_l_we_n(conv_integer(s_oam_addr_cpy(4 downto 2))) <= '0';
-                        else
-                            spr_ptn_l_we_n(conv_integer(s_oam_addr_cpy(4 downto 2))) <= '1';
-                        end if;
-
-                        --pattern tbl high vale.
-                        if (nes_x (2 downto 0) = "000") then
-                            spr_ptn_h_we_n(conv_integer(s_oam_addr_cpy(4 downto 2))) <= '0';
-                        else
-                            spr_ptn_h_we_n(conv_integer(s_oam_addr_cpy(4 downto 2))) <= '1';
-                        end if;
-                        
                         --check sprite 0 is used in the next line.
                         if (sprite0_evaluated = '1') then
                             sprite0_displayed <= '1';
                         end if;
-
-                    elsif (nes_x > conv_std_logic_vector(HSCAN_SPR_MAX, X_SIZE)) then
-                        --clear last write enable.
-                        spr_ptn_h_we_n <= "11111111";
                     end if;--if (nes_x <= conv_std_logic_vector(HSCAN_OAM_EVA_START, X_SIZE))
-
-                    --display sprite.
-                    if ((nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) and
-                        (nes_y < conv_std_logic_vector(VSCAN, X_SIZE))) then
-                        --start counter.
-                        if (nes_x = "000000000") then
-                            spr_x_ce_n <= "00000000";
-                        end if;
-
-                        for i in 0 to 7 loop
-                            if (spr_x_cnt(i) = "00000001") then
-                                --active sprite, start shifting..
-                                spr_x_ce_n(i) <= '1';
-                                spr_ptn_ce_n(i) <= '0';
-                            end if;
-                        end loop;
-                    else
-                        spr_x_ce_n <= "11111111";
-                        spr_ptn_ce_n <= "11111111";
-                    end if; --if ((nes_x < conv_std_logic_vector(HSCAN, X_SIZE)) 
                 else
                     --sprite evaluation are cleared during the blank line.
                     sprite0_evaluated <= '0';

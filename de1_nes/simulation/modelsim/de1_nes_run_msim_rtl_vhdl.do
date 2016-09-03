@@ -70,10 +70,10 @@ add wave -label s_oam_addr_cpy -radix decimal sim:/testbench_motones_sim/sim_boa
 
 add wave -label spr_y_tmp -radix hex  sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/spr_y_tmp
 add wave -label spr_tile_tmp -radix hex  sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/spr_tile_tmp
-add wave -label spr_attr -radix hex  sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/spr_attr
-add wave -label spr_x_cnt -radix hex  sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/spr_x_cnt
-add wave -label spr_ptn_l -radix hex  sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/spr_ptn_l
-add wave -label spr_ptn_h -radix hex  sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/spr_ptn_h
+add wave -label spr_attr -radix hex  sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/spr_attr(1)
+add wave -label spr_x_cnt -radix hex  sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/spr_x_cnt(1)
+add wave -label spr_ptn_l -radix hex  sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/spr_ptn_l(1)
+add wave -label spr_ptn_h -radix hex  sim:/testbench_motones_sim/sim_board/ppu_inst/vga_render_inst/spr_ptn_h(1)
 
 #add wave -divider vga
 #add wave -label h_sync_n sim:/testbench_motones_sim/sim_board/ppu_inst/h_sync_n
