@@ -160,6 +160,7 @@ architecture rtl of de1_nes is
         signal dbg_s_oam_ce_rn_wn               : out std_logic_vector (2 downto 0);
         signal dbg_s_oam_addr                   : out std_logic_vector (4 downto 0);
         signal dbg_s_oam_data                   : out std_logic_vector (7 downto 0);
+        signal dbg_s_oam_addr_cpy               : out std_logic_vector (4 downto 0);
 
                 dl_cpu_clk  : in std_logic;
                 ppu_clk     : in std_logic;
@@ -289,6 +290,7 @@ architecture rtl of de1_nes is
     signal dbg_s_oam_ce_rn_wn               : std_logic_vector (2 downto 0);
     signal dbg_s_oam_addr                   : std_logic_vector (4 downto 0);
     signal dbg_s_oam_data                   : std_logic_vector (7 downto 0);
+    signal dbg_s_oam_addr_cpy               : std_logic_vector (4 downto 0);
     signal dbg_ppu_data_dummy               : std_logic_vector (7 downto 0);
     signal dbg_ppu_status_dummy             : std_logic_vector (7 downto 0);
     signal dbg_ppu_scrl_x_dummy             : std_logic_vector (7 downto 0);
@@ -323,7 +325,7 @@ begin
     dbg_exec_cycle_dummy,
     dbg_ea_carry,
     dbg_status_dummy,
-    dbg_pcl, dbg_pch, dbg_sp_dummy, dbg_x_dummy, dbg_y_dummy, dbg_acc,
+    dbg_pcl, dbg_pch, dbg_sp_dummy, dbg_x_dummy, dbg_y_dummy, dbg_acc_dummy,
     dbg_dec_oe_n,
     dbg_dec_val_dummy,
     dbg_stat_we_n    ,
@@ -363,6 +365,7 @@ begin
         dbg_s_oam_ce_rn_wn              ,
         dbg_s_oam_addr                  ,
         dbg_s_oam_data                  ,
+        dbg_s_oam_addr_cpy              ,
 
                 cpu_mem_clk     ,
                 ppu_clk         ,
@@ -437,6 +440,7 @@ begin
     dbg_int_d_bus(4 downto 0) <= dbg_s_oam_addr(4 downto 0);
     dbg_dec_val <= dbg_s_oam_data;
     dbg_y(5 downto 0) <= dbg_vga_y(5 downto 0);
+    dbg_acc <= "000" & dbg_s_oam_addr_cpy;
     --dbg_ppu_scrl_y <= dbg_ppu_scrl_y_dummy;
 
     --nmi_n <= dummy_nmi;

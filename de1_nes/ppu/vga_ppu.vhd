@@ -28,7 +28,7 @@ entity vga_ppu_render is
     signal dbg_s_oam_ce_rn_wn               : out std_logic_vector (2 downto 0);
     signal dbg_s_oam_addr                   : out std_logic_vector (4 downto 0);
     signal dbg_s_oam_data                   : out std_logic_vector (7 downto 0);
-    signal dbg_emu_ppu_clk                  : out std_logic;
+    signal dbg_s_oam_addr_cpy               : out std_logic_vector (4 downto 0);
 
             vga_clk     : in std_logic;
             emu_ppu_clk : in std_logic;
@@ -398,15 +398,15 @@ begin
     dbg_s_oam_ce_rn_wn               <= s_oam_ram_ce_n & s_oam_r_n & s_oam_w_n;
     dbg_s_oam_addr                   <= s_oam_addr;
     dbg_s_oam_data                   <= s_oam_data;
-
+    dbg_s_oam_addr_cpy               <= s_oam_addr_cpy;
 --    dbg_disp_nt <= disp_nt;
 --    dbg_disp_attr <= disp_attr;
 --    dbg_disp_ptn_h <= disp_ptn_h;
 --    dbg_disp_ptn_l <= disp_ptn_l;
     dbg_disp_nt <= spr_tile_tmp;
     dbg_disp_attr <= spr_attr(0);
-    dbg_disp_ptn_h <= spr_ptn_h(0) & "00000000";
-    dbg_disp_ptn_l <= spr_ptn_l(0) & "00000000";
+    dbg_disp_ptn_h <= "00000000" & spr_ptn_h(0);
+    dbg_disp_ptn_l <= "00000000" & spr_ptn_l(0);
 
     
     -----------------------------------------
