@@ -116,6 +116,17 @@ component d_flip_flop
         );
 end component;
 
+component d_flip_flop_bit
+    port (  
+            clk     : in std_logic;
+            res_n   : in std_logic;
+            set_n   : in std_logic;
+            we_n    : in std_logic;
+            d       : in std_logic;
+            q       : out std_logic
+        );
+end component;
+
 component tri_state_buffer
     generic (
             dsize : integer := 8
@@ -304,6 +315,7 @@ signal spr_y_we_n       : std_logic;
 signal spr_tile_we_n    : std_logic;
 signal spr_y_tmp        : std_logic_vector (dsize - 1 downto 0);
 signal spr_tile_tmp     : std_logic_vector (dsize - 1 downto 0);
+signal spr_attr_tmp     : std_logic;
 signal spr_ptn_in       : std_logic_vector (dsize - 1 downto 0);
 
 signal sprite0_evaluated    : std_logic;
@@ -720,9 +732,12 @@ begin
 
 
     --reverse bit when NOT SPRHFL is set (.nes file format bit endian).
-    spr_ptn_in <= vram_data when spr_attr(conv_integer(s_oam_addr_cpy(4 downto 2)))(SPRHFL) = '1' else
-                (vram_data(0) & vram_data(1) & vram_data(2) & vram_data(3) & 
-                 vram_data(4) & vram_data(5) & vram_data(6) & vram_data(7));
+    spr_attr_tmp_inst : d_flip_flop_bit
+            port map (emu_ppu_clk, rst_n, '1', '0', 
+                    spr_attr(conv_integer(s_oam_addr_cpy(4 downto 2)))(SPRHFL), spr_attr_tmp);
+    spr_ptn_in <= vram_data when spr_attr_tmp = '1' else
+                 (vram_data(0) & vram_data(1) & vram_data(2) & vram_data(3) & 
+                  vram_data(4) & vram_data(5) & vram_data(6) & vram_data(7));
 
     ----fetch attribute
     spr_attr_we_n(conv_integer(s_oam_addr_cpy(4 downto 2)))
