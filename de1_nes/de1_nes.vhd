@@ -323,7 +323,7 @@ begin
     dbg_exec_cycle_dummy,
     dbg_ea_carry,
     dbg_status_dummy,
-    dbg_pcl, dbg_pch, dbg_sp_dummy, dbg_x_dummy, dbg_y, dbg_acc,
+    dbg_pcl, dbg_pch, dbg_sp_dummy, dbg_x_dummy, dbg_y_dummy, dbg_acc,
     dbg_dec_oe_n,
     dbg_dec_val_dummy,
     dbg_stat_we_n    ,
@@ -436,6 +436,7 @@ begin
     dbg_x <= dbg_p_oam_data;
     dbg_int_d_bus(4 downto 0) <= dbg_s_oam_addr(4 downto 0);
     dbg_dec_val <= dbg_s_oam_data;
+    dbg_y(5 downto 0) <= dbg_vga_y(5 downto 0);
     --dbg_ppu_scrl_y <= dbg_ppu_scrl_y_dummy;
 
     --nmi_n <= dummy_nmi;

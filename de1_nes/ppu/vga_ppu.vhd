@@ -386,12 +386,9 @@ constant nes_color_palette : nes_color_array := (
 begin
     dbg_vga_x <= vga_x;
     dbg_vga_y <= vga_y;
+    --dbg_vga_y <= "0000" & spr_y_we_n & spr_tile_we_n & spr_attr_we_n(0) & spr_x_we_n(0) & spr_ptn_l_we_n(0) & spr_ptn_h_we_n(0);
     dbg_nes_x <= nes_x;
     dbg_nes_y <= nes_y;
-    dbg_disp_nt <= disp_nt;
-    dbg_disp_attr <= disp_attr;
-    dbg_disp_ptn_h <= disp_ptn_h;
-    dbg_disp_ptn_l <= disp_ptn_l;
     dbg_plt_addr <= plt_addr;
     dbg_plt_data <= plt_data;
     dbg_plt_ce_rn_wn               <= plt_ram_ce_n & plt_r_n & plt_w_n;
@@ -402,6 +399,14 @@ begin
     dbg_s_oam_addr                   <= s_oam_addr;
     dbg_s_oam_data                   <= s_oam_data;
 
+--    dbg_disp_nt <= disp_nt;
+--    dbg_disp_attr <= disp_attr;
+--    dbg_disp_ptn_h <= disp_ptn_h;
+--    dbg_disp_ptn_l <= disp_ptn_l;
+    dbg_disp_nt <= spr_tile_tmp;
+    dbg_disp_attr <= spr_attr(0);
+    dbg_disp_ptn_h <= spr_ptn_h(0) & "00000000";
+    dbg_disp_ptn_l <= spr_ptn_l(0) & "00000000";
 
     
     -----------------------------------------
