@@ -62,11 +62,19 @@ begin
     addr <= conv_std_logic_vector(ad, 16);
     d_io <= conv_std_logic_vector(dt, 8);
 end;
+
 procedure io_brk is
 begin
     addr <= (others => 'Z');
     d_io <= (others => 'Z');
     r_nw <= 'Z';
+end;
+
+procedure io_read (ad: in integer) is
+begin
+    r_nw <= '1';
+    addr <= conv_std_logic_vector(ad, 16);
+    d_io <= (others => 'Z');
 end;
 
     begin
@@ -384,7 +392,7 @@ end;
                         dma_step_cnt := dma_step_cnt + 1;
 
                     elsif (global_step_cnt = 5) then
-                        --step4 = scroll test.
+                        --step4 = scroll test and ppu reg read test.
                         if (scl_step_cnt = 0) then
                             --x scroll pos=123
                             io_out(16#2005#, 11);
@@ -392,9 +400,63 @@ end;
                             --y scroll pos=100
                             io_out(16#2005#, 0);
 
+                        elsif (scl_step_cnt = 2 * cpu_io_multi) then
+                            --read status reg.
+                            io_read(16#2002#);
+
+                        elsif (scl_step_cnt = 3 * cpu_io_multi) then
+                            --read vram nt0.
+                            io_out(16#2006#, 16#20#);
+
+                        elsif (scl_step_cnt = 4 * cpu_io_multi) then
+                            io_out(16#2006#, 16#03#);
+
+                        elsif (scl_step_cnt = 5 * cpu_io_multi) then
+                            io_read(16#2007#);
+
+                        elsif (scl_step_cnt = 6 * cpu_io_multi) then
+                            --pattern tbl.
+                            io_out(16#2006#, 16#04#);
+
+                        elsif (scl_step_cnt = 7 * cpu_io_multi) then
+                            io_out(16#2006#, 16#d1#);
+
+                        elsif (scl_step_cnt = 8 * cpu_io_multi) then
+                            io_read(16#2007#);
+
+                        elsif (scl_step_cnt = 9 * cpu_io_multi) then
+                            --attr tbl.
+                            io_out(16#2006#, 16#23#);
+
+                        elsif (scl_step_cnt = 10 * cpu_io_multi) then
+                            io_out(16#2006#, 16#c0#);
+
+                        elsif (scl_step_cnt = 11 * cpu_io_multi) then
+                            --set attr first.
+                            io_out(16#2006#, 16#5a#);
+
+                        elsif (scl_step_cnt = 12 * cpu_io_multi) then
+                            io_out(16#2006#, 16#23#);
+
+                        elsif (scl_step_cnt = 13 * cpu_io_multi) then
+                            io_out(16#2006#, 16#c0#);
+
+                        elsif (scl_step_cnt = 14 * cpu_io_multi) then
+                            io_read(16#2007#);
+
+                        elsif (scl_step_cnt = 15 * cpu_io_multi) then
+                            --read palette tbl.
+                            io_out(16#2006#, 16#3f#);
+
+                        elsif (scl_step_cnt = 16 * cpu_io_multi) then
+                            io_out(16#2006#, 16#10#);
+
+                        elsif (scl_step_cnt = 17 * cpu_io_multi) then
+                            io_read(16#2007#);
+
                         else
                             io_brk;
-                            if (scl_step_cnt > 1 * cpu_io_multi) then
+                            if (scl_step_cnt > 17 * cpu_io_multi) then
                                 global_step_cnt := global_step_cnt + 1;
                             end if;
                         end if;
