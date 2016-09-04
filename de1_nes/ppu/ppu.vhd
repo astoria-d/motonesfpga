@@ -26,6 +26,7 @@ entity ppu is
     signal dbg_s_oam_data                   : out std_logic_vector (7 downto 0);
     signal dbg_s_oam_addr_cpy               : out std_logic_vector (4 downto 0);
 
+            cpu_clk     : in std_logic;
             dl_cpu_clk  : in std_logic;
             ppu_clk     : in std_logic;
             vga_clk     : in std_logic;
@@ -110,9 +111,7 @@ component vga_ppu_render
             oam_bus_ce_n    : in std_logic;
             oam_addr_in     : in std_logic_vector (7 downto 0);
             oam_data_in     : in std_logic_vector (7 downto 0);
-            oam_data_out    : out std_logic_vector (7 downto 0);
-
-            v_bus_busy_n    : out std_logic
+            oam_data_out    : out std_logic_vector (7 downto 0)
     );
 end component;
 
@@ -216,8 +215,6 @@ signal rnd_vram_data    : std_logic_vector (7 downto 0);
 signal rnd_plt_data_out     : std_logic_vector (7 downto 0);
 signal rnd_oam_data_out     : std_logic_vector (7 downto 0);
 
-signal v_bus_busy_n     : std_logic;
-
 begin
 
     dbg_ppu_ce_n <= ce_n;
@@ -246,7 +243,7 @@ begin
             port map (dl_cpu_clk, rst_n, '1', ppu_mask_we_n, cpu_d, ppu_mask);
 
     ppu_status_inst : d_flip_flop generic map(dsize)
-            port map (emu_ppu_clk, rst_n, '1', '0', rdr_ppu_stat, ppu_status);
+            port map (cpu_clk, rst_n, '1', '0', rdr_ppu_stat, ppu_status);
 
     --ppu addr reg.
     ppu_addr_in <=  cpu_d(5 downto 0) & ppu_addr(7 downto 0)
@@ -353,6 +350,7 @@ begin
             rnd_wr_n;
     rd_n <= '1' when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
             '1' when ppu_addr_upd_n = '0' else
+            '0' when ce_n = '0' and cpu_addr = PPUDATA and r_nw = '1' else
             rnd_rd_n;
 
     vram_addr <= ppu_addr when ce_n = '0' and cpu_addr = PPUADDR and r_nw = '0' else
@@ -394,8 +392,18 @@ begin
         end if;
     end process;
 
-    cpu_d <= (others => 'Z');
+    -----------------------------
+    --read from cpu...
+    -----------------------------
+    cpu_d <= ppu_status when ce_n = '0' and cpu_addr = PPUSTATUS and r_nw = '1' else
+             rnd_plt_data_out when ce_n = '0' and cpu_addr = PPUDATA and
+                                           ppu_addr(13 downto 8) = "111111" and r_nw = '1' else
+             vram_data when ce_n = '0' and cpu_addr = PPUDATA and r_nw = '1' else
+             (others => 'Z');
 
+    -----------------------------
+    --vga render instance...
+    -----------------------------
     vga_render_inst : vga_ppu_render port map (
     dbg_nes_x                        ,
     dbg_vga_x                        ,
@@ -419,8 +427,8 @@ begin
             ppu_ctrl, ppu_mask, rdr_ppu_stat, ppu_scroll_x, ppu_scroll_y,
             r_nw,
             plt_bus_ce_n, ppu_addr(4 downto 0), cpu_d, rnd_plt_data_out,
-            oam_bus_ce_n, oam_addr, cpu_d, rnd_oam_data_out,
-            v_bus_busy_n);
+            oam_bus_ce_n, oam_addr, cpu_d, rnd_oam_data_out
+            );
 
 end rtl;
 

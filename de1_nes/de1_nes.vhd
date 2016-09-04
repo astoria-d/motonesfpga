@@ -162,6 +162,7 @@ architecture rtl of de1_nes is
         signal dbg_s_oam_data                   : out std_logic_vector (7 downto 0);
         signal dbg_s_oam_addr_cpy               : out std_logic_vector (4 downto 0);
 
+                cpu_clk     : in std_logic;
                 dl_cpu_clk  : in std_logic;
                 ppu_clk     : in std_logic;
                 vga_clk     : in std_logic;
@@ -367,6 +368,7 @@ begin
         dbg_s_oam_data                  ,
         dbg_s_oam_addr_cpy              ,
 
+                cpu_clk     ,
                 cpu_mem_clk     ,
                 ppu_clk         ,
                 vga_clk     ,

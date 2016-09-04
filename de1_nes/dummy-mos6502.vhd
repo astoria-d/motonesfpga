@@ -433,7 +433,7 @@ end;
 
                         elsif (scl_step_cnt = 11 * cpu_io_multi) then
                             --set attr first.
-                            io_out(16#2006#, 16#5a#);
+                            io_out(16#2007#, 16#5a#);
 
                         elsif (scl_step_cnt = 12 * cpu_io_multi) then
                             io_out(16#2006#, 16#23#);
@@ -449,7 +449,7 @@ end;
                             io_out(16#2006#, 16#3f#);
 
                         elsif (scl_step_cnt = 16 * cpu_io_multi) then
-                            io_out(16#2006#, 16#10#);
+                            io_out(16#2006#, 16#11#);
 
                         elsif (scl_step_cnt = 17 * cpu_io_multi) then
                             io_read(16#2007#);

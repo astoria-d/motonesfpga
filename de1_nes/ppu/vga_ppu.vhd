@@ -66,9 +66,7 @@ entity vga_ppu_render is
             oam_bus_ce_n    : in std_logic;
             oam_addr_in     : in std_logic_vector (7 downto 0);
             oam_data_in     : in std_logic_vector (7 downto 0);
-            oam_data_out    : out std_logic_vector (7 downto 0);
-
-            v_bus_busy_n    : out std_logic
+            oam_data_out    : out std_logic_vector (7 downto 0)
     );
 end vga_ppu_render;
 
@@ -203,6 +201,7 @@ constant PPUIB     : integer := 7;  --intensify blue
 constant SPRHFL     : integer := 6;  --flip sprigte horizontally
 constant SPRVFL     : integer := 7;  --flip sprigte vertically
 
+constant ST_BSY     : integer := 4;  --vram busy
 constant ST_SOF     : integer := 5;  --sprite overflow
 constant ST_SP0     : integer := 6;  --sprite 0 hits
 constant ST_VBL     : integer := 7;  --vblank
@@ -223,6 +222,7 @@ signal nes_y        : std_logic_vector (8 downto 0);
 --vram i/o
 signal io_cnt_rst_n     : std_logic;
 signal io_cnt           : std_logic_vector(0 downto 0);
+signal v_bus_busy       : std_logic;
 
 --bg prefetch position (scroll + 16 cycle ahead of current pos)
 --511 x 239 (or 255 x 479)
@@ -317,10 +317,10 @@ signal spr_y_tmp        : std_logic_vector (dsize - 1 downto 0);
 signal spr_tile_tmp     : std_logic_vector (dsize - 1 downto 0);
 signal spr_attr_tmp     : std_logic;
 signal spr_ptn_in       : std_logic_vector (dsize - 1 downto 0);
+signal spr_attr_wk      : std_logic_vector (dsize - 1 downto 0);
 
 signal sprite0_evaluated    : std_logic;
 signal sprite0_displayed    : std_logic;
-
 
 subtype nes_color_data  is std_logic_vector (11 downto 0);
 type nes_color_array    is array (0 to 63) of nes_color_data;
@@ -635,12 +635,12 @@ begin
                 (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                 nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
             '1';
-    v_bus_busy_n <= 
-            '0' when (
+    v_bus_busy <= 
+            '1' when (
                 ((ppu_mask(PPUSBG) = '1' or ppu_mask(PPUSSP) = '1') and
                 (nes_y < conv_std_logic_vector(VSCAN, X_SIZE) or 
                 nes_y = conv_std_logic_vector(VSCAN_NEXT_START, X_SIZE)))) else
-            '1';
+            '0';
 
     -----------------------------------------
     ---primary oam implementation...
@@ -732,9 +732,10 @@ begin
 
 
     --reverse bit when NOT SPRHFL is set (.nes file format bit endian).
+    spr_attr_wk <= spr_attr(conv_integer(s_oam_addr_cpy(4 downto 2)));
     spr_attr_tmp_inst : d_flip_flop_bit
             port map (emu_ppu_clk, rst_n, '1', '0', 
-                    spr_attr(conv_integer(s_oam_addr_cpy(4 downto 2)))(SPRHFL), spr_attr_tmp);
+                    spr_attr_wk(SPRHFL), spr_attr_tmp);
     spr_ptn_in <= vram_data when spr_attr_tmp = '1' else
                  (vram_data(0) & vram_data(1) & vram_data(2) & vram_data(3) & 
                   vram_data(4) & vram_data(5) & vram_data(6) & vram_data(7));
@@ -1256,6 +1257,7 @@ end;
                 --TODO: sprite overflow is not inplemented!
                 ppu_status(ST_SOF) <= '0';
                 set_sp0_hit;
+                ppu_status(ST_BSY) <= v_bus_busy;
 
                 if ((nes_y > conv_std_logic_vector(VSCAN, X_SIZE))) then
                     --vblank start
