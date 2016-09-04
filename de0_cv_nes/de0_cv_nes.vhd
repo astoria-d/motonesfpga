@@ -103,6 +103,16 @@ architecture rtl of de0_cv_nes is
     );
     end component;
 
+    component tss_ram
+        generic (abus_size : integer := 16; dbus_size : integer := 8);
+        port (  
+                clk               : in std_logic;
+                ce_n, oe_n, we_n  : in std_logic;   --select pin active low.
+                addr              : in std_logic_vector (abus_size - 1 downto 0);
+                d_io              : inout std_logic_vector (dbus_size - 1 downto 0)
+        );
+    end component;
+
     component ram
         generic (abus_size : integer := 16; dbus_size : integer := 8);
         port (  
@@ -144,11 +154,13 @@ architecture rtl of de0_cv_nes is
         signal dbg_s_oam_ce_rn_wn               : out std_logic_vector (2 downto 0);
         signal dbg_s_oam_addr                   : out std_logic_vector (4 downto 0);
         signal dbg_s_oam_data                   : out std_logic_vector (7 downto 0);
+        signal dbg_s_oam_addr_cpy               : out std_logic_vector (4 downto 0);
 
                 dl_cpu_clk  : in std_logic;
                 ppu_clk     : in std_logic;
                 vga_clk     : in std_logic;
                 emu_ppu_clk : in std_logic;
+                emu_ppu_clk_dl : in std_logic;
                 ce_n        : in std_logic;
                 rst_n       : in std_logic;
                 r_nw        : in std_logic;
@@ -253,12 +265,11 @@ architecture rtl of de0_cv_nes is
     signal nt0_ce_n : std_logic;
     signal nt1_ce_n : std_logic;
 
---    signal dbg_disp_nt, dbg_disp_attr : std_logic_vector (7 downto 0);
---    signal dbg_disp_ptn_h, dbg_disp_ptn_l : std_logic_vector (15 downto 0);
     signal dbg_pcl, dbg_pch : std_logic_vector(7 downto 0);
     signal dbg_stat_we_n    : std_logic;
     signal dbg_idl_h, dbg_idl_l     : std_logic_vector (7 downto 0);
 
+    signal dbg_vga_clk                      : std_logic;
     signal dbg_ppu_addr_dummy               : std_logic_vector (13 downto 0);
     signal dbg_nes_x                        : std_logic_vector (8 downto 0);
     signal dbg_vga_x                        : std_logic_vector (9 downto 0);
@@ -273,6 +284,7 @@ architecture rtl of de0_cv_nes is
     signal dbg_s_oam_ce_rn_wn               : std_logic_vector (2 downto 0);
     signal dbg_s_oam_addr                   : std_logic_vector (4 downto 0);
     signal dbg_s_oam_data                   : std_logic_vector (7 downto 0);
+    signal dbg_s_oam_addr_cpy               : std_logic_vector (4 downto 0);
     signal dbg_ppu_data_dummy               : std_logic_vector (7 downto 0);
     signal dbg_ppu_status_dummy             : std_logic_vector (7 downto 0);
     signal dbg_ppu_scrl_x_dummy             : std_logic_vector (7 downto 0);
@@ -343,7 +355,7 @@ begin
             port map (cpu_mem_clk, rom_ce_n, addr(rom_32k - 1 downto 0), d_io);
 
     ram_oe_n <= not R_nW;
-    prg_ram_inst : ram generic map (ram_2k, data_size)
+    prg_ram_inst : tss_ram generic map (ram_2k, data_size)
             port map (cpu_mem_clk, ram_ce_n, ram_oe_n, R_nW, addr(ram_2k - 1 downto 0), d_io);
 
     --nes ppu instance
@@ -368,11 +380,13 @@ begin
         dbg_s_oam_ce_rn_wn              ,
         dbg_s_oam_addr                  ,
         dbg_s_oam_data                  ,
+        dbg_s_oam_addr_cpy              ,
 
                 cpu_mem_clk     ,
                 ppu_clk         ,
                 vga_clk     ,
                 emu_ppu_clk     ,
+                emu_ppu_mem_clk     ,
                 ppu_ce_n        ,
                 rst_n       ,
                 r_nw        ,
@@ -442,6 +456,7 @@ begin
     dbg_ppu_clk <= ppu_clk;
     dbg_emu_ppu_clk <= emu_ppu_clk;
     dbg_cpu_mem_clk <= cpu_mem_clk;
+    dbg_vga_clk <= vga_clk;
     dbg_r_nw <= r_nw;
     dbg_addr <= addr;
     dbg_d_io <= d_io;
