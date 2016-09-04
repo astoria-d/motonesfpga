@@ -771,8 +771,7 @@ y_loop:
 
     ;;dma start.
     lda #$02
-    ;sta $4014
-    sta $4013
+    sta $4014
 
     rts
 .endproc
