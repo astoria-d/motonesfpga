@@ -286,6 +286,8 @@ architecture rtl of de0_cv_nes is
     signal dbg_s_oam_addr                   : std_logic_vector (4 downto 0);
     signal dbg_s_oam_data                   : std_logic_vector (7 downto 0);
     signal dbg_s_oam_addr_cpy               : std_logic_vector (4 downto 0);
+    signal dbg_ppu_ctrl_dummy               : std_logic_vector (7 downto 0);
+    signal dbg_ppu_mask_dummy               : std_logic_vector (7 downto 0);
     signal dbg_ppu_data_dummy               : std_logic_vector (7 downto 0);
     signal dbg_ppu_status_dummy             : std_logic_vector (7 downto 0);
     signal dbg_ppu_scrl_x_dummy             : std_logic_vector (7 downto 0);
@@ -362,9 +364,9 @@ begin
     --nes ppu instance
     ppu_inst: ppu port map (  
         dbg_ppu_ce_n                                        ,
-        dbg_ppu_ctrl, dbg_ppu_mask, dbg_ppu_status          ,
+        dbg_ppu_ctrl_dummy, dbg_ppu_mask_dummy, dbg_ppu_status          ,
         dbg_ppu_addr                                        ,
-        dbg_ppu_data, dbg_ppu_scrl_x, dbg_ppu_scrl_y        ,
+        dbg_ppu_data_dummy, dbg_ppu_scrl_x, dbg_ppu_scrl_y        ,
 
         dbg_nes_x                        ,
         dbg_vga_x                        ,
@@ -467,9 +469,9 @@ begin
     dbg_nmi <= nmi_n;
 
     ----cpu...
---    dbg_ppu_ctrl <= dbg_pcl;
---    dbg_ppu_data <= dbg_idl_l;
---    dbg_ppu_mask <= dbg_idl_h;
+    dbg_ppu_ctrl <= dbg_pcl;
+    dbg_ppu_data <= dbg_idl_l;
+    dbg_ppu_mask <= dbg_idl_h;
 
     --ppu debug....
 --    dbg_exec_cycle(0) <= dbg_nes_x(8);
