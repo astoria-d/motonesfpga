@@ -395,6 +395,7 @@ begin
     -----------------------------
     --read from cpu...
     -----------------------------
+    --TODO! palette ram read sequence must be re-worked!!
     cpu_d <= ppu_status when ce_n = '0' and cpu_addr = PPUSTATUS and r_nw = '1' else
              rnd_plt_data_out when ce_n = '0' and cpu_addr = PPUDATA and
                                            ppu_addr(13 downto 8) = "111111" and r_nw = '1' else
