@@ -3,7 +3,7 @@ others = $MODEL_TECH/../modelsim.ini
 
 ; Altera specific primitive library mappings 
 
-work = gate_work
+work = rtl_work
 [vcom]
 ; Turn on VHDL-1993 as the default. Normally is off.
 ; VHDL93 = 1

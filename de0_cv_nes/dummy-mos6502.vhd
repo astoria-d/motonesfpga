@@ -4,6 +4,7 @@ use ieee.std_logic_1164.all;
 entity mos6502 is 
     port (  
             pi_base_clk 	: in std_logic;
+            pi_cpu_en       : in std_logic_vector (7 downto 0);
             pi_rdy         : in std_logic;
             pi_rst_n       : in std_logic;
             pi_irq_n       : in std_logic;
@@ -79,7 +80,7 @@ end;
             ref_cnt := 0;
 
         elsif (rising_edge(pi_base_clk)) then
-
+            if (pi_cpu_en(0) = '1') then
             if (pi_rdy = '1') then
                 if (init_done = '0') then
                     if (global_step_cnt = 0) then
@@ -516,6 +517,7 @@ end;
                 po_addr <= (others => 'Z');
                 pio_d_io <= (others => 'Z');
             end if;--if (rdy = '1') then
+            end if;--if (pi_cpu_en(0) = '1') then
         end if; --if (rst_n = '0') then
     end process;
 
