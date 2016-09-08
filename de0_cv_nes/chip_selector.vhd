@@ -57,6 +57,8 @@ begin
                     reg_cpu_en <= "01000000";
                 elsif (ref_cnt = 28) then
                     reg_cpu_en <= "10000000";
+                else
+                    reg_cpu_en <= "00000000";
                 end if;
 
                 if (ref_cnt = 31) then
