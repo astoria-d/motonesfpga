@@ -15,20 +15,21 @@ vsim -t 1ps -L altera -L lpm -L sgate -L altera_mf -L altera_lnsim -L cyclonev -
 ##script custom part...
 
 
-#add wave -label rst_n sim:/testbench_motones_sim/sim_board/pi_rst_n;
+add wave -label rst_n sim:/testbench_motones_sim/sim_board/pi_rst_n;
 #add wave -label r_nw sim:/testbench_motones_sim/sim_board/wr_r_nw;
-#add wave -label base_clk sim:/testbench_motones_sim/sim_board/pi_base_clk;
+add wave -label base_clk sim:/testbench_motones_sim/sim_board/pi_base_clk;
 
 #add wave sim:/testbench_motones_sim/*;
 #add wave sim:/testbench_motones_sim/sim_board/*;
-add wave sim:/testbench_motones_sim/sim_board/chip_selector_inst/*;
+add wave sim:/testbench_motones_sim/sim_board/chip_selector_inst/reg_cpu_en;
+add wave sim:/testbench_motones_sim/sim_board/chip_selector_inst/reg_ppu_en;
 
 
 view structure
 view signals
 
-run 8 us
-run 100 us
+run 300 ns
 wave zoom full
 
+run 5 us
 

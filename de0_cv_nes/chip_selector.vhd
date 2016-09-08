@@ -34,7 +34,7 @@ begin
     po_ppu_en <= reg_ppu_en;
     
     cpu_clk_p : process (pi_rst_n, pi_base_clk)
-    variable ref_cnt : integer range 0 to 15;
+    variable ref_cnt : integer range 0 to 31;
     begin
         if (pi_rst_n = '0') then
             reg_cpu_en <= (others => '0');
@@ -43,28 +43,33 @@ begin
             if (rising_edge(pi_base_clk)) then
                 if (ref_cnt = 0) then
                     reg_cpu_en <= "00000001";
-                elsif (ref_cnt = 3) then
+                elsif (ref_cnt = 4) then
                     reg_cpu_en <= "00000010";
-                elsif (ref_cnt = 7) then
+                elsif (ref_cnt = 8) then
                     reg_cpu_en <= "00000100";
-                elsif (ref_cnt = 11) then
+                elsif (ref_cnt = 12) then
                     reg_cpu_en <= "00001000";
-                elsif (ref_cnt = 15) then
+                elsif (ref_cnt = 16) then
                     reg_cpu_en <= "00010000";
-                elsif (ref_cnt = 19) then
+                elsif (ref_cnt = 20) then
                     reg_cpu_en <= "00100000";
-                elsif (ref_cnt = 23) then
+                elsif (ref_cnt = 24) then
                     reg_cpu_en <= "01000000";
-                elsif (ref_cnt = 27) then
+                elsif (ref_cnt = 28) then
                     reg_cpu_en <= "10000000";
                 end if;
-                ref_cnt := ref_cnt + 1;
+
+                if (ref_cnt = 31) then
+                    ref_cnt := 0;
+                else
+                    ref_cnt := ref_cnt + 1;
+                end if;
             end if;
         end if;
     end process;
 
     ppu_clk_p : process (pi_rst_n, pi_base_clk)
-    variable ref_cnt : integer range 0 to 31;
+    variable ref_cnt : integer range 0 to 15;
     begin
         if (pi_rst_n = '0') then
             reg_ppu_en <= (others => '0');
@@ -73,14 +78,21 @@ begin
             if (rising_edge(pi_base_clk)) then
                 if (ref_cnt = 0) then
                     reg_ppu_en <= "0001";
-                elsif (ref_cnt = 3) then
+                elsif (ref_cnt = 4) then
                     reg_ppu_en <= "0010";
-                elsif (ref_cnt = 7) then
+                elsif (ref_cnt = 8) then
                     reg_ppu_en <= "0100";
-                elsif (ref_cnt = 11) then
+                elsif (ref_cnt = 12) then
                     reg_ppu_en <= "1000";
+                else
+                    reg_ppu_en <= "0000";
                 end if;
-                ref_cnt := ref_cnt + 1;
+                
+                if (ref_cnt = 15) then
+                    ref_cnt := 0;
+                else
+                    ref_cnt := ref_cnt + 1;
+                end if;
             end if;
         end if;
     end process;
