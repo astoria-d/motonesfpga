@@ -98,6 +98,7 @@ set_global_assignment -name VHDL_FILE de0_cv_nes.vhd
 
 ##timing definition...
 set_global_assignment -name SDC_FILE mos6502-timing.sdc
+set_instance_assignment -name GLOBAL_SIGNAL "GLOBAL CLOCK" -to base_clk
 
 ##for signal trap ii setting...
 #set_global_assignment -name ENABLE_SIGNALTAP ON
