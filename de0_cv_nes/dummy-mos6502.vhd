@@ -3,10 +3,10 @@ use ieee.std_logic_1164.all;
 
 entity mos6502 is 
     port (  
+            pi_rst_n       : in std_logic;
             pi_base_clk 	: in std_logic;
             pi_cpu_en       : in std_logic_vector (7 downto 0);
             pi_rdy         : in std_logic;
-            pi_rst_n       : in std_logic;
             pi_irq_n       : in std_logic;
             pi_nmi_n       : in std_logic;
             po_r_nw        : out std_logic;

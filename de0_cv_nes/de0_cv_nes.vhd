@@ -28,11 +28,11 @@ end de0_cv_nes;
 
 architecture rtl of de0_cv_nes is
     component mos6502
-        port (  
-                pi_base_clk 	: in std_logic;
-                pi_cpu_en       : in std_logic_vector (7 downto 0);
-                pi_rdy         : in std_logic;
+        port (
                 pi_rst_n       : in std_logic;
+                pi_base_clk    : in std_logic;
+                pi_cpu_en      : in std_logic_vector (7 downto 0);
+                pi_rdy         : in std_logic;
                 pi_irq_n       : in std_logic;
                 pi_nmi_n       : in std_logic;
                 po_r_nw        : out std_logic;
@@ -42,7 +42,7 @@ architecture rtl of de0_cv_nes is
     end component;
 
     component clock_selector
-        port (  
+        port (
                 pi_rst_n        : in std_logic;
                 pi_base_clk     : in std_logic;
                 po_cpu_en       : out std_logic_vector (7 downto 0);
@@ -51,18 +51,19 @@ architecture rtl of de0_cv_nes is
     end component;
 
     component ppu port (
-                pi_base_clk    : in std_logic;
-                pi_ce_n        : in std_logic;
                 pi_rst_n       : in std_logic;
+                pi_base_clk    : in std_logic;
+                pi_ppu_en      : in std_logic_vector (3 downto 0);
+                pi_ce_n        : in std_logic;
                 pi_r_nw        : in std_logic;
                 pi_cpu_addr    : in std_logic_vector (2 downto 0);
-                pio_cpu_d       : inout std_logic_vector (7 downto 0);
+                pio_cpu_d      : inout std_logic_vector (7 downto 0);
 
                 po_rd_n        : out std_logic;
                 po_wr_n        : out std_logic;
                 po_ale_n       : out std_logic;
                 po_vram_addr   : out std_logic_vector (13 downto 0);
-                pio_vram_data   : inout std_logic_vector (7 downto 0)
+                pio_vram_data  : inout std_logic_vector (7 downto 0)
     );
     end component;
 
@@ -120,10 +121,10 @@ begin
 
     --mos 6502 cpu instance
     cpu_inst : mos6502 port map (
+            pi_rst_n, 
             pi_base_clk, 
             wr_cpu_en, 
             wr_rdy,
-            pi_rst_n, 
             wr_irq_n, 
             wr_nmi_n, 
             wr_r_nw, 
@@ -152,4 +153,3 @@ begin
     po_g           <= (others => '0');
     po_b           <= (others => '0');
 end rtl;
-
