@@ -107,9 +107,9 @@ begin
             wr_d_io
             );
 
-    wr_rdy <= '0';
-    wr_irq_n <= '0';
-    wr_nmi_n <= '0';
+    wr_rdy <= '1';
+    wr_irq_n <= '1';
+    wr_nmi_n <= '1';
 
     po_h_sync_n    <= '0';
     po_v_sync_n    <= '0';
