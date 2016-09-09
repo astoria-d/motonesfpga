@@ -42,7 +42,7 @@ set_global_assignment -name DEVICE 5CEBA4F23C7
 set_global_assignment -name TOP_LEVEL_ENTITY de0_cv_nes
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 14.0
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "15:11:02  MAY 18, 2016"
-set_global_assignment -name LAST_QUARTUS_VERSION 14.0
+set_global_assignment -name LAST_QUARTUS_VERSION "13.0 SP1"
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
 set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
@@ -97,6 +97,7 @@ set_location_assignment PIN_AB12 -to nt_v_mirror
 
 set_global_assignment -name VHDL_FILE chip_selector.vhd
 set_global_assignment -name VHDL_FILE dummy-mos6502.vhd
+set_global_assignment -name VHDL_FILE ppu.vhd
 
 set_global_assignment -name VHDL_FILE de0_cv_nes.vhd
 

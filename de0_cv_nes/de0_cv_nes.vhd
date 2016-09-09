@@ -50,6 +50,18 @@ architecture rtl of de0_cv_nes is
             );
     end component;
 
+    component chip_selector
+        port (
+                pi_rst_n        : in std_logic;
+                pi_base_clk     : in std_logic;
+                pi_addr         : in std_logic_vector (15 downto 0);
+                po_rom_ce_n     : out std_logic;
+                po_ram_ce_n     : out std_logic;
+                po_ppu_ce_n     : out std_logic;
+                po_apu_ce_n     : out std_logic
+            );
+    end component;
+
     component ppu port (
                 pi_rst_n       : in std_logic;
                 pi_base_clk    : in std_logic;
@@ -65,18 +77,6 @@ architecture rtl of de0_cv_nes is
                 po_vram_addr   : out std_logic_vector (13 downto 0);
                 pio_vram_data  : inout std_logic_vector (7 downto 0)
     );
-    end component;
-
-    component chip_selector
-        port (
-                pi_rst_n        : in std_logic;
-                pi_base_clk     : in std_logic;
-                pi_addr         : in std_logic_vector (15 downto 0);
-                po_rom_ce_n     : out std_logic;
-                po_ram_ce_n     : out std_logic;
-                po_ppu_ce_n     : out std_logic;
-                po_apu_ce_n     : out std_logic
-            );
     end component;
 
     component v_chip_selector
@@ -107,6 +107,12 @@ signal wr_ram_ce_n     : std_logic;
 signal wr_ppu_ce_n     : std_logic;
 signal wr_apu_ce_n     : std_logic;
 
+signal wr_v_rd_n        : std_logic;
+signal wr_v_wr_n        : std_logic;
+signal wr_v_ale_n       : std_logic;
+signal wr_vram_addr     : std_logic_vector (13 downto 0);
+signal wr_vram_data     : std_logic_vector (7 downto 0);
+
 --signal wr_pt_ce_n     : std_logic;
 --signal wr_nt0_ce_n    : std_logic;
 --signal wr_nt1_ce_n    : std_logic;
@@ -116,8 +122,12 @@ begin
     dbg_base_clk <= pi_base_clk;
 
     --synchronized clock generator instance
-    clock_selector_inst : clock_selector port map
-        (pi_rst_n, pi_base_clk, wr_cpu_en, wr_ppu_en);
+    clock_selector_inst : clock_selector port map (
+            pi_rst_n,
+            pi_base_clk,
+            wr_cpu_en,
+            wr_ppu_en
+            );
 
     --mos 6502 cpu instance
     cpu_inst : mos6502 port map (
@@ -141,6 +151,23 @@ begin
             wr_ram_ce_n,
             wr_ppu_ce_n,
             wr_apu_ce_n
+            );
+
+    --chip select (address decode)
+    ppu_inst : ppu port map (
+            pi_rst_n, 
+            pi_base_clk, 
+            wr_ppu_en,
+            wr_ppu_ce_n,
+            wr_r_nw, 
+            wr_addr(2 downto 0), 
+            wr_d_io,
+
+            wr_v_rd_n,
+            wr_v_wr_n,
+            wr_v_ale_n,
+            wr_vram_addr,
+            wr_vram_data
             );
 
     wr_rdy <= '1';
