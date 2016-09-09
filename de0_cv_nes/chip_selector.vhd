@@ -1,17 +1,22 @@
+---------------------------------------------
+---------------------------------------------
+-------- synchronized clock selector --------
+---------------------------------------------
+---------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 
-entity chip_selector is 
+entity clock_selector is 
     port (  
                 pi_rst_n        : in std_logic;
                 pi_base_clk     : in std_logic;
                 po_cpu_en       : out std_logic_vector (7 downto 0);
                 po_ppu_en       : out std_logic_vector (3 downto 0)
         );
-end chip_selector;
+end clock_selector;
 
-architecture rtl of chip_selector is
+architecture rtl of clock_selector is
 
 signal reg_cpu_en       : std_logic_vector (7 downto 0);
 signal reg_ppu_en       : std_logic_vector (3 downto 0);
@@ -101,3 +106,124 @@ begin
 
 end rtl;
 
+
+---------------------------------------------
+---------------------------------------------
+--------------- chip selector ---------------
+---------------------------------------------
+---------------------------------------------
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
+
+entity chip_selector is 
+    port (
+                pi_rst_n        : in std_logic;
+                pi_base_clk    : in std_logic;
+                pi_addr         : in std_logic_vector (15 downto 0);
+                po_rom_ce_n     : out std_logic;
+                po_ram_ce_n     : out std_logic;
+                po_ppu_ce_n     : out std_logic;
+                po_apu_ce_n     : out std_logic
+        );
+end chip_selector;
+
+architecture rtl of chip_selector is
+
+signal reg_rom_ce_n      : std_logic;
+signal reg_ram_ce_n      : std_logic;
+signal reg_ppu_ce_n      : std_logic;
+signal reg_apu_ce_n      : std_logic;
+
+begin
+    po_rom_ce_n <= reg_rom_ce_n;
+    po_ram_ce_n <= reg_ram_ce_n;
+    po_ppu_ce_n <= reg_ppu_ce_n;
+    po_apu_ce_n <= reg_apu_ce_n;
+
+    chip_sel_p : process (pi_rst_n, pi_base_clk)
+    begin
+        if (pi_rst_n = '0') then
+            reg_rom_ce_n <= '1';
+            reg_ram_ce_n <= '1';
+            reg_ppu_ce_n <= '1';
+            reg_apu_ce_n <= '1';
+        else
+            if (rising_edge(pi_base_clk)) then
+                if (pi_addr(15) = '1') then
+                    reg_rom_ce_n <= '0';
+                else
+                    reg_rom_ce_n <= '1';
+                end if;
+
+                if (pi_addr(15) = '0' and pi_addr(14) = '0' and pi_addr(13) = '1') then
+                    reg_ppu_ce_n <= '0';
+                else
+                    reg_ppu_ce_n <= '1';
+                end if;
+
+                if (pi_addr(15) = '0' and pi_addr(14) = '1' and pi_addr(13) = '0') then
+                    reg_apu_ce_n <= '0';
+                else
+                    reg_apu_ce_n <= '1';
+                end if;
+
+                if ((pi_addr(15) or pi_addr(14) or pi_addr(13)) = '0') then
+                    reg_ram_ce_n <= '0';
+                else
+                    reg_ram_ce_n <= '1';
+                end if;
+            end if;
+        end if;
+    end process;
+
+end rtl;
+
+
+
+---------------------------------------------
+---------------------------------------------
+------------ vram chip selector -------------
+---------------------------------------------
+---------------------------------------------
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
+
+entity v_chip_selector is 
+    port (
+                pi_rst_n        : in std_logic;
+                pi_base_clk    : in std_logic;
+                pi_v_addr      : in std_logic_vector (13 downto 0);
+                pi_nt_v_mirror : in std_logic;
+                po_pt_ce_n     : out std_logic;
+                po_nt0_ce_n    : out std_logic;
+                po_nt1_ce_n    : out std_logic
+        );
+end v_chip_selector;
+
+architecture rtl of v_chip_selector is
+
+signal reg_pt_ce_n       : std_logic;
+signal reg_nt0_ce_n      : std_logic;
+signal reg_nt1_ce_n      : std_logic;
+
+begin
+    po_pt_ce_n <= reg_pt_ce_n;
+    po_nt0_ce_n <= reg_nt0_ce_n;
+    po_nt1_ce_n <= reg_nt1_ce_n;
+
+    chip_sel_p : process (pi_rst_n, pi_base_clk)
+    begin
+        if (pi_rst_n = '0') then
+            reg_pt_ce_n <= '1';
+            reg_nt0_ce_n <= '1';
+            reg_nt1_ce_n <= '1';
+        else
+            if (rising_edge(pi_base_clk)) then
+
+            end if;
+        end if;
+    end process;
+
+end rtl;

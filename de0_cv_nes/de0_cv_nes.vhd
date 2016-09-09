@@ -3,7 +3,7 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.conv_integer;
 
 --  
---   MOTO NES FPGA On GHDL Simulation Environment Virtual Cuicuit Board
+--   MOTO NES FPGA On DE0-CV Environment Virtual Cuicuit Board
 --   All of the components are assembled and instanciated on this board.
 --  
 
@@ -41,7 +41,7 @@ architecture rtl of de0_cv_nes is
         );
     end component;
 
-    component chip_selector
+    component clock_selector
         port (  
                 pi_rst_n        : in std_logic;
                 pi_base_clk     : in std_logic;
@@ -66,8 +66,22 @@ architecture rtl of de0_cv_nes is
     );
     end component;
 
-    component v_address_decoder
+    component chip_selector
         port (
+                pi_rst_n        : in std_logic;
+                pi_base_clk     : in std_logic;
+                pi_addr         : in std_logic_vector (15 downto 0);
+                po_rom_ce_n     : out std_logic;
+                po_ram_ce_n     : out std_logic;
+                po_ppu_ce_n     : out std_logic;
+                po_apu_ce_n     : out std_logic
+            );
+    end component;
+
+    component v_chip_selector
+        port (
+                pi_rst_n        : in std_logic;
+                pi_base_clk    : in std_logic;
                 pi_v_addr      : in std_logic_vector (13 downto 0);
                 pi_nt_v_mirror : in std_logic;
                 po_pt_ce_n     : out std_logic;
@@ -87,11 +101,21 @@ signal wr_r_nw      : std_logic;
 signal wr_addr      : std_logic_vector ( 15 downto 0);
 signal wr_d_io      : std_logic_vector ( 7 downto 0);
 
+signal wr_rom_ce_n     : std_logic;
+signal wr_ram_ce_n     : std_logic;
+signal wr_ppu_ce_n     : std_logic;
+signal wr_apu_ce_n     : std_logic;
+
+--signal wr_pt_ce_n     : std_logic;
+--signal wr_nt0_ce_n    : std_logic;
+--signal wr_nt1_ce_n    : std_logic;
+
 begin
 
     dbg_base_clk <= pi_base_clk;
 
-    chip_selector_inst : chip_selector port map
+    --synchronized clock generator instance
+    clock_selector_inst : clock_selector port map
         (pi_rst_n, pi_base_clk, wr_cpu_en, wr_ppu_en);
 
     --mos 6502 cpu instance
@@ -105,6 +129,17 @@ begin
             wr_r_nw, 
             wr_addr, 
             wr_d_io
+            );
+
+    --chip select (address decode)
+    cs_inst : chip_selector port map (
+            pi_rst_n,
+            pi_base_clk, 
+            wr_addr,
+            wr_rom_ce_n,
+            wr_ram_ce_n,
+            wr_ppu_ce_n,
+            wr_apu_ce_n
             );
 
     wr_rdy <= '1';
