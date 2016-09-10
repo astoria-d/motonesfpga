@@ -31,10 +31,6 @@ constant PPUSCROLL : std_logic_vector(2 downto 0) := "101";
 constant PPUADDR   : std_logic_vector(2 downto 0) := "110";
 constant PPUDATA   : std_logic_vector(2 downto 0) := "111";
 
-constant PPUVAI     : integer := 2;  --vram address increment
-constant PPUNEN     : integer := 7;  --nmi enable
-constant ST_VBL     : integer := 7;  --vblank
-
 signal reg_ppu_ctrl         : std_logic_vector (7 downto 0);
 signal reg_ppu_mask         : std_logic_vector (7 downto 0);
 signal reg_ppu_status       : std_logic_vector (7 downto 0);
@@ -44,6 +40,12 @@ signal reg_ppu_scroll_x     : std_logic_vector (7 downto 0);
 signal reg_ppu_scroll_y     : std_logic_vector (7 downto 0);
 signal reg_ppu_addr         : std_logic_vector (13 downto 0);
 signal reg_ppu_data         : std_logic_vector (7 downto 0);
+
+signal reg_rd_n         : std_logic;
+signal reg_wr_n         : std_logic;
+signal reg_ale_n        : std_logic;
+signal reg_vram_addr    : std_logic_vector (13 downto 0);
+signal reg_vram_data    : std_logic_vector (7 downto 0)
 
 begin
 
@@ -141,5 +143,6 @@ begin
             end if;--if (pi_ppu_en(0) = '1' and pi_ce_n = '0') then
         end if;--if (pi_rst_n = '0') then
     end process;
+
 end rtl;
 

@@ -5,11 +5,13 @@ if {[file exists rtl_work]} {
 vlib rtl_work
 vmap work rtl_work
 
-vcom -93 -work work {../../de0_cv_nes.vhd}
 vcom -93 -work work {../../chip_selector.vhd}
+vcom -93 -work work {../../mem/ram.vhd}
+vcom -93 -work work {../../mem/chr_rom.vhd}
 vcom -93 -work work {../../ppu.vhd}
 vcom -93 -work work {../../dummy-mos6502.vhd}
 
+vcom -93 -work work {../../de0_cv_nes.vhd}
 vcom -93 -work work {../../testbench_motones_sim.vhd}
 
 vsim -t 1ps -L altera -L lpm -L sgate -L altera_mf -L altera_lnsim -L cyclonev -L rtl_work -L work -voptargs="+acc"  testbench_motones_sim
