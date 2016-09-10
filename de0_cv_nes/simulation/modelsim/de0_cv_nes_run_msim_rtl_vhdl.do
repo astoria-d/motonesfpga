@@ -50,8 +50,15 @@ add wave -divider render
 #add wave -label vga_y       sim:/testbench_motones_sim/sim_board/render_inst/reg_vga_y;
 add wave -label nes_x       sim:/testbench_motones_sim/sim_board/render_inst/reg_nes_x;
 add wave -label nes_y       sim:/testbench_motones_sim/sim_board/render_inst/reg_nes_y;
-add wave -label wr_rnd_en  sim:/testbench_motones_sim/sim_board/wr_rnd_en;
-add wave -label reg_v_cur_state sim:/testbench_motones_sim/sim_board/render_inst/reg_v_cur_state;
+#add wave -label wr_rnd_en  sim:/testbench_motones_sim/sim_board/wr_rnd_en;
+#add wave -label reg_v_cur_state sim:/testbench_motones_sim/sim_board/render_inst/reg_v_cur_state;
+add wave -label prf_x       sim:/testbench_motones_sim/sim_board/render_inst/reg_prf_x;
+#add wave -label prf_y       sim:/testbench_motones_sim/sim_board/render_inst/reg_prf_y;
+
+add wave -label disp_nt -radix hex sim:/testbench_motones_sim/sim_board/render_inst/reg_disp_nt;
+add wave -label disp_attr   -radix hex sim:/testbench_motones_sim/sim_board/render_inst/reg_disp_attr;
+add wave -label disp_ptn_l -radix hex sim:/testbench_motones_sim/sim_board/render_inst/reg_disp_ptn_l;
+add wave -label disp_ptn_h -radix hex sim:/testbench_motones_sim/sim_board/render_inst/reg_disp_ptn_h;
 
 
 add wave -divider vga

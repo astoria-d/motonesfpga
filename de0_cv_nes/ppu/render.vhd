@@ -67,6 +67,8 @@ constant VSCAN_NEXT_START       : integer := 262;
 constant HSCAN_SPR_MAX          : integer := 321;
 constant HSCAN_OAM_EVA_START    : integer := 64;
 
+constant PREFETCH_INT           : integer := 16;
+
 constant PPUBNA    : integer := 1;  --base name address
 constant PPUVAI    : integer := 2;  --vram address increment
 constant PPUSPA    : integer := 3;  --sprite pattern table address
@@ -168,6 +170,9 @@ signal reg_vga_y        : integer range 0 to VGA_H_MAX - 1;
 
 signal reg_nes_x        : integer range 0 to VGA_W_MAX / 2 - 1;
 signal reg_nes_y        : integer range 0 to VGA_W_MAX / 2 - 1;
+--prefech is wider by scroll reg size.
+signal reg_prf_x        : integer range 0 to VGA_W_MAX / 2 + 256 - 1;
+signal reg_prf_y        : integer range 0 to VGA_W_MAX / 2 + 256 - 1;
 
 type vac_state is (
     IDLE,
@@ -189,6 +194,11 @@ signal reg_v_wr_n       : std_logic;
 signal reg_v_addr       : std_logic_vector (13 downto 0);
 signal reg_v_data       : std_logic_vector (7 downto 0);
 
+signal reg_disp_nt          : std_logic_vector (7 downto 0);
+signal reg_disp_attr        : std_logic_vector (7 downto 0);
+signal reg_disp_ptn_l       : std_logic_vector (15 downto 0);
+signal reg_disp_ptn_h       : std_logic_vector (15 downto 0);
+
 begin
 
     --position and sync signal generate.
@@ -199,11 +209,9 @@ begin
             reg_vga_y <= 0;
             reg_nes_x <= 0;
             reg_nes_y <= 0;
+            reg_prf_x <= 0;
+            reg_prf_y <= 0;
         elsif (rising_edge(pi_base_clk)) then
-
-            reg_nes_x <= reg_vga_x / 2;
-            reg_nes_y <= reg_vga_y / 2;
-
             if ((pi_rnd_en(0) or pi_rnd_en(2))= '1') then
                 if (reg_vga_x = VGA_W_MAX - 1) then
                     reg_vga_x <= 0;
@@ -228,8 +236,29 @@ begin
                 else
                     po_v_sync_n <= '1';
                 end if;
-
             end if;--if (pi_rnd_en(1) = '1' or pi_rnd_en(3) = '1' ) then
+
+            --nes x/y position...
+            reg_nes_x <= reg_vga_x / 2;
+            reg_nes_y <= reg_vga_y / 2;
+
+            --pre-fetch x/y position...
+            if (reg_vga_x < HSCAN_NEXT_START * 2) then
+                reg_prf_x <= reg_vga_x / 2 + conv_integer(pi_ppu_scroll_x) + PREFETCH_INT;
+            else
+                reg_prf_x <= reg_vga_x / 2 + conv_integer(pi_ppu_scroll_x)
+                                - HSCAN_NEXT_START + PREFETCH_INT;
+            end if;
+
+            if (reg_vga_y < VSCAN * 2) then
+                if (reg_vga_x < HSCAN_NEXT_START * 2) then
+                    reg_prf_y <= reg_vga_y / 2 + conv_integer(pi_ppu_scroll_y);
+                else
+                    reg_prf_y <= (reg_vga_y + 1) / 2 + conv_integer(pi_ppu_scroll_y);
+                end if;
+            else
+                reg_prf_y <= 0;
+            end if;
         end if;--if (pi_rst_n = '0') then
     end process;
 
@@ -238,9 +267,7 @@ begin
     begin
         if (pi_rst_n = '0') then
             reg_v_cur_state <= IDLE;
-            reg_v_data    <= (others => 'Z');
         elsif (rising_edge(pi_base_clk)) then
-            reg_v_data    <= pi_v_data;
             reg_v_cur_state <= reg_v_next_state;
         end if;--if (pi_rst_n = '0') then
     end process;
@@ -361,48 +388,104 @@ end;
     po_wr_n         <= reg_v_wr_n;
     po_v_addr       <= reg_v_addr;
 
-    --main vram access state machine...
+    --vram r/w selector state machine...
     vac_main_stat_p : process (reg_v_cur_state)
     begin
         case reg_v_cur_state is
             when IDLE =>
                 reg_v_rd_n  <= 'Z';
                 reg_v_wr_n  <= 'Z';
-                reg_v_addr  <= (others => 'Z');
-            when AD_SET0 =>
+            when AD_SET0 | AD_SET1 | REG_SET2 | REG_SET3 =>
                 reg_v_rd_n  <= '1';
                 reg_v_wr_n  <= '1';
-                reg_v_addr  <= (others => 'Z');
-            when AD_SET1 =>
-                reg_v_rd_n  <= '1';
-                reg_v_wr_n  <= '1';
-                reg_v_addr  <= (others => 'Z');
-            when AD_SET2 =>
+            when AD_SET2 | AD_SET3 | REG_SET0 | REG_SET1 =>
                 reg_v_rd_n  <= '0';
                 reg_v_wr_n  <= '1';
-                reg_v_addr  <= (others => 'Z');
-            when AD_SET3 =>
-                reg_v_rd_n  <= '0';
-                reg_v_wr_n  <= '1';
-                reg_v_addr  <= (others => 'Z');
-            when REG_SET0 =>
-                reg_v_rd_n  <= '0';
-                reg_v_wr_n  <= '1';
-                reg_v_addr  <= (others => 'Z');
-            when REG_SET1 =>
-                reg_v_rd_n  <= '0';
-                reg_v_wr_n  <= '1';
-                reg_v_addr  <= (others => 'Z');
-            when REG_SET2 =>
-                reg_v_rd_n  <= '1';
-                reg_v_wr_n  <= '1';
-                reg_v_addr  <= (others => 'Z');
-            when REG_SET3 =>
-                reg_v_rd_n  <= '1';
-                reg_v_wr_n  <= '1';
-                reg_v_addr  <= (others => 'Z');
         end case;
     end process;
+
+    --vram address state machine...
+    vaddr_stat_p : process (pi_rst_n, pi_base_clk)
+function is_bg (
+    pm_sbg          : in std_logic;
+    pm_nes_x        : in integer range 0 to VGA_W_MAX - 1;
+    pm_nes_y        : in integer range 0 to VGA_H_MAX - 1
+    )return integer is
+begin
+    if (pm_sbg = '1'and
+        (pm_nes_x <= HSCAN or pm_nes_x >= HSCAN_NEXT_START) and
+        (pm_nes_y < VSCAN or pm_nes_y = VSCAN_NEXT_START)) then
+        return 1;
+    else
+        return 0;
+    end if;
+end;
+    begin
+        if (pi_rst_n = '0') then
+            reg_v_addr  <= (others => 'Z');
+            reg_v_data    <= (others => 'Z');
+        elsif (rising_edge(pi_base_clk)) then
+            reg_v_data    <= pi_v_data;
+            
+            if (is_bg(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
+                ----fetch next tile byte.
+                if (reg_prf_x mod 8 = 1) then
+                    --vram addr is incremented every 8 cycle.
+                    --name table at 0x2000
+                    reg_v_addr(9 downto 0)
+                        <= conv_std_logic_vector(reg_prf_y, 9)(7 downto 3)
+                            & conv_std_logic_vector(reg_prf_x, 9)(7 downto 3);
+                    reg_v_addr(13 downto 10) <= "10" & pi_ppu_ctrl(PPUBNA downto 0)
+                                                    + ("000" & conv_std_logic_vector(reg_prf_x, 9)(8));
+                ----fetch attr table byte.
+                elsif (reg_prf_x mod 8 = 3) then
+                    --attr table at 0x23c0
+                    reg_v_addr(7 downto 0) <= "11000000" +
+                            ("00" & conv_std_logic_vector(reg_prf_y, 9)(7 downto 5)
+                                  & conv_std_logic_vector(reg_prf_x, 9)(7 downto 5));
+                    reg_v_addr(13 downto 8) <= "10" &
+                            pi_ppu_ctrl(PPUBNA downto 0) & "11"
+                                + ("000" & conv_std_logic_vector(reg_prf_x, 9)(8) & "00");
+                ----fetch pattern table low byte.
+                elsif (reg_prf_x mod 8 = 5) then
+                     --vram addr is incremented every 8 cycle.
+                     reg_v_addr <= "0" & pi_ppu_ctrl(PPUBPA) &
+                                          reg_disp_nt(7 downto 0)
+                                        & "0" & conv_std_logic_vector(reg_prf_y, 9)(2 downto 0);
+                ----fetch pattern table high byte.
+                elsif (reg_prf_x mod 8 = 7) then
+                     --vram addr is incremented every 8 cycle.
+                     reg_v_addr <= "0" & pi_ppu_ctrl(PPUBPA) &
+                                          reg_disp_nt(7 downto 0)
+                                        & "0" & conv_std_logic_vector(reg_prf_y, 9)(2 downto 0)
+                                        + "00000000001000";
+                end if;
+            end if;
+        end if;--if (pi_rst_n = '0') then
+    end process;
+
+    --vram r/w selector state machine...
+    bg_main_stat_p : process (reg_v_cur_state, reg_v_data)
+    begin
+        case reg_v_cur_state is
+            when IDLE =>
+                reg_disp_nt     <= (others => 'Z');
+                reg_disp_attr   <= (others => 'Z');
+                reg_disp_ptn_l  <= (others => 'Z');
+                reg_disp_ptn_h  <= (others => 'Z');
+            when AD_SET0 | AD_SET1 | REG_SET2 | AD_SET2 | AD_SET3 | REG_SET0 | REG_SET1 =>
+--                reg_disp_nt     <= (others => 'Z');
+--                reg_disp_attr   <= (others => 'Z');
+--                reg_disp_ptn_l  <= (others => 'Z');
+--                reg_disp_ptn_h  <= (others => 'Z');
+            when REG_SET3 =>
+                reg_disp_nt     <= reg_v_data;
+                reg_disp_attr   <= reg_v_data;
+                reg_disp_ptn_l  <= reg_v_data & "00000000";
+                reg_disp_ptn_h  <= reg_v_data & "00000000";
+        end case;
+    end process;
+
 
     po_ppu_status   <= (others => '0');
 

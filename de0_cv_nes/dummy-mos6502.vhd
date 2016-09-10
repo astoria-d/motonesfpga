@@ -376,7 +376,8 @@ end;
                         --step4 = scroll test and ppu reg read test.
                         if (scl_step_cnt = 0) then
                             --x scroll pos=123
-                            io_out(16#2005#, 11);
+                            --io_out(16#2005#, 11);
+                            io_out(16#2005#, 0);
                         elsif (scl_step_cnt = 1 * cpu_io_multi) then
                             --y scroll pos=100
                             io_out(16#2005#, 0);
