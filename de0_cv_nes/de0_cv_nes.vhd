@@ -71,10 +71,16 @@ architecture rtl of de0_cv_nes is
                 pi_cpu_addr    : in std_logic_vector (2 downto 0);
                 pio_cpu_d      : inout std_logic_vector (7 downto 0);
 
-                po_rd_n        : out std_logic;
-                po_wr_n        : out std_logic;
-                po_vram_addr   : out std_logic_vector (13 downto 0);
-                pio_vram_data  : inout std_logic_vector (7 downto 0)
+                po_v_rd_n       : out std_logic;
+                po_v_wr_n       : out std_logic;
+                po_v_addr       : out std_logic_vector (13 downto 0);
+                pio_v_data      : inout std_logic_vector (7 downto 0);
+
+                po_spr_ce_n     : out std_logic;
+                po_spr_rd_n     : out std_logic;
+                po_spr_wr_n     : out std_logic;
+                po_spr_addr     : out std_logic_vector (7 downto 0);
+                po_spr_data     : out std_logic_vector (7 downto 0)
     );
     end component;
 
@@ -145,8 +151,14 @@ signal wr_apu_ce_n     : std_logic;
 
 signal wr_v_rd_n        : std_logic;
 signal wr_v_wr_n        : std_logic;
-signal wr_vram_addr     : std_logic_vector (13 downto 0);
-signal wr_vram_data     : std_logic_vector (7 downto 0);
+signal wr_v_addr        : std_logic_vector (13 downto 0);
+signal wr_v_data        : std_logic_vector (7 downto 0);
+
+signal wr_spr_ce_n      : std_logic;
+signal wr_spr_rd_n      : std_logic;
+signal wr_spr_wr_n      : std_logic;
+signal wr_spr_addr      : std_logic_vector (7 downto 0);
+signal wr_spr_data      : std_logic_vector (7 downto 0);
 
 signal wr_pt_ce_n       : std_logic;
 signal wr_nt0_ce_n      : std_logic;
@@ -202,15 +214,21 @@ begin
 
             wr_v_rd_n,
             wr_v_wr_n,
-            wr_vram_addr,
-            wr_vram_data
+            wr_v_addr,
+            wr_v_data,
+
+            wr_spr_ce_n,
+            wr_spr_rd_n,
+            wr_spr_wr_n,
+            wr_spr_addr,
+            wr_spr_data
             );
 
     --vram chip select (address decode)
     vcs_inst : v_chip_selector port map (
             pi_rst_n,
             pi_base_clk, 
-            wr_vram_addr,
+            wr_v_addr,
             pi_nt_v_mirror,
             wr_pt_ce_n,
             wr_nt0_ce_n,
@@ -225,8 +243,8 @@ begin
             wr_nt0_ce_n,
             wr_v_rd_n,
             wr_v_wr_n,
-            wr_vram_addr(vram_1k - 1 downto 0),
-            wr_vram_data
+            wr_v_addr(vram_1k - 1 downto 0),
+            wr_v_data
             );
 
     --name table/attr table #1
@@ -236,8 +254,8 @@ begin
             wr_nt1_ce_n,
             wr_v_rd_n,
             wr_v_wr_n,
-            wr_vram_addr(vram_1k - 1 downto 0),
-            wr_vram_data
+            wr_v_addr(vram_1k - 1 downto 0),
+            wr_v_data
             );
 
     --palette table
@@ -246,16 +264,27 @@ begin
             wr_plt_ce_n,
             wr_v_rd_n,
             wr_v_wr_n,
-            wr_vram_addr(4 downto 0),
-            wr_vram_data
+            wr_v_addr(4 downto 0),
+            wr_v_data
             );
 
     --pattern table
     chr_rom_inst : chr_rom port map (
             pi_base_clk,
             wr_pt_ce_n,
-            wr_vram_addr(12 downto 0),
-            wr_vram_data
+            wr_v_addr(12 downto 0),
+            wr_v_data
+            );
+
+    --palette table
+    spr_ram_inst : ram generic map
+            (8, 8) port map (
+            pi_base_clk,
+            wr_spr_ce_n,
+            wr_spr_rd_n,
+            wr_spr_wr_n,
+            wr_spr_addr,
+            wr_spr_data
             );
 
     wr_rdy <= '1';

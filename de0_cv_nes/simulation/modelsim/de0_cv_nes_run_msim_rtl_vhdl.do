@@ -8,7 +8,7 @@ vmap work rtl_work
 vcom -93 -work work {../../chip_selector.vhd}
 vcom -93 -work work {../../mem/ram.vhd}
 vcom -93 -work work {../../mem/chr_rom.vhd}
-vcom -93 -work work {../../ppu.vhd}
+vcom -93 -work work {../../ppu/ppu.vhd}
 vcom -93 -work work {../../dummy-mos6502.vhd}
 
 vcom -93 -work work {../../de0_cv_nes.vhd}
@@ -41,8 +41,8 @@ add wave -label ppu_data        -radix hex sim:/testbench_motones_sim/sim_board/
 add wave -divider vram
 add wave -label v_rd_n        -radix hex sim:/testbench_motones_sim/sim_board/wr_v_rd_n;
 add wave -label v_wr_n        -radix hex sim:/testbench_motones_sim/sim_board/wr_v_wr_n;
-add wave -label vram_addr        -radix hex sim:/testbench_motones_sim/sim_board/wr_vram_addr;
-add wave -label vram_data        -radix hex sim:/testbench_motones_sim/sim_board/wr_vram_data;
+add wave -label vram_addr        -radix hex sim:/testbench_motones_sim/sim_board/wr_v_addr;
+add wave -label vram_data        -radix hex sim:/testbench_motones_sim/sim_board/wr_v_data;
 
 #add wave -radix hex sim:/testbench_motones_sim/sim_board/vram_plt_inst/*;
 

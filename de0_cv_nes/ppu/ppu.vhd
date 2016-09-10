@@ -12,10 +12,16 @@ entity ppu is
                 pi_cpu_addr    : in std_logic_vector (2 downto 0);
                 pio_cpu_d      : inout std_logic_vector (7 downto 0);
 
-                po_rd_n        : out std_logic;
-                po_wr_n        : out std_logic;
-                po_vram_addr   : out std_logic_vector (13 downto 0);
-                pio_vram_data  : inout std_logic_vector (7 downto 0)
+                po_v_rd_n       : out std_logic;
+                po_v_wr_n       : out std_logic;
+                po_v_addr       : out std_logic_vector (13 downto 0);
+                pio_v_data      : inout std_logic_vector (7 downto 0);
+
+                po_spr_ce_n     : out std_logic;
+                po_spr_rd_n     : out std_logic;
+                po_spr_wr_n     : out std_logic;
+                po_spr_addr     : out std_logic_vector (7 downto 0);
+                po_spr_data     : out std_logic_vector (7 downto 0)
     );
 end ppu;
 
@@ -47,10 +53,16 @@ signal reg_v_next_state     : vac_state;
 signal reg_spr_cur_state    : vac_state;
 signal reg_spr_next_state   : vac_state;
 
-signal reg_rd_n         : std_logic;
-signal reg_wr_n         : std_logic;
-signal reg_vram_addr    : std_logic_vector (13 downto 0);
-signal reg_vram_data    : std_logic_vector (7 downto 0);
+signal reg_v_rd_n       : std_logic;
+signal reg_v_wr_n       : std_logic;
+signal reg_v_addr       : std_logic_vector (13 downto 0);
+signal reg_v_data       : std_logic_vector (7 downto 0);
+
+signal reg_spr_ce_n       : std_logic;
+signal reg_spr_rd_n       : std_logic;
+signal reg_spr_wr_n       : std_logic;
+signal reg_spr_addr       : std_logic_vector (7 downto 0);
+signal reg_spr_data       : std_logic_vector (7 downto 0);
 
 begin
 
@@ -151,13 +163,13 @@ begin
     end process;
 
     --vram output signal...
-    po_rd_n        <= reg_rd_n;
-    po_wr_n        <= reg_wr_n;
-    po_vram_addr   <= reg_vram_addr;
-    pio_vram_data  <= reg_vram_data;
+    po_v_rd_n        <= reg_v_rd_n;
+    po_v_wr_n        <= reg_v_wr_n;
+    po_v_addr   <= reg_v_addr;
+    pio_v_data  <= reg_v_data;
 
     --vram access state machine (state transition)...
-    vac_set_stat_p : process (pi_rst_n, pi_base_clk)
+    ac_set_stat_p : process (pi_rst_n, pi_base_clk)
     begin
         if (pi_rst_n = '0') then
             reg_v_cur_state <= idle;
@@ -169,7 +181,7 @@ begin
     end process;
 
     --state change to next.
-    vac_v_next_stat_p : process (reg_v_cur_state, pi_cpu_en, pi_ce_n, pi_r_nw, pi_cpu_addr)
+    vac_next_stat_p : process (reg_v_cur_state, pi_cpu_en, pi_ce_n, pi_r_nw, pi_cpu_addr)
     begin
         case reg_v_cur_state is
             when idle =>
@@ -208,40 +220,130 @@ begin
     end process;
 
     --main vram access state machine...
-    vac_v_main_stat_p : process (reg_v_cur_state, reg_ppu_addr, reg_ppu_data)
+    vac_main_stat_p : process (reg_v_cur_state, reg_ppu_addr, reg_ppu_data)
     begin
         case reg_v_cur_state is
             when idle =>
-                reg_rd_n         <= 'Z';
-                reg_wr_n         <= 'Z';
-                reg_vram_addr    <= (others => 'Z');
-                reg_vram_data    <= (others => 'Z');
+                reg_v_rd_n         <= 'Z';
+                reg_v_wr_n         <= 'Z';
+                reg_v_addr    <= (others => 'Z');
+                reg_v_data    <= (others => 'Z');
             when reg_set =>
                 --register is set in set_ppu_p process.
-                reg_rd_n         <= '1';
-                reg_wr_n         <= '1';
-                reg_vram_addr    <= (others => 'Z');
-                reg_vram_data    <= (others => 'Z');
+                reg_v_rd_n         <= '1';
+                reg_v_wr_n         <= '1';
+                reg_v_addr    <= (others => 'Z');
+                reg_v_data    <= (others => 'Z');
             when reg_out =>
-                reg_rd_n         <= '1';
-                reg_wr_n         <= '1';
-                reg_vram_addr    <= reg_ppu_addr;
-                reg_vram_data    <= reg_ppu_data;
+                reg_v_rd_n         <= '1';
+                reg_v_wr_n         <= '1';
+                reg_v_addr    <= reg_ppu_addr;
+                reg_v_data    <= reg_ppu_data;
             when mem_write =>
-                reg_rd_n         <= '1';
-                reg_wr_n         <= '0';
-                reg_vram_addr    <= reg_ppu_addr;
-                reg_vram_data    <= reg_ppu_data;
+                reg_v_rd_n         <= '1';
+                reg_v_wr_n         <= '0';
+                reg_v_addr    <= reg_ppu_addr;
+                reg_v_data    <= reg_ppu_data;
             when write_end =>
-                reg_rd_n         <= '1';
-                reg_wr_n         <= '1';
-                reg_vram_addr    <= reg_ppu_addr;
-                reg_vram_data    <= reg_ppu_data;
+                reg_v_rd_n         <= '1';
+                reg_v_wr_n         <= '1';
+                reg_v_addr    <= reg_ppu_addr;
+                reg_v_data    <= reg_ppu_data;
             when complete =>
-                reg_rd_n         <= '1';
-                reg_wr_n         <= '1';
-                reg_vram_addr    <= (others => 'Z');
-                reg_vram_data    <= (others => 'Z');
+                reg_v_rd_n         <= '1';
+                reg_v_wr_n         <= '1';
+                reg_v_addr    <= (others => 'Z');
+                reg_v_data    <= (others => 'Z');
+        end case;
+    end process;
+
+    --sprite output signal...
+    po_spr_ce_n     <= reg_spr_ce_n;
+    po_spr_rd_n     <= reg_spr_rd_n;
+    po_spr_wr_n     <= reg_spr_wr_n;
+    po_spr_addr     <= reg_spr_addr;
+    po_spr_data     <= reg_spr_data;
+
+    --sprite state change to next.
+    sac_next_stat_p : process (reg_spr_cur_state, pi_cpu_en, pi_ce_n, pi_r_nw, pi_cpu_addr)
+    begin
+        case reg_spr_cur_state is
+            when idle =>
+                if (pi_cpu_en(1) = '1' and pi_ce_n = '0' and pi_r_nw = '0' and pi_cpu_addr = OAMDATA) then
+                    reg_spr_next_state <= reg_set;
+                else
+                    reg_spr_next_state <= reg_spr_cur_state;
+                end if;
+            when reg_set =>
+                if (pi_cpu_en(2) = '1' and pi_ce_n = '0' and pi_r_nw = '0' and pi_cpu_addr = OAMDATA) then
+                    reg_spr_next_state <= reg_out;
+                else
+                    reg_spr_next_state <= reg_spr_cur_state;
+                end if;
+            when reg_out =>
+                if (pi_cpu_en(3) = '1' and pi_ce_n = '0' and pi_r_nw = '0' and pi_cpu_addr = OAMDATA) then
+                    reg_spr_next_state <= mem_write;
+                else
+                    reg_spr_next_state <= reg_spr_cur_state;
+                end if;
+            when mem_write =>
+                if (pi_cpu_en(4) = '1' and pi_ce_n = '0' and pi_r_nw = '0' and pi_cpu_addr = OAMDATA) then
+                    reg_spr_next_state <= write_end;
+                else
+                    reg_spr_next_state <= reg_spr_cur_state;
+                end if;
+            when write_end =>
+                if (pi_cpu_en(5) = '1' and pi_ce_n = '0' and pi_r_nw = '0' and pi_cpu_addr = OAMDATA) then
+                    reg_spr_next_state <= complete;
+                else
+                    reg_spr_next_state <= reg_spr_cur_state;
+                end if;
+            when complete =>
+                    reg_spr_next_state <= idle;
+        end case;
+    end process;
+
+    --main sprite access state machine...
+    sac_main_stat_p : process (reg_spr_cur_state, reg_oam_addr, reg_oam_data)
+    begin
+        case reg_spr_cur_state is
+            when idle =>
+                reg_spr_ce_n    <= 'Z';
+                reg_spr_rd_n    <= 'Z';
+                reg_spr_wr_n    <= 'Z';
+                reg_spr_addr    <= (others => 'Z');
+                reg_spr_data    <= (others => 'Z');
+            when reg_set =>
+                --register is set in set_ppu_p process.
+                reg_spr_ce_n    <= '1';
+                reg_spr_rd_n    <= '1';
+                reg_spr_wr_n    <= '1';
+                reg_spr_addr    <= (others => 'Z');
+                reg_spr_data    <= (others => 'Z');
+            when reg_out =>
+                reg_spr_ce_n    <= '0';
+                reg_spr_rd_n    <= '1';
+                reg_spr_wr_n    <= '1';
+                reg_spr_addr    <= reg_oam_addr;
+                reg_spr_data    <= reg_oam_data;
+            when mem_write =>
+                reg_spr_ce_n    <= '0';
+                reg_spr_rd_n    <= '1';
+                reg_spr_wr_n    <= '0';
+                reg_spr_addr    <= reg_oam_addr;
+                reg_spr_data    <= reg_oam_data;
+            when write_end =>
+                reg_spr_ce_n    <= '1';
+                reg_spr_rd_n    <= '1';
+                reg_spr_wr_n    <= '1';
+                reg_spr_addr    <= reg_oam_addr;
+                reg_spr_data    <= reg_oam_data;
+            when complete =>
+                reg_spr_ce_n    <= '1';
+                reg_spr_rd_n    <= '1';
+                reg_spr_wr_n    <= '1';
+                reg_spr_addr    <= (others => 'Z');
+                reg_spr_data    <= (others => 'Z');
         end case;
     end process;
 
