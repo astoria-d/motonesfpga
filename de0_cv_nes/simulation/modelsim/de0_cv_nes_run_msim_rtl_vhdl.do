@@ -50,6 +50,8 @@ add wave -divider render
 #add wave -label vga_y       sim:/testbench_motones_sim/sim_board/render_inst/reg_vga_y;
 add wave -label nes_x       sim:/testbench_motones_sim/sim_board/render_inst/reg_nes_x;
 add wave -label nes_y       sim:/testbench_motones_sim/sim_board/render_inst/reg_nes_y;
+add wave -label wr_rnd_en  sim:/testbench_motones_sim/sim_board/wr_rnd_en;
+add wave -label reg_v_cur_state sim:/testbench_motones_sim/sim_board/render_inst/reg_v_cur_state;
 
 
 add wave -divider vga
@@ -66,9 +68,8 @@ add wave -label b       sim:/testbench_motones_sim/sim_board/po_b;
 view structure
 view signals
 
-#run 300 ns
-run 10 us
+run 4 us
 wave zoom full
 
-run 135 us
+run 162 us
 

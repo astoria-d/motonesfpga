@@ -152,7 +152,7 @@ architecture rtl of de0_cv_nes is
             po_rd_n         : out std_logic;
             po_wr_n         : out std_logic;
             po_v_addr       : out std_logic_vector (13 downto 0);
-            io_v_data       : in std_logic_vector (7 downto 0);
+            pi_v_data       : in std_logic_vector (7 downto 0);
 
             --sprite i/f
             po_spr_ce_n     : out std_logic;

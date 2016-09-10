@@ -26,7 +26,7 @@ entity render is
         po_rd_n         : out std_logic;
         po_wr_n         : out std_logic;
         po_v_addr       : out std_logic_vector (13 downto 0);
-        io_v_data       : in std_logic_vector (7 downto 0);
+        pi_v_data       : in std_logic_vector (7 downto 0);
 
         --sprite i/f
         po_spr_ce_n     : out std_logic;
@@ -169,6 +169,26 @@ signal reg_vga_y        : integer range 0 to VGA_H_MAX - 1;
 signal reg_nes_x        : integer range 0 to VGA_W_MAX / 2 - 1;
 signal reg_nes_y        : integer range 0 to VGA_W_MAX / 2 - 1;
 
+type vac_state is (
+    IDLE,
+    AD_SET0,
+    AD_SET1,
+    AD_SET2,
+    AD_SET3,
+    REG_SET0,
+    REG_SET1,
+    REG_SET2,
+    REG_SET3
+    );
+
+signal reg_v_cur_state      : vac_state;
+signal reg_v_next_state     : vac_state;
+
+signal reg_v_rd_n       : std_logic;
+signal reg_v_wr_n       : std_logic;
+signal reg_v_addr       : std_logic_vector (13 downto 0);
+signal reg_v_data       : std_logic_vector (7 downto 0);
+
 begin
 
     --position and sync signal generate.
@@ -195,7 +215,7 @@ begin
                 else
                     reg_vga_x <= reg_vga_x + 1;
                 end if;
-                
+
                 --sync signal assert.
                 if (reg_vga_x >= VGA_W + H_FP and reg_vga_x < VGA_W + H_FP + H_SP) then
                     po_h_sync_n <= '0';
@@ -208,15 +228,182 @@ begin
                 else
                     po_v_sync_n <= '1';
                 end if;
-                
+
             end if;--if (pi_rnd_en(1) = '1' or pi_rnd_en(3) = '1' ) then
         end if;--if (pi_rst_n = '0') then
     end process;
 
-    po_rd_n         <= 'Z';
-    po_wr_n         <= 'Z';
-    po_v_addr       <= (others => 'Z');
-    
+    --vram access state machine (state transition)...
+    vac_set_stat_p : process (pi_rst_n, pi_base_clk)
+    begin
+        if (pi_rst_n = '0') then
+            reg_v_cur_state <= IDLE;
+            reg_v_data    <= (others => 'Z');
+        elsif (rising_edge(pi_base_clk)) then
+            reg_v_data    <= pi_v_data;
+            reg_v_cur_state <= reg_v_next_state;
+        end if;--if (pi_rst_n = '0') then
+    end process;
+
+    --state change to next.
+    vac_next_stat_p : process (reg_v_cur_state, pi_rnd_en, pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y)
+function bg_process (
+    pm_sbg          : in std_logic;
+    pm_nes_x        : in integer range 0 to VGA_W_MAX - 1;
+    pm_nes_y        : in integer range 0 to VGA_H_MAX - 1
+    )return integer is
+begin
+    if (pm_sbg = '1'and
+        (pm_nes_x <= HSCAN or pm_nes_x >= HSCAN_NEXT_START) and
+        (pm_nes_y < VSCAN or pm_nes_y = VSCAN_NEXT_START)) then
+        return 1;
+    else
+        return 0;
+    end if;
+end;
+
+function is_idle (
+    pm_sbg          : in std_logic;
+    pm_nes_x        : in integer range 0 to VGA_W_MAX - 1;
+    pm_nes_y        : in integer range 0 to VGA_H_MAX - 1
+    )return integer is
+begin
+    if (pm_sbg = '0' or
+        (pm_nes_x > HSCAN and pm_nes_x < HSCAN_NEXT_START) or
+        (pm_nes_y >= VSCAN and pm_nes_y < VSCAN_NEXT_START)) then
+        return 1;
+    else
+        return 0;
+    end if;
+end;
+    begin
+        case reg_v_cur_state is
+            when IDLE =>
+                if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
+                    pi_rnd_en(3) = '1' and
+                    reg_nes_x mod 8 = 0) then
+                    --start vram access process.
+                    reg_v_next_state <= AD_SET0;
+                else
+                    reg_v_next_state <= reg_v_cur_state;
+                end if;
+            when AD_SET0 =>
+                if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
+                    pi_rnd_en(0) = '1'
+                ) then
+                    reg_v_next_state <= AD_SET1;
+                elsif (is_idle(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
+                    ---when nes_x=257, fall to idle
+                    reg_v_next_state <= IDLE;
+                else
+                    reg_v_next_state <= reg_v_cur_state;
+                end if;
+            when AD_SET1 =>
+                if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
+                    pi_rnd_en(1) = '1'
+                ) then
+                    reg_v_next_state <= AD_SET2;
+                else
+                    reg_v_next_state <= reg_v_cur_state;
+                end if;
+            when AD_SET2 =>
+                if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
+                    pi_rnd_en(2) = '1'
+                ) then
+                    reg_v_next_state <= AD_SET3;
+                else
+                    reg_v_next_state <= reg_v_cur_state;
+                end if;
+            when AD_SET3 =>
+                if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
+                    pi_rnd_en(3) = '1'
+                ) then
+                    reg_v_next_state <= REG_SET0;
+                else
+                    reg_v_next_state <= reg_v_cur_state;
+                end if;
+            when REG_SET0 =>
+                if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
+                    pi_rnd_en(0) = '1'
+                ) then
+                    reg_v_next_state <= REG_SET1;
+                else
+                    reg_v_next_state <= reg_v_cur_state;
+                end if;
+            when REG_SET1 =>
+                if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
+                    pi_rnd_en(1) = '1'
+                ) then
+                    reg_v_next_state <= REG_SET2;
+                else
+                    reg_v_next_state <= reg_v_cur_state;
+                end if;
+            when REG_SET2 =>
+                if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
+                    pi_rnd_en(2) = '1'
+                ) then
+                    reg_v_next_state <= REG_SET3;
+                else
+                    reg_v_next_state <= reg_v_cur_state;
+                end if;
+            when REG_SET3 =>
+                if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
+                    pi_rnd_en(3) = '1'
+                ) then
+                    reg_v_next_state <= AD_SET0;
+                else
+                    reg_v_next_state <= reg_v_cur_state;
+                end if;
+        end case;
+    end process;
+
+    po_rd_n         <= reg_v_rd_n;
+    po_wr_n         <= reg_v_wr_n;
+    po_v_addr       <= reg_v_addr;
+
+    --main vram access state machine...
+    vac_main_stat_p : process (reg_v_cur_state)
+    begin
+        case reg_v_cur_state is
+            when IDLE =>
+                reg_v_rd_n  <= 'Z';
+                reg_v_wr_n  <= 'Z';
+                reg_v_addr  <= (others => 'Z');
+            when AD_SET0 =>
+                reg_v_rd_n  <= '1';
+                reg_v_wr_n  <= '1';
+                reg_v_addr  <= (others => 'Z');
+            when AD_SET1 =>
+                reg_v_rd_n  <= '1';
+                reg_v_wr_n  <= '1';
+                reg_v_addr  <= (others => 'Z');
+            when AD_SET2 =>
+                reg_v_rd_n  <= '0';
+                reg_v_wr_n  <= '1';
+                reg_v_addr  <= (others => 'Z');
+            when AD_SET3 =>
+                reg_v_rd_n  <= '0';
+                reg_v_wr_n  <= '1';
+                reg_v_addr  <= (others => 'Z');
+            when REG_SET0 =>
+                reg_v_rd_n  <= '0';
+                reg_v_wr_n  <= '1';
+                reg_v_addr  <= (others => 'Z');
+            when REG_SET1 =>
+                reg_v_rd_n  <= '0';
+                reg_v_wr_n  <= '1';
+                reg_v_addr  <= (others => 'Z');
+            when REG_SET2 =>
+                reg_v_rd_n  <= '1';
+                reg_v_wr_n  <= '1';
+                reg_v_addr  <= (others => 'Z');
+            when REG_SET3 =>
+                reg_v_rd_n  <= '1';
+                reg_v_wr_n  <= '1';
+                reg_v_addr  <= (others => 'Z');
+        end case;
+    end process;
+
     po_ppu_status   <= (others => '0');
 
     po_spr_ce_n     <= 'Z';
