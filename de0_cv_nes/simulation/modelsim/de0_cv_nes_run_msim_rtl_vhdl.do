@@ -60,13 +60,16 @@ add wave -label disp_attr   -radix hex sim:/testbench_motones_sim/sim_board/rend
 add wave -label disp_ptn_l -radix hex sim:/testbench_motones_sim/sim_board/render_inst/reg_disp_ptn_l;
 add wave -label disp_ptn_h -radix hex sim:/testbench_motones_sim/sim_board/render_inst/reg_disp_ptn_h;
 
+add wave -label plt_addr -radix hex sim:/testbench_motones_sim/sim_board/render_inst/reg_plt_addr;
+add wave -label plt_data -radix hex sim:/testbench_motones_sim/sim_board/render_inst/reg_plt_data;
+
 
 add wave -divider vga
 add wave -label h_sync_n       sim:/testbench_motones_sim/sim_board/po_h_sync_n;
 add wave -label v_sync_n    sim:/testbench_motones_sim/sim_board/po_v_sync_n;
-add wave -label r       sim:/testbench_motones_sim/sim_board/po_r;
-add wave -label g       sim:/testbench_motones_sim/sim_board/po_g;
-add wave -label b       sim:/testbench_motones_sim/sim_board/po_b;
+add wave -label r -radix hex sim:/testbench_motones_sim/sim_board/po_r;
+add wave -label g -radix hex sim:/testbench_motones_sim/sim_board/po_g;
+add wave -label b -radix hex sim:/testbench_motones_sim/sim_board/po_b;
 
 
 #add wave -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/reg*;

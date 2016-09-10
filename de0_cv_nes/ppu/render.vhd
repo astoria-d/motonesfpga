@@ -463,7 +463,6 @@ end;
             reg_disp_attr   <= (others => 'Z');
         elsif (rising_edge(pi_base_clk)) then
             reg_v_data      <= pi_v_data;
-            reg_plt_data    <= pi_plt_data;
 
             if (is_bg(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
                 ----fetch next tile byte.
@@ -546,13 +545,52 @@ end;
     plt_ac_p : process (pi_rst_n, pi_base_clk)
     begin
         if (pi_rst_n = '0') then
+            reg_plt_addr    <= (others => 'Z');
+            reg_plt_data    <= (others => 'Z');
         elsif (rising_edge(pi_base_clk)) then
+            
+            reg_plt_data    <= pi_plt_data;
+            
             if (is_bg(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
+                if (conv_std_logic_vector(reg_nes_y, 9)(4) = '0'
+                    and (reg_disp_ptn_h(0) or reg_disp_ptn_l(0)) = '1') then
+                    reg_plt_addr <=
+                            "0" & reg_disp_attr(1 downto 0) & reg_disp_ptn_h(0) & reg_disp_ptn_l(0);
+                elsif (conv_std_logic_vector(reg_nes_y, 9)(4) = '1'
+                    and (reg_disp_ptn_h(0) or reg_disp_ptn_l(0)) = '1') then
+                    reg_plt_addr <=
+                            "0" & reg_disp_attr(5 downto 4) & reg_disp_ptn_h(0) & reg_disp_ptn_l(0);
+                else
+                    ---else: no output color >> universal bg color output.
+                    --0x3f00 is the universal bg palette.
+                    reg_plt_addr <= (others => '0');
+                end if;
             end if;
         end if;--if (pi_rst_n = '0') then
     end process;
 
-    reg_plt_addr <= (others => 'Z');
+    rgb_out_p : process (pi_rst_n, pi_base_clk)
+    begin
+        if (pi_rst_n = '0') then
+            po_b <= (others => '0');
+            po_g <= (others => '0');
+            po_r <= (others => '0');
+        else
+            if (rising_edge(pi_base_clk)) then
+                if (reg_nes_x < HSCAN and reg_nes_y < VSCAN) then
+                    --if or if not bg/sprite is shown, output color anyway 
+                    --sinse universal bg color is included..
+                    po_b <= nes_color_palette(conv_integer(reg_plt_data(5 downto 0))) (11 downto 8);
+                    po_g <= nes_color_palette(conv_integer(reg_plt_data(5 downto 0))) (7 downto 4);
+                    po_r <= nes_color_palette(conv_integer(reg_plt_data(5 downto 0))) (3 downto 0);
+                else
+                    po_b <= (others => '0');
+                    po_g <= (others => '0');
+                    po_r <= (others => '0');
+                end if;
+            end if; --if (rising_edge(emu_ppu_clk)) then
+        end if;--if (rst_n = '0') then
+    end process;--output_p
 
     po_ppu_status   <= (others => '0');
 
@@ -561,8 +599,5 @@ end;
     po_spr_wr_n     <= 'Z';
     po_spr_addr     <= (others => 'Z');
 
-    po_r           <= (others => 'Z');
-    po_g           <= (others => 'Z');
-    po_b           <= (others => 'Z');
 end rtl;
 
