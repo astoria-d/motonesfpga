@@ -12,10 +12,17 @@ entity ppu is
                 pi_cpu_addr    : in std_logic_vector (2 downto 0);
                 pio_cpu_d      : inout std_logic_vector (7 downto 0);
 
+                po_v_ce_n       : out std_logic;
                 po_v_rd_n       : out std_logic;
                 po_v_wr_n       : out std_logic;
                 po_v_addr       : out std_logic_vector (13 downto 0);
                 pio_v_data      : inout std_logic_vector (7 downto 0);
+
+                po_plt_ce_n     : out std_logic;
+                po_plt_rd_n     : out std_logic;
+                po_plt_wr_n     : out std_logic;
+                po_plt_addr     : out std_logic_vector (4 downto 0);
+                pio_plt_data    : inout std_logic_vector (7 downto 0);
 
                 po_spr_ce_n     : out std_logic;
                 po_spr_rd_n     : out std_logic;
@@ -58,10 +65,13 @@ signal reg_v_next_state     : vac_state;
 signal reg_spr_cur_state    : vac_state;
 signal reg_spr_next_state   : vac_state;
 
+signal reg_v_ce_n       : std_logic;
 signal reg_v_rd_n       : std_logic;
 signal reg_v_wr_n       : std_logic;
 signal reg_v_addr       : std_logic_vector (13 downto 0);
 signal reg_v_data       : std_logic_vector (7 downto 0);
+
+signal reg_plt_ce_n       : std_logic;
 
 signal reg_spr_ce_n       : std_logic;
 signal reg_spr_rd_n       : std_logic;
@@ -172,10 +182,17 @@ begin
     end process;
 
     --vram output signal...
-    po_v_rd_n        <= reg_v_rd_n;
-    po_v_wr_n        <= reg_v_wr_n;
-    po_v_addr   <= reg_v_addr;
-    pio_v_data  <= reg_v_data;
+    po_v_ce_n       <= reg_v_ce_n;
+    po_v_rd_n       <= reg_v_rd_n;
+    po_v_wr_n       <= reg_v_wr_n;
+    po_v_addr       <= reg_v_addr;
+    pio_v_data      <= reg_v_data;
+
+    po_plt_ce_n     <= reg_plt_ce_n;
+    po_plt_rd_n     <= reg_v_rd_n;
+    po_plt_wr_n     <= reg_v_wr_n;
+    po_plt_addr     <= reg_v_addr(4 downto 0);
+    pio_plt_data    <= reg_v_data;
 
     --vram access state machine (state transition)...
     ac_set_stat_p : process (pi_rst_n, pi_base_clk)
@@ -233,36 +250,63 @@ begin
     begin
         case reg_v_cur_state is
             when idle =>
-                reg_v_rd_n         <= 'Z';
-                reg_v_wr_n         <= 'Z';
-                reg_v_addr    <= (others => 'Z');
-                reg_v_data    <= (others => 'Z');
+                reg_v_ce_n      <= 'Z';
+                reg_v_rd_n      <= 'Z';
+                reg_v_wr_n      <= 'Z';
+                reg_v_addr      <= (others => 'Z');
+                reg_v_data      <= (others => 'Z');
+                reg_plt_ce_n    <= 'Z';
             when reg_set =>
                 --register is set in set_ppu_p process.
-                reg_v_rd_n         <= '1';
-                reg_v_wr_n         <= '1';
+                reg_v_ce_n      <= '1';
+                reg_v_rd_n      <= '1';
+                reg_v_wr_n      <= '1';
                 reg_v_addr    <= (others => 'Z');
                 reg_v_data    <= (others => 'Z');
+                reg_plt_ce_n    <= '1';
             when reg_out =>
-                reg_v_rd_n         <= '1';
-                reg_v_wr_n         <= '1';
+                if (reg_ppu_addr(13 downto 8) = "111111") then
+                    reg_v_ce_n      <= '1';
+                    reg_plt_ce_n    <= '0';
+                else
+                    reg_plt_ce_n    <= '1';
+                    reg_v_ce_n      <= '0';
+                end if;
+                reg_v_rd_n      <= '1';
+                reg_v_wr_n      <= '1';
                 reg_v_addr    <= reg_ppu_addr;
                 reg_v_data    <= reg_ppu_data;
             when mem_write =>
-                reg_v_rd_n         <= '1';
-                reg_v_wr_n         <= '0';
+                if (reg_ppu_addr(13 downto 8) = "111111") then
+                    reg_v_ce_n      <= '1';
+                    reg_plt_ce_n    <= '0';
+                else
+                    reg_plt_ce_n    <= '1';
+                    reg_v_ce_n      <= '0';
+                end if;
+                reg_v_rd_n      <= '1';
+                reg_v_wr_n      <= '0';
                 reg_v_addr    <= reg_ppu_addr;
                 reg_v_data    <= reg_ppu_data;
             when write_end =>
-                reg_v_rd_n         <= '1';
-                reg_v_wr_n         <= '1';
+                if (reg_ppu_addr(13 downto 8) = "111111") then
+                    reg_v_ce_n      <= '1';
+                    reg_plt_ce_n    <= '0';
+                else
+                    reg_plt_ce_n    <= '1';
+                    reg_v_ce_n      <= '0';
+                end if;
+                reg_v_rd_n      <= '1';
+                reg_v_wr_n      <= '1';
                 reg_v_addr    <= reg_ppu_addr;
                 reg_v_data    <= reg_ppu_data;
             when complete =>
-                reg_v_rd_n         <= '1';
-                reg_v_wr_n         <= '1';
+                reg_v_ce_n      <= '1';
+                reg_v_rd_n      <= '1';
+                reg_v_wr_n      <= '1';
                 reg_v_addr    <= (others => 'Z');
                 reg_v_data    <= (others => 'Z');
+                reg_plt_ce_n    <= '1';
         end case;
     end process;
 

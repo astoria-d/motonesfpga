@@ -23,10 +23,18 @@ entity render is
         pi_ppu_scroll_y    : in std_logic_vector (7 downto 0);
 
         --vram i/f
-        po_rd_n         : out std_logic;
-        po_wr_n         : out std_logic;
+        po_v_ce_n       : out std_logic;
+        po_v_rd_n       : out std_logic;
+        po_v_wr_n       : out std_logic;
         po_v_addr       : out std_logic_vector (13 downto 0);
         pi_v_data       : in std_logic_vector (7 downto 0);
+
+        --plt i/f
+        po_plt_ce_n     : out std_logic;
+        po_plt_rd_n     : out std_logic;
+        po_plt_wr_n     : out std_logic;
+        po_plt_addr     : out std_logic_vector (4 downto 0);
+        pi_plt_data     : in std_logic_vector (7 downto 0);
 
         --sprite i/f
         po_spr_ce_n     : out std_logic;
@@ -165,6 +173,21 @@ constant nes_color_palette : nes_color_array := (
         conv_std_logic_vector(16#000#, 12)
         );
 
+function is_bg (
+    pm_sbg          : in std_logic;
+    pm_nes_x        : in integer range 0 to VGA_W_MAX - 1;
+    pm_nes_y        : in integer range 0 to VGA_H_MAX - 1
+    )return integer is
+begin
+    if (pm_sbg = '1'and
+        (pm_nes_x <= HSCAN or pm_nes_x >= HSCAN_NEXT_START) and
+        (pm_nes_y < VSCAN or pm_nes_y = VSCAN_NEXT_START)) then
+        return 1;
+    else
+        return 0;
+    end if;
+end;
+
 signal reg_vga_x        : integer range 0 to VGA_W_MAX - 1;
 signal reg_vga_y        : integer range 0 to VGA_H_MAX - 1;
 
@@ -189,6 +212,7 @@ type vac_state is (
 signal reg_v_cur_state      : vac_state;
 signal reg_v_next_state     : vac_state;
 
+signal reg_v_ce_n       : std_logic;
 signal reg_v_rd_n       : std_logic;
 signal reg_v_wr_n       : std_logic;
 signal reg_v_addr       : std_logic_vector (13 downto 0);
@@ -198,6 +222,12 @@ signal reg_disp_nt          : std_logic_vector (7 downto 0);
 signal reg_disp_attr        : std_logic_vector (7 downto 0);
 signal reg_disp_ptn_l       : std_logic_vector (15 downto 0);
 signal reg_disp_ptn_h       : std_logic_vector (15 downto 0);
+
+signal reg_plt_ce_n       : std_logic;
+signal reg_plt_rd_n       : std_logic;
+signal reg_plt_wr_n       : std_logic;
+signal reg_plt_addr       : std_logic_vector (4 downto 0);
+signal reg_plt_data       : std_logic_vector (7 downto 0);
 
 begin
 
@@ -384,9 +414,15 @@ end;
         end case;
     end process;
 
-    po_rd_n         <= reg_v_rd_n;
-    po_wr_n         <= reg_v_wr_n;
+    po_v_ce_n       <= reg_v_ce_n;
+    po_v_rd_n       <= reg_v_rd_n;
+    po_v_wr_n       <= reg_v_wr_n;
     po_v_addr       <= reg_v_addr;
+
+    po_plt_ce_n     <= reg_plt_ce_n;
+    po_plt_rd_n     <= reg_plt_rd_n;
+    po_plt_wr_n     <= reg_plt_wr_n;
+    po_plt_addr     <= reg_plt_addr;
 
     --vram r/w selector state machine...
     vac_main_stat_p : process (reg_v_cur_state)
@@ -402,24 +438,23 @@ end;
                 reg_v_rd_n  <= '0';
                 reg_v_wr_n  <= '1';
         end case;
+
+        case reg_v_cur_state is
+            when IDLE =>
+                reg_v_ce_n  <= 'Z';
+                reg_plt_ce_n <= 'Z';
+                reg_plt_rd_n <= 'Z';
+                reg_plt_wr_n <= 'Z'; 
+            when AD_SET0 | AD_SET1 | REG_SET2 | REG_SET3 | AD_SET2 | AD_SET3 | REG_SET0 | REG_SET1 =>
+                reg_v_ce_n  <= '0';
+                reg_plt_ce_n <= '0';
+                reg_plt_rd_n <= '0';
+                reg_plt_wr_n <= '1'; 
+        end case;
     end process;
 
     --vram address state machine...
     vaddr_stat_p : process (pi_rst_n, pi_base_clk)
-function is_bg (
-    pm_sbg          : in std_logic;
-    pm_nes_x        : in integer range 0 to VGA_W_MAX - 1;
-    pm_nes_y        : in integer range 0 to VGA_H_MAX - 1
-    )return integer is
-begin
-    if (pm_sbg = '1'and
-        (pm_nes_x <= HSCAN or pm_nes_x >= HSCAN_NEXT_START) and
-        (pm_nes_y < VSCAN or pm_nes_y = VSCAN_NEXT_START)) then
-        return 1;
-    else
-        return 0;
-    end if;
-end;
     begin
         if (pi_rst_n = '0') then
             reg_v_addr  <= (others => 'Z');
@@ -427,8 +462,9 @@ end;
             reg_disp_nt     <= (others => 'Z');
             reg_disp_attr   <= (others => 'Z');
         elsif (rising_edge(pi_base_clk)) then
-            reg_v_data    <= pi_v_data;
-            
+            reg_v_data      <= pi_v_data;
+            reg_plt_data    <= pi_plt_data;
+
             if (is_bg(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
                 ----fetch next tile byte.
                 if (reg_prf_x mod 8 = 1) then
@@ -475,22 +511,8 @@ end;
         end if;--if (pi_rst_n = '0') then
     end process;
 
-    --vram address state machine...
+    --pattern table state machine...
     bg_ptn_p : process (pi_rst_n, pi_base_clk)
-function is_bg (
-    pm_sbg          : in std_logic;
-    pm_nes_x        : in integer range 0 to VGA_W_MAX - 1;
-    pm_nes_y        : in integer range 0 to VGA_H_MAX - 1
-    )return integer is
-begin
-    if (pm_sbg = '1'and
-        (pm_nes_x <= HSCAN or pm_nes_x >= HSCAN_NEXT_START) and
-        (pm_nes_y < VSCAN or pm_nes_y = VSCAN_NEXT_START)) then
-        return 1;
-    else
-        return 0;
-    end if;
-end;
     begin
         if (pi_rst_n = '0') then
             reg_disp_ptn_l  <= (others => '0');
@@ -519,6 +541,18 @@ end;
             end if;
         end if;--if (pi_rst_n = '0') then
     end process;
+
+    --palette table state machine...
+    plt_ac_p : process (pi_rst_n, pi_base_clk)
+    begin
+        if (pi_rst_n = '0') then
+        elsif (rising_edge(pi_base_clk)) then
+            if (is_bg(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
+            end if;
+        end if;--if (pi_rst_n = '0') then
+    end process;
+
+    reg_plt_addr <= (others => 'Z');
 
     po_ppu_status   <= (others => '0');
 

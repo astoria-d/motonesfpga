@@ -71,10 +71,17 @@ architecture rtl of de0_cv_nes is
                 pi_cpu_addr    : in std_logic_vector (2 downto 0);
                 pio_cpu_d      : inout std_logic_vector (7 downto 0);
 
+                po_v_ce_n       : out std_logic;
                 po_v_rd_n       : out std_logic;
                 po_v_wr_n       : out std_logic;
                 po_v_addr       : out std_logic_vector (13 downto 0);
                 pio_v_data      : inout std_logic_vector (7 downto 0);
+
+                po_plt_ce_n     : out std_logic;
+                po_plt_rd_n     : out std_logic;
+                po_plt_wr_n     : out std_logic;
+                po_plt_addr     : out std_logic_vector (4 downto 0);
+                pio_plt_data    : inout std_logic_vector (7 downto 0);
 
                 po_spr_ce_n     : out std_logic;
                 po_spr_rd_n     : out std_logic;
@@ -126,12 +133,12 @@ architecture rtl of de0_cv_nes is
         port (
                     pi_rst_n        : in std_logic;
                     pi_base_clk     : in std_logic;
+                    pi_v_ce_n       : in std_logic;
                     pi_v_addr       : in std_logic_vector (13 downto 0);
                     pi_nt_v_mirror  : in std_logic;
                     po_pt_ce_n      : out std_logic;
                     po_nt0_ce_n     : out std_logic;
-                    po_nt1_ce_n     : out std_logic;
-                    po_plt_ce_n     : out std_logic
+                    po_nt1_ce_n     : out std_logic
             );
     end component;
 
@@ -149,10 +156,18 @@ architecture rtl of de0_cv_nes is
             pi_ppu_scroll_y    : in std_logic_vector (7 downto 0);
 
             --vram i/f
-            po_rd_n         : out std_logic;
-            po_wr_n         : out std_logic;
+            po_v_ce_n       : out std_logic;
+            po_v_rd_n       : out std_logic;
+            po_v_wr_n       : out std_logic;
             po_v_addr       : out std_logic_vector (13 downto 0);
             pi_v_data       : in std_logic_vector (7 downto 0);
+
+            --plt i/f
+            po_plt_ce_n     : out std_logic;
+            po_plt_rd_n     : out std_logic;
+            po_plt_wr_n     : out std_logic;
+            po_plt_addr     : out std_logic_vector (4 downto 0);
+            pi_plt_data     : in std_logic_vector (7 downto 0);
 
             --sprite i/f
             po_spr_ce_n     : out std_logic;
@@ -190,10 +205,17 @@ signal wr_ram_ce_n     : std_logic;
 signal wr_ppu_ce_n     : std_logic;
 signal wr_apu_ce_n     : std_logic;
 
+signal wr_v_ce_n        : std_logic;
 signal wr_v_rd_n        : std_logic;
 signal wr_v_wr_n        : std_logic;
 signal wr_v_addr        : std_logic_vector (13 downto 0);
 signal wr_v_data        : std_logic_vector (7 downto 0);
+
+signal wr_plt_ce_n      : std_logic;
+signal wr_plt_rd_n      : std_logic;
+signal wr_plt_wr_n      : std_logic;
+signal wr_plt_addr      : std_logic_vector (4 downto 0);
+signal wr_plt_data      : std_logic_vector (7 downto 0);
 
 signal wr_spr_ce_n      : std_logic;
 signal wr_spr_rd_n      : std_logic;
@@ -204,7 +226,6 @@ signal wr_spr_data      : std_logic_vector (7 downto 0);
 signal wr_pt_ce_n       : std_logic;
 signal wr_nt0_ce_n      : std_logic;
 signal wr_nt1_ce_n      : std_logic;
-signal wr_plt_ce_n      : std_logic;
 
 signal wr_ppu_ctrl          : std_logic_vector (7 downto 0);
 signal wr_ppu_mask          : std_logic_vector (7 downto 0);
@@ -258,10 +279,17 @@ begin
             wr_addr(2 downto 0), 
             wr_d_io,
 
+            wr_v_ce_n,
             wr_v_rd_n,
             wr_v_wr_n,
             wr_v_addr,
             wr_v_data,
+
+            wr_plt_ce_n,
+            wr_plt_rd_n,
+            wr_plt_wr_n,
+            wr_plt_addr,
+            wr_plt_data,
 
             wr_spr_ce_n,
             wr_spr_rd_n,
@@ -280,13 +308,13 @@ begin
     --vram chip select (address decode)
     vcs_inst : v_chip_selector port map (
             pi_rst_n,
-            pi_base_clk, 
+            pi_base_clk,
+            wr_v_ce_n,
             wr_v_addr,
             pi_nt_v_mirror,
             wr_pt_ce_n,
             wr_nt0_ce_n,
-            wr_nt1_ce_n,
-            wr_plt_ce_n
+            wr_nt1_ce_n
             );
 
     --name table/attr table #0
@@ -315,10 +343,10 @@ begin
     vram_plt_inst : palette_ram port map (
             pi_base_clk,
             wr_plt_ce_n,
-            wr_v_rd_n,
-            wr_v_wr_n,
-            wr_v_addr(4 downto 0),
-            wr_v_data
+            wr_plt_rd_n,
+            wr_plt_wr_n,
+            wr_plt_addr,
+            wr_plt_data
             );
 
     --pattern table
@@ -354,10 +382,18 @@ begin
             wr_ppu_scroll_y,
 
             --vram i/f
+            wr_v_ce_n,
             wr_v_rd_n,
             wr_v_wr_n,
             wr_v_addr,
             wr_v_data,
+
+            --plt i/f
+            wr_plt_ce_n,
+            wr_plt_rd_n,
+            wr_plt_wr_n,
+            wr_plt_addr,
+            wr_plt_data,
 
             --sprite i/f
             wr_spr_ce_n,
