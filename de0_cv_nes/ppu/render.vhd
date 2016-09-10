@@ -424,6 +424,8 @@ end;
         if (pi_rst_n = '0') then
             reg_v_addr  <= (others => 'Z');
             reg_v_data    <= (others => 'Z');
+            reg_disp_nt     <= (others => 'Z');
+            reg_disp_attr   <= (others => 'Z');
         elsif (rising_edge(pi_base_clk)) then
             reg_v_data    <= pi_v_data;
             
@@ -437,6 +439,10 @@ end;
                             & conv_std_logic_vector(reg_prf_x, 9)(7 downto 3);
                     reg_v_addr(13 downto 10) <= "10" & pi_ppu_ctrl(PPUBNA downto 0)
                                                     + ("000" & conv_std_logic_vector(reg_prf_x, 9)(8));
+                
+                elsif (reg_prf_x mod 8 = 2 and reg_v_cur_state = REG_SET0) then
+                    reg_disp_nt     <= reg_v_data;
+                
                 ----fetch attr table byte.
                 elsif (reg_prf_x mod 8 = 3) then
                     --attr table at 0x23c0
@@ -446,12 +452,17 @@ end;
                     reg_v_addr(13 downto 8) <= "10" &
                             pi_ppu_ctrl(PPUBNA downto 0) & "11"
                                 + ("000" & conv_std_logic_vector(reg_prf_x, 9)(8) & "00");
+                
+                elsif (reg_prf_x mod 8 = 4 and reg_v_cur_state = REG_SET0) then
+                    reg_disp_attr   <= reg_v_data;
+
                 ----fetch pattern table low byte.
                 elsif (reg_prf_x mod 8 = 5) then
                      --vram addr is incremented every 8 cycle.
                      reg_v_addr <= "0" & pi_ppu_ctrl(PPUBPA) &
                                           reg_disp_nt(7 downto 0)
                                         & "0" & conv_std_logic_vector(reg_prf_y, 9)(2 downto 0);
+
                 ----fetch pattern table high byte.
                 elsif (reg_prf_x mod 8 = 7) then
                      --vram addr is incremented every 8 cycle.
@@ -464,28 +475,50 @@ end;
         end if;--if (pi_rst_n = '0') then
     end process;
 
-    --vram r/w selector state machine...
-    bg_main_stat_p : process (reg_v_cur_state, reg_v_data)
+    --vram address state machine...
+    bg_ptn_p : process (pi_rst_n, pi_base_clk)
+function is_bg (
+    pm_sbg          : in std_logic;
+    pm_nes_x        : in integer range 0 to VGA_W_MAX - 1;
+    pm_nes_y        : in integer range 0 to VGA_H_MAX - 1
+    )return integer is
+begin
+    if (pm_sbg = '1'and
+        (pm_nes_x <= HSCAN or pm_nes_x >= HSCAN_NEXT_START) and
+        (pm_nes_y < VSCAN or pm_nes_y = VSCAN_NEXT_START)) then
+        return 1;
+    else
+        return 0;
+    end if;
+end;
     begin
-        case reg_v_cur_state is
-            when IDLE =>
-                reg_disp_nt     <= (others => 'Z');
-                reg_disp_attr   <= (others => 'Z');
-                reg_disp_ptn_l  <= (others => 'Z');
-                reg_disp_ptn_h  <= (others => 'Z');
-            when AD_SET0 | AD_SET1 | REG_SET2 | AD_SET2 | AD_SET3 | REG_SET0 | REG_SET1 =>
---                reg_disp_nt     <= (others => 'Z');
---                reg_disp_attr   <= (others => 'Z');
---                reg_disp_ptn_l  <= (others => 'Z');
---                reg_disp_ptn_h  <= (others => 'Z');
-            when REG_SET3 =>
-                reg_disp_nt     <= reg_v_data;
-                reg_disp_attr   <= reg_v_data;
-                reg_disp_ptn_l  <= reg_v_data & "00000000";
-                reg_disp_ptn_h  <= reg_v_data & "00000000";
-        end case;
-    end process;
+        if (pi_rst_n = '0') then
+            reg_disp_ptn_l  <= (others => '0');
+            reg_disp_ptn_h  <= (others => '0');
+        elsif (rising_edge(pi_base_clk)) then
 
+            if (is_bg(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
+                if (reg_v_cur_state = REG_SET0) then
+                    if (reg_prf_x mod 8 = 6) then
+                        reg_disp_ptn_l   <= reg_v_data & reg_disp_ptn_l(7 downto 0);
+                    else
+                        reg_disp_ptn_l   <= "0" & reg_disp_ptn_l(15 downto 1);
+                    end if;
+
+                    if (reg_prf_x mod 8 = 0) then
+                        reg_disp_ptn_h   <= reg_v_data & reg_disp_ptn_h(7 downto 0);
+                    else
+                        reg_disp_ptn_h   <= "0" & reg_disp_ptn_h(15 downto 1);
+                    end if;
+
+                elsif (reg_v_cur_state = AD_SET0) then
+                    reg_disp_ptn_l   <= "0" & reg_disp_ptn_l(15 downto 1);
+                    reg_disp_ptn_h   <= "0" & reg_disp_ptn_h(15 downto 1);
+
+                end if;
+            end if;
+        end if;--if (pi_rst_n = '0') then
+    end process;
 
     po_ppu_status   <= (others => '0');
 
