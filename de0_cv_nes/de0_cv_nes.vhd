@@ -245,128 +245,128 @@ begin
             wr_rnd_en
             );
 
-    --mos 6502 cpu instance
-    cpu_inst : mos6502 port map (
-            pi_rst_n, 
-            pi_base_clk, 
-            wr_cpu_en, 
-            wr_rdy,
-            wr_irq_n, 
-            wr_nmi_n, 
-            wr_r_nw, 
-            wr_addr, 
-            wr_d_io
-            );
-
-    --chip select (address decode)
-    cs_inst : chip_selector port map (
-            pi_rst_n,
-            pi_base_clk, 
-            wr_addr,
-            wr_rom_ce_n,
-            wr_ram_ce_n,
-            wr_ppu_ce_n,
-            wr_apu_ce_n
-            );
-
-    --ppu
-    ppu_inst : ppu port map (
-            pi_rst_n, 
-            pi_base_clk, 
-            wr_cpu_en,
-            wr_ppu_ce_n,
-            wr_r_nw, 
-            wr_addr(2 downto 0), 
-            wr_d_io,
-
-            wr_v_ce_n,
-            wr_v_rd_n,
-            wr_v_wr_n,
-            wr_v_addr,
-            wr_v_data,
-
-            wr_plt_ce_n,
-            wr_plt_rd_n,
-            wr_plt_wr_n,
-            wr_plt_addr,
-            wr_plt_data,
-
-            wr_spr_ce_n,
-            wr_spr_rd_n,
-            wr_spr_wr_n,
-            wr_spr_addr,
-            wr_spr_data,
-
-            --render i/f
-            wr_ppu_ctrl,
-            wr_ppu_mask,
-            wr_ppu_status,
-            wr_ppu_scroll_x,
-            wr_ppu_scroll_y
-            );
-
-    --vram chip select (address decode)
-    vcs_inst : v_chip_selector port map (
-            pi_rst_n,
-            pi_base_clk,
-            wr_v_ce_n,
-            wr_v_addr,
-            pi_nt_v_mirror,
-            wr_pt_ce_n,
-            wr_nt0_ce_n,
-            wr_nt1_ce_n
-            );
-
-    --name table/attr table #0
-    vram_nt0_inst : ram generic map
-        (vram_1k, 8) port map (
-            pi_base_clk,
-            wr_nt0_ce_n,
-            wr_v_rd_n,
-            wr_v_wr_n,
-            wr_v_addr(vram_1k - 1 downto 0),
-            wr_v_data
-            );
-
-    --name table/attr table #1
-    vram_nt1_inst : ram generic map
-        (vram_1k, 8) port map (
-            pi_base_clk,
-            wr_nt1_ce_n,
-            wr_v_rd_n,
-            wr_v_wr_n,
-            wr_v_addr(vram_1k - 1 downto 0),
-            wr_v_data
-            );
-
-    --palette table
-    vram_plt_inst : palette_ram port map (
-            pi_base_clk,
-            wr_plt_ce_n,
-            wr_plt_rd_n,
-            wr_plt_wr_n,
-            wr_plt_addr,
-            wr_plt_data
-            );
-
-    --pattern table
-    chr_rom_inst : chr_rom port map (
-            pi_base_clk,
-            wr_pt_ce_n,
-            wr_v_addr(12 downto 0),
-            wr_v_data
-            );
-
-    --palette table
-    spr_ram_inst : ram generic map
-            (8, 8) port map (
-            pi_base_clk,
-            wr_spr_ce_n,
-            wr_spr_rd_n,
-            wr_spr_wr_n,
-            wr_spr_addr,
-            wr_spr_data
-            );
+--    --mos 6502 cpu instance
+--    cpu_inst : mos6502 port map (
+--            pi_rst_n, 
+--            pi_base_clk, 
+--            wr_cpu_en, 
+--            wr_rdy,
+--            wr_irq_n, 
+--            wr_nmi_n, 
+--            wr_r_nw, 
+--            wr_addr, 
+--            wr_d_io
+--            );
+--
+--    --chip select (address decode)
+--    cs_inst : chip_selector port map (
+--            pi_rst_n,
+--            pi_base_clk, 
+--            wr_addr,
+--            wr_rom_ce_n,
+--            wr_ram_ce_n,
+--            wr_ppu_ce_n,
+--            wr_apu_ce_n
+--            );
+--
+--    --ppu
+--    ppu_inst : ppu port map (
+--            pi_rst_n, 
+--            pi_base_clk, 
+--            wr_cpu_en,
+--            wr_ppu_ce_n,
+--            wr_r_nw, 
+--            wr_addr(2 downto 0), 
+--            wr_d_io,
+--
+--            wr_v_ce_n,
+--            wr_v_rd_n,
+--            wr_v_wr_n,
+--            wr_v_addr,
+--            wr_v_data,
+--
+--            wr_plt_ce_n,
+--            wr_plt_rd_n,
+--            wr_plt_wr_n,
+--            wr_plt_addr,
+--            wr_plt_data,
+--
+--            wr_spr_ce_n,
+--            wr_spr_rd_n,
+--            wr_spr_wr_n,
+--            wr_spr_addr,
+--            wr_spr_data,
+--
+--            --render i/f
+--            wr_ppu_ctrl,
+--            wr_ppu_mask,
+--            wr_ppu_status,
+--            wr_ppu_scroll_x,
+--            wr_ppu_scroll_y
+--            );
+--
+--    --vram chip select (address decode)
+--    vcs_inst : v_chip_selector port map (
+--            pi_rst_n,
+--            pi_base_clk,
+--            wr_v_ce_n,
+--            wr_v_addr,
+--            pi_nt_v_mirror,
+--            wr_pt_ce_n,
+--            wr_nt0_ce_n,
+--            wr_nt1_ce_n
+--            );
+--
+--    --name table/attr table #0
+--    vram_nt0_inst : ram generic map
+--        (vram_1k, 8) port map (
+--            pi_base_clk,
+--            wr_nt0_ce_n,
+--            wr_v_rd_n,
+--            wr_v_wr_n,
+--            wr_v_addr(vram_1k - 1 downto 0),
+--            wr_v_data
+--            );
+--
+--    --name table/attr table #1
+--    vram_nt1_inst : ram generic map
+--        (vram_1k, 8) port map (
+--            pi_base_clk,
+--            wr_nt1_ce_n,
+--            wr_v_rd_n,
+--            wr_v_wr_n,
+--            wr_v_addr(vram_1k - 1 downto 0),
+--            wr_v_data
+--            );
+--
+--    --palette table
+--    vram_plt_inst : palette_ram port map (
+--            pi_base_clk,
+--            wr_plt_ce_n,
+--            wr_plt_rd_n,
+--            wr_plt_wr_n,
+--            wr_plt_addr,
+--            wr_plt_data
+--            );
+--
+--    --pattern table
+--    chr_rom_inst : chr_rom port map (
+--            pi_base_clk,
+--            wr_pt_ce_n,
+--            wr_v_addr(12 downto 0),
+--            wr_v_data
+--            );
+--
+--    --palette table
+--    spr_ram_inst : ram generic map
+--            (8, 8) port map (
+--            pi_base_clk,
+--            wr_spr_ce_n,
+--            wr_spr_rd_n,
+--            wr_spr_wr_n,
+--            wr_spr_addr,
+--            wr_spr_data
+--            );
 
     --vga render instance
     render_inst : render port map (

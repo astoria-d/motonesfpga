@@ -245,13 +245,17 @@ begin
             if ((pi_rnd_en(0) or pi_rnd_en(2))= '1') then
                 if (reg_vga_x = VGA_W_MAX - 1) then
                     reg_vga_x <= 0;
+                    reg_nes_x <= 0;
                     if (reg_vga_x = VGA_H_MAX - 1) then
                         reg_vga_y <= 0;
+                        reg_nes_y <= 0;
                     else
                         reg_vga_y <= reg_vga_y + 1;
+                        reg_nes_y <= (reg_vga_y + 1) / 2;
                     end if;
                 else
                     reg_vga_x <= reg_vga_x + 1;
+                    reg_nes_x <= (reg_vga_x + 1) / 2;
                 end if;
 
                 --sync signal assert.
@@ -267,10 +271,6 @@ begin
                     po_v_sync_n <= '1';
                 end if;
             end if;--if (pi_rnd_en(1) = '1' or pi_rnd_en(3) = '1' ) then
-
-            --nes x/y position...
-            reg_nes_x <= reg_vga_x / 2;
-            reg_nes_y <= reg_vga_y / 2;
 
             --pre-fetch x/y position...
             if (reg_vga_x < HSCAN_NEXT_START * 2) then
@@ -292,282 +292,282 @@ begin
         end if;--if (pi_rst_n = '0') then
     end process;
 
-    --vram access state machine (state transition)...
-    vac_set_stat_p : process (pi_rst_n, pi_base_clk)
-    begin
-        if (pi_rst_n = '0') then
-            reg_v_cur_state <= IDLE;
-        elsif (rising_edge(pi_base_clk)) then
-            reg_v_cur_state <= reg_v_next_state;
-        end if;--if (pi_rst_n = '0') then
-    end process;
-
-    --state change to next.
-    vac_next_stat_p : process (reg_v_cur_state, pi_rnd_en, pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y)
-function bg_process (
-    pm_sbg          : in std_logic;
-    pm_nes_x        : in integer range 0 to VGA_W_MAX - 1;
-    pm_nes_y        : in integer range 0 to VGA_H_MAX - 1
-    )return integer is
-begin
-    if (pm_sbg = '1'and
-        (pm_nes_x <= HSCAN or pm_nes_x >= HSCAN_NEXT_START) and
-        (pm_nes_y < VSCAN or pm_nes_y = VSCAN_NEXT_START)) then
-        return 1;
-    else
-        return 0;
-    end if;
-end;
-
-function is_idle (
-    pm_sbg          : in std_logic;
-    pm_nes_x        : in integer range 0 to VGA_W_MAX - 1;
-    pm_nes_y        : in integer range 0 to VGA_H_MAX - 1
-    )return integer is
-begin
-    if (pm_sbg = '0' or
-        (pm_nes_x > HSCAN and pm_nes_x < HSCAN_NEXT_START) or
-        (pm_nes_y >= VSCAN and pm_nes_y < VSCAN_NEXT_START)) then
-        return 1;
-    else
-        return 0;
-    end if;
-end;
-    begin
-        case reg_v_cur_state is
-            when IDLE =>
-                if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
-                    pi_rnd_en(3) = '1' and
-                    reg_nes_x mod 8 = 0) then
-                    --start vram access process.
-                    reg_v_next_state <= AD_SET0;
-                else
-                    reg_v_next_state <= reg_v_cur_state;
-                end if;
-            when AD_SET0 =>
-                if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
-                    pi_rnd_en(0) = '1'
-                ) then
-                    reg_v_next_state <= AD_SET1;
-                elsif (is_idle(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
-                    ---when nes_x=257, fall to idle
-                    reg_v_next_state <= IDLE;
-                else
-                    reg_v_next_state <= reg_v_cur_state;
-                end if;
-            when AD_SET1 =>
-                if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
-                    pi_rnd_en(1) = '1'
-                ) then
-                    reg_v_next_state <= AD_SET2;
-                else
-                    reg_v_next_state <= reg_v_cur_state;
-                end if;
-            when AD_SET2 =>
-                if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
-                    pi_rnd_en(2) = '1'
-                ) then
-                    reg_v_next_state <= AD_SET3;
-                else
-                    reg_v_next_state <= reg_v_cur_state;
-                end if;
-            when AD_SET3 =>
-                if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
-                    pi_rnd_en(3) = '1'
-                ) then
-                    reg_v_next_state <= REG_SET0;
-                else
-                    reg_v_next_state <= reg_v_cur_state;
-                end if;
-            when REG_SET0 =>
-                if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
-                    pi_rnd_en(0) = '1'
-                ) then
-                    reg_v_next_state <= REG_SET1;
-                else
-                    reg_v_next_state <= reg_v_cur_state;
-                end if;
-            when REG_SET1 =>
-                if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
-                    pi_rnd_en(1) = '1'
-                ) then
-                    reg_v_next_state <= REG_SET2;
-                else
-                    reg_v_next_state <= reg_v_cur_state;
-                end if;
-            when REG_SET2 =>
-                if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
-                    pi_rnd_en(2) = '1'
-                ) then
-                    reg_v_next_state <= REG_SET3;
-                else
-                    reg_v_next_state <= reg_v_cur_state;
-                end if;
-            when REG_SET3 =>
-                if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
-                    pi_rnd_en(3) = '1'
-                ) then
-                    reg_v_next_state <= AD_SET0;
-                else
-                    reg_v_next_state <= reg_v_cur_state;
-                end if;
-        end case;
-    end process;
-
-    po_v_ce_n       <= reg_v_ce_n;
-    po_v_rd_n       <= reg_v_rd_n;
-    po_v_wr_n       <= reg_v_wr_n;
-    po_v_addr       <= reg_v_addr;
-
-    po_plt_ce_n     <= reg_plt_ce_n;
-    po_plt_rd_n     <= reg_plt_rd_n;
-    po_plt_wr_n     <= reg_plt_wr_n;
-    po_plt_addr     <= reg_plt_addr;
-
-    --vram r/w selector state machine...
-    vac_main_stat_p : process (reg_v_cur_state)
-    begin
-        case reg_v_cur_state is
-            when IDLE =>
-                reg_v_rd_n  <= 'Z';
-                reg_v_wr_n  <= 'Z';
-            when AD_SET0 | AD_SET1 | REG_SET2 | REG_SET3 =>
-                reg_v_rd_n  <= '1';
-                reg_v_wr_n  <= '1';
-            when AD_SET2 | AD_SET3 | REG_SET0 | REG_SET1 =>
-                reg_v_rd_n  <= '0';
-                reg_v_wr_n  <= '1';
-        end case;
-
-        case reg_v_cur_state is
-            when IDLE =>
-                reg_v_ce_n  <= 'Z';
-                reg_plt_ce_n <= 'Z';
-                reg_plt_rd_n <= 'Z';
-                reg_plt_wr_n <= 'Z'; 
-            when AD_SET0 | AD_SET1 | REG_SET2 | REG_SET3 | AD_SET2 | AD_SET3 | REG_SET0 | REG_SET1 =>
-                reg_v_ce_n  <= '0';
-                reg_plt_ce_n <= '0';
-                reg_plt_rd_n <= '0';
-                reg_plt_wr_n <= '1'; 
-        end case;
-    end process;
-
-    --vram address state machine...
-    vaddr_stat_p : process (pi_rst_n, pi_base_clk)
-    begin
-        if (pi_rst_n = '0') then
-            reg_v_addr  <= (others => 'Z');
-            reg_v_data    <= (others => 'Z');
-            reg_disp_nt     <= (others => 'Z');
-            reg_disp_attr   <= (others => 'Z');
-        elsif (rising_edge(pi_base_clk)) then
-            reg_v_data      <= pi_v_data;
-
-            if (is_bg(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
-                ----fetch next tile byte.
-                if (reg_prf_x mod 8 = 1) then
-                    --vram addr is incremented every 8 cycle.
-                    --name table at 0x2000
-                    reg_v_addr(9 downto 0)
-                        <= conv_std_logic_vector(reg_prf_y, 9)(7 downto 3)
-                            & conv_std_logic_vector(reg_prf_x, 9)(7 downto 3);
-                    reg_v_addr(13 downto 10) <= "10" & pi_ppu_ctrl(PPUBNA downto 0)
-                                                    + ("000" & conv_std_logic_vector(reg_prf_x, 9)(8));
-                
-                elsif (reg_prf_x mod 8 = 2 and reg_v_cur_state = REG_SET0) then
-                    reg_disp_nt     <= reg_v_data;
-                
-                ----fetch attr table byte.
-                elsif (reg_prf_x mod 8 = 3) then
-                    --attr table at 0x23c0
-                    reg_v_addr(7 downto 0) <= "11000000" +
-                            ("00" & conv_std_logic_vector(reg_prf_y, 9)(7 downto 5)
-                                  & conv_std_logic_vector(reg_prf_x, 9)(7 downto 5));
-                    reg_v_addr(13 downto 8) <= "10" &
-                            pi_ppu_ctrl(PPUBNA downto 0) & "11"
-                                + ("000" & conv_std_logic_vector(reg_prf_x, 9)(8) & "00");
-                
-                elsif (reg_prf_x mod 8 = 4 and reg_v_cur_state = REG_SET0) then
-                    reg_disp_attr   <= reg_v_data;
-
-                ----fetch pattern table low byte.
-                elsif (reg_prf_x mod 8 = 5) then
-                     --vram addr is incremented every 8 cycle.
-                     reg_v_addr <= "0" & pi_ppu_ctrl(PPUBPA) &
-                                          reg_disp_nt(7 downto 0)
-                                        & "0" & conv_std_logic_vector(reg_prf_y, 9)(2 downto 0);
-
-                ----fetch pattern table high byte.
-                elsif (reg_prf_x mod 8 = 7) then
-                     --vram addr is incremented every 8 cycle.
-                     reg_v_addr <= "0" & pi_ppu_ctrl(PPUBPA) &
-                                          reg_disp_nt(7 downto 0)
-                                        & "0" & conv_std_logic_vector(reg_prf_y, 9)(2 downto 0)
-                                        + "00000000001000";
-                end if;
-            end if;
-        end if;--if (pi_rst_n = '0') then
-    end process;
-
-    --pattern table state machine...
-    bg_ptn_p : process (pi_rst_n, pi_base_clk)
-    begin
-        if (pi_rst_n = '0') then
-            reg_disp_ptn_l  <= (others => '0');
-            reg_disp_ptn_h  <= (others => '0');
-        elsif (rising_edge(pi_base_clk)) then
-
-            if (is_bg(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
-                if (reg_v_cur_state = REG_SET0) then
-                    if (reg_prf_x mod 8 = 6) then
-                        reg_disp_ptn_l   <= reg_v_data & reg_disp_ptn_l(7 downto 0);
-                    else
-                        reg_disp_ptn_l   <= "0" & reg_disp_ptn_l(15 downto 1);
-                    end if;
-
-                    if (reg_prf_x mod 8 = 0) then
-                        reg_disp_ptn_h   <= reg_v_data & reg_disp_ptn_h(7 downto 0);
-                    else
-                        reg_disp_ptn_h   <= "0" & reg_disp_ptn_h(15 downto 1);
-                    end if;
-
-                elsif (reg_v_cur_state = AD_SET0) then
-                    reg_disp_ptn_l   <= "0" & reg_disp_ptn_l(15 downto 1);
-                    reg_disp_ptn_h   <= "0" & reg_disp_ptn_h(15 downto 1);
-
-                end if;
-            end if;
-        end if;--if (pi_rst_n = '0') then
-    end process;
-
-    --palette table state machine...
-    plt_ac_p : process (pi_rst_n, pi_base_clk)
-    begin
-        if (pi_rst_n = '0') then
-            reg_plt_addr    <= (others => 'Z');
-            reg_plt_data    <= (others => 'Z');
-        elsif (rising_edge(pi_base_clk)) then
-            
-            reg_plt_data    <= pi_plt_data;
-            
-            if (is_bg(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
-                if (conv_std_logic_vector(reg_nes_y, 9)(4) = '0'
-                    and (reg_disp_ptn_h(0) or reg_disp_ptn_l(0)) = '1') then
-                    reg_plt_addr <=
-                            "0" & reg_disp_attr(1 downto 0) & reg_disp_ptn_h(0) & reg_disp_ptn_l(0);
-                elsif (conv_std_logic_vector(reg_nes_y, 9)(4) = '1'
-                    and (reg_disp_ptn_h(0) or reg_disp_ptn_l(0)) = '1') then
-                    reg_plt_addr <=
-                            "0" & reg_disp_attr(5 downto 4) & reg_disp_ptn_h(0) & reg_disp_ptn_l(0);
-                else
-                    ---else: no output color >> universal bg color output.
-                    --0x3f00 is the universal bg palette.
-                    reg_plt_addr <= (others => '0');
-                end if;
-            end if;
-        end if;--if (pi_rst_n = '0') then
-    end process;
+--    --vram access state machine (state transition)...
+--    vac_set_stat_p : process (pi_rst_n, pi_base_clk)
+--    begin
+--        if (pi_rst_n = '0') then
+--            reg_v_cur_state <= IDLE;
+--        elsif (rising_edge(pi_base_clk)) then
+--            reg_v_cur_state <= reg_v_next_state;
+--        end if;--if (pi_rst_n = '0') then
+--    end process;
+--
+--    --state change to next.
+--    vac_next_stat_p : process (reg_v_cur_state, pi_rnd_en, pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y)
+--function bg_process (
+--    pm_sbg          : in std_logic;
+--    pm_nes_x        : in integer range 0 to VGA_W_MAX - 1;
+--    pm_nes_y        : in integer range 0 to VGA_H_MAX - 1
+--    )return integer is
+--begin
+--    if (pm_sbg = '1'and
+--        (pm_nes_x <= HSCAN or pm_nes_x >= HSCAN_NEXT_START) and
+--        (pm_nes_y < VSCAN or pm_nes_y = VSCAN_NEXT_START)) then
+--        return 1;
+--    else
+--        return 0;
+--    end if;
+--end;
+--
+--function is_idle (
+--    pm_sbg          : in std_logic;
+--    pm_nes_x        : in integer range 0 to VGA_W_MAX - 1;
+--    pm_nes_y        : in integer range 0 to VGA_H_MAX - 1
+--    )return integer is
+--begin
+--    if (pm_sbg = '0' or
+--        (pm_nes_x > HSCAN and pm_nes_x < HSCAN_NEXT_START) or
+--        (pm_nes_y >= VSCAN and pm_nes_y < VSCAN_NEXT_START)) then
+--        return 1;
+--    else
+--        return 0;
+--    end if;
+--end;
+--    begin
+--        case reg_v_cur_state is
+--            when IDLE =>
+--                if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
+--                    pi_rnd_en(3) = '1' and
+--                    reg_nes_x mod 8 = 0) then
+--                    --start vram access process.
+--                    reg_v_next_state <= AD_SET0;
+--                else
+--                    reg_v_next_state <= reg_v_cur_state;
+--                end if;
+--            when AD_SET0 =>
+--                if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
+--                    pi_rnd_en(0) = '1'
+--                ) then
+--                    reg_v_next_state <= AD_SET1;
+--                elsif (is_idle(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
+--                    ---when nes_x=257, fall to idle
+--                    reg_v_next_state <= IDLE;
+--                else
+--                    reg_v_next_state <= reg_v_cur_state;
+--                end if;
+--            when AD_SET1 =>
+--                if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
+--                    pi_rnd_en(1) = '1'
+--                ) then
+--                    reg_v_next_state <= AD_SET2;
+--                else
+--                    reg_v_next_state <= reg_v_cur_state;
+--                end if;
+--            when AD_SET2 =>
+--                if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
+--                    pi_rnd_en(2) = '1'
+--                ) then
+--                    reg_v_next_state <= AD_SET3;
+--                else
+--                    reg_v_next_state <= reg_v_cur_state;
+--                end if;
+--            when AD_SET3 =>
+--                if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
+--                    pi_rnd_en(3) = '1'
+--                ) then
+--                    reg_v_next_state <= REG_SET0;
+--                else
+--                    reg_v_next_state <= reg_v_cur_state;
+--                end if;
+--            when REG_SET0 =>
+--                if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
+--                    pi_rnd_en(0) = '1'
+--                ) then
+--                    reg_v_next_state <= REG_SET1;
+--                else
+--                    reg_v_next_state <= reg_v_cur_state;
+--                end if;
+--            when REG_SET1 =>
+--                if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
+--                    pi_rnd_en(1) = '1'
+--                ) then
+--                    reg_v_next_state <= REG_SET2;
+--                else
+--                    reg_v_next_state <= reg_v_cur_state;
+--                end if;
+--            when REG_SET2 =>
+--                if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
+--                    pi_rnd_en(2) = '1'
+--                ) then
+--                    reg_v_next_state <= REG_SET3;
+--                else
+--                    reg_v_next_state <= reg_v_cur_state;
+--                end if;
+--            when REG_SET3 =>
+--                if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
+--                    pi_rnd_en(3) = '1'
+--                ) then
+--                    reg_v_next_state <= AD_SET0;
+--                else
+--                    reg_v_next_state <= reg_v_cur_state;
+--                end if;
+--        end case;
+--    end process;
+--
+--    po_v_ce_n       <= reg_v_ce_n;
+--    po_v_rd_n       <= reg_v_rd_n;
+--    po_v_wr_n       <= reg_v_wr_n;
+--    po_v_addr       <= reg_v_addr;
+--
+--    po_plt_ce_n     <= reg_plt_ce_n;
+--    po_plt_rd_n     <= reg_plt_rd_n;
+--    po_plt_wr_n     <= reg_plt_wr_n;
+--    po_plt_addr     <= reg_plt_addr;
+--
+--    --vram r/w selector state machine...
+--    vac_main_stat_p : process (reg_v_cur_state)
+--    begin
+--        case reg_v_cur_state is
+--            when IDLE =>
+--                reg_v_rd_n  <= 'Z';
+--                reg_v_wr_n  <= 'Z';
+--            when AD_SET0 | AD_SET1 | REG_SET2 | REG_SET3 =>
+--                reg_v_rd_n  <= '1';
+--                reg_v_wr_n  <= '1';
+--            when AD_SET2 | AD_SET3 | REG_SET0 | REG_SET1 =>
+--                reg_v_rd_n  <= '0';
+--                reg_v_wr_n  <= '1';
+--        end case;
+--
+--        case reg_v_cur_state is
+--            when IDLE =>
+--                reg_v_ce_n  <= 'Z';
+--                reg_plt_ce_n <= 'Z';
+--                reg_plt_rd_n <= 'Z';
+--                reg_plt_wr_n <= 'Z'; 
+--            when AD_SET0 | AD_SET1 | REG_SET2 | REG_SET3 | AD_SET2 | AD_SET3 | REG_SET0 | REG_SET1 =>
+--                reg_v_ce_n  <= '0';
+--                reg_plt_ce_n <= '0';
+--                reg_plt_rd_n <= '0';
+--                reg_plt_wr_n <= '1'; 
+--        end case;
+--    end process;
+--
+--    --vram address state machine...
+--    vaddr_stat_p : process (pi_rst_n, pi_base_clk)
+--    begin
+--        if (pi_rst_n = '0') then
+--            reg_v_addr  <= (others => 'Z');
+--            reg_v_data    <= (others => 'Z');
+--            reg_disp_nt     <= (others => 'Z');
+--            reg_disp_attr   <= (others => 'Z');
+--        elsif (rising_edge(pi_base_clk)) then
+--            reg_v_data      <= pi_v_data;
+--
+--            if (is_bg(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
+--                ----fetch next tile byte.
+--                if (reg_prf_x mod 8 = 1) then
+--                    --vram addr is incremented every 8 cycle.
+--                    --name table at 0x2000
+--                    reg_v_addr(9 downto 0)
+--                        <= conv_std_logic_vector(reg_prf_y, 9)(7 downto 3)
+--                            & conv_std_logic_vector(reg_prf_x, 9)(7 downto 3);
+--                    reg_v_addr(13 downto 10) <= "10" & pi_ppu_ctrl(PPUBNA downto 0)
+--                                                    + ("000" & conv_std_logic_vector(reg_prf_x, 9)(8));
+--                
+--                elsif (reg_prf_x mod 8 = 2 and reg_v_cur_state = REG_SET0) then
+--                    reg_disp_nt     <= reg_v_data;
+--                
+--                ----fetch attr table byte.
+--                elsif (reg_prf_x mod 8 = 3) then
+--                    --attr table at 0x23c0
+--                    reg_v_addr(7 downto 0) <= "11000000" +
+--                            ("00" & conv_std_logic_vector(reg_prf_y, 9)(7 downto 5)
+--                                  & conv_std_logic_vector(reg_prf_x, 9)(7 downto 5));
+--                    reg_v_addr(13 downto 8) <= "10" &
+--                            pi_ppu_ctrl(PPUBNA downto 0) & "11"
+--                                + ("000" & conv_std_logic_vector(reg_prf_x, 9)(8) & "00");
+--                
+--                elsif (reg_prf_x mod 8 = 4 and reg_v_cur_state = REG_SET0) then
+--                    reg_disp_attr   <= reg_v_data;
+--
+--                ----fetch pattern table low byte.
+--                elsif (reg_prf_x mod 8 = 5) then
+--                     --vram addr is incremented every 8 cycle.
+--                     reg_v_addr <= "0" & pi_ppu_ctrl(PPUBPA) &
+--                                          reg_disp_nt(7 downto 0)
+--                                        & "0" & conv_std_logic_vector(reg_prf_y, 9)(2 downto 0);
+--
+--                ----fetch pattern table high byte.
+--                elsif (reg_prf_x mod 8 = 7) then
+--                     --vram addr is incremented every 8 cycle.
+--                     reg_v_addr <= "0" & pi_ppu_ctrl(PPUBPA) &
+--                                          reg_disp_nt(7 downto 0)
+--                                        & "0" & conv_std_logic_vector(reg_prf_y, 9)(2 downto 0)
+--                                        + "00000000001000";
+--                end if;
+--            end if;
+--        end if;--if (pi_rst_n = '0') then
+--    end process;
+--
+--    --pattern table state machine...
+--    bg_ptn_p : process (pi_rst_n, pi_base_clk)
+--    begin
+--        if (pi_rst_n = '0') then
+--            reg_disp_ptn_l  <= (others => '0');
+--            reg_disp_ptn_h  <= (others => '0');
+--        elsif (rising_edge(pi_base_clk)) then
+--
+--            if (is_bg(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
+--                if (reg_v_cur_state = REG_SET0) then
+--                    if (reg_prf_x mod 8 = 6) then
+--                        reg_disp_ptn_l   <= reg_v_data & reg_disp_ptn_l(7 downto 0);
+--                    else
+--                        reg_disp_ptn_l   <= "0" & reg_disp_ptn_l(15 downto 1);
+--                    end if;
+--
+--                    if (reg_prf_x mod 8 = 0) then
+--                        reg_disp_ptn_h   <= reg_v_data & reg_disp_ptn_h(7 downto 0);
+--                    else
+--                        reg_disp_ptn_h   <= "0" & reg_disp_ptn_h(15 downto 1);
+--                    end if;
+--
+--                elsif (reg_v_cur_state = AD_SET0) then
+--                    reg_disp_ptn_l   <= "0" & reg_disp_ptn_l(15 downto 1);
+--                    reg_disp_ptn_h   <= "0" & reg_disp_ptn_h(15 downto 1);
+--
+--                end if;
+--            end if;
+--        end if;--if (pi_rst_n = '0') then
+--    end process;
+--
+--    --palette table state machine...
+--    plt_ac_p : process (pi_rst_n, pi_base_clk)
+--    begin
+--        if (pi_rst_n = '0') then
+--            reg_plt_addr    <= (others => 'Z');
+--            reg_plt_data    <= (others => 'Z');
+--        elsif (rising_edge(pi_base_clk)) then
+--            
+--            reg_plt_data    <= pi_plt_data;
+--            
+--            if (is_bg(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
+--                if (conv_std_logic_vector(reg_nes_y, 9)(4) = '0'
+--                    and (reg_disp_ptn_h(0) or reg_disp_ptn_l(0)) = '1') then
+--                    reg_plt_addr <=
+--                            "0" & reg_disp_attr(1 downto 0) & reg_disp_ptn_h(0) & reg_disp_ptn_l(0);
+--                elsif (conv_std_logic_vector(reg_nes_y, 9)(4) = '1'
+--                    and (reg_disp_ptn_h(0) or reg_disp_ptn_l(0)) = '1') then
+--                    reg_plt_addr <=
+--                            "0" & reg_disp_attr(5 downto 4) & reg_disp_ptn_h(0) & reg_disp_ptn_l(0);
+--                else
+--                    ---else: no output color >> universal bg color output.
+--                    --0x3f00 is the universal bg palette.
+--                    reg_plt_addr <= (others => '0');
+--                end if;
+--            end if;
+--        end if;--if (pi_rst_n = '0') then
+--    end process;
 
     rgb_out_p : process (pi_rst_n, pi_base_clk)
     begin
@@ -580,12 +580,12 @@ end;
                 if (reg_nes_x < HSCAN and reg_nes_y < VSCAN) then
                     --if or if not bg/sprite is shown, output color anyway 
                     --sinse universal bg color is included..
-                    po_b <= nes_color_palette(conv_integer(reg_plt_data(5 downto 0))) (11 downto 8);
-                    po_g <= nes_color_palette(conv_integer(reg_plt_data(5 downto 0))) (7 downto 4);
-                    po_r <= nes_color_palette(conv_integer(reg_plt_data(5 downto 0))) (3 downto 0);
---                    po_b <= "1100";
---                    po_g <= "0011";
---                    po_r <= "0101";
+--                    po_b <= nes_color_palette(conv_integer(reg_plt_data(5 downto 0))) (11 downto 8);
+--                    po_g <= nes_color_palette(conv_integer(reg_plt_data(5 downto 0))) (7 downto 4);
+--                    po_r <= nes_color_palette(conv_integer(reg_plt_data(5 downto 0))) (3 downto 0);
+                    po_b <= (others => '0');
+                    po_g <= (others => '1');
+                    po_r <= (others => '1');
                 else
                     po_b <= (others => '0');
                     po_g <= (others => '0');
@@ -603,4 +603,3 @@ end;
     po_spr_addr     <= (others => 'Z');
 
 end rtl;
-
