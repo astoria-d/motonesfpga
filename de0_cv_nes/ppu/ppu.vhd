@@ -21,7 +21,13 @@ entity ppu is
                 po_spr_rd_n     : out std_logic;
                 po_spr_wr_n     : out std_logic;
                 po_spr_addr     : out std_logic_vector (7 downto 0);
-                po_spr_data     : out std_logic_vector (7 downto 0)
+                po_spr_data     : out std_logic_vector (7 downto 0);
+
+                po_ppu_ctrl        : out std_logic_vector (7 downto 0);
+                po_ppu_mask        : out std_logic_vector (7 downto 0);
+                pi_ppu_status      : in std_logic_vector (7 downto 0);
+                po_ppu_scroll_x    : out std_logic_vector (7 downto 0);
+                po_ppu_scroll_y    : out std_logic_vector (7 downto 0)
     );
 end ppu;
 
@@ -38,7 +44,6 @@ constant PPUDATA   : std_logic_vector(2 downto 0) := "111";
 
 signal reg_ppu_ctrl         : std_logic_vector (7 downto 0);
 signal reg_ppu_mask         : std_logic_vector (7 downto 0);
-signal reg_ppu_status       : std_logic_vector (7 downto 0);
 signal reg_oam_addr         : std_logic_vector (7 downto 0);
 signal reg_oam_data         : std_logic_vector (7 downto 0);
 signal reg_ppu_scroll_x     : std_logic_vector (7 downto 0);
@@ -66,7 +71,11 @@ signal reg_spr_data       : std_logic_vector (7 downto 0);
 
 begin
 
-    reg_ppu_status <= (others => '0');
+    --set control regs for renderer.
+    po_ppu_ctrl        <= reg_ppu_ctrl;
+    po_ppu_mask        <= reg_ppu_mask;
+    po_ppu_scroll_x    <= reg_ppu_scroll_x;
+    po_ppu_scroll_y    <= reg_ppu_scroll_y;
 
     --ppu register set process..
     set_ppu_p : process (pi_rst_n, pi_base_clk)
@@ -154,7 +163,7 @@ begin
         elsif (rising_edge(pi_base_clk)) then
             if (pi_cpu_en(1) = '1' and pi_ce_n = '0' and pi_r_nw = '1') then
                 if (pi_cpu_addr = PPUSTATUS) then
-                    pio_cpu_d <= reg_ppu_status;
+                    pio_cpu_d <= pi_ppu_status;
                 end if;
             elsif (pi_ce_n = '1') then
                 pio_cpu_d <= (others => 'Z');

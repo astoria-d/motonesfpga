@@ -14,7 +14,7 @@ entity render is
         pi_rst_n       : in std_logic;
         pi_base_clk    : in std_logic;
 
-        --upper ppu i/f
+        --ppu i/f
         pi_ppu_ctrl        : in std_logic_vector (7 downto 0);
         pi_ppu_mask        : in std_logic_vector (7 downto 0);
         po_ppu_status      : out std_logic_vector (7 downto 0);
@@ -22,10 +22,17 @@ entity render is
         pi_ppu_scroll_y    : in std_logic_vector (7 downto 0);
 
         --vram i/f
-        po_rd_n        : out std_logic;
-        po_wr_n        : out std_logic;
-        po_vram_addr   : out std_logic_vector (13 downto 0);
-        pio_vram_data  : inout std_logic_vector (7 downto 0);
+        po_rd_n         : out std_logic;
+        po_wr_n         : out std_logic;
+        po_v_addr       : out std_logic_vector (13 downto 0);
+        io_v_data       : in std_logic_vector (7 downto 0);
+
+        --sprite i/f
+        po_spr_ce_n     : out std_logic;
+        po_spr_rd_n     : out std_logic;
+        po_spr_wr_n     : out std_logic;
+        po_spr_addr     : out std_logic_vector (7 downto 0);
+        pi_spr_data     : in std_logic_vector (7 downto 0);
 
         --vga output
         po_h_sync_n    : out std_logic;
@@ -52,14 +59,12 @@ constant V_BP           : integer := 33;
 constant V_FP           : integer := 10;
 
 --nes screen size is emulated to align with the vga timing...
-constant HSCAN        : integer := 256;
-constant VSCAN        : integer := 240;
-constant HSCAN_NEXT_START    : integer := 382;
-constant VSCAN_NEXT_START    : integer := 262;
-constant HSCAN_SPR_MAX       : integer := 321;
-constant HSCAN_OAM_EVA_START       : integer := 64;
-
-
+constant HSCAN                  : integer := 256;
+constant VSCAN                  : integer := 240;
+constant HSCAN_NEXT_START       : integer := 382;
+constant VSCAN_NEXT_START       : integer := 262;
+constant HSCAN_SPR_MAX          : integer := 321;
+constant HSCAN_OAM_EVA_START    : integer := 64;
 
 constant PPUBNA    : integer := 1;  --base name address
 constant PPUVAI    : integer := 2;  --vram address increment
@@ -156,6 +161,12 @@ constant nes_color_palette : nes_color_array := (
         conv_std_logic_vector(16#000#, 12), 
         conv_std_logic_vector(16#000#, 12)
         );
+
+signal reg_vga_x        : std_logic_vector (9 downto 0);
+signal reg_vga_y        : std_logic_vector (9 downto 0);
+
+signal reg_nes_x        : std_logic_vector (8 downto 0);
+signal reg_nes_y        : std_logic_vector (8 downto 0);
 
 begin
     

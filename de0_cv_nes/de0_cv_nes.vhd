@@ -80,7 +80,13 @@ architecture rtl of de0_cv_nes is
                 po_spr_rd_n     : out std_logic;
                 po_spr_wr_n     : out std_logic;
                 po_spr_addr     : out std_logic_vector (7 downto 0);
-                po_spr_data     : out std_logic_vector (7 downto 0)
+                po_spr_data     : out std_logic_vector (7 downto 0);
+
+                po_ppu_ctrl        : out std_logic_vector (7 downto 0);
+                po_ppu_mask        : out std_logic_vector (7 downto 0);
+                pi_ppu_status      : in std_logic_vector (7 downto 0);
+                po_ppu_scroll_x    : out std_logic_vector (7 downto 0);
+                po_ppu_scroll_y    : out std_logic_vector (7 downto 0)
     );
     end component;
 
@@ -129,6 +135,40 @@ architecture rtl of de0_cv_nes is
             );
     end component;
 
+    component render
+        port (
+            pi_rst_n       : in std_logic;
+            pi_base_clk    : in std_logic;
+
+            --ppu i/f
+            pi_ppu_ctrl        : in std_logic_vector (7 downto 0);
+            pi_ppu_mask        : in std_logic_vector (7 downto 0);
+            po_ppu_status      : out std_logic_vector (7 downto 0);
+            pi_ppu_scroll_x    : in std_logic_vector (7 downto 0);
+            pi_ppu_scroll_y    : in std_logic_vector (7 downto 0);
+
+            --vram i/f
+            po_rd_n         : out std_logic;
+            po_wr_n         : out std_logic;
+            po_v_addr       : out std_logic_vector (13 downto 0);
+            io_v_data       : in std_logic_vector (7 downto 0);
+
+            --sprite i/f
+            po_spr_ce_n     : out std_logic;
+            po_spr_rd_n     : out std_logic;
+            po_spr_wr_n     : out std_logic;
+            po_spr_addr     : out std_logic_vector (7 downto 0);
+            pi_spr_data     : in std_logic_vector (7 downto 0);
+
+            --vga output
+            po_h_sync_n    : out std_logic;
+            po_v_sync_n    : out std_logic;
+            po_r           : out std_logic_vector(3 downto 0);
+            po_g           : out std_logic_vector(3 downto 0);
+            po_b           : out std_logic_vector(3 downto 0)
+            );
+    end component;
+
 constant ram_2k     : integer := 11;    --2k = 11   bit width.
 constant rom_32k    : integer := 15;    --32k = 15  bit width.
 constant vram_1k    : integer := 10;    --1k = 10   bit width.
@@ -165,6 +205,11 @@ signal wr_nt0_ce_n      : std_logic;
 signal wr_nt1_ce_n      : std_logic;
 signal wr_plt_ce_n      : std_logic;
 
+signal wr_ppu_ctrl          : std_logic_vector (7 downto 0);
+signal wr_ppu_mask          : std_logic_vector (7 downto 0);
+signal wr_ppu_status        : std_logic_vector (7 downto 0);
+signal wr_ppu_scroll_x      : std_logic_vector (7 downto 0);
+signal wr_ppu_scroll_y      : std_logic_vector (7 downto 0);
 
 begin
 
@@ -221,7 +266,14 @@ begin
             wr_spr_rd_n,
             wr_spr_wr_n,
             wr_spr_addr,
-            wr_spr_data
+            wr_spr_data,
+
+            --render i/f
+            wr_ppu_ctrl,
+            wr_ppu_mask,
+            wr_ppu_status,
+            wr_ppu_scroll_x,
+            wr_ppu_scroll_y
             );
 
     --vram chip select (address decode)
@@ -287,13 +339,41 @@ begin
             wr_spr_data
             );
 
+    --vga render instance
+    render_inst : render port map (
+            pi_rst_n, 
+            pi_base_clk,
+
+            --ppu i/f
+            wr_ppu_ctrl,
+            wr_ppu_mask,
+            wr_ppu_status,
+            wr_ppu_scroll_x,
+            wr_ppu_scroll_y,
+
+            --vram i/f
+            wr_v_rd_n,
+            wr_v_wr_n,
+            wr_v_addr,
+            wr_v_data,
+
+            --sprite i/f
+            wr_spr_ce_n,
+            wr_spr_rd_n,
+            wr_spr_wr_n,
+            wr_spr_addr,
+            wr_spr_data,
+
+            --vga output
+            po_h_sync_n,
+            po_v_sync_n,
+            po_r,
+            po_g,
+            po_b
+            );
+
     wr_rdy <= '1';
     wr_irq_n <= '1';
     wr_nmi_n <= '1';
 
-    po_h_sync_n    <= '0';
-    po_v_sync_n    <= '0';
-    po_r           <= (others => '0');
-    po_g           <= (others => '0');
-    po_b           <= (others => '0');
 end rtl;
