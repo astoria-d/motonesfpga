@@ -213,6 +213,19 @@ begin
         end if;--if (pi_rst_n = '0') then
     end process;
 
+    po_rd_n         <= 'Z';
+    po_wr_n         <= 'Z';
+    po_v_addr       <= (others => 'Z');
+    
+    po_ppu_status   <= (others => '0');
 
+    po_spr_ce_n     <= 'Z';
+    po_spr_rd_n     <= 'Z';
+    po_spr_wr_n     <= 'Z';
+    po_spr_addr     <= (others => 'Z');
+
+    po_r           <= (others => 'Z');
+    po_g           <= (others => 'Z');
+    po_b           <= (others => 'Z');
 end rtl;
 
