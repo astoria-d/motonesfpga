@@ -13,6 +13,7 @@ entity render is
     port (
         pi_rst_n       : in std_logic;
         pi_base_clk    : in std_logic;
+        pi_rnd_en      : in std_logic_vector (3 downto 0);
 
         --ppu i/f
         pi_ppu_ctrl        : in std_logic_vector (7 downto 0);
@@ -162,13 +163,56 @@ constant nes_color_palette : nes_color_array := (
         conv_std_logic_vector(16#000#, 12)
         );
 
-signal reg_vga_x        : std_logic_vector (9 downto 0);
-signal reg_vga_y        : std_logic_vector (9 downto 0);
+signal reg_vga_x        : integer range 0 to VGA_W_MAX - 1;
+signal reg_vga_y        : integer range 0 to VGA_H_MAX - 1;
 
-signal reg_nes_x        : std_logic_vector (8 downto 0);
-signal reg_nes_y        : std_logic_vector (8 downto 0);
+signal reg_nes_x        : integer range 0 to VGA_W_MAX / 2 - 1;
+signal reg_nes_y        : integer range 0 to VGA_W_MAX / 2 - 1;
 
 begin
-    
+
+    --position and sync signal generate.
+    pos_p : process (pi_rst_n, pi_base_clk)
+    begin
+        if (pi_rst_n = '0') then
+            reg_vga_x <= 0;
+            reg_vga_y <= 0;
+            reg_nes_x <= 0;
+            reg_nes_y <= 0;
+        elsif (rising_edge(pi_base_clk)) then
+
+            reg_nes_x <= reg_vga_x / 2;
+            reg_nes_y <= reg_vga_y / 2;
+
+            if ((pi_rnd_en(0) or pi_rnd_en(2))= '1') then
+                if (reg_vga_x = VGA_W_MAX - 1) then
+                    reg_vga_x <= 0;
+                    if (reg_vga_x = VGA_H_MAX - 1) then
+                        reg_vga_y <= 0;
+                    else
+                        reg_vga_y <= reg_vga_y + 1;
+                    end if;
+                else
+                    reg_vga_x <= reg_vga_x + 1;
+                end if;
+                
+                --sync signal assert.
+                if (reg_vga_x >= VGA_W + H_FP and reg_vga_x < VGA_W + H_FP + H_SP) then
+                    po_h_sync_n <= '0';
+                else
+                    po_h_sync_n <= '1';
+                end if;
+
+                if (reg_vga_y >= VGA_H + V_FP and reg_vga_y < VGA_H + V_FP + V_SP) then
+                    po_v_sync_n <= '0';
+                else
+                    po_v_sync_n <= '1';
+                end if;
+                
+            end if;--if (pi_rnd_en(1) = '1' or pi_rnd_en(3) = '1' ) then
+        end if;--if (pi_rst_n = '0') then
+    end process;
+
+
 end rtl;
 

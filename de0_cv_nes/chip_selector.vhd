@@ -12,14 +12,14 @@ entity clock_selector is
                 pi_rst_n        : in std_logic;
                 pi_base_clk     : in std_logic;
                 po_cpu_en       : out std_logic_vector (7 downto 0);
-                po_ppu_en       : out std_logic_vector (3 downto 0)
+                po_rnd_en       : out std_logic_vector (3 downto 0)
         );
 end clock_selector;
 
 architecture rtl of clock_selector is
 
 signal reg_cpu_en       : std_logic_vector (7 downto 0);
-signal reg_ppu_en       : std_logic_vector (3 downto 0);
+signal reg_rnd_en       : std_logic_vector (3 downto 0);
 
 begin
     --Actual NES base clock =  21.477272 MHz
@@ -36,7 +36,6 @@ begin
     --emu ppu clock = base clock / 4
 
     po_cpu_en <= reg_cpu_en;
-    po_ppu_en <= reg_ppu_en;
     
     cpu_clk_p : process (pi_rst_n, pi_base_clk)
     variable ref_cnt : integer range 0 to 31;
@@ -75,27 +74,30 @@ begin
         end if;
     end process;
 
+    --render clock timing enabler.
+    po_rnd_en <= reg_rnd_en;
+
     ppu_clk_p : process (pi_rst_n, pi_base_clk)
-    variable ref_cnt : integer range 0 to 15;
+    variable ref_cnt : integer range 0 to 3;
     begin
         if (pi_rst_n = '0') then
-            reg_ppu_en <= (others => '0');
+            reg_rnd_en <= (others => '0');
             ref_cnt := 0;
         else
             if (rising_edge(pi_base_clk)) then
                 if (ref_cnt = 0) then
-                    reg_ppu_en <= "0001";
-                elsif (ref_cnt = 4) then
-                    reg_ppu_en <= "0010";
-                elsif (ref_cnt = 8) then
-                    reg_ppu_en <= "0100";
-                elsif (ref_cnt = 12) then
-                    reg_ppu_en <= "1000";
+                    reg_rnd_en <= "0001";
+                elsif (ref_cnt = 1) then
+                    reg_rnd_en <= "0010";
+                elsif (ref_cnt = 2) then
+                    reg_rnd_en <= "0100";
+                elsif (ref_cnt = 3) then
+                    reg_rnd_en <= "1000";
                 else
-                    reg_ppu_en <= "0000";
+                    reg_rnd_en <= "0000";
                 end if;
                 
-                if (ref_cnt = 15) then
+                if (ref_cnt = 3) then
                     ref_cnt := 0;
                 else
                     ref_cnt := ref_cnt + 1;

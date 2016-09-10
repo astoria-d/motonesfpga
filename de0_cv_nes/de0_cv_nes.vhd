@@ -46,7 +46,7 @@ architecture rtl of de0_cv_nes is
                 pi_rst_n        : in std_logic;
                 pi_base_clk     : in std_logic;
                 po_cpu_en       : out std_logic_vector (7 downto 0);
-                po_ppu_en       : out std_logic_vector (3 downto 0)
+                po_rnd_en       : out std_logic_vector (3 downto 0)
             );
     end component;
 
@@ -139,6 +139,7 @@ architecture rtl of de0_cv_nes is
         port (
             pi_rst_n       : in std_logic;
             pi_base_clk    : in std_logic;
+            pi_rnd_en      : in std_logic_vector (3 downto 0);
 
             --ppu i/f
             pi_ppu_ctrl        : in std_logic_vector (7 downto 0);
@@ -174,7 +175,7 @@ constant rom_32k    : integer := 15;    --32k = 15  bit width.
 constant vram_1k    : integer := 10;    --1k = 10   bit width.
 
 signal wr_cpu_en       : std_logic_vector (7 downto 0);
-signal wr_ppu_en       : std_logic_vector (3 downto 0);
+signal wr_rnd_en       : std_logic_vector (3 downto 0);
 
 signal wr_rdy       : std_logic;
 signal wr_irq_n     : std_logic;
@@ -220,7 +221,7 @@ begin
             pi_rst_n,
             pi_base_clk,
             wr_cpu_en,
-            wr_ppu_en
+            wr_rnd_en
             );
 
     --mos 6502 cpu instance
@@ -343,6 +344,7 @@ begin
     render_inst : render port map (
             pi_rst_n, 
             pi_base_clk,
+            wr_rnd_en,
 
             --ppu i/f
             wr_ppu_ctrl,

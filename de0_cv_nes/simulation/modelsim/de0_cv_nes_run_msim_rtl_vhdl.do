@@ -9,6 +9,7 @@ vcom -93 -work work {../../chip_selector.vhd}
 vcom -93 -work work {../../mem/ram.vhd}
 vcom -93 -work work {../../mem/chr_rom.vhd}
 vcom -93 -work work {../../ppu/ppu.vhd}
+vcom -93 -work work {../../ppu/render.vhd}
 vcom -93 -work work {../../dummy-mos6502.vhd}
 
 vcom -93 -work work {../../de0_cv_nes.vhd}
@@ -43,6 +44,21 @@ add wave -label v_rd_n        -radix hex sim:/testbench_motones_sim/sim_board/wr
 add wave -label v_wr_n        -radix hex sim:/testbench_motones_sim/sim_board/wr_v_wr_n;
 add wave -label vram_addr        -radix hex sim:/testbench_motones_sim/sim_board/wr_v_addr;
 add wave -label vram_data        -radix hex sim:/testbench_motones_sim/sim_board/wr_v_data;
+
+add wave -divider render
+add wave -label vga_x       sim:/testbench_motones_sim/sim_board/render_inst/reg_vga_x;
+add wave -label vga_y       sim:/testbench_motones_sim/sim_board/render_inst/reg_vga_y;
+add wave -label nes_x       sim:/testbench_motones_sim/sim_board/render_inst/reg_nes_x;
+add wave -label nes_y       sim:/testbench_motones_sim/sim_board/render_inst/reg_nes_y;
+
+
+add wave -divider vga
+add wave -label h_sync_n       sim:/testbench_motones_sim/sim_board/po_h_sync_n;
+add wave -label v_sync_n    sim:/testbench_motones_sim/sim_board/po_v_sync_n;
+add wave -label r       sim:/testbench_motones_sim/sim_board/po_r;
+add wave -label g       sim:/testbench_motones_sim/sim_board/po_g;
+add wave -label b       sim:/testbench_motones_sim/sim_board/po_b;
+
 
 #add wave -radix hex sim:/testbench_motones_sim/sim_board/vram_plt_inst/*;
 
