@@ -226,9 +226,9 @@ begin
         else
             if (rising_edge(pi_base_clk)) then
                 if ((pi_v_addr(13) = '0')) then
-                    reg_pt_ce_n <= '1';
-                else
                     reg_pt_ce_n <= '0';
+                else
+                    reg_pt_ce_n <= '1';
                 end if;
 
                 if (pi_v_addr(13) = '0') then
@@ -256,7 +256,7 @@ begin
                 end if;
 
                 if (pi_v_addr(13 downto 8) = "111111") then
-                    reg_plt_ce_n <= '1';
+                    reg_plt_ce_n <= '0';
                 else
                     reg_plt_ce_n <= '1';
                 end if;

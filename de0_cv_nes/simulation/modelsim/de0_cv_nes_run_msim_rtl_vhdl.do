@@ -18,7 +18,6 @@ vsim -t 1ps -L altera -L lpm -L sgate -L altera_mf -L altera_lnsim -L cyclonev -
 
 ##script custom part...
 
-
 add wave -label rst_n               sim:/testbench_motones_sim/sim_board/pi_rst_n;
 add wave -label base_clk            sim:/testbench_motones_sim/sim_board/pi_base_clk;
 add wave -label wr_cpu_en           sim:/testbench_motones_sim/sim_board/wr_cpu_en;
@@ -28,7 +27,6 @@ add wave -label d_io -radix hex     sim:/testbench_motones_sim/sim_board/wr_d_io
 
 
 add wave -divider ppu
-add wave -label pi_ppu_en       -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/pi_ppu_en;
 add wave -label pi_ce_n         -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/pi_ce_n;
 add wave -label ppu_ctrl        -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/reg_ppu_ctrl;
 add wave -label ppu_mask        -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/reg_ppu_mask;
@@ -40,11 +38,13 @@ add wave -label ppu_scroll_y    -radix hex sim:/testbench_motones_sim/sim_board/
 add wave -label ppu_addr        -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/reg_ppu_addr;
 add wave -label ppu_data        -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/reg_ppu_data;
 
-#add wave sim:/testbench_motones_sim/*;
-#add wave sim:/testbench_motones_sim/sim_board/*;
-#add wave sim:/testbench_motones_sim/sim_board/chip_selector_inst/reg_ppu_en;
+add wave -divider vram
+add wave -label v_rd_n        -radix hex sim:/testbench_motones_sim/sim_board/wr_v_rd_n;
+add wave -label v_wr_n        -radix hex sim:/testbench_motones_sim/sim_board/wr_v_wr_n;
+add wave -label vram_addr        -radix hex sim:/testbench_motones_sim/sim_board/wr_vram_addr;
+add wave -label vram_data        -radix hex sim:/testbench_motones_sim/sim_board/wr_vram_data;
 
-#add wave sim:/testbench_motones_sim/sim_board/cpu_inst/*;
+#add wave -radix hex sim:/testbench_motones_sim/sim_board/vram_plt_inst/*;
 
 
 view structure

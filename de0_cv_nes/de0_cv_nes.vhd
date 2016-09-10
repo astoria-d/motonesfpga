@@ -65,7 +65,7 @@ architecture rtl of de0_cv_nes is
     component ppu port (
                 pi_rst_n       : in std_logic;
                 pi_base_clk    : in std_logic;
-                pi_ppu_en      : in std_logic_vector (3 downto 0);
+                pi_cpu_en      : in std_logic_vector (7 downto 0);
                 pi_ce_n        : in std_logic;
                 pi_r_nw        : in std_logic;
                 pi_cpu_addr    : in std_logic_vector (2 downto 0);
@@ -73,7 +73,6 @@ architecture rtl of de0_cv_nes is
 
                 po_rd_n        : out std_logic;
                 po_wr_n        : out std_logic;
-                po_ale_n       : out std_logic;
                 po_vram_addr   : out std_logic_vector (13 downto 0);
                 pio_vram_data  : inout std_logic_vector (7 downto 0)
     );
@@ -146,7 +145,6 @@ signal wr_apu_ce_n     : std_logic;
 
 signal wr_v_rd_n        : std_logic;
 signal wr_v_wr_n        : std_logic;
-signal wr_v_ale_n       : std_logic;
 signal wr_vram_addr     : std_logic_vector (13 downto 0);
 signal wr_vram_data     : std_logic_vector (7 downto 0);
 
@@ -196,7 +194,7 @@ begin
     ppu_inst : ppu port map (
             pi_rst_n, 
             pi_base_clk, 
-            wr_ppu_en,
+            wr_cpu_en,
             wr_ppu_ce_n,
             wr_r_nw, 
             wr_addr(2 downto 0), 
@@ -204,7 +202,6 @@ begin
 
             wr_v_rd_n,
             wr_v_wr_n,
-            wr_v_ale_n,
             wr_vram_addr,
             wr_vram_data
             );

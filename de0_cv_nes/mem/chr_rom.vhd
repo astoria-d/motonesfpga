@@ -17,7 +17,7 @@ architecture rtl of chr_rom is
 
 --CHR ROM is 8k
 subtype rom_data is std_logic_vector (7 downto 0);
-type rom_array is array (0 to 2**12) of rom_data;
+type rom_array is array (0 to 2**13 - 1) of rom_data;
 
 --function is called only once at the array initialize.
 function rom_fill return rom_array is 
