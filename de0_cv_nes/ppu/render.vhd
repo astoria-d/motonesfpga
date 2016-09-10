@@ -60,12 +60,10 @@ constant VGA_W          : integer := 640;
 constant VGA_H          : integer := 480;
 constant VGA_W_MAX      : integer := 800;
 constant VGA_H_MAX      : integer := 525;
-constant H_SP           : integer := 95;
-constant H_BP           : integer := 48;
-constant H_FP           : integer := 15;
-constant V_SP           : integer := 2;
-constant V_BP           : integer := 33;
-constant V_FP           : integer := 10;
+constant H_SYNC_S       : integer := 660;
+constant H_SYNC_E       : integer := 756;
+constant V_SYNC_S       : integer := 494;
+constant V_SYNC_E       : integer := 495;
 
 --nes screen size is emulated to align with the vga timing...
 constant HSCAN                  : integer := 256;
@@ -246,7 +244,7 @@ begin
                 if (reg_vga_x = VGA_W_MAX - 1) then
                     reg_vga_x <= 0;
                     reg_nes_x <= 0;
-                    if (reg_vga_x = VGA_H_MAX - 1) then
+                    if (reg_vga_y = VGA_H_MAX - 1) then
                         reg_vga_y <= 0;
                         reg_nes_y <= 0;
                     else
@@ -259,13 +257,13 @@ begin
                 end if;
 
                 --sync signal assert.
-                if (reg_vga_x >= VGA_W + H_FP and reg_vga_x < VGA_W + H_FP + H_SP) then
+                if (reg_vga_x >= H_SYNC_S and reg_vga_x < H_SYNC_E) then
                     po_h_sync_n <= '0';
                 else
                     po_h_sync_n <= '1';
                 end if;
 
-                if (reg_vga_y >= VGA_H + V_FP and reg_vga_y < VGA_H + V_FP + V_SP) then
+                if (reg_vga_y >= V_SYNC_S and reg_vga_y < V_SYNC_E) then
                     po_v_sync_n <= '0';
                 else
                     po_v_sync_n <= '1';
