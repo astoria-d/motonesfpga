@@ -583,6 +583,9 @@ end;
                     po_b <= nes_color_palette(conv_integer(reg_plt_data(5 downto 0))) (11 downto 8);
                     po_g <= nes_color_palette(conv_integer(reg_plt_data(5 downto 0))) (7 downto 4);
                     po_r <= nes_color_palette(conv_integer(reg_plt_data(5 downto 0))) (3 downto 0);
+--                    po_b <= "1100";
+--                    po_g <= "0011";
+--                    po_r <= "0101";
                 else
                     po_b <= (others => '0');
                     po_g <= (others => '0');
