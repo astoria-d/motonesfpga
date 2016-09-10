@@ -332,45 +332,45 @@ end;
 
                     elsif (global_step_cnt = 4) then
                         --step3 = dma set.
-                        for i in 0 to 64 loop
-                            j := i * 4;
-                            if (ch = 16#5b#) then
-                                ch := 16#41#;
-                            else
-                                ch := 16#41# + i;
-                            end if;
-
-                            --if (i < 64) then
-                            if (i < 10) then
-                                --set dma value on the ram.
-                                if    (dma_step_cnt = (0 + j) * cpu_io_multi) then
-                                    io_out(16#0200# + j, i);
-                                elsif (dma_step_cnt = (1 + j) * cpu_io_multi) then
-                                    io_out(16#0201# + j, ch);
-                                elsif (dma_step_cnt = (2 + j) * cpu_io_multi) then
-                                    io_out(16#0202# + j, 16#01#);
-                                elsif (dma_step_cnt = (3 + j) * cpu_io_multi) then
-                                    io_out(16#0203# + j, j);
-                                elsif (dma_step_cnt = (0 + j) * cpu_io_multi + 1) or
-                                        (dma_step_cnt = (1 + j) * cpu_io_multi + 1) or
-                                        (dma_step_cnt = (2 + j) * cpu_io_multi + 1) or
-                                        (dma_step_cnt = (3 + j) * cpu_io_multi + 1) then
-                                    io_brk;
-                                end if;
-                            else
-                                if    (dma_step_cnt = (0 + j) * cpu_io_multi) then
-                                    --start dma
-                                    io_out(16#4014#, 16#02#);
-                                elsif (dma_step_cnt = (0 + j) * cpu_io_multi + 1) then
-                                    io_brk;
-                                elsif (dma_step_cnt = (0 + j) * cpu_io_multi + 2) then
+--                        for i in 0 to 64 loop
+--                            j := i * 4;
+--                            if (ch = 16#5b#) then
+--                                ch := 16#41#;
+--                            else
+--                                ch := 16#41# + i;
+--                            end if;
+--
+--                            --if (i < 64) then
+--                            if (i < 10) then
+--                                --set dma value on the ram.
+--                                if    (dma_step_cnt = (0 + j) * cpu_io_multi) then
+--                                    io_out(16#0200# + j, i);
+--                                elsif (dma_step_cnt = (1 + j) * cpu_io_multi) then
+--                                    io_out(16#0201# + j, ch);
+--                                elsif (dma_step_cnt = (2 + j) * cpu_io_multi) then
+--                                    io_out(16#0202# + j, 16#01#);
+--                                elsif (dma_step_cnt = (3 + j) * cpu_io_multi) then
+--                                    io_out(16#0203# + j, j);
+--                                elsif (dma_step_cnt = (0 + j) * cpu_io_multi + 1) or
+--                                        (dma_step_cnt = (1 + j) * cpu_io_multi + 1) or
+--                                        (dma_step_cnt = (2 + j) * cpu_io_multi + 1) or
+--                                        (dma_step_cnt = (3 + j) * cpu_io_multi + 1) then
+--                                    io_brk;
+--                                end if;
+--                            else
+--                                if    (dma_step_cnt = (0 + j) * cpu_io_multi) then
+--                                    --start dma
+--                                    io_out(16#4014#, 16#02#);
+--                                elsif (dma_step_cnt = (0 + j) * cpu_io_multi + 1) then
+--                                    io_brk;
+--                                elsif (dma_step_cnt = (0 + j) * cpu_io_multi + 2) then
                                     io_brk;
                                     global_step_cnt := global_step_cnt + 1;
-                                end if;
-                            end if;
-                        end loop;
-                        
-                        dma_step_cnt := dma_step_cnt + 1;
+--                                end if;
+--                            end if;
+--                        end loop;
+--                        
+--                        dma_step_cnt := dma_step_cnt + 1;
 
                     elsif (global_step_cnt = 5) then
                         --step4 = scroll test and ppu reg read test.
