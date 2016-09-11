@@ -335,7 +335,7 @@ end;
         case reg_v_cur_state is
             when IDLE =>
                 if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
-                    pi_rnd_en(3) = '1' and
+                    pi_rnd_en(2) = '1' and
                     reg_nes_x mod 8 = 0) then
                     --start vram access process.
                     reg_v_next_state <= AD_SET0;
@@ -344,31 +344,40 @@ end;
                 end if;
             when AD_SET0 =>
                 if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
-                    pi_rnd_en(0) = '1'
+                    pi_rnd_en(3) = '1'
                 ) then
                     reg_v_next_state <= AD_SET1;
+                elsif (is_idle(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
+                    ---when nes_x=257, fall to idle
+                    reg_v_next_state <= IDLE;
                 else
                     reg_v_next_state <= reg_v_cur_state;
                 end if;
             when AD_SET1 =>
                 if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
-                    pi_rnd_en(1) = '1'
+                    pi_rnd_en(0) = '1'
                 ) then
                     reg_v_next_state <= AD_SET2;
+                elsif (is_idle(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
+                    ---when nes_x=257, fall to idle
+                    reg_v_next_state <= IDLE;
                 else
                     reg_v_next_state <= reg_v_cur_state;
                 end if;
             when AD_SET2 =>
                 if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
-                    pi_rnd_en(2) = '1'
+                    pi_rnd_en(1) = '1'
                 ) then
                     reg_v_next_state <= AD_SET3;
+                elsif (is_idle(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
+                    ---when nes_x=257, fall to idle
+                    reg_v_next_state <= IDLE;
                 else
                     reg_v_next_state <= reg_v_cur_state;
                 end if;
             when AD_SET3 =>
                 if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
-                    pi_rnd_en(3) = '1'
+                    pi_rnd_en(2) = '1'
                 ) then
                     reg_v_next_state <= REG_SET0;
                 elsif (is_idle(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
@@ -379,31 +388,40 @@ end;
                 end if;
             when REG_SET0 =>
                 if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
-                    pi_rnd_en(0) = '1'
+                    pi_rnd_en(3) = '1'
                 ) then
                     reg_v_next_state <= REG_SET1;
+                elsif (is_idle(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
+                    ---when nes_x=257, fall to idle
+                    reg_v_next_state <= IDLE;
                 else
                     reg_v_next_state <= reg_v_cur_state;
                 end if;
             when REG_SET1 =>
                 if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
-                    pi_rnd_en(1) = '1'
+                    pi_rnd_en(0) = '1'
                 ) then
                     reg_v_next_state <= REG_SET2;
+                elsif (is_idle(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
+                    ---when nes_x=257, fall to idle
+                    reg_v_next_state <= IDLE;
                 else
                     reg_v_next_state <= reg_v_cur_state;
                 end if;
             when REG_SET2 =>
                 if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
-                    pi_rnd_en(2) = '1'
+                    pi_rnd_en(1) = '1'
                 ) then
                     reg_v_next_state <= REG_SET3;
+                elsif (is_idle(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
+                    ---when nes_x=257, fall to idle
+                    reg_v_next_state <= IDLE;
                 else
                     reg_v_next_state <= reg_v_cur_state;
                 end if;
             when REG_SET3 =>
                 if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
-                    pi_rnd_en(3) = '1'
+                    pi_rnd_en(2) = '1'
                 ) then
                     reg_v_next_state <= AD_SET0;
                 elsif (is_idle(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
@@ -476,7 +494,7 @@ end;
                     reg_v_addr(13 downto 10) <= "10" & pi_ppu_ctrl(PPUBNA downto 0)
                                                     + ("000" & conv_std_logic_vector(reg_prf_x, 9)(8));
                 
-                elsif (reg_prf_x mod 8 = 2 and reg_v_cur_state = REG_SET0) then
+                elsif (reg_prf_x mod 8 = 2 and reg_v_cur_state = REG_SET1) then
                     reg_disp_nt     <= reg_v_data;
                 
                 ----fetch attr table byte.
@@ -489,7 +507,7 @@ end;
                             pi_ppu_ctrl(PPUBNA downto 0) & "11"
                                 + ("000" & conv_std_logic_vector(reg_prf_x, 9)(8) & "00");
                 
-                elsif (reg_prf_x mod 8 = 4 and reg_v_cur_state = REG_SET0) then
+                elsif (reg_prf_x mod 8 = 4 and reg_v_cur_state = REG_SET1) then
                     reg_disp_attr   <= reg_v_data;
 
                 ----fetch pattern table low byte.
@@ -520,7 +538,7 @@ end;
         elsif (rising_edge(pi_base_clk)) then
 
             if (is_bg(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
-                if (reg_v_cur_state = REG_SET0) then
+                if (reg_v_cur_state = REG_SET1) then
                     if (reg_prf_x mod 8 = 6) then
                         reg_disp_ptn_l   <= reg_v_data & reg_disp_ptn_l(7 downto 0);
                     else
