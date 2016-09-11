@@ -58,8 +58,8 @@ add wave -label reg_v_cur_state sim:/testbench_motones_sim/sim_board/render_inst
 
 add wave -label disp_nt -radix hex sim:/testbench_motones_sim/sim_board/render_inst/reg_disp_nt;
 add wave -label disp_attr   -radix hex sim:/testbench_motones_sim/sim_board/render_inst/reg_disp_attr;
-add wave -label disp_ptn_l -radix hex sim:/testbench_motones_sim/sim_board/render_inst/reg_disp_ptn_l;
-add wave -label disp_ptn_h -radix hex sim:/testbench_motones_sim/sim_board/render_inst/reg_disp_ptn_h;
+add wave -label sft_ptn_l -radix hex sim:/testbench_motones_sim/sim_board/render_inst/reg_sft_ptn_l;
+add wave -label sft_ptn_h -radix hex sim:/testbench_motones_sim/sim_board/render_inst/reg_sft_ptn_h;
 
 add wave -label plt_addr -radix hex sim:/testbench_motones_sim/sim_board/render_inst/reg_plt_addr;
 add wave -label plt_data -radix hex sim:/testbench_motones_sim/sim_board/render_inst/reg_plt_data;

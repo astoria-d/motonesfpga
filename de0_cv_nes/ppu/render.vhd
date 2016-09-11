@@ -218,8 +218,9 @@ signal reg_v_data       : std_logic_vector (7 downto 0);
 
 signal reg_disp_nt          : std_logic_vector (7 downto 0);
 signal reg_disp_attr        : std_logic_vector (7 downto 0);
-signal reg_disp_ptn_l       : std_logic_vector (15 downto 0);
-signal reg_disp_ptn_h       : std_logic_vector (15 downto 0);
+signal reg_tmp_ptn_l        : std_logic_vector (7 downto 0);
+signal reg_sft_ptn_l        : std_logic_vector (15 downto 0);
+signal reg_sft_ptn_h        : std_logic_vector (15 downto 0);
 
 signal reg_plt_ce_n       : std_logic;
 signal reg_plt_rd_n       : std_logic;
@@ -533,28 +534,29 @@ end;
     bg_ptn_p : process (pi_rst_n, pi_base_clk)
     begin
         if (pi_rst_n = '0') then
-            reg_disp_ptn_l  <= (others => '0');
-            reg_disp_ptn_h  <= (others => '0');
+            reg_tmp_ptn_l <= (others => '0');
+            reg_sft_ptn_l <= (others => '0');
+            reg_sft_ptn_h <= (others => '0');
         elsif (rising_edge(pi_base_clk)) then
 
             if (is_bg(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
-                if (reg_v_cur_state = REG_SET1) then
-                    if (reg_prf_x mod 8 = 6) then
-                        reg_disp_ptn_l   <= reg_v_data & reg_disp_ptn_l(7 downto 0);
-                    else
-                        reg_disp_ptn_l   <= "0" & reg_disp_ptn_l(15 downto 1);
+                --fetch low first.
+                if (reg_prf_x mod 8 = 6 and reg_v_cur_state = REG_SET1) then
+                    reg_tmp_ptn_l <= reg_v_data;
+                end if;
+
+                if (reg_prf_x mod 8 = 0) then
+                    if (reg_v_cur_state = REG_SET1) then
+                        --copy low & shift.
+                        reg_sft_ptn_l <= reg_tmp_ptn_l & reg_sft_ptn_l(8 downto 1);
+                        --fetch high & shift.
+                        reg_sft_ptn_h <= reg_v_data & reg_sft_ptn_h(8 downto 1);
                     end if;
-
-                    if (reg_prf_x mod 8 = 0) then
-                        reg_disp_ptn_h   <= reg_v_data & reg_disp_ptn_h(7 downto 0);
-                    else
-                        reg_disp_ptn_h   <= "0" & reg_disp_ptn_h(15 downto 1);
+                else
+                    if (reg_v_cur_state = AD_SET1 or reg_v_cur_state = REG_SET1) then
+                        reg_sft_ptn_l <= "0" & reg_sft_ptn_l(15 downto 1);
+                        reg_sft_ptn_h <= "0" & reg_sft_ptn_h(15 downto 1);
                     end if;
-
-                elsif (reg_v_cur_state = AD_SET0 or reg_v_cur_state = REG_SET0) then
-                    reg_disp_ptn_l   <= "0" & reg_disp_ptn_l(15 downto 1);
-                    reg_disp_ptn_h   <= "0" & reg_disp_ptn_h(15 downto 1);
-
                 end if;
             end if;
         end if;--if (pi_rst_n = '0') then
@@ -569,16 +571,17 @@ end;
         elsif (rising_edge(pi_base_clk)) then
             
             reg_plt_data    <= pi_plt_data;
-            
-            if (is_bg(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
+            --shift pattern propageted 1 cycle later.
+            if (is_bg(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
+                (reg_v_cur_state = AD_SET2 or reg_v_cur_state = REG_SET2)) then
                 if (conv_std_logic_vector(reg_nes_y, 9)(4) = '0'
-                    and (reg_disp_ptn_h(0) or reg_disp_ptn_l(0)) = '1') then
+                    and (reg_sft_ptn_h(0) or reg_sft_ptn_l(0)) = '1') then
                     reg_plt_addr <=
-                            "0" & reg_disp_attr(1 downto 0) & reg_disp_ptn_h(0) & reg_disp_ptn_l(0);
+                            "0" & reg_disp_attr(1 downto 0) & reg_sft_ptn_h(0) & reg_sft_ptn_l(0);
                 elsif (conv_std_logic_vector(reg_nes_y, 9)(4) = '1'
-                    and (reg_disp_ptn_h(0) or reg_disp_ptn_l(0)) = '1') then
+                    and (reg_sft_ptn_h(0) or reg_sft_ptn_l(0)) = '1') then
                     reg_plt_addr <=
-                            "0" & reg_disp_attr(5 downto 4) & reg_disp_ptn_h(0) & reg_disp_ptn_l(0);
+                            "0" & reg_disp_attr(5 downto 4) & reg_sft_ptn_h(0) & reg_sft_ptn_l(0);
                 else
                     ---else: no output color >> universal bg color output.
                     --0x3f00 is the universal bg palette.
