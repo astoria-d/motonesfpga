@@ -82,5 +82,5 @@ view signals
 run 4 us
 wave zoom full
 
-run 162 us
+run 166 us
 

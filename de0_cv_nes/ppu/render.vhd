@@ -551,7 +551,7 @@ end;
                         reg_disp_ptn_h   <= "0" & reg_disp_ptn_h(15 downto 1);
                     end if;
 
-                elsif (reg_v_cur_state = AD_SET0) then
+                elsif (reg_v_cur_state = AD_SET0 or reg_v_cur_state = REG_SET0) then
                     reg_disp_ptn_l   <= "0" & reg_disp_ptn_l(15 downto 1);
                     reg_disp_ptn_h   <= "0" & reg_disp_ptn_h(15 downto 1);
 

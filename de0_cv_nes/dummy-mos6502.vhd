@@ -236,7 +236,7 @@ end;
                             --set vram addr 2005 (first row, 6th col)
                             io_out(16#2006#, 16#20#);
                         elsif (nt_step_cnt = 1 * cpu_io_multi) then
-                            io_out(16#2006#, 16#03#);
+                            io_out(16#2006#, 16#08#);
                         elsif (nt_step_cnt = 2 * cpu_io_multi) then
                             --set name tbl data
                             --0x44, 45, 45 = DEM
