@@ -22,7 +22,10 @@ entity de0_cv_nes is
         po_r           : out std_logic_vector(3 downto 0);
         po_g           : out std_logic_vector(3 downto 0);
         po_b           : out std_logic_vector(3 downto 0);
-        pi_nt_v_mirror : in std_logic
+        pi_nt_v_mirror : in std_logic;
+        
+        --for debugging..
+        po_dbg_cnt     : out std_logic_vector (63 downto 0)
          );
 end de0_cv_nes;
 
@@ -233,6 +236,8 @@ signal wr_ppu_status        : std_logic_vector (7 downto 0);
 signal wr_ppu_scroll_x      : std_logic_vector (7 downto 0);
 signal wr_ppu_scroll_y      : std_logic_vector (7 downto 0);
 
+signal reg_dbg_cnt          : std_logic_vector (63 downto 0);
+
 begin
 
     dbg_base_clk <= pi_base_clk;
@@ -414,4 +419,24 @@ begin
     wr_irq_n <= '1';
     wr_nmi_n <= '1';
 
+    po_dbg_cnt <= reg_dbg_cnt;
+    deb_cnt_p : process (pi_rst_n, pi_base_clk)
+use ieee.std_logic_unsigned.all;
+    variable cnt : integer;
+    begin
+        if (pi_rst_n = '0') then
+            reg_dbg_cnt <= (others => '0');
+            cnt := 0;
+        else
+            if (rising_edge(pi_base_clk)) then
+                if (cnt = 0) then
+                    --debug count is half cycle because too fast to capture in st ii.
+                    reg_dbg_cnt <= reg_dbg_cnt + 1;
+                    cnt := 1;
+                else
+                    cnt := 0;
+                end if;
+            end if;
+        end if;
+    end process;
 end rtl;

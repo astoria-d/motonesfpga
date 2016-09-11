@@ -347,9 +347,6 @@ end;
                     pi_rnd_en(0) = '1'
                 ) then
                     reg_v_next_state <= AD_SET1;
-                elsif (is_idle(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
-                    ---when nes_x=257, fall to idle
-                    reg_v_next_state <= IDLE;
                 else
                     reg_v_next_state <= reg_v_cur_state;
                 end if;
@@ -374,6 +371,9 @@ end;
                     pi_rnd_en(3) = '1'
                 ) then
                     reg_v_next_state <= REG_SET0;
+                elsif (is_idle(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
+                    ---when nes_x=257, fall to idle
+                    reg_v_next_state <= IDLE;
                 else
                     reg_v_next_state <= reg_v_cur_state;
                 end if;
@@ -406,6 +406,9 @@ end;
                     pi_rnd_en(3) = '1'
                 ) then
                     reg_v_next_state <= AD_SET0;
+                elsif (is_idle(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
+                    ---when nes_x=257, fall to idle
+                    reg_v_next_state <= IDLE;
                 else
                     reg_v_next_state <= reg_v_cur_state;
                 end if;

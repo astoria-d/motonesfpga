@@ -19,6 +19,7 @@ vsim -t 1ps -L altera -L lpm -L sgate -L altera_mf -L altera_lnsim -L cyclonev -
 
 ##script custom part...
 
+add wave -label dbg_cnt -radix hex  sim:/testbench_motones_sim/sim_board/po_dbg_cnt;
 add wave -label rst_n               sim:/testbench_motones_sim/sim_board/pi_rst_n;
 add wave -label base_clk            sim:/testbench_motones_sim/sim_board/pi_base_clk;
 add wave -label wr_cpu_en           sim:/testbench_motones_sim/sim_board/wr_cpu_en;
@@ -46,13 +47,13 @@ add wave -label vram_addr        -radix hex sim:/testbench_motones_sim/sim_board
 add wave -label vram_data        -radix hex sim:/testbench_motones_sim/sim_board/wr_v_data;
 
 add wave -divider render
-add wave -label vga_x       sim:/testbench_motones_sim/sim_board/render_inst/reg_vga_x;
-add wave -label vga_y       sim:/testbench_motones_sim/sim_board/render_inst/reg_vga_y;
+#add wave -label vga_x       sim:/testbench_motones_sim/sim_board/render_inst/reg_vga_x;
+#add wave -label vga_y       sim:/testbench_motones_sim/sim_board/render_inst/reg_vga_y;
 add wave -label nes_x       sim:/testbench_motones_sim/sim_board/render_inst/reg_nes_x;
 add wave -label nes_y       sim:/testbench_motones_sim/sim_board/render_inst/reg_nes_y;
 #add wave -label wr_rnd_en  sim:/testbench_motones_sim/sim_board/wr_rnd_en;
 add wave -label reg_v_cur_state sim:/testbench_motones_sim/sim_board/render_inst/reg_v_cur_state;
-add wave -label prf_x       sim:/testbench_motones_sim/sim_board/render_inst/reg_prf_x;
+#add wave -label prf_x       sim:/testbench_motones_sim/sim_board/render_inst/reg_prf_x;
 #add wave -label prf_y       sim:/testbench_motones_sim/sim_board/render_inst/reg_prf_y;
 
 add wave -label disp_nt -radix hex sim:/testbench_motones_sim/sim_board/render_inst/reg_disp_nt;

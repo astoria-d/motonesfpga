@@ -17,8 +17,15 @@ end mos6502;
 
 architecture rtl of mos6502 is
 
+signal reg_r_nw     : std_logic;
+signal reg_addr     : std_logic_vector ( 15 downto 0);
+signal reg_d_io     : std_logic_vector ( 7 downto 0);
 
 begin
+
+    po_r_nw     <= reg_r_nw;
+    po_addr     <= reg_addr;
+    pio_d_io     <= reg_d_io;
 
     --set ppu value...
     set_ppu_p : process (pi_base_clk, pi_rst_n)
@@ -39,31 +46,31 @@ begin
 
 procedure io_out (ad: in integer; dt : in integer) is
 begin
-    po_r_nw <= '0';
-    po_addr <= conv_std_logic_vector(ad, 16);
-    pio_d_io <= conv_std_logic_vector(dt, 8);
+    reg_r_nw <= '0';
+    reg_addr <= conv_std_logic_vector(ad, 16);
+    reg_d_io <= conv_std_logic_vector(dt, 8);
 end;
 
 procedure io_brk is
 begin
-    po_addr <= (others => 'Z');
-    pio_d_io <= (others => 'Z');
-    po_r_nw <= 'Z';
+    reg_addr <= (others => '0');
+    reg_d_io <= (others => '0');
+    reg_r_nw <= '1';
 end;
 
 procedure io_read (ad: in integer) is
 begin
-    po_r_nw <= '1';
-    po_addr <= conv_std_logic_vector(ad, 16);
-    pio_d_io <= (others => 'Z');
+    reg_r_nw <= '1';
+    reg_addr <= conv_std_logic_vector(ad, 16);
+    reg_d_io <= (others => 'Z');
 end;
 
     begin
         if (pi_rst_n = '0') then
             
-            po_r_nw <= 'Z';
-            po_addr <= (others => 'Z');
-            pio_d_io <= (others => 'Z');
+            reg_r_nw <= 'Z';
+            reg_addr <= (others => 'Z');
+            reg_d_io <= (others => 'Z');
             
             init_done := '0';
             global_step_cnt := 0;
@@ -514,9 +521,9 @@ end;
                     end if;
                 end if;--if (init_done = '0') then
             else
-                po_r_nw <= 'Z';
-                po_addr <= (others => 'Z');
-                pio_d_io <= (others => 'Z');
+                reg_r_nw <= '1';
+                reg_addr <= (others => '0');
+                reg_d_io <= (others => '0');
             end if;--if (rdy = '1') then
             end if;--if (pi_cpu_en(0) = '1') then
         end if; --if (rst_n = '0') then

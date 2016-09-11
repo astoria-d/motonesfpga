@@ -21,7 +21,10 @@ architecture stimulus of testbench_motones_sim is
         po_r           : out std_logic_vector(3 downto 0);
         po_g           : out std_logic_vector(3 downto 0);
         po_b           : out std_logic_vector(3 downto 0);
-        pi_nt_v_mirror : in std_logic
+        pi_nt_v_mirror : in std_logic;
+        
+        --for debugging..
+        po_dbg_cnt     : out std_logic_vector (63 downto 0)
          );
     end component;
 
@@ -40,6 +43,7 @@ architecture stimulus of testbench_motones_sim is
     signal joypad1     : std_logic_vector(7 downto 0);
     signal joypad2     : std_logic_vector(7 downto 0);
     signal nt_v_mirror : std_logic;
+    signal dbg_cnt     : std_logic_vector (63 downto 0);
 
     constant powerup_time   : time := 2 us;
     constant reset_time     : time := 890 ns;
@@ -55,7 +59,7 @@ begin
     sim_board : de0_cv_nes port map (
     dbg_base_clk,
     base_clk, reset_input, joypad1, joypad2, 
-            h_sync_n, v_sync_n, r, g, b, nt_v_mirror);
+            h_sync_n, v_sync_n, r, g, b, nt_v_mirror, dbg_cnt);
 
     --- input reset.
     reset_p: process
