@@ -542,6 +542,7 @@ end;
             if (is_bg(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
                 --fetch low first.
                 if (reg_prf_x mod 8 = 6 and reg_v_cur_state = REG_SET1) then
+                    --TODO: must reverse order if attr not set.
                     reg_tmp_ptn_l <= reg_v_data;
                 end if;
 
@@ -550,6 +551,7 @@ end;
                         --copy low & shift.
                         reg_sft_ptn_l <= reg_tmp_ptn_l & reg_sft_ptn_l(8 downto 1);
                         --fetch high & shift.
+                        --TODO: must reverse order if attr not set.
                         reg_sft_ptn_h <= reg_v_data & reg_sft_ptn_h(8 downto 1);
                     end if;
                 else
