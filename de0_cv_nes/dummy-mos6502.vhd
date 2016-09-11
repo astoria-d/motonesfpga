@@ -19,13 +19,18 @@ architecture rtl of mos6502 is
 
 signal reg_r_nw     : std_logic;
 signal reg_addr     : std_logic_vector ( 15 downto 0);
-signal reg_d_io     : std_logic_vector ( 7 downto 0);
+signal reg_d_in     : std_logic_vector ( 7 downto 0);
+signal reg_d_out    : std_logic_vector ( 7 downto 0);
+
+signal dummy_ad     : std_logic_vector (12 downto 0) := "0000000000000";
+signal dummy_cnt    : integer := 0;
 
 begin
 
     po_r_nw     <= reg_r_nw;
     po_addr     <= reg_addr;
-    pio_d_io     <= reg_d_io;
+    pio_d_io    <= reg_d_out;
+    reg_d_in    <= pio_d_io;
 
     --set ppu value...
     set_ppu_p : process (pi_base_clk, pi_rst_n)
@@ -48,21 +53,31 @@ procedure io_out (ad: in integer; dt : in integer) is
 begin
     reg_r_nw <= '0';
     reg_addr <= conv_std_logic_vector(ad, 16);
-    reg_d_io <= conv_std_logic_vector(dt, 8);
+    reg_d_out <= conv_std_logic_vector(dt, 8);
 end;
 
 procedure io_brk is
+use ieee.std_logic_unsigned.all;
 begin
-    reg_addr <= (others => '0');
-    reg_d_io <= (others => '0');
-    reg_r_nw <= '1';
+    --fake ram read/write to emulate dummy i/o.
+    reg_addr <= "000" & dummy_ad;
+    dummy_ad <= dummy_ad + 1;
+    if (dummy_cnt = 0) then
+        reg_d_out <= (others => 'Z');
+        reg_r_nw <= '1';
+        dummy_cnt <= 1;
+    else
+        reg_d_out <= dummy_ad(7 downto 0);
+        reg_r_nw <= '0';
+        dummy_cnt <= 0;
+    end if;
 end;
 
 procedure io_read (ad: in integer) is
 begin
     reg_r_nw <= '1';
     reg_addr <= conv_std_logic_vector(ad, 16);
-    reg_d_io <= (others => 'Z');
+    reg_d_out <= (others => 'Z');
 end;
 
     begin
@@ -70,7 +85,7 @@ end;
             
             reg_r_nw <= 'Z';
             reg_addr <= (others => 'Z');
-            reg_d_io <= (others => 'Z');
+            reg_d_out <= (others => 'Z');
             
             init_done := '0';
             global_step_cnt := 0;
@@ -465,7 +480,8 @@ end;
                         else
                             io_brk;
                             if (enable_ppu_step_cnt > 1 * cpu_io_multi) then
-                                global_step_cnt := global_step_cnt + 1;
+                                --skip nmi test at this momemnt..
+                                global_step_cnt := global_step_cnt + 3;
                             end if;
                         end if;
                         enable_ppu_step_cnt := enable_ppu_step_cnt + 1;
@@ -519,11 +535,13 @@ end;
                         io_brk;
                         init_done := '1';
                     end if;
+                else
+                    io_brk;
                 end if;--if (init_done = '0') then
             else
-                reg_r_nw <= '1';
-                reg_addr <= (others => '0');
-                reg_d_io <= (others => '0');
+                reg_r_nw <= 'Z';
+                reg_addr <= (others => 'Z');
+                reg_d_out <= (others => 'Z');
             end if;--if (rdy = '1') then
             end if;--if (pi_cpu_en(0) = '1') then
         end if; --if (rst_n = '0') then
@@ -534,4 +552,34 @@ end rtl;
 
 
 
+
+-----------dummy prg rom
+library ieee;
+use ieee.std_logic_1164.all;
+entity prg_rom is 
+    port (
+            pi_rst_n        : in std_logic;
+            pi_base_clk 	: in std_logic;
+            pi_ce_n         : in std_logic;
+            pi_addr         : in std_logic_vector (14 downto 0);
+            pi_data         : out std_logic_vector (7 downto 0)
+        );
+end prg_rom;
+architecture rtl of prg_rom is
+begin
+    p_read : process (pi_base_clk)
+    begin
+        if (pi_rst_n = '0') then
+            pi_data <= (others => 'Z');
+        elsif (rising_edge(pi_base_clk)) then
+            if (pi_ce_n = '0') then
+                ---dummy data.
+                pi_data <= "00110011";
+            else
+                pi_data <= (others => 'Z');
+            end if;
+        end if;
+    end process;
+
+end rtl;
 

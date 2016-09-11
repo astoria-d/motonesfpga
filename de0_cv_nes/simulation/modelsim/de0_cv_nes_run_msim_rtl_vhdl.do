@@ -73,7 +73,7 @@ add wave -label g -radix hex sim:/testbench_motones_sim/sim_board/po_g;
 add wave -label b -radix hex sim:/testbench_motones_sim/sim_board/po_b;
 
 
-#add wave -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/reg*;
+#add wave -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg*;
 
 
 view structure

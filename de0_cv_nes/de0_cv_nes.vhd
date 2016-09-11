@@ -65,6 +65,15 @@ architecture rtl of de0_cv_nes is
             );
     end component;
 
+    component prg_rom port (
+                pi_rst_n        : in std_logic;
+                pi_base_clk 	: in std_logic;
+                pi_ce_n         : in std_logic;
+                pi_addr         : in std_logic_vector (14 downto 0);
+                pi_data         : out std_logic_vector (7 downto 0)
+            );
+    end component;
+
     component ppu port (
                 pi_rst_n       : in std_logic;
                 pi_base_clk    : in std_logic;
@@ -199,6 +208,8 @@ signal wr_rdy       : std_logic;
 signal wr_irq_n     : std_logic;
 signal wr_nmi_n     : std_logic;
 signal wr_r_nw      : std_logic;
+--r_n is negative logic of wr_r_nw.
+signal lg_r_n       : std_logic;
 
 signal wr_addr      : std_logic_vector ( 15 downto 0);
 signal wr_d_io      : std_logic_vector ( 7 downto 0);
@@ -272,6 +283,27 @@ begin
             wr_ram_ce_n,
             wr_ppu_ce_n,
             wr_apu_ce_n
+            );
+
+    --program rom
+    prom_inst : prg_rom port map (
+            pi_rst_n,
+            pi_base_clk, 
+            wr_rom_ce_n,
+            wr_addr(14 downto 0), 
+            wr_d_io
+            );
+
+    lg_r_n <= not wr_r_nw;
+    --cpu ram inst.
+    cpu_ram_inst : ram generic map
+        (ram_2k, 8) port map (
+            pi_base_clk,
+            wr_ram_ce_n,
+            lg_r_n, 
+            wr_r_nw, 
+            wr_addr(10 downto 0), 
+            wr_d_io
             );
 
     --ppu
