@@ -567,7 +567,7 @@ entity prg_rom is
 end prg_rom;
 architecture rtl of prg_rom is
 begin
-    p_read : process (pi_base_clk)
+    p_read : process (pi_rst_n, pi_base_clk)
     begin
         if (pi_rst_n = '0') then
             pi_data <= (others => 'Z');
