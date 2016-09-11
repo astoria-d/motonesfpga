@@ -239,12 +239,12 @@ end;
                             io_out(16#2006#, 16#03#);
                         elsif (nt_step_cnt = 2 * cpu_io_multi) then
                             --set name tbl data
-                            --0x44, 45, 45 = DEE
+                            --0x44, 45, 45 = DEM
                             io_out(16#2007#, 16#44#);
                         elsif (nt_step_cnt = 3 * cpu_io_multi) then
                             io_out(16#2007#, 16#45#);
                         elsif (nt_step_cnt = 4 * cpu_io_multi) then
-                            io_out(16#2007#, 16#45#);
+                            io_out(16#2007#, 16#4d#);
 
 
                         elsif (nt_step_cnt = 5 * cpu_io_multi) then
