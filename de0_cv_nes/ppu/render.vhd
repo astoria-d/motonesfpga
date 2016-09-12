@@ -285,6 +285,16 @@ signal reg_s_oam_wr_n       : std_logic;
 signal reg_s_oam_addr       : std_logic_vector (4 downto 0);
 signal reg_s_oam_data       : std_logic_vector (7 downto 0);
 
+signal reg_p_oam_cpy_cnt    : integer range 0 to 255;
+signal reg_s_oam_cpy_cnt    : integer range 0 to 32;
+signal spr_eval_cnt         : integer range 0 to 3;
+
+
+signal reg_p_oam_ce_n       : std_logic;
+signal reg_p_oam_rd_n       : std_logic;
+signal reg_p_oam_wr_n       : std_logic;
+signal reg_p_oam_addr       : std_logic_vector (7 downto 0);
+
 begin
 
     --position and sync signal generate.
@@ -961,6 +971,12 @@ end;
     end process;
 
     --sprite main process...
+
+    po_spr_ce_n     <= reg_p_oam_ce_n;
+    po_spr_rd_n     <= reg_p_oam_rd_n;
+    po_spr_wr_n     <= reg_p_oam_wr_n;
+    po_spr_addr     <= reg_p_oam_addr;
+
     sprite_main_p : process (pi_rst_n, pi_base_clk)
 function is_s_oam_clear (
     pm_ssp          : in std_logic;
@@ -985,7 +1001,7 @@ function is_spr_eval (
 begin
     if (pm_ssp = '1' and
         (pm_nes_x >= HSCAN_OAM_EVA_START and pm_nes_x <= HSCAN) and
-        (pm_nes_y < VSCAN and pm_nes_y = VSCAN_NEXT_START)) then
+        (pm_nes_y < VSCAN or pm_nes_y = VSCAN_NEXT_START)) then
         return 1;
     else
         return 0;
@@ -994,19 +1010,29 @@ end;
 
     begin
         if (pi_rst_n = '0') then
+            ---secondary oam ram
             reg_s_oam_ce_n <= '1';
             reg_s_oam_rd_n <= '1';
             reg_s_oam_wr_n <= '1';
             reg_s_oam_data <= (others => 'Z');
             reg_s_oam_addr <= (others => '0');
+            reg_s_oam_cpy_cnt <= 0;
+            reg_p_oam_cpy_cnt <= 0;
+
+            --primary oam ram.
+            reg_p_oam_ce_n <= 'Z';
+            reg_p_oam_rd_n <= 'Z';
+            reg_p_oam_wr_n <= 'Z';
+            reg_p_oam_addr <= (others => 'Z');
+
         else
             if (rising_edge(pi_base_clk)) then
                 if (is_s_oam_clear(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
                     --fill s_oam with FF.
                     reg_s_oam_data <= (others => '1');
+                    reg_s_oam_rd_n <= '1';
                     if (reg_s_oam_cur_state = AD_SET0) then
                         reg_s_oam_ce_n <= '0';
-                        reg_s_oam_rd_n <= '1';
                         reg_s_oam_wr_n <= '1';
                     elsif (reg_s_oam_cur_state = REG_CLR0) then
                         reg_s_oam_wr_n <= '0';
@@ -1015,11 +1041,57 @@ end;
                     elsif (reg_s_oam_cur_state = REG_CLR3) then
                         reg_s_oam_addr <= reg_s_oam_addr + 1;
                     end if;
+                    
+                    --init primary oam.
+                    reg_p_oam_ce_n <= '1';
+                    reg_p_oam_rd_n <= '1';
+                    reg_p_oam_wr_n <= '1';
+                    reg_p_oam_addr <= (others => '0');
+                    reg_s_oam_cpy_cnt <= 0;
+                    reg_p_oam_cpy_cnt <= 0;
+                    spr_eval_cnt <= 0;
                 elsif (is_spr_eval(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    if (reg_s_oam_cur_state = AD_SET0) then
-                        reg_s_oam_ce_n <= '0';
-                        reg_s_oam_rd_n <= '0';
-                        reg_s_oam_wr_n <= '1';
+                    --copy data from primary oam ram.
+                    reg_s_oam_addr <= conv_std_logic_vector(reg_s_oam_cpy_cnt, 5);
+                    reg_s_oam_data <= pi_spr_data;
+                    reg_s_oam_rd_n <= '1';
+
+                    reg_p_oam_ce_n <= '0';
+                    reg_p_oam_rd_n <= '0';
+                    reg_p_oam_wr_n <= '1';
+                    reg_p_oam_addr <= conv_std_logic_vector(reg_p_oam_cpy_cnt, 8);
+
+                    if (reg_s_oam_cpy_cnt < 32) then
+                        if (reg_s_oam_cur_state = AD_SET0) then
+                            reg_s_oam_ce_n <= '0';
+                            reg_s_oam_wr_n <= '1';
+                        elsif (reg_s_oam_cur_state = REG_CP0) then
+                            reg_s_oam_ce_n <= '0';
+                            reg_s_oam_wr_n <= '0';
+                        elsif (reg_s_oam_cur_state = REG_CP1) then
+                            reg_s_oam_ce_n <= '1';
+                            reg_s_oam_wr_n <= '1';
+                            if (spr_eval_cnt = 0 and
+                                (pi_spr_data <= reg_nes_y and reg_nes_y < pi_spr_data + 8)) then
+                                --evaluate and found sprite in the range.
+                                --increment s-oam.
+                                reg_s_oam_cpy_cnt <= reg_s_oam_cpy_cnt + 1;
+                                reg_p_oam_cpy_cnt <= reg_p_oam_cpy_cnt + 1;
+                                spr_eval_cnt <= spr_eval_cnt + 1;
+                            elsif (spr_eval_cnt = 0) then
+                                --sprite not hit. next entry.
+                                reg_p_oam_cpy_cnt <= reg_p_oam_cpy_cnt + 4;
+                            else
+                                --sprite copying.
+                                reg_s_oam_cpy_cnt <= reg_s_oam_cpy_cnt + 1;
+                                reg_p_oam_cpy_cnt <= reg_p_oam_cpy_cnt + 1;
+                                if (spr_eval_cnt = 3) then
+                                    spr_eval_cnt <= 0;
+                                else
+                                    spr_eval_cnt <= spr_eval_cnt + 1;
+                                end if;
+                            end if;
+                        end if;
                     end if;
                 else
                     reg_s_oam_ce_n <= '1';
@@ -1027,16 +1099,17 @@ end;
                     reg_s_oam_wr_n <= '1';
                     reg_s_oam_data <= (others => 'Z');
                     reg_s_oam_addr <= (others => '0');
+                    reg_s_oam_cpy_cnt <= 0;
+
+                    reg_p_oam_ce_n <= 'Z';
+                    reg_p_oam_rd_n <= 'Z';
+                    reg_p_oam_wr_n <= 'Z';
+                    reg_p_oam_addr <= (others => 'Z');
                 end if;
             end if; --if (rising_edge(emu_ppu_clk)) then
         end if;--if (rst_n = '0') then
    end process;
 
     po_ppu_status   <= (others => '0');
-
-    po_spr_ce_n     <= 'Z';
-    po_spr_rd_n     <= 'Z';
-    po_spr_wr_n     <= 'Z';
-    po_spr_addr     <= (others => 'Z');
 
 end rtl;
