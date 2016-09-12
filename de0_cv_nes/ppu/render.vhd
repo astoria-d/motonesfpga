@@ -960,6 +960,78 @@ end;
         end case;
     end process;
 
+    --sprite main process...
+    sprite_main_p : process (pi_rst_n, pi_base_clk)
+function is_s_oam_clear (
+    pm_ssp          : in std_logic;
+    pm_nes_x        : in integer range 0 to VGA_W_MAX - 1;
+    pm_nes_y        : in integer range 0 to VGA_H_MAX - 1
+    ) return integer is
+begin
+    if (pm_ssp = '0' or
+        (pm_nes_x > HSCAN_OAM_EVA_START) or
+        (pm_nes_y >= VSCAN and pm_nes_y < VSCAN_NEXT_START)) then
+        return 0;
+    else
+        return 1;
+    end if;
+end;
+
+function is_spr_eval (
+    pm_ssp          : in std_logic;
+    pm_nes_x        : in integer range 0 to VGA_W_MAX - 1;
+    pm_nes_y        : in integer range 0 to VGA_H_MAX - 1
+    ) return integer is
+begin
+    if (pm_ssp = '1' and
+        (pm_nes_x >= HSCAN_OAM_EVA_START and pm_nes_x <= HSCAN) and
+        (pm_nes_y < VSCAN and pm_nes_y = VSCAN_NEXT_START)) then
+        return 1;
+    else
+        return 0;
+    end if;
+end;
+
+    begin
+        if (pi_rst_n = '0') then
+            reg_s_oam_ce_n <= '1';
+            reg_s_oam_rd_n <= '1';
+            reg_s_oam_wr_n <= '1';
+            reg_s_oam_data <= (others => 'Z');
+            reg_s_oam_addr <= (others => '0');
+        else
+            if (rising_edge(pi_base_clk)) then
+                if (is_s_oam_clear(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
+                    --fill s_oam with FF.
+                    reg_s_oam_data <= (others => '1');
+                    if (reg_s_oam_cur_state = AD_SET0) then
+                        reg_s_oam_ce_n <= '0';
+                        reg_s_oam_rd_n <= '1';
+                        reg_s_oam_wr_n <= '1';
+                    elsif (reg_s_oam_cur_state = REG_CLR0) then
+                        reg_s_oam_wr_n <= '0';
+                    elsif (reg_s_oam_cur_state = REG_CLR1) then
+                        reg_s_oam_wr_n <= '1';
+                    elsif (reg_s_oam_cur_state = REG_CLR3) then
+                        reg_s_oam_addr <= reg_s_oam_addr + 1;
+                    end if;
+                elsif (is_spr_eval(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
+                    if (reg_s_oam_cur_state = AD_SET0) then
+                        reg_s_oam_ce_n <= '0';
+                        reg_s_oam_rd_n <= '0';
+                        reg_s_oam_wr_n <= '1';
+                    end if;
+                else
+                    reg_s_oam_ce_n <= '1';
+                    reg_s_oam_rd_n <= '1';
+                    reg_s_oam_wr_n <= '1';
+                    reg_s_oam_data <= (others => 'Z');
+                    reg_s_oam_addr <= (others => '0');
+                end if;
+            end if; --if (rising_edge(emu_ppu_clk)) then
+        end if;--if (rst_n = '0') then
+   end process;
+
     po_ppu_status   <= (others => '0');
 
     po_spr_ce_n     <= 'Z';

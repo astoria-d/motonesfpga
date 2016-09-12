@@ -63,6 +63,11 @@ add wave -label nes_y       sim:/testbench_motones_sim/sim_board/render_inst/reg
 
 add wave -divider sprite
 add wave -label reg_s_oam_cur_state sim:/testbench_motones_sim/sim_board/render_inst/reg_s_oam_cur_state;
+add wave -label reg_s_oam_ce_n  sim:/testbench_motones_sim/sim_board/render_inst/reg_s_oam_ce_n;
+add wave -label reg_s_oam_rd_n  sim:/testbench_motones_sim/sim_board/render_inst/reg_s_oam_rd_n;
+add wave -label reg_s_oam_wr_n  sim:/testbench_motones_sim/sim_board/render_inst/reg_s_oam_wr_n;
+add wave -label reg_s_oam_addr -radix hex  sim:/testbench_motones_sim/sim_board/render_inst/reg_s_oam_addr;
+add wave -label reg_s_oam_data -radix hex  sim:/testbench_motones_sim/sim_board/render_inst/reg_s_oam_data;
 
 add wave -divider palette
 add wave -label plt_addr -radix hex sim:/testbench_motones_sim/sim_board/render_inst/reg_plt_addr;
