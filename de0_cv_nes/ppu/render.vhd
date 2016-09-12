@@ -207,7 +207,7 @@ signal reg_nes_y        : integer range 0 to VGA_W_MAX / 2 - 1;
 signal reg_prf_x        : integer range 0 to VGA_W_MAX / 2 + 256 - 1;
 signal reg_prf_y        : integer range 0 to VGA_W_MAX / 2 + 256 - 1;
 
-type vac_state is (
+type reg_status is (
     IDLE,
     AD_SET0,
     AD_SET1,
@@ -220,8 +220,8 @@ type vac_state is (
     );
 
 -------------bg registers.
-signal reg_v_cur_state      : vac_state;
-signal reg_v_next_state     : vac_state;
+signal reg_v_cur_state      : reg_status;
+signal reg_v_next_state     : reg_status;
 
 signal reg_v_ce_n       : std_logic;
 signal reg_v_rd_n       : std_logic;
@@ -243,41 +243,8 @@ signal reg_plt_data       : std_logic_vector (7 downto 0);
 
 ---------------oam registers.
 
-type s_oam_state is (
-    IDLE,
-    AD_SET0,
-    AD_SET1,
-    AD_SET2,
-    AD_SET3,
-    REG_CLR0,
-    REG_CLR1,
-    REG_CLR2,
-    REG_CLR3,
-    REG_CP0,
-    REG_CP1,
-    REG_CP2,
-    REG_CP3,
-    REG_NT0,
-    REG_NT1,
-    REG_NT2,
-    REG_NT3,
-    REG_AT0,
-    REG_AT1,
-    REG_AT2,
-    REG_AT3,
-    REG_PL0,
-    REG_PL1,
-    REG_PL2,
-    REG_PL3,
-    REG_PH0,
-    REG_PH1,
-    REG_PH2,
-    REG_PH3
-    );
-
-
-signal reg_s_oam_cur_state      : s_oam_state;
-signal reg_s_oam_next_state     : s_oam_state;
+signal reg_s_oam_cur_state      : reg_status;
+signal reg_s_oam_next_state     : reg_status;
 
 signal reg_s_oam_ce_n       : std_logic;
 signal reg_s_oam_rd_n       : std_logic;
@@ -752,214 +719,35 @@ end;
                 if (is_idle(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
                     reg_s_oam_next_state <= IDLE;
                 elsif (pi_rnd_en(2) = '1') then
-                    if (reg_nes_x < HSCAN_OAM_EVA_START) then
-                        --first 64 is oam clear.
-                        reg_s_oam_next_state <= REG_CLR0;
-                    elsif (reg_nes_x <= HSCAN) then
-                        --next until 256 is evaluate.
-                        --TODO: must add evaluation logic...
-                        reg_s_oam_next_state <= REG_CP0;
-                    else
-                        if (reg_nes_x mod 8 = 1) then
-                            reg_s_oam_next_state <= REG_NT0;
-                        elsif (reg_nes_x mod 8 = 3) then
-                            reg_s_oam_next_state <= REG_AT0;
-                        elsif (reg_nes_x mod 8 = 5) then
-                            reg_s_oam_next_state <= REG_PL0;
-                        elsif (reg_nes_x mod 8 = 7) then
-                            reg_s_oam_next_state <= REG_PH0;
-                        else
-                            reg_s_oam_next_state <= reg_s_oam_cur_state;
-                        end if;
-                    end if;
+                    reg_s_oam_next_state <= REG_SET0;
                 else
                     reg_s_oam_next_state <= reg_s_oam_cur_state;
                 end if;
-            when REG_CLR0 =>
+            when REG_SET0 =>
                 if (is_idle(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
                     reg_s_oam_next_state <= IDLE;
                 elsif (pi_rnd_en(3) = '1') then
-                    reg_s_oam_next_state <= REG_CLR1;
+                    reg_s_oam_next_state <= REG_SET1;
                 else
                     reg_s_oam_next_state <= reg_s_oam_cur_state;
                 end if;
-            when REG_CLR1 =>
+            when REG_SET1 =>
                 if (is_idle(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
                     reg_s_oam_next_state <= IDLE;
                 elsif (pi_rnd_en(0) = '1') then
-                    reg_s_oam_next_state <= REG_CLR2;
+                    reg_s_oam_next_state <= REG_SET2;
                 else
                     reg_s_oam_next_state <= reg_s_oam_cur_state;
                 end if;
-            when REG_CLR2 =>
+            when REG_SET2 =>
                 if (is_idle(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
                     reg_s_oam_next_state <= IDLE;
                 elsif (pi_rnd_en(1) = '1') then
-                    reg_s_oam_next_state <= REG_CLR3;
+                    reg_s_oam_next_state <= REG_SET3;
                 else
                     reg_s_oam_next_state <= reg_s_oam_cur_state;
                 end if;
-            when REG_CLR3 =>
-                if (is_idle(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    reg_s_oam_next_state <= IDLE;
-                elsif (pi_rnd_en(2) = '1') then
-                    reg_s_oam_next_state <= AD_SET0;
-                else
-                    reg_s_oam_next_state <= reg_s_oam_cur_state;
-                end if;
-            when REG_CP0 =>
-                if (is_idle(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    reg_s_oam_next_state <= IDLE;
-                elsif (pi_rnd_en(3) = '1') then
-                    reg_s_oam_next_state <= REG_CP1;
-                else
-                    reg_s_oam_next_state <= reg_s_oam_cur_state;
-                end if;
-            when REG_CP1 =>
-                if (is_idle(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    reg_s_oam_next_state <= IDLE;
-                elsif (pi_rnd_en(0) = '1') then
-                    reg_s_oam_next_state <= REG_CP2;
-                else
-                    reg_s_oam_next_state <= reg_s_oam_cur_state;
-                end if;
-            when REG_CP2 =>
-                if (is_idle(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    reg_s_oam_next_state <= IDLE;
-                elsif (pi_rnd_en(1) = '1') then
-                    reg_s_oam_next_state <= REG_CP3;
-                else
-                    reg_s_oam_next_state <= reg_s_oam_cur_state;
-                end if;
-            when REG_CP3 =>
-                if (is_idle(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    reg_s_oam_next_state <= IDLE;
-                elsif (pi_rnd_en(2) = '1') then
-                    reg_s_oam_next_state <= AD_SET0;
-                else
-                    reg_s_oam_next_state <= reg_s_oam_cur_state;
-                end if;
-            when REG_NT0 =>
-                if (is_idle(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    reg_s_oam_next_state <= IDLE;
-                elsif (pi_rnd_en(3) = '1') then
-                    reg_s_oam_next_state <= REG_NT1;
-                else
-                    reg_s_oam_next_state <= reg_s_oam_cur_state;
-                end if;
-            when REG_NT1 =>
-                if (is_idle(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    reg_s_oam_next_state <= IDLE;
-                elsif (pi_rnd_en(0) = '1') then
-                    reg_s_oam_next_state <= REG_NT2;
-                else
-                    reg_s_oam_next_state <= reg_s_oam_cur_state;
-                end if;
-            when REG_NT2 =>
-                if (is_idle(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    reg_s_oam_next_state <= IDLE;
-                elsif (pi_rnd_en(1) = '1') then
-                    reg_s_oam_next_state <= REG_NT3;
-                else
-                    reg_s_oam_next_state <= reg_s_oam_cur_state;
-                end if;
-            when REG_NT3 =>
-                if (is_idle(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    reg_s_oam_next_state <= IDLE;
-                elsif (pi_rnd_en(2) = '1') then
-                    reg_s_oam_next_state <= AD_SET0;
-                else
-                    reg_s_oam_next_state <= reg_s_oam_cur_state;
-                end if;
-            when REG_AT0 =>
-                if (is_idle(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    reg_s_oam_next_state <= IDLE;
-                elsif (pi_rnd_en(3) = '1') then
-                    reg_s_oam_next_state <= REG_AT1;
-                else
-                    reg_s_oam_next_state <= reg_s_oam_cur_state;
-                end if;
-            when REG_AT1 =>
-                if (is_idle(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    reg_s_oam_next_state <= IDLE;
-                elsif (pi_rnd_en(0) = '1') then
-                    reg_s_oam_next_state <= REG_AT2;
-                else
-                    reg_s_oam_next_state <= reg_s_oam_cur_state;
-                end if;
-            when REG_AT2 =>
-                if (is_idle(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    reg_s_oam_next_state <= IDLE;
-                elsif (pi_rnd_en(1) = '1') then
-                    reg_s_oam_next_state <= REG_AT3;
-                else
-                    reg_s_oam_next_state <= reg_s_oam_cur_state;
-                end if;
-            when REG_AT3 =>
-                if (is_idle(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    reg_s_oam_next_state <= IDLE;
-                elsif (pi_rnd_en(2) = '1') then
-                    reg_s_oam_next_state <= AD_SET0;
-                else
-                    reg_s_oam_next_state <= reg_s_oam_cur_state;
-                end if;
-            when REG_PL0 =>
-                if (is_idle(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    reg_s_oam_next_state <= IDLE;
-                elsif (pi_rnd_en(3) = '1') then
-                    reg_s_oam_next_state <= REG_PL1;
-                else
-                    reg_s_oam_next_state <= reg_s_oam_cur_state;
-                end if;
-            when REG_PL1 =>
-                if (is_idle(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    reg_s_oam_next_state <= IDLE;
-                elsif (pi_rnd_en(0) = '1') then
-                    reg_s_oam_next_state <= REG_PL2;
-                else
-                    reg_s_oam_next_state <= reg_s_oam_cur_state;
-                end if;
-            when REG_PL2 =>
-                if (is_idle(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    reg_s_oam_next_state <= IDLE;
-                elsif (pi_rnd_en(1) = '1') then
-                    reg_s_oam_next_state <= REG_PL3;
-                else
-                    reg_s_oam_next_state <= reg_s_oam_cur_state;
-                end if;
-            when REG_PL3 =>
-                if (is_idle(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    reg_s_oam_next_state <= IDLE;
-                elsif (pi_rnd_en(2) = '1') then
-                    reg_s_oam_next_state <= AD_SET0;
-                else
-                    reg_s_oam_next_state <= reg_s_oam_cur_state;
-                end if;
-            when REG_PH0 =>
-                if (is_idle(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    reg_s_oam_next_state <= IDLE;
-                elsif (pi_rnd_en(3) = '1') then
-                    reg_s_oam_next_state <= REG_PH1;
-                else
-                    reg_s_oam_next_state <= reg_s_oam_cur_state;
-                end if;
-            when REG_PH1 =>
-                if (is_idle(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    reg_s_oam_next_state <= IDLE;
-                elsif (pi_rnd_en(0) = '1') then
-                    reg_s_oam_next_state <= REG_PH2;
-                else
-                    reg_s_oam_next_state <= reg_s_oam_cur_state;
-                end if;
-            when REG_PH2 =>
-                if (is_idle(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    reg_s_oam_next_state <= IDLE;
-                elsif (pi_rnd_en(1) = '1') then
-                    reg_s_oam_next_state <= REG_PH3;
-                else
-                    reg_s_oam_next_state <= reg_s_oam_cur_state;
-                end if;
-            when REG_PH3 =>
+            when REG_SET3 =>
                 if (is_idle(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
                     reg_s_oam_next_state <= IDLE;
                 elsif (pi_rnd_en(2) = '1') then
@@ -1034,11 +822,11 @@ end;
                     if (reg_s_oam_cur_state = AD_SET0) then
                         reg_s_oam_ce_n <= '0';
                         reg_s_oam_wr_n <= '1';
-                    elsif (reg_s_oam_cur_state = REG_CLR0) then
+                    elsif (reg_s_oam_cur_state = REG_SET0) then
                         reg_s_oam_wr_n <= '0';
-                    elsif (reg_s_oam_cur_state = REG_CLR1) then
+                    elsif (reg_s_oam_cur_state = REG_SET1) then
                         reg_s_oam_wr_n <= '1';
-                    elsif (reg_s_oam_cur_state = REG_CLR3) then
+                    elsif (reg_s_oam_cur_state = REG_SET3) then
                         reg_s_oam_addr <= reg_s_oam_addr + 1;
                     end if;
                     
@@ -1065,10 +853,10 @@ end;
                         if (reg_s_oam_cur_state = AD_SET0) then
                             reg_s_oam_ce_n <= '0';
                             reg_s_oam_wr_n <= '1';
-                        elsif (reg_s_oam_cur_state = REG_CP0) then
+                        elsif (reg_s_oam_cur_state = REG_SET0) then
                             reg_s_oam_ce_n <= '0';
                             reg_s_oam_wr_n <= '0';
-                        elsif (reg_s_oam_cur_state = REG_CP1) then
+                        elsif (reg_s_oam_cur_state = REG_SET1) then
                             reg_s_oam_ce_n <= '1';
                             reg_s_oam_wr_n <= '1';
                             if (spr_eval_cnt = 0 and
