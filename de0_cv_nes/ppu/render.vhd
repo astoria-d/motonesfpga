@@ -198,6 +198,19 @@ begin
     end if;
 end;
 
+function is_spr_pfetch (
+    pm_ssp          : in std_logic;
+    pm_nes_x        : in integer range 0 to VGA_W_MAX - 1;
+    pm_nes_y        : in integer range 0 to VGA_H_MAX - 1
+    ) return integer is
+begin
+    if (pm_ssp = '1'and pm_nes_x <= HSCAN and pm_nes_y < VSCAN) then
+        return 1;
+    else
+        return 0;
+    end if;
+end;
+
 signal reg_vga_x        : integer range 0 to VGA_W_MAX - 1;
 signal reg_vga_y        : integer range 0 to VGA_H_MAX - 1;
 
@@ -350,39 +363,38 @@ begin
 
     --state change to next.
     vac_next_stat_p : process (reg_v_cur_state, pi_rnd_en, pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y)
-function bg_process (
+function is_v_access (
     pm_sbg          : in std_logic;
+    pm_ssp          : in std_logic;
     pm_nes_x        : in integer range 0 to VGA_W_MAX - 1;
     pm_nes_y        : in integer range 0 to VGA_H_MAX - 1
     )return integer is
 begin
-    if (pm_sbg = '1'and
-        (pm_nes_x <= HSCAN or pm_nes_x >= HSCAN_NEXT_START) and
-        (pm_nes_y < VSCAN or pm_nes_y = VSCAN_NEXT_START)) then
-        return 1;
+    if ((pm_nes_y < VSCAN or pm_nes_y = VSCAN_NEXT_START)) then
+        if ((pm_nes_x <= HSCAN or pm_nes_x >= HSCAN_NEXT_START)) then
+            if (pm_sbg = '1') then
+                return 1;
+            else
+                return 0;
+            end if;
+        elsif ((pm_nes_x > HSCAN and pm_nes_x < HSCAN_SPR_MAX)) then
+            if (pm_ssp = '1') then
+                return 1;
+            else
+                return 0;
+            end if;
+        else
+            return 0;
+        end if;
     else
         return 0;
     end if;
 end;
 
-function is_idle (
-    pm_sbg          : in std_logic;
-    pm_nes_x        : in integer range 0 to VGA_W_MAX - 1;
-    pm_nes_y        : in integer range 0 to VGA_H_MAX - 1
-    )return integer is
-begin
-    if (pm_sbg = '0' or
-        (pm_nes_x > HSCAN and pm_nes_x < HSCAN_NEXT_START) or
-        (pm_nes_y >= VSCAN and pm_nes_y < VSCAN_NEXT_START)) then
-        return 1;
-    else
-        return 0;
-    end if;
-end;
     begin
         case reg_v_cur_state is
             when IDLE =>
-                if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
+                if (is_v_access(pi_ppu_mask(PPUSBG), pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1 and
                     pi_rnd_en(2) = '1' and
                     reg_nes_x mod 8 = 0) then
                     --start vram access process.
@@ -391,92 +403,84 @@ end;
                     reg_v_next_state <= reg_v_cur_state;
                 end if;
             when AD_SET0 =>
-                if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
-                    pi_rnd_en(3) = '1'
-                ) then
-                    reg_v_next_state <= AD_SET1;
-                elsif (is_idle(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
-                    ---when nes_x=257, fall to idle
-                    reg_v_next_state <= IDLE;
+                if (is_v_access(pi_ppu_mask(PPUSBG), pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
+                    if (pi_rnd_en(3) = '1') then
+                        reg_v_next_state <= AD_SET1;
+                    else
+                        reg_v_next_state <= reg_v_cur_state;
+                    end if;
                 else
-                    reg_v_next_state <= reg_v_cur_state;
+                    reg_v_next_state <= IDLE;
                 end if;
             when AD_SET1 =>
-                if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
-                    pi_rnd_en(0) = '1'
-                ) then
-                    reg_v_next_state <= AD_SET2;
-                elsif (is_idle(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
-                    ---when nes_x=257, fall to idle
-                    reg_v_next_state <= IDLE;
+                if (is_v_access(pi_ppu_mask(PPUSBG), pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
+                    if (pi_rnd_en(0) = '1') then
+                        reg_v_next_state <= AD_SET2;
+                    else
+                        reg_v_next_state <= reg_v_cur_state;
+                    end if;
                 else
-                    reg_v_next_state <= reg_v_cur_state;
+                    reg_v_next_state <= IDLE;
                 end if;
             when AD_SET2 =>
-                if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
-                    pi_rnd_en(1) = '1'
-                ) then
-                    reg_v_next_state <= AD_SET3;
-                elsif (is_idle(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
-                    ---when nes_x=257, fall to idle
-                    reg_v_next_state <= IDLE;
+                if (is_v_access(pi_ppu_mask(PPUSBG), pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
+                    if (pi_rnd_en(1) = '1') then
+                        reg_v_next_state <= AD_SET3;
+                    else
+                        reg_v_next_state <= reg_v_cur_state;
+                    end if;
                 else
-                    reg_v_next_state <= reg_v_cur_state;
+                    reg_v_next_state <= IDLE;
                 end if;
             when AD_SET3 =>
-                if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
-                    pi_rnd_en(2) = '1'
-                ) then
-                    reg_v_next_state <= REG_SET0;
-                elsif (is_idle(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
-                    ---when nes_x=257, fall to idle
-                    reg_v_next_state <= IDLE;
+                if (is_v_access(pi_ppu_mask(PPUSBG), pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
+                    if (pi_rnd_en(2) = '1') then
+                        reg_v_next_state <= REG_SET0;
+                    else
+                        reg_v_next_state <= reg_v_cur_state;
+                    end if;
                 else
-                    reg_v_next_state <= reg_v_cur_state;
+                    reg_v_next_state <= IDLE;
                 end if;
             when REG_SET0 =>
-                if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
-                    pi_rnd_en(3) = '1'
-                ) then
-                    reg_v_next_state <= REG_SET1;
-                elsif (is_idle(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
-                    ---when nes_x=257, fall to idle
-                    reg_v_next_state <= IDLE;
+                if (is_v_access(pi_ppu_mask(PPUSBG), pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
+                    if (pi_rnd_en(3) = '1') then
+                        reg_v_next_state <= REG_SET1;
+                    else
+                        reg_v_next_state <= reg_v_cur_state;
+                    end if;
                 else
-                    reg_v_next_state <= reg_v_cur_state;
+                    reg_v_next_state <= IDLE;
                 end if;
             when REG_SET1 =>
-                if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
-                    pi_rnd_en(0) = '1'
-                ) then
-                    reg_v_next_state <= REG_SET2;
-                elsif (is_idle(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
-                    ---when nes_x=257, fall to idle
-                    reg_v_next_state <= IDLE;
+                if (is_v_access(pi_ppu_mask(PPUSBG), pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
+                    if (pi_rnd_en(0) = '1') then
+                        reg_v_next_state <= REG_SET2;
+                    else
+                        reg_v_next_state <= reg_v_cur_state;
+                    end if;
                 else
-                    reg_v_next_state <= reg_v_cur_state;
+                    reg_v_next_state <= IDLE;
                 end if;
             when REG_SET2 =>
-                if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
-                    pi_rnd_en(1) = '1'
-                ) then
-                    reg_v_next_state <= REG_SET3;
-                elsif (is_idle(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
-                    ---when nes_x=257, fall to idle
-                    reg_v_next_state <= IDLE;
+                if (is_v_access(pi_ppu_mask(PPUSBG), pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
+                    if (pi_rnd_en(1) = '1') then
+                        reg_v_next_state <= REG_SET3;
+                    else
+                        reg_v_next_state <= reg_v_cur_state;
+                    end if;
                 else
-                    reg_v_next_state <= reg_v_cur_state;
+                    reg_v_next_state <= IDLE;
                 end if;
             when REG_SET3 =>
-                if (bg_process(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
-                    pi_rnd_en(2) = '1'
-                ) then
-                    reg_v_next_state <= AD_SET0;
-                elsif (is_idle(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
-                    ---when nes_x=257, fall to idle
-                    reg_v_next_state <= IDLE;
+                if (is_v_access(pi_ppu_mask(PPUSBG), pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
+                    if (pi_rnd_en(2) = '1') then
+                        reg_v_next_state <= AD_SET0;
+                    else
+                        reg_v_next_state <= reg_v_cur_state;
+                    end if;
                 else
-                    reg_v_next_state <= reg_v_cur_state;
+                    reg_v_next_state <= IDLE;
                 end if;
         end case;
     end process;
@@ -531,6 +535,7 @@ end;
         elsif (rising_edge(pi_base_clk)) then
             reg_v_data      <= pi_v_data;
 
+            --bg vram fetch.
             if (is_bg(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
                 ----fetch next tile byte.
                 if (reg_prf_x mod 8 = 1) then
@@ -573,6 +578,40 @@ end;
                                         & "0" & conv_std_logic_vector(reg_prf_y, 9)(2 downto 0)
                                         + "00000000001000";
                 end if;
+
+            --sprite pattern fetch.
+            elsif (is_spr_pfetch(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
+                ----fetch pattern table low byte.
+                if (reg_nes_x mod 8 = 5) then
+                    if (reg_spr_attr((reg_nes_x - 256) / 8)(SPRVFL) = '0') then
+                        reg_v_addr <= "0" & pi_ppu_ctrl(PPUSPA) & 
+                                    reg_spr_tile_tmp & "0" & 
+                                    (conv_std_logic_vector(reg_nes_y, 3) + "001" - reg_spr_y_tmp(2 downto 0));
+                    else
+                        --flip sprite vertically.
+                        reg_v_addr <= "0" & pi_ppu_ctrl(PPUSPA) & 
+                                    reg_spr_tile_tmp & "0" & 
+                                    (reg_spr_y_tmp(2 downto 0) - conv_std_logic_vector(reg_nes_y, 3) - "010");
+                    end if;
+
+                ----fetch pattern table high byte.
+                elsif (reg_nes_x mod 8 = 7) then
+                    if (reg_spr_attr((reg_nes_x - 256) / 8)(SPRVFL) = '0') then
+                        reg_v_addr <= "0" & pi_ppu_ctrl(PPUSPA) & 
+                                    reg_spr_tile_tmp & "0" & 
+                                    (conv_std_logic_vector(reg_nes_y, 3) + "001" - reg_spr_y_tmp(2 downto 0))
+                                        + "00000000001000";
+                    else
+                        --flip sprite vertically.
+                        reg_v_addr <= "0" & pi_ppu_ctrl(PPUSPA) & 
+                                    reg_spr_tile_tmp & "0"  & 
+                                    (reg_spr_y_tmp(2 downto 0) - conv_std_logic_vector(reg_nes_y, 3) - "010")
+                                        + "00000000001000";
+                    end if;
+                end if;
+            else
+                reg_v_addr  <= (others => 'Z');
+                reg_v_data    <= (others => 'Z');
             end if;
         end if;--if (pi_rst_n = '0') then
     end process;
@@ -917,7 +956,13 @@ end;
                         end if;
                     end if;
                 elsif (is_spr_cpy(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    --copy to sprite register.
+                    --release p-oam access.
+                    reg_p_oam_ce_n <= '1';
+                    reg_p_oam_rd_n <= '1';
+                    reg_p_oam_wr_n <= '1';
+                    reg_p_oam_addr <= (others => '0');
+
+                    --copy s-oam to sprite register.
                     --257 to 320 = (1 to 64) & 256
                     -->(1 to 64) / 2 & 256.
                     reg_s_oam_ce_n <= '0';
@@ -936,6 +981,23 @@ end;
                             reg_spr_x((reg_nes_x - 256) / 8 - 1) <= wr_s_oam_data;
                         end if;
                     end if;
+
+                    --sprite pattern is read from vram.
+                    if (reg_s_oam_cur_state = REG_SET1) then
+                        if (reg_nes_x mod 8 = 6) then
+                            reg_spr_ptn_l((reg_nes_x - 256) / 8) <= pi_v_data;
+                        elsif (reg_nes_x mod 8 = 0) then
+                            reg_spr_ptn_h((reg_nes_x - 256) / 8 - 1) <= pi_v_data;
+                        end if;
+                    end if;
+
+                elsif (is_spr_pfetch(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
+                    --release s-oam access.
+                    reg_s_oam_ce_n <= '1';
+                    reg_s_oam_addr <= (others => 'Z');
+                    reg_s_oam_data <= (others => 'Z');
+                    reg_s_oam_wr_n <= '1';
+                    reg_s_oam_rd_n <= '1';
                 else
                     reg_s_oam_ce_n <= '1';
                     reg_s_oam_rd_n <= '1';
@@ -951,7 +1013,8 @@ end;
                 end if;
             end if; --if (rising_edge(emu_ppu_clk)) then
         end if;--if (rst_n = '0') then
-   end process;
+
+    end process;
 
     po_ppu_status   <= (others => '0');
 
