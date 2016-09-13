@@ -251,6 +251,7 @@ signal reg_s_oam_rd_n       : std_logic;
 signal reg_s_oam_wr_n       : std_logic;
 signal reg_s_oam_addr       : std_logic_vector (4 downto 0);
 signal reg_s_oam_data       : std_logic_vector (7 downto 0);
+signal wr_s_oam_data        : std_logic_vector (7 downto 0);
 
 signal reg_p_oam_cpy_cnt    : integer range 0 to 255;
 signal reg_s_oam_cpy_cnt    : integer range 0 to 32;
@@ -261,6 +262,16 @@ signal reg_p_oam_ce_n       : std_logic;
 signal reg_p_oam_rd_n       : std_logic;
 signal reg_p_oam_wr_n       : std_logic;
 signal reg_p_oam_addr       : std_logic_vector (7 downto 0);
+
+--sprite display register.
+type oam_reg_array    is array (0 to 7) of std_logic_vector (7 downto 0);
+
+signal reg_spr_y_tmp        : std_logic_vector (7 downto 0);
+signal reg_spr_tile_tmp     : std_logic_vector (7 downto 0);
+signal reg_spr_attr         : oam_reg_array;
+signal reg_spr_x            : oam_reg_array;
+signal reg_spr_ptn_l        : oam_reg_array;
+signal reg_spr_ptn_h        : oam_reg_array;
 
 begin
 
@@ -660,8 +671,9 @@ end;
                             reg_s_oam_rd_n,
                             reg_s_oam_wr_n,
                             reg_s_oam_addr,
-                            reg_s_oam_data
+                            wr_s_oam_data
                             );
+    wr_s_oam_data <= reg_s_oam_data;
 
 
     --state change to next.
@@ -796,6 +808,21 @@ begin
     end if;
 end;
 
+function is_spr_cpy (
+    pm_ssp          : in std_logic;
+    pm_nes_x        : in integer range 0 to VGA_W_MAX - 1;
+    pm_nes_y        : in integer range 0 to VGA_H_MAX - 1
+    ) return integer is
+begin
+    if (pm_ssp = '1' and
+        (pm_nes_x > HSCAN and pm_nes_x < HSCAN_SPR_MAX) and
+        (pm_nes_y < VSCAN or pm_nes_y = VSCAN_NEXT_START)) then
+        return 1;
+    else
+        return 0;
+    end if;
+end;
+
     begin
         if (pi_rst_n = '0') then
             ---secondary oam ram
@@ -813,6 +840,14 @@ end;
             reg_p_oam_wr_n <= 'Z';
             reg_p_oam_addr <= (others => 'Z');
 
+            reg_spr_y_tmp        <= (others => '0');
+            reg_spr_tile_tmp     <= (others => '0');
+            for i in 0 to 7 loop
+                reg_spr_attr(i)         <= (others => '0');
+                reg_spr_x(i)            <= (others => '0');
+                reg_spr_ptn_l(i)        <= (others => '0');
+                reg_spr_ptn_h(i)        <= (others => '0');
+            end loop;
         else
             if (rising_edge(pi_base_clk)) then
                 if (is_s_oam_clear(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
@@ -879,6 +914,26 @@ end;
                                     spr_eval_cnt <= spr_eval_cnt + 1;
                                 end if;
                             end if;
+                        end if;
+                    end if;
+                elsif (is_spr_cpy(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
+                    --copy to sprite register.
+                    --257 to 320 = (1 to 64) & 256
+                    -->(1 to 64) / 2 & 256.
+                    reg_s_oam_ce_n <= '0';
+                    reg_s_oam_addr <= conv_std_logic_vector((reg_nes_x - 256) / 2, 5);
+                    reg_s_oam_data <= (others => 'Z');
+                    reg_s_oam_wr_n <= '1';
+                    reg_s_oam_rd_n <= '0';
+                    if (reg_s_oam_cur_state = REG_SET1) then
+                        if (reg_nes_x mod 8 = 2) then
+                            reg_spr_y_tmp <= wr_s_oam_data;
+                        elsif (reg_nes_x mod 8 = 4) then
+                            reg_spr_tile_tmp <= wr_s_oam_data;
+                        elsif (reg_nes_x mod 8 = 6) then
+                            reg_spr_attr((reg_nes_x - 256) / 8) <= wr_s_oam_data;
+                        elsif (reg_nes_x mod 8 = 0) then
+                            reg_spr_x((reg_nes_x - 256) / 8 - 1) <= wr_s_oam_data;
                         end if;
                     end if;
                 else

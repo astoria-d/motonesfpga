@@ -75,6 +75,11 @@ add wave -label wr_spr_wr_n  sim:/testbench_motones_sim/sim_board/wr_spr_wr_n;
 add wave -label wr_spr_addr -radix hex  sim:/testbench_motones_sim/sim_board/wr_spr_addr;
 add wave -label wr_spr_data -radix hex  sim:/testbench_motones_sim/sim_board/wr_spr_data;
 
+add wave -label reg_spr_y_tmp -radix hex    sim:/testbench_motones_sim/sim_board/render_inst/reg_spr_y_tmp;
+add wave -label reg_spr_tile_tmp -radix hex sim:/testbench_motones_sim/sim_board/render_inst/reg_spr_tile_tmp;
+add wave -label reg_spr_attr -radix hex     sim:/testbench_motones_sim/sim_board/render_inst/reg_spr_attr;
+add wave -label reg_spr_x -radix hex        sim:/testbench_motones_sim/sim_board/render_inst/reg_spr_x;
+
 add wave -divider palette
 add wave -label plt_addr -radix hex sim:/testbench_motones_sim/sim_board/render_inst/reg_plt_addr;
 add wave -label plt_data -radix hex sim:/testbench_motones_sim/sim_board/render_inst/reg_plt_data;
