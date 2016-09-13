@@ -406,81 +406,49 @@ end;
                 end if;
             when AD_SET0 =>
                 if (is_v_access(pi_ppu_mask(PPUSBG), pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    if (pi_rnd_en(3) = '1') then
-                        reg_v_next_state <= AD_SET1;
-                    else
-                        reg_v_next_state <= reg_v_cur_state;
-                    end if;
+                    reg_v_next_state <= AD_SET1;
                 else
                     reg_v_next_state <= IDLE;
                 end if;
             when AD_SET1 =>
                 if (is_v_access(pi_ppu_mask(PPUSBG), pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    if (pi_rnd_en(0) = '1') then
-                        reg_v_next_state <= AD_SET2;
-                    else
-                        reg_v_next_state <= reg_v_cur_state;
-                    end if;
+                    reg_v_next_state <= AD_SET2;
                 else
                     reg_v_next_state <= IDLE;
                 end if;
             when AD_SET2 =>
                 if (is_v_access(pi_ppu_mask(PPUSBG), pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    if (pi_rnd_en(1) = '1') then
-                        reg_v_next_state <= AD_SET3;
-                    else
-                        reg_v_next_state <= reg_v_cur_state;
-                    end if;
+                    reg_v_next_state <= AD_SET3;
                 else
                     reg_v_next_state <= IDLE;
                 end if;
             when AD_SET3 =>
                 if (is_v_access(pi_ppu_mask(PPUSBG), pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    if (pi_rnd_en(2) = '1') then
-                        reg_v_next_state <= REG_SET0;
-                    else
-                        reg_v_next_state <= reg_v_cur_state;
-                    end if;
+                    reg_v_next_state <= REG_SET0;
                 else
                     reg_v_next_state <= IDLE;
                 end if;
             when REG_SET0 =>
                 if (is_v_access(pi_ppu_mask(PPUSBG), pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    if (pi_rnd_en(3) = '1') then
-                        reg_v_next_state <= REG_SET1;
-                    else
-                        reg_v_next_state <= reg_v_cur_state;
-                    end if;
+                    reg_v_next_state <= REG_SET1;
                 else
                     reg_v_next_state <= IDLE;
                 end if;
             when REG_SET1 =>
                 if (is_v_access(pi_ppu_mask(PPUSBG), pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    if (pi_rnd_en(0) = '1') then
-                        reg_v_next_state <= REG_SET2;
-                    else
-                        reg_v_next_state <= reg_v_cur_state;
-                    end if;
+                    reg_v_next_state <= REG_SET2;
                 else
                     reg_v_next_state <= IDLE;
                 end if;
             when REG_SET2 =>
                 if (is_v_access(pi_ppu_mask(PPUSBG), pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    if (pi_rnd_en(1) = '1') then
-                        reg_v_next_state <= REG_SET3;
-                    else
-                        reg_v_next_state <= reg_v_cur_state;
-                    end if;
+                    reg_v_next_state <= REG_SET3;
                 else
                     reg_v_next_state <= IDLE;
                 end if;
             when REG_SET3 =>
                 if (is_v_access(pi_ppu_mask(PPUSBG), pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    if (pi_rnd_en(2) = '1') then
-                        reg_v_next_state <= AD_SET0;
-                    else
-                        reg_v_next_state <= reg_v_cur_state;
-                    end if;
+                    reg_v_next_state <= AD_SET0;
                 else
                     reg_v_next_state <= IDLE;
                 end if;
@@ -719,20 +687,27 @@ end;
 
     --state change to next.
     s_oam_next_stat_p : process (reg_s_oam_cur_state, pi_rnd_en, pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y)
-function is_idle (
+function is_s_oam_access (
     pm_ssp          : in std_logic;
     pm_nes_x        : in integer range 0 to VGA_W_MAX - 1;
     pm_nes_y        : in integer range 0 to VGA_H_MAX - 1
     )return integer is
 begin
-    if (pm_ssp = '0' or
-        (pm_nes_x > HSCAN_SPR_MAX) or
-        (pm_nes_y >= VSCAN and pm_nes_y < VSCAN_NEXT_START)) then
-        return 1;
+    if ((pm_nes_y < VSCAN or pm_nes_y = VSCAN_NEXT_START)) then
+        if (pm_nes_x < HSCAN_SPR_MAX) then
+            if (pm_ssp = '1') then
+                return 1;
+            else
+                return 0;
+            end if;
+        else
+            return 0;
+        end if;
     else
         return 0;
     end if;
 end;
+
     begin
         case reg_s_oam_cur_state is
             when IDLE =>
@@ -745,68 +720,52 @@ end;
                     reg_s_oam_next_state <= reg_s_oam_cur_state;
                 end if;
             when AD_SET0 =>
-                if (is_idle(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    reg_s_oam_next_state <= IDLE;
-                elsif (pi_rnd_en(3) = '1') then
+                if (is_s_oam_access(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
                     reg_s_oam_next_state <= AD_SET1;
                 else
-                    reg_s_oam_next_state <= reg_s_oam_cur_state;
+                    reg_s_oam_next_state <= IDLE;
                 end if;
             when AD_SET1 =>
-                if (is_idle(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    reg_s_oam_next_state <= IDLE;
-                elsif (pi_rnd_en(0) = '1') then
+                if (is_s_oam_access(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
                     reg_s_oam_next_state <= AD_SET2;
                 else
-                    reg_s_oam_next_state <= reg_s_oam_cur_state;
+                    reg_s_oam_next_state <= IDLE;
                 end if;
             when AD_SET2 =>
-                if (is_idle(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    reg_s_oam_next_state <= IDLE;
-                elsif (pi_rnd_en(1) = '1') then
+                if (is_s_oam_access(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
                     reg_s_oam_next_state <= AD_SET3;
                 else
-                    reg_s_oam_next_state <= reg_s_oam_cur_state;
+                    reg_s_oam_next_state <= IDLE;
                 end if;
             when AD_SET3 =>
-                if (is_idle(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    reg_s_oam_next_state <= IDLE;
-                elsif (pi_rnd_en(2) = '1') then
+                if (is_s_oam_access(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
                     reg_s_oam_next_state <= REG_SET0;
                 else
-                    reg_s_oam_next_state <= reg_s_oam_cur_state;
+                    reg_s_oam_next_state <= IDLE;
                 end if;
             when REG_SET0 =>
-                if (is_idle(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    reg_s_oam_next_state <= IDLE;
-                elsif (pi_rnd_en(3) = '1') then
+                if (is_s_oam_access(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
                     reg_s_oam_next_state <= REG_SET1;
                 else
-                    reg_s_oam_next_state <= reg_s_oam_cur_state;
+                    reg_s_oam_next_state <= IDLE;
                 end if;
             when REG_SET1 =>
-                if (is_idle(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    reg_s_oam_next_state <= IDLE;
-                elsif (pi_rnd_en(0) = '1') then
+                if (is_s_oam_access(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
                     reg_s_oam_next_state <= REG_SET2;
                 else
-                    reg_s_oam_next_state <= reg_s_oam_cur_state;
+                    reg_s_oam_next_state <= IDLE;
                 end if;
             when REG_SET2 =>
-                if (is_idle(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    reg_s_oam_next_state <= IDLE;
-                elsif (pi_rnd_en(1) = '1') then
+                if (is_s_oam_access(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
                     reg_s_oam_next_state <= REG_SET3;
                 else
-                    reg_s_oam_next_state <= reg_s_oam_cur_state;
+                    reg_s_oam_next_state <= IDLE;
                 end if;
             when REG_SET3 =>
-                if (is_idle(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    reg_s_oam_next_state <= IDLE;
-                elsif (pi_rnd_en(2) = '1') then
+                if (is_s_oam_access(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
                     reg_s_oam_next_state <= AD_SET0;
                 else
-                    reg_s_oam_next_state <= reg_s_oam_cur_state;
+                    reg_s_oam_next_state <= IDLE;
                 end if;
         end case;
     end process;
