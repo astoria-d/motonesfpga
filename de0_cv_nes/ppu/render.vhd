@@ -204,7 +204,9 @@ function is_spr_pfetch (
     pm_nes_y        : in integer range 0 to VGA_H_MAX - 1
     ) return integer is
 begin
-    if (pm_ssp = '1'and pm_nes_x <= HSCAN and pm_nes_y < VSCAN) then
+    if (pm_ssp = '1'and 
+        (pm_nes_x > HSCAN and pm_nes_x < HSCAN_SPR_MAX) and
+        (pm_nes_y < VSCAN or pm_nes_y = VSCAN_NEXT_START)) then
         return 1;
     else
         return 0;
