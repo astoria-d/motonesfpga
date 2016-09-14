@@ -285,8 +285,7 @@ signal wr_s_oam_data        : std_logic_vector (7 downto 0);
 
 signal reg_p_oam_cpy_cnt    : integer range 0 to 255;
 signal reg_s_oam_cpy_cnt    : integer range 0 to 32;
-signal spr_eval_cnt         : integer range 0 to 3;
-
+signal reg_spr_eval_cnt     : integer range 0 to 3;
 
 signal reg_p_oam_ce_n       : std_logic;
 signal reg_p_oam_rd_n       : std_logic;
@@ -304,6 +303,7 @@ signal reg_spr_x            : oam_reg_array;
 signal reg_spr_ptn_sft_start    : std_logic_vector (7 downto 0);
 signal reg_spr_ptn_l            : oam_reg_array;
 signal reg_spr_ptn_h            : oam_reg_array;
+signal reg_spr_hit              : integer range 0 to 1;
 
 begin
 
@@ -477,37 +477,22 @@ end;
     po_v_wr_n       <= reg_v_wr_n;
     po_v_addr       <= reg_v_addr;
 
-    po_plt_ce_n     <= reg_plt_ce_n;
-    po_plt_rd_n     <= reg_plt_rd_n;
-    po_plt_wr_n     <= reg_plt_wr_n;
-    po_plt_addr     <= reg_plt_addr;
-
     --vram r/w selector state machine...
-    vac_main_stat_p : process (reg_v_cur_state)
+    vram_ac_select_p : process (reg_v_cur_state)
     begin
         case reg_v_cur_state is
             when IDLE =>
+                reg_v_ce_n  <= 'Z';
                 reg_v_rd_n  <= 'Z';
                 reg_v_wr_n  <= 'Z';
             when AD_SET0 | AD_SET1 | REG_SET2 | REG_SET3 =>
+                reg_v_ce_n  <= '0';
                 reg_v_rd_n  <= '1';
                 reg_v_wr_n  <= '1';
             when AD_SET2 | AD_SET3 | REG_SET0 | REG_SET1 =>
+                reg_v_ce_n  <= '0';
                 reg_v_rd_n  <= '0';
                 reg_v_wr_n  <= '1';
-        end case;
-
-        case reg_v_cur_state is
-            when IDLE =>
-                reg_v_ce_n  <= 'Z';
-                reg_plt_ce_n <= 'Z';
-                reg_plt_rd_n <= 'Z';
-                reg_plt_wr_n <= 'Z'; 
-            when AD_SET0 | AD_SET1 | REG_SET2 | REG_SET3 | AD_SET2 | AD_SET3 | REG_SET0 | REG_SET1 =>
-                reg_v_ce_n  <= '0';
-                reg_plt_ce_n <= '0';
-                reg_plt_rd_n <= '0';
-                reg_plt_wr_n <= '1'; 
         end case;
     end process;
 
@@ -637,31 +622,94 @@ end;
         end if;--if (pi_rst_n = '0') then
     end process;
 
+    po_plt_ce_n     <= reg_plt_ce_n;
+    po_plt_rd_n     <= reg_plt_rd_n;
+    po_plt_wr_n     <= reg_plt_wr_n;
+    po_plt_addr     <= reg_plt_addr;
+
     --palette table state machine...
     plt_ac_p : process (pi_rst_n, pi_base_clk)
+    variable spr_i : integer range -1 to 7;
+
+function is_disp (
+    pm_sbg          : in std_logic;
+    pm_ssp          : in std_logic;
+    pm_nes_x        : in integer range 0 to VGA_W_MAX - 1;
+    pm_nes_y        : in integer range 0 to VGA_H_MAX - 1
+    ) return integer is
+begin
+    if ((pm_sbg = '1' or pm_ssp = '1') and pm_nes_x < HSCAN and pm_nes_y < VSCAN) then
+        return 1;
+    else
+        return 0;
+    end if;
+end;
+
+procedure get_visible_sprite (
+    pm_ssp          : in std_logic
+    ) is
+begin
+    if (pm_ssp = '1') then
+        for i in 0 to 7 loop
+            if (reg_spr_x(i) = "00000000" and
+                (reg_spr_ptn_h(i)(0) or reg_spr_ptn_l(i)(0)) = '1' ) then
+                spr_i := i;
+                exit;
+            end if;
+        end loop;
+    else
+        spr_i := -1;
+    end if;
+end;
+
     begin
         if (pi_rst_n = '0') then
+            reg_plt_ce_n <= 'Z';
+            reg_plt_rd_n <= 'Z';
+            reg_plt_wr_n <= 'Z'; 
+
             reg_plt_addr    <= (others => 'Z');
             reg_plt_data    <= (others => 'Z');
+            reg_spr_hit     <= 0;
         elsif (rising_edge(pi_base_clk)) then
             
             reg_plt_data    <= pi_plt_data;
             --shift pattern propageted 1 cycle later.
-            if (is_bg(pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1 and
-                (reg_v_cur_state = AD_SET2 or reg_v_cur_state = REG_SET2)) then
-                if (conv_std_logic_vector(reg_nes_y, 9)(4) = '0'
-                    and (reg_sft_ptn_h(0) or reg_sft_ptn_l(0)) = '1') then
-                    reg_plt_addr <=
-                            "0" & reg_disp_attr(1 downto 0) & reg_sft_ptn_h(0) & reg_sft_ptn_l(0);
-                elsif (conv_std_logic_vector(reg_nes_y, 9)(4) = '1'
-                    and (reg_sft_ptn_h(0) or reg_sft_ptn_l(0)) = '1') then
-                    reg_plt_addr <=
-                            "0" & reg_disp_attr(5 downto 4) & reg_sft_ptn_h(0) & reg_sft_ptn_l(0);
-                else
-                    ---else: no output color >> universal bg color output.
-                    --0x3f00 is the universal bg palette.
-                    reg_plt_addr <= (others => '0');
+            if (is_disp(pi_ppu_mask(PPUSBG), pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y) = 1) then
+                reg_plt_ce_n <= '0';
+                reg_plt_rd_n <= '0';
+                reg_plt_wr_n <= '1'; 
+
+                if (reg_v_cur_state = AD_SET2 or reg_v_cur_state = REG_SET2) then
+                    --check sprite pattern first.
+                    get_visible_sprite(pi_ppu_mask(PPUSBG));
+                    if (spr_i >= 0) then
+                        --sprite display.
+                        reg_plt_addr <=
+                            "1" & reg_spr_attr(spr_i)(1 downto 0) & reg_spr_ptn_h(spr_i)(0) & reg_spr_ptn_l(spr_i)(0);
+                    elsif (conv_std_logic_vector(reg_nes_y, 9)(4) = '0'
+                        and (reg_sft_ptn_h(0) or reg_sft_ptn_l(0)) = '1') then
+                        reg_plt_addr <=
+                                "0" & reg_disp_attr(1 downto 0) & reg_sft_ptn_h(0) & reg_sft_ptn_l(0);
+                    elsif (conv_std_logic_vector(reg_nes_y, 9)(4) = '1'
+                        and (reg_sft_ptn_h(0) or reg_sft_ptn_l(0)) = '1') then
+                        reg_plt_addr <=
+                                "0" & reg_disp_attr(5 downto 4) & reg_sft_ptn_h(0) & reg_sft_ptn_l(0);
+                    else
+                        ---no output color >> universal bg color output.
+                        --0x3f00 is the universal bg palette.
+                        reg_plt_addr <= (others => '0');
+                    end if;
                 end if;
+            else
+                --reset sprite hit.
+                reg_spr_hit     <= 0;
+                --release plt bus.
+                reg_plt_ce_n <= 'Z';
+                reg_plt_rd_n <= 'Z';
+                reg_plt_wr_n <= 'Z'; 
+                reg_plt_addr    <= (others => 'Z');
+                reg_plt_data    <= (others => 'Z');
             end if;
         end if;--if (pi_rst_n = '0') then
     end process;
@@ -794,7 +842,7 @@ end;
     po_spr_wr_n     <= reg_p_oam_wr_n;
     po_spr_addr     <= reg_p_oam_addr;
 
-    sprite_main_p : process (pi_rst_n, pi_base_clk)
+    sprite_eval_p : process (pi_rst_n, pi_base_clk)
 function is_s_oam_clear (
     pm_ssp          : in std_logic;
     pm_nes_x        : in integer range 0 to VGA_W_MAX - 1;
@@ -871,7 +919,7 @@ end;
                     reg_p_oam_addr <= (others => '0');
                     reg_s_oam_cpy_cnt <= 0;
                     reg_p_oam_cpy_cnt <= 0;
-                    spr_eval_cnt <= 0;
+                    reg_spr_eval_cnt <= 0;
                 elsif (is_spr_eval(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
                     --copy data from primary oam ram.
                     reg_s_oam_addr <= conv_std_logic_vector(reg_s_oam_cpy_cnt, 5);
@@ -893,24 +941,24 @@ end;
                         elsif (reg_s_oam_cur_state = REG_SET1) then
                             reg_s_oam_ce_n <= '1';
                             reg_s_oam_wr_n <= '1';
-                            if (spr_eval_cnt = 0 and
+                            if (reg_spr_eval_cnt = 0 and
                                 (pi_spr_data <= reg_nes_y and reg_nes_y < pi_spr_data + 8)) then
                                 --evaluate and found sprite in the range.
                                 --increment s-oam.
                                 reg_s_oam_cpy_cnt <= reg_s_oam_cpy_cnt + 1;
                                 reg_p_oam_cpy_cnt <= reg_p_oam_cpy_cnt + 1;
-                                spr_eval_cnt <= spr_eval_cnt + 1;
-                            elsif (spr_eval_cnt = 0) then
+                                reg_spr_eval_cnt <= reg_spr_eval_cnt + 1;
+                            elsif (reg_spr_eval_cnt = 0) then
                                 --sprite not hit. next entry.
                                 reg_p_oam_cpy_cnt <= reg_p_oam_cpy_cnt + 4;
                             else
                                 --sprite copying.
                                 reg_s_oam_cpy_cnt <= reg_s_oam_cpy_cnt + 1;
                                 reg_p_oam_cpy_cnt <= reg_p_oam_cpy_cnt + 1;
-                                if (spr_eval_cnt = 3) then
-                                    spr_eval_cnt <= 0;
+                                if (reg_spr_eval_cnt = 3) then
+                                    reg_spr_eval_cnt <= 0;
                                 else
-                                    spr_eval_cnt <= spr_eval_cnt + 1;
+                                    reg_spr_eval_cnt <= reg_spr_eval_cnt + 1;
                                 end if;
                             end if;
                         end if;
