@@ -82,6 +82,7 @@ add wave -label reg_spr_y_tmp -radix hex    sim:/testbench_motones_sim/sim_board
 add wave -label reg_spr_tile_tmp -radix hex sim:/testbench_motones_sim/sim_board/render_inst/reg_spr_tile_tmp;
 add wave -label reg_spr_attr -radix hex     sim:/testbench_motones_sim/sim_board/render_inst/reg_spr_attr;
 add wave -label reg_spr_x -radix hex        sim:/testbench_motones_sim/sim_board/render_inst/reg_spr_x;
+add wave -label reg_spr_ptn_sft_start -radix hex        sim:/testbench_motones_sim/sim_board/render_inst/reg_spr_ptn_sft_start;
 add wave -label reg_spr_ptn_l -radix hex        sim:/testbench_motones_sim/sim_board/render_inst/reg_spr_ptn_l;
 add wave -label reg_spr_ptn_h -radix hex        sim:/testbench_motones_sim/sim_board/render_inst/reg_spr_ptn_h;
 
@@ -107,5 +108,5 @@ view signals
 run 4 us
 wave zoom full
 
-run 190 us
+run 210 us
 

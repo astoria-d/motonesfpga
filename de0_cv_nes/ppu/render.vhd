@@ -213,6 +213,21 @@ begin
     end if;
 end;
 
+function is_spr_cpy (
+    pm_ssp          : in std_logic;
+    pm_nes_x        : in integer range 0 to VGA_W_MAX - 1;
+    pm_nes_y        : in integer range 0 to VGA_H_MAX - 1
+    ) return integer is
+begin
+    if (pm_ssp = '1' and
+        (pm_nes_x > HSCAN and pm_nes_x < HSCAN_SPR_MAX) and
+        (pm_nes_y < VSCAN or pm_nes_y = VSCAN_NEXT_START)) then
+        return 1;
+    else
+        return 0;
+    end if;
+end;
+
 signal reg_vga_x        : integer range 0 to VGA_W_MAX - 1;
 signal reg_vga_y        : integer range 0 to VGA_H_MAX - 1;
 
@@ -285,8 +300,10 @@ signal reg_spr_y_tmp        : std_logic_vector (7 downto 0);
 signal reg_spr_tile_tmp     : std_logic_vector (7 downto 0);
 signal reg_spr_attr         : oam_reg_array;
 signal reg_spr_x            : oam_reg_array;
-signal reg_spr_ptn_l        : oam_reg_array;
-signal reg_spr_ptn_h        : oam_reg_array;
+
+signal reg_spr_ptn_sft_start    : std_logic_vector (7 downto 0);
+signal reg_spr_ptn_l            : oam_reg_array;
+signal reg_spr_ptn_h            : oam_reg_array;
 
 begin
 
@@ -808,21 +825,6 @@ begin
     end if;
 end;
 
-function is_spr_cpy (
-    pm_ssp          : in std_logic;
-    pm_nes_x        : in integer range 0 to VGA_W_MAX - 1;
-    pm_nes_y        : in integer range 0 to VGA_H_MAX - 1
-    ) return integer is
-begin
-    if (pm_ssp = '1' and
-        (pm_nes_x > HSCAN and pm_nes_x < HSCAN_SPR_MAX) and
-        (pm_nes_y < VSCAN or pm_nes_y = VSCAN_NEXT_START)) then
-        return 1;
-    else
-        return 0;
-    end if;
-end;
-
     begin
         if (pi_rst_n = '0') then
             ---secondary oam ram
@@ -844,9 +846,6 @@ end;
             reg_spr_tile_tmp     <= (others => '0');
             for i in 0 to 7 loop
                 reg_spr_attr(i)         <= (others => '0');
-                reg_spr_x(i)            <= (others => '0');
-                reg_spr_ptn_l(i)        <= (others => '0');
-                reg_spr_ptn_h(i)        <= (others => '0');
             end loop;
         else
             if (rising_edge(pi_base_clk)) then
@@ -938,17 +937,6 @@ end;
                             reg_spr_tile_tmp <= wr_s_oam_data;
                         elsif (reg_nes_x mod 8 = 6) then
                             reg_spr_attr((reg_nes_x - 256) / 8) <= wr_s_oam_data;
-                        elsif (reg_nes_x mod 8 = 0) then
-                            reg_spr_x((reg_nes_x - 256) / 8 - 1) <= wr_s_oam_data;
-                        end if;
-                    end if;
-
-                    --sprite pattern is read from vram.
-                    if (reg_s_oam_cur_state = REG_SET1) then
-                        if (reg_nes_x mod 8 = 6) then
-                            reg_spr_ptn_l((reg_nes_x - 256) / 8) <= pi_v_data;
-                        elsif (reg_nes_x mod 8 = 0) then
-                            reg_spr_ptn_h((reg_nes_x - 256) / 8 - 1) <= pi_v_data;
                         end if;
                     end if;
 
@@ -974,7 +962,72 @@ end;
                 end if;
             end if; --if (rising_edge(emu_ppu_clk)) then
         end if;--if (rst_n = '0') then
+    end process;
 
+    --sprite pattern data process.
+    sprite_ptn_p : process (pi_rst_n, pi_base_clk)
+
+function is_spr_disp (
+    pm_ssp          : in std_logic;
+    pm_nes_x        : in integer range 0 to VGA_W_MAX - 1;
+    pm_nes_y        : in integer range 0 to VGA_H_MAX - 1
+    ) return integer is
+begin
+    if (pm_ssp = '1' and pm_nes_x < HSCAN and pm_nes_y < VSCAN) then
+        return 1;
+    else
+        return 0;
+    end if;
+end;
+
+    begin
+        if (pi_rst_n = '0') then
+            reg_spr_ptn_sft_start <= (others => '0');
+            for i in 0 to 7 loop
+                reg_spr_x(i)            <= (others => '0');
+                reg_spr_ptn_l(i)        <= (others => '0');
+                reg_spr_ptn_h(i)        <= (others => '0');
+            end loop;
+        else
+            if (rising_edge(pi_base_clk)) then
+                if (is_spr_cpy(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
+                    if (reg_s_oam_cur_state = REG_SET1) then
+                        if (reg_nes_x mod 8 = 0) then
+                            reg_spr_x((reg_nes_x - 256) / 8 - 1) <= wr_s_oam_data;
+                        end if;
+                    end if;
+
+                    --sprite pattern is read from vram.
+                    if (reg_s_oam_cur_state = REG_SET1) then
+                        if (reg_nes_x mod 8 = 6) then
+                            reg_spr_ptn_l((reg_nes_x - 256) / 8) <= pi_v_data;
+                        elsif (reg_nes_x mod 8 = 0) then
+                            reg_spr_ptn_h((reg_nes_x - 256) / 8 - 1) <= pi_v_data;
+                        end if;
+                    end if;
+
+                elsif (is_spr_disp(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
+                    --sprite pattern shift.
+                    if (reg_s_oam_cur_state = AD_SET0 or reg_s_oam_cur_state = REG_SET0) then
+                        for i in 0 to 7 loop
+                            if (reg_spr_ptn_sft_start(i) = '1') then
+                                --shift pattern.
+                                reg_spr_ptn_l(i) <= "0" & reg_spr_ptn_l(i)(7 downto 1);
+                                reg_spr_ptn_h(i) <= "0" & reg_spr_ptn_h(i)(7 downto 1);
+                            else
+                                if (reg_spr_x(i) = "00000000") then
+                                    reg_spr_ptn_sft_start(i) <= '1';
+                                else
+                                    reg_spr_x(i) <= reg_spr_x(i) - 1;
+                                end if;
+                            end if;
+                        end loop;
+                    end if;
+                else
+                    reg_spr_ptn_sft_start <= (others => '0');
+                end if;
+            end if; --if (rising_edge(emu_ppu_clk)) then
+        end if;--if (rst_n = '0') then
     end process;
 
     po_ppu_status   <= (others => '0');
