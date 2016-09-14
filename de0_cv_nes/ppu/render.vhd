@@ -183,6 +183,34 @@ constant nes_color_palette : nes_color_array := (
         conv_std_logic_vector(16#000#, 12)
         );
 
+function is_v_access (
+    pm_sbg          : in std_logic;
+    pm_ssp          : in std_logic;
+    pm_nes_x        : in integer range 0 to VGA_W_MAX - 1;
+    pm_nes_y        : in integer range 0 to VGA_H_MAX - 1
+    )return integer is
+begin
+    if ((pm_nes_y < VSCAN or pm_nes_y = VSCAN_NEXT_START)) then
+        if ((pm_nes_x <= HSCAN or pm_nes_x >= HSCAN_NEXT_START)) then
+            if (pm_sbg = '1') then
+                return 1;
+            else
+                return 0;
+            end if;
+        elsif ((pm_nes_x > HSCAN and pm_nes_x < HSCAN_SPR_MAX)) then
+            if (pm_ssp = '1') then
+                return 1;
+            else
+                return 0;
+            end if;
+        else
+            return 0;
+        end if;
+    else
+        return 0;
+    end if;
+end;
+
 function is_bg (
     pm_sbg          : in std_logic;
     pm_nes_x        : in integer range 0 to VGA_W_MAX - 1;
@@ -303,7 +331,11 @@ signal reg_spr_x            : oam_reg_array;
 signal reg_spr_ptn_sft_start    : std_logic_vector (7 downto 0);
 signal reg_spr_ptn_l            : oam_reg_array;
 signal reg_spr_ptn_h            : oam_reg_array;
-signal reg_spr_hit              : integer range 0 to 1;
+signal reg_spr_hit              : std_logic;
+
+--status register.
+signal reg_ppu_status       : std_logic_vector (7 downto 0);
+
 
 begin
 
@@ -382,34 +414,6 @@ begin
 
     --state change to next.
     vac_next_stat_p : process (reg_v_cur_state, pi_rnd_en, pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y)
-function is_v_access (
-    pm_sbg          : in std_logic;
-    pm_ssp          : in std_logic;
-    pm_nes_x        : in integer range 0 to VGA_W_MAX - 1;
-    pm_nes_y        : in integer range 0 to VGA_H_MAX - 1
-    )return integer is
-begin
-    if ((pm_nes_y < VSCAN or pm_nes_y = VSCAN_NEXT_START)) then
-        if ((pm_nes_x <= HSCAN or pm_nes_x >= HSCAN_NEXT_START)) then
-            if (pm_sbg = '1') then
-                return 1;
-            else
-                return 0;
-            end if;
-        elsif ((pm_nes_x > HSCAN and pm_nes_x < HSCAN_SPR_MAX)) then
-            if (pm_ssp = '1') then
-                return 1;
-            else
-                return 0;
-            end if;
-        else
-            return 0;
-        end if;
-    else
-        return 0;
-    end if;
-end;
-
     begin
         case reg_v_cur_state is
             when IDLE =>
@@ -670,7 +674,7 @@ end;
 
             reg_plt_addr    <= (others => 'Z');
             reg_plt_data    <= (others => 'Z');
-            reg_spr_hit     <= 0;
+            reg_spr_hit     <= '0';
         elsif (rising_edge(pi_base_clk)) then
             
             reg_plt_data    <= pi_plt_data;
@@ -687,6 +691,10 @@ end;
                         --sprite display.
                         reg_plt_addr <=
                             "1" & reg_spr_attr(spr_i)(1 downto 0) & reg_spr_ptn_h(spr_i)(0) & reg_spr_ptn_l(spr_i)(0);
+                        --check sprite hit.
+                        if ((reg_sft_ptn_h(0) or reg_sft_ptn_l(0)) = '1') then
+                            reg_spr_hit     <= '1';
+                        end if;
                     elsif (conv_std_logic_vector(reg_nes_y, 9)(4) = '0'
                         and (reg_sft_ptn_h(0) or reg_sft_ptn_l(0)) = '1') then
                         reg_plt_addr <=
@@ -703,7 +711,7 @@ end;
                 end if;
             else
                 --reset sprite hit.
-                reg_spr_hit     <= 0;
+                reg_spr_hit     <= '0';
                 --release plt bus.
                 reg_plt_ce_n <= 'Z';
                 reg_plt_rd_n <= 'Z';
@@ -1078,6 +1086,43 @@ end;
         end if;--if (rst_n = '0') then
     end process;
 
-    po_ppu_status   <= (others => '0');
+    po_ppu_status   <= reg_ppu_status;
+
+    --status register set.
+    status_p : process (pi_rst_n, pi_base_clk)
+    begin
+        if (pi_rst_n = '0') then
+            reg_ppu_status <= (others => '0');
+        else
+            if (rising_edge(pi_base_clk)) then
+                --avoid latches...
+                reg_ppu_status(3 downto 0) <= (others => '0');
+                --TODO: sprite overflow is not inplemented!
+                reg_ppu_status(ST_SOF) <= '0';
+
+                --ppu busy flag set. not sure this complies the nes spec...
+                if (is_v_access(pi_ppu_mask(PPUSBG), pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
+                    reg_ppu_status(ST_BSY) <= '1';
+                else
+                    reg_ppu_status(ST_BSY) <= '0';
+                end if;
+
+                --sprite 0 hit set.
+                if (reg_nes_y = VSCAN_NEXT_START - 1) then
+                    reg_ppu_status(ST_SP0) <= '0';
+                else
+                    reg_ppu_status(ST_SP0) <= reg_spr_hit;
+                end if;
+
+                if (reg_nes_y > VSCAN and reg_nes_y < VSCAN_NEXT_START) then
+                    --vblank start
+                    reg_ppu_status(ST_VBL) <= '1';
+                else
+                    --vblank end
+                    reg_ppu_status(ST_VBL) <= '0';
+                end if;
+            end if; --if (rising_edge(emu_ppu_clk)) then
+        end if;--if (rst_n = '0') then
+    end process;
 
 end rtl;
