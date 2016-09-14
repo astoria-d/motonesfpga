@@ -540,6 +540,7 @@ begin
                     reg_disp_attr   <= reg_v_data;
 
                 ----fetch pattern table low byte.
+                --pattern table at 0x0000
                 elsif (reg_prf_x mod 8 = 5) then
                      --vram addr is incremented every 8 cycle.
                      reg_v_addr <= "0" & pi_ppu_ctrl(PPUBPA) &
@@ -551,38 +552,36 @@ begin
                      --vram addr is incremented every 8 cycle.
                      reg_v_addr <= "0" & pi_ppu_ctrl(PPUBPA) &
                                           reg_disp_nt(7 downto 0)
-                                        & "0" & conv_std_logic_vector(reg_prf_y, 9)(2 downto 0)
-                                        + "00000000001000";
+                                        & "1" & conv_std_logic_vector(reg_prf_y, 9)(2 downto 0);
                 end if;
 
             --sprite pattern fetch.
+            --TODO: must take it into consideration, reg_nes_y = 262 case.
             elsif (is_spr_pfetch(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
                 ----fetch pattern table low byte.
                 if (reg_nes_x mod 8 = 5) then
                     if (reg_spr_attr((reg_nes_x - 256) / 8)(SPRVFL) = '0') then
                         reg_v_addr <= "0" & pi_ppu_ctrl(PPUSPA) & 
                                     reg_spr_tile_tmp & "0" & 
-                                    (conv_std_logic_vector(reg_nes_y, 3) + "001" - reg_spr_y_tmp(2 downto 0));
+                                    (conv_std_logic_vector(reg_nes_y, 3) - reg_spr_y_tmp(2 downto 0) + "001");
                     else
                         --flip sprite vertically.
                         reg_v_addr <= "0" & pi_ppu_ctrl(PPUSPA) & 
                                     reg_spr_tile_tmp & "0" & 
-                                    (reg_spr_y_tmp(2 downto 0) - conv_std_logic_vector(reg_nes_y, 3) - "010");
+                                    (reg_spr_y_tmp(2 downto 0) - conv_std_logic_vector(reg_nes_y, 3) + "110");
                     end if;
 
                 ----fetch pattern table high byte.
                 elsif (reg_nes_x mod 8 = 7) then
                     if (reg_spr_attr((reg_nes_x - 256) / 8)(SPRVFL) = '0') then
                         reg_v_addr <= "0" & pi_ppu_ctrl(PPUSPA) & 
-                                    reg_spr_tile_tmp & "0" & 
-                                    (conv_std_logic_vector(reg_nes_y, 3) + "001" - reg_spr_y_tmp(2 downto 0))
-                                        + "00000000001000";
+                                    reg_spr_tile_tmp & "1" & 
+                                    (conv_std_logic_vector(reg_nes_y, 3) - reg_spr_y_tmp(2 downto 0) + "001");
                     else
                         --flip sprite vertically.
                         reg_v_addr <= "0" & pi_ppu_ctrl(PPUSPA) & 
-                                    reg_spr_tile_tmp & "0"  & 
-                                    (reg_spr_y_tmp(2 downto 0) - conv_std_logic_vector(reg_nes_y, 3) - "010")
-                                        + "00000000001000";
+                                    reg_spr_tile_tmp & "1" & 
+                                    (reg_spr_y_tmp(2 downto 0) - conv_std_logic_vector(reg_nes_y, 3) + "110");
                     end if;
                 end if;
             else
@@ -633,7 +632,10 @@ begin
 
     --palette table state machine...
     plt_ac_p : process (pi_rst_n, pi_base_clk)
-    variable spr_i : integer range -1 to 7;
+    --spr_i: 0 - 7 is the sprite display number.
+    --       8 is sprite in the back.
+    --       9 is sprite in front.
+    variable spr_i : integer range 0 to 9;
 
 function is_disp (
     pm_sbg          : in std_logic;
@@ -654,15 +656,35 @@ procedure get_visible_sprite (
     ) is
 begin
     if (pm_ssp = '1') then
-        for i in 0 to 7 loop
-            if (reg_spr_x(i) = "00000000" and
-                (reg_spr_ptn_h(i)(0) or reg_spr_ptn_l(i)(0)) = '1' ) then
-                spr_i := i;
-                exit;
-            end if;
-        end loop;
+        if (reg_spr_x(0) = "00000000" and
+            (reg_spr_ptn_h(0)(0) or reg_spr_ptn_l(0)(0)) = '1' ) then
+            spr_i := 0;
+        elsif (reg_spr_x(1) = "00000000" and
+            (reg_spr_ptn_h(1)(0) or reg_spr_ptn_l(1)(0)) = '1' ) then
+            spr_i := 1;
+        elsif (reg_spr_x(2) = "00000000" and
+            (reg_spr_ptn_h(2)(0) or reg_spr_ptn_l(2)(0)) = '1' ) then
+            spr_i := 2;
+        elsif (reg_spr_x(3) = "00000000" and
+            (reg_spr_ptn_h(3)(0) or reg_spr_ptn_l(3)(0)) = '1' ) then
+            spr_i := 3;
+        elsif (reg_spr_x(4) = "00000000" and
+            (reg_spr_ptn_h(4)(0) or reg_spr_ptn_l(4)(0)) = '1' ) then
+            spr_i := 4;
+        elsif (reg_spr_x(5) = "00000000" and
+            (reg_spr_ptn_h(5)(0) or reg_spr_ptn_l(5)(0)) = '1' ) then
+            spr_i := 5;
+        elsif (reg_spr_x(6) = "00000000" and
+            (reg_spr_ptn_h(6)(0) or reg_spr_ptn_l(6)(0)) = '1' ) then
+            spr_i := 6;
+        elsif (reg_spr_x(7) = "00000000" and
+            (reg_spr_ptn_h(7)(0) or reg_spr_ptn_l(7)(0)) = '1' ) then
+            spr_i := 7;
+        else
+            spr_i := 8;
+        end if;
     else
-        spr_i := -1;
+        spr_i := 8;
     end if;
 end;
 
@@ -686,8 +708,8 @@ end;
 
                 if (reg_v_cur_state = AD_SET2 or reg_v_cur_state = REG_SET2) then
                     --check sprite pattern first.
-                    get_visible_sprite(pi_ppu_mask(PPUSBG));
-                    if (spr_i >= 0) then
+                    get_visible_sprite(pi_ppu_mask(PPUSSP));
+                    if (spr_i < 8) then
                         --sprite display.
                         reg_plt_addr <=
                             "1" & reg_spr_attr(spr_i)(1 downto 0) & reg_spr_ptn_h(spr_i)(0) & reg_spr_ptn_l(spr_i)(0);
@@ -950,7 +972,7 @@ end;
                             reg_s_oam_ce_n <= '1';
                             reg_s_oam_wr_n <= '1';
                             if (reg_spr_eval_cnt = 0 and
-                                (pi_spr_data <= reg_nes_y and reg_nes_y < pi_spr_data + 8)) then
+                                (pi_spr_data - 1 <= reg_nes_y and reg_nes_y < pi_spr_data + 7)) then
                                 --evaluate and found sprite in the range.
                                 --increment s-oam.
                                 reg_s_oam_cpy_cnt <= reg_s_oam_cpy_cnt + 1;
