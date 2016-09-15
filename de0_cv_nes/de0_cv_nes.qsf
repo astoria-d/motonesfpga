@@ -106,6 +106,8 @@ set_global_assignment -name VHDL_FILE dummy-ppu.vhd
 
 #cpu
 #set_global_assignment -name VHDL_FILE dummy-mos6502.vhd
+
+set_global_assignment -name VHDL_FILE mem/prg_rom.vhd
 set_global_assignment -name VHDL_FILE mos6502.vhd
 
 set_global_assignment -name VHDL_FILE de0_cv_nes.vhd
