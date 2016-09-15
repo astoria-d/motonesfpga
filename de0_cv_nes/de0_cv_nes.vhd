@@ -66,11 +66,10 @@ architecture rtl of de0_cv_nes is
     end component;
 
     component prg_rom port (
-                pi_rst_n        : in std_logic;
                 pi_base_clk 	: in std_logic;
                 pi_ce_n         : in std_logic;
                 pi_addr         : in std_logic_vector (14 downto 0);
-                pi_data         : out std_logic_vector (7 downto 0)
+                po_data         : out std_logic_vector (7 downto 0)
             );
     end component;
 
@@ -287,7 +286,6 @@ begin
 
     --program rom
     prom_inst : prg_rom port map (
-            pi_rst_n,
             pi_base_clk, 
             wr_rom_ce_n,
             wr_addr(14 downto 0), 
