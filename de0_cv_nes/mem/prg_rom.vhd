@@ -41,12 +41,12 @@ function rom_fill return rom_array is
 
 --for GHDL environment
 --itinialize with the rom_fill function.
---signal p_rom : rom_array := rom_fill;
+signal p_rom : rom_array := rom_fill;
 
 --for Quartus II environment
-signal p_rom : rom_array;
-attribute ram_init_file : string;
-attribute ram_init_file of p_rom : signal is "sample1-prg.hex";
+--signal p_rom : rom_array;
+--attribute ram_init_file : string;
+--attribute ram_init_file of p_rom : signal is "sample1-prg.hex";
 
 begin
     
