@@ -923,6 +923,7 @@ end;
         if (pi_rst_n = '0') then
             reg_pc_l    <= (others => '0');
             reg_pc_h    <= (others => '0');
+            reg_inst    <= (others => '0');
             reg_addr    <= (others => 'Z');
             reg_d_out   <= (others => 'Z');
             reg_r_nw    <= 'Z';
@@ -934,6 +935,21 @@ end;
                 reg_addr    <= (others => '0');
                 reg_d_out   <= (others => 'Z');
                 reg_r_nw    <= '1';
+            elsif (reg_main_state = ST_RS_T3) then
+                --dummy sp out 1.
+                reg_addr    <= "11111111" & reg_sp;
+                reg_d_out   <= (others => 'Z');
+                reg_r_nw    <= '0';
+            elsif (reg_main_state = ST_RS_T4) then
+                --dummy sp out 2.
+                reg_addr    <= "11111111" & (reg_sp - 1);
+                reg_d_out   <= (others => 'Z');
+                reg_r_nw    <= '0';
+            elsif (reg_main_state = ST_RS_T5) then
+                --dummy sp out 3.
+                reg_addr    <= "11111111" & (reg_sp - 2);
+                reg_d_out   <= (others => 'Z');
+                reg_r_nw    <= '0';
             elsif (reg_main_state = ST_RS_T6) then
                 --reset vector low...
                 reg_addr    <= "1111111111111100";
@@ -951,7 +967,7 @@ end;
                     reg_addr    <= reg_pc_h & reg_pc_l;
                     reg_d_out   <= (others => 'Z');
                     reg_r_nw    <= '1';
-                elsif (reg_sub_state = ST_SUB60) then
+                elsif (reg_sub_state = ST_SUB30) then
                     reg_inst    <= reg_d_in;
                 elsif (reg_sub_state = ST_SUB70) then
                     reg_pc_l    <= reg_pc_l + 1;
