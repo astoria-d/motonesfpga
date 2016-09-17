@@ -1,6 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
+use ieee.std_logic_arith.conv_std_logic_vector;
 
 entity mos6502 is 
     port (  
@@ -1019,35 +1020,35 @@ end;
                     --pc move next.
                     pc_inc;
                 end if;
+            --fetch and move next case.
             elsif (reg_main_state = ST_A21_T1 or
-                   reg_main_state = ST_A22_T1 or
-                   reg_main_state = ST_A23_T1 or
-                   reg_main_state = ST_A23_T2 or
-                   reg_main_state = ST_A24_T1 or
-                   reg_main_state = ST_A25_T1 or
-                   reg_main_state = ST_A25_T2 or
-                   reg_main_state = ST_A26_T1 or
-                   reg_main_state = ST_A27_T1 or
-                   reg_main_state = ST_A31_T1 or
-                   reg_main_state = ST_A32_T1 or
-                   reg_main_state = ST_A32_T2 or
-                   reg_main_state = ST_A33_T1 or
-                   reg_main_state = ST_A34_T1 or
-                   reg_main_state = ST_A34_T2 or
-                   reg_main_state = ST_A35_T1 or
-                   reg_main_state = ST_A36_T1 or
-                   reg_main_state = ST_A41_T1 or
-                   reg_main_state = ST_A42_T1 or
-                   reg_main_state = ST_A42_T2 or
-                   reg_main_state = ST_A43_T1 or
-                   reg_main_state = ST_A44_T1 or
-                   reg_main_state = ST_A44_T2 or
-                   reg_main_state = ST_A53_T1 or
-                   reg_main_state = ST_A561_T1 or
-                   reg_main_state = ST_A562_T1 or
-                   reg_main_state = ST_A562_T2 or
-                   reg_main_state = ST_A58_T1) then
-               --fetch and move next case.
+                reg_main_state = ST_A22_T1 or
+                reg_main_state = ST_A23_T1 or
+                reg_main_state = ST_A23_T2 or
+                reg_main_state = ST_A24_T1 or
+                reg_main_state = ST_A25_T1 or
+                reg_main_state = ST_A25_T2 or
+                reg_main_state = ST_A26_T1 or
+                reg_main_state = ST_A27_T1 or
+                reg_main_state = ST_A31_T1 or
+                reg_main_state = ST_A32_T1 or
+                reg_main_state = ST_A32_T2 or
+                reg_main_state = ST_A33_T1 or
+                reg_main_state = ST_A34_T1 or
+                reg_main_state = ST_A34_T2 or
+                reg_main_state = ST_A35_T1 or
+                reg_main_state = ST_A36_T1 or
+                reg_main_state = ST_A41_T1 or
+                reg_main_state = ST_A42_T1 or
+                reg_main_state = ST_A42_T2 or
+                reg_main_state = ST_A43_T1 or
+                reg_main_state = ST_A44_T1 or
+                reg_main_state = ST_A44_T2 or
+                reg_main_state = ST_A53_T1 or
+                reg_main_state = ST_A561_T1 or
+                reg_main_state = ST_A562_T1 or
+                reg_main_state = ST_A562_T2 or
+                reg_main_state = ST_A58_T1) then
                 if (reg_sub_state = ST_SUB00) then
                     --fetch next.
                     reg_addr    <= reg_pc_h & reg_pc_l;
@@ -1056,6 +1057,49 @@ end;
                 elsif (reg_sub_state = ST_SUB70) then
                     --pc move next.
                     pc_inc;
+                end if;
+           --jsr.
+            elsif (reg_main_state = ST_A53_T2) then
+                --sp out (discarded.)
+                reg_addr    <= "00000001" & reg_sp;
+                reg_d_out   <= (others => 'Z');
+                reg_r_nw    <= '1';
+            elsif (reg_main_state = ST_A53_T3) then
+                --push pch
+                reg_addr    <= "00000001" & reg_sp;
+                reg_d_out   <= reg_pc_h;
+                if (reg_sub_state = ST_SUB32 or
+                    reg_sub_state = ST_SUB33 or
+                    reg_sub_state = ST_SUB40 or
+                    reg_sub_state = ST_SUB41
+                    ) then
+                    reg_r_nw    <= '0';
+                else
+                    reg_r_nw    <= 'Z';
+                end if;
+            elsif (reg_main_state = ST_A53_T4) then
+                --push pcl
+                reg_addr    <= "00000001" & reg_sp;
+                reg_d_out   <= reg_pc_l;
+                if (reg_sub_state = ST_SUB32 or
+                    reg_sub_state = ST_SUB33 or
+                    reg_sub_state = ST_SUB40 or
+                    reg_sub_state = ST_SUB41
+                    ) then
+                    reg_r_nw    <= '0';
+                else
+                    reg_r_nw    <= 'Z';
+                end if;
+            elsif (reg_main_state = ST_A53_T5) then
+                if (reg_sub_state = ST_SUB00) then
+                    --fetch next.
+                    reg_addr    <= reg_pc_h & reg_pc_l;
+                    reg_d_out   <= (others => 'Z');
+                    reg_r_nw    <= '1';
+                elsif (reg_sub_state = ST_SUB70) then
+                    --go to sub-routine addr.
+                    reg_pc_l    <= reg_idl_l;
+                    reg_pc_h    <= reg_idl_h;
                 end if;
             end if;--if (reg_main_state = ST_RS_T0) then
         end if;--if (pi_rst_n = '0') then
@@ -1075,42 +1119,71 @@ end;
             reg_idl_h <= (others => '0');
         elsif (rising_edge(pi_base_clk)) then
             if (reg_main_state = ST_A21_T1 or
-                   reg_main_state = ST_A22_T1 or
-                   reg_main_state = ST_A23_T1 or
-                   reg_main_state = ST_A24_T1 or
-                   reg_main_state = ST_A25_T1 or
-                   reg_main_state = ST_A26_T1 or
-                   reg_main_state = ST_A27_T1 or
-                   reg_main_state = ST_A31_T1 or
-                   reg_main_state = ST_A32_T1 or
-                   reg_main_state = ST_A33_T1 or
-                   reg_main_state = ST_A34_T1 or
-                   reg_main_state = ST_A35_T1 or
-                   reg_main_state = ST_A36_T1 or
-                   reg_main_state = ST_A41_T1 or
-                   reg_main_state = ST_A42_T1 or
-                   reg_main_state = ST_A43_T1 or
-                   reg_main_state = ST_A44_T1 or
-                   reg_main_state = ST_A53_T1 or
-                   reg_main_state = ST_A561_T1 or
-                   reg_main_state = ST_A562_T1 or
-                   reg_main_state = ST_A58_T1) then
+                reg_main_state = ST_A22_T1 or
+                reg_main_state = ST_A23_T1 or
+                reg_main_state = ST_A24_T1 or
+                reg_main_state = ST_A25_T1 or
+                reg_main_state = ST_A26_T1 or
+                reg_main_state = ST_A27_T1 or
+                reg_main_state = ST_A31_T1 or
+                reg_main_state = ST_A32_T1 or
+                reg_main_state = ST_A33_T1 or
+                reg_main_state = ST_A34_T1 or
+                reg_main_state = ST_A35_T1 or
+                reg_main_state = ST_A36_T1 or
+                reg_main_state = ST_A41_T1 or
+                reg_main_state = ST_A42_T1 or
+                reg_main_state = ST_A43_T1 or
+                reg_main_state = ST_A44_T1 or
+                reg_main_state = ST_A53_T1 or
+                reg_main_state = ST_A561_T1 or
+                reg_main_state = ST_A562_T1 or
+                reg_main_state = ST_A58_T1) then
                 if (reg_sub_state = ST_SUB30) then
                     --get low data from rom.
                     reg_idl_l <= reg_d_in;
                 end if;
             elsif (reg_main_state = ST_A23_T2 or
-                   reg_main_state = ST_A25_T2 or
-                   reg_main_state = ST_A32_T2 or
-                   reg_main_state = ST_A34_T2 or
-                   reg_main_state = ST_A42_T2 or
-                   reg_main_state = ST_A44_T2 or
-                   reg_main_state = ST_A562_T2) then
+                reg_main_state = ST_A25_T2 or
+                reg_main_state = ST_A32_T2 or
+                reg_main_state = ST_A34_T2 or
+                reg_main_state = ST_A42_T2 or
+                reg_main_state = ST_A44_T2 or
+                reg_main_state = ST_A53_T5 or
+                reg_main_state = ST_A562_T2) then
                 if (reg_sub_state = ST_SUB30) then
                     --get high data from rom.
                     reg_idl_h <= reg_d_in;
                 end if;
-            end if;--if (reg_main_state = ST_RS_T0) then        end if;--if (pi_rst_n = '0') then
+            end if;--if (reg_main_state = ST_RS_T0)
+        end if;--if (pi_rst_n = '0') then
+    end process;
+
+    --stack pointer...
+    sp_p : process (pi_rst_n, pi_base_clk)
+    begin
+        if (pi_rst_n = '0') then
+            reg_sp <= (others => '0');
+        elsif (rising_edge(pi_base_clk)) then
+            if (reg_main_state = ST_A1_T1) then
+                --txs inst.
+                if (reg_inst = conv_std_logic_vector(16#9a#, 8)) then
+                    reg_sp <= reg_idl_l;
+                end if;
+            elsif (reg_main_state = ST_A53_T3 or
+                reg_main_state = ST_A53_T4-- or
+                ) then
+                --push
+                if (reg_sub_state = ST_SUB70) then
+                    reg_sp <= reg_sp - 1;
+                end if;
+--            elsif (reg_main_state = ST_A23_T2 or
+--                reg_main_state = ST_A562_T2) then
+--                --pull
+--                if (reg_sub_state = ST_SUB30) then
+--                    reg_sp <= (others => '0');
+--                end if;
+            end if;--if (reg_main_state = ST_RS_T0)
         end if;--if (pi_rst_n = '0') then
     end process;
 

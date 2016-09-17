@@ -45,14 +45,18 @@ add wave -label reg_main_cur_state  sim:/testbench_motones_sim/sim_board/cpu_ins
 add wave -label reg_inst -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_inst;
 add wave -label reg_pc_l -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_pc_l;
 add wave -label reg_pc_h -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_pc_h;
+add wave -label reg_idl_l -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_idl_l;
+add wave -label reg_idl_h -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_idl_h;
+add wave -label reg_sp -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_sp;
+
 
 view structure
 view signals
 
-run 9 us
+run 12 us
 wave zoom full
 
-run 100 us
+run 20 us
 
 
 #################################### PPU part.... ###########################################
