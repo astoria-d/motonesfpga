@@ -210,6 +210,8 @@ signal reg_pc_h     : std_logic_vector (7 downto 0);
 --tmp acc carry/overflow reg.
 signal reg_tmp_carry    : std_logic;
 signal reg_tmp_ovf      : std_logic;
+signal reg_tmp_condition    : std_logic;
+signal reg_tmp_pg_crossed   : std_logic;
 
 
 --bus i/o reg.
@@ -308,7 +310,8 @@ begin
     end process;
 
     --state change to next.
-    tx_next_main_stat_p : process (pi_rst_n, reg_main_state, reg_sub_state, reg_inst)
+    tx_next_main_stat_p : process (pi_rst_n, reg_main_state, reg_sub_state,
+                                   reg_inst, reg_tmp_condition, reg_tmp_pg_crossed)
 
     begin
         case reg_main_state is
@@ -943,13 +946,25 @@ begin
                 end if;
             when ST_A58_T1 =>
                 if (reg_sub_state = ST_SUB73) then
-                    reg_main_next_state <= ST_A58_T2;
+                    if (reg_tmp_condition = '1') then
+                        --condition met. move to branch state.
+                        reg_main_next_state <= ST_A58_T2;
+                    else
+                        --condition not met. goto next inst fetch.
+                        reg_main_next_state <= ST_CM_T0;
+                    end if;
                 else
                     reg_main_next_state <= reg_main_state;
                 end if;
             when ST_A58_T2 =>
                 if (reg_sub_state = ST_SUB73) then
-                    reg_main_next_state <= ST_A58_T3;
+                    if (reg_tmp_pg_crossed = '1') then
+                        --page crossed. move to next.
+                        reg_main_next_state <= ST_A58_T2;
+                    else
+                        --page not crossed. move to next inst fetch.
+                        reg_main_next_state <= ST_CM_T0;
+                    end if;
                 else
                     reg_main_next_state <= reg_main_state;
                 end if;
@@ -978,6 +993,9 @@ begin
     --pc, io bus, r/w, instruction regs...
     ad_general_p : process (pi_rst_n, pi_base_clk)
 
+    --address calcuratin w/ carry.
+    variable calc_adl   : std_logic_vector(8 downto 0);
+
 procedure pc_inc is
 begin
     if (reg_pc_l = "11111111") then
@@ -998,6 +1016,8 @@ end;
             reg_d_out   <= (others => 'Z');
             reg_d_in    <= (others => '0');
             reg_r_nw    <= 'Z';
+            reg_tmp_pg_crossed  <= '0';
+            calc_adl    := (others => '0');
         elsif (rising_edge(pi_base_clk)) then
 
             --general input data register.
@@ -1039,6 +1059,10 @@ end;
                 reg_r_nw    <= '1';
                 reg_pc_h    <= reg_d_in;
             elsif (reg_main_state = ST_CM_T0) then
+                --init pg crossing flag.
+                reg_tmp_pg_crossed <= '0';
+                calc_adl    := (others => '0');
+
                 if (reg_sub_state = ST_SUB00) then
                     --fetch next.
                     reg_addr    <= reg_pc_h & reg_pc_l;
@@ -1165,6 +1189,27 @@ end;
                 reg_d_out   <= (others => 'Z');
                 reg_r_nw    <= '1';
             end if;--if (reg_main_state = ST_RS_T0) then
+
+           --conditional branch.
+            elsif (reg_main_state = ST_A58_T2) then
+                if (reg_sub_state = ST_SUB10) then
+                    calc_adl    := ("0" & reg_pc_l) + ("0" & reg_idl_l);
+                    reg_tmp_pg_crossed <= calc_adl(8);
+
+                    reg_pc_l    <= calc_adl(7 downto 0);
+                    reg_addr    <= reg_pc_h & calc_adl(7 downto 0);
+                    reg_d_out   <= (others => 'Z');
+                    reg_r_nw    <= '1';
+                end if;
+
+            --page crossed.
+            elsif (reg_main_state = ST_A58_T3) then
+                if (reg_sub_state = ST_SUB10) then
+                    reg_pc_l    <= reg_pc_h + "1";
+                    reg_addr    <= (reg_pc_h + "1") & reg_pc_l;
+                    reg_d_out   <= (others => 'Z');
+                    reg_r_nw    <= '1';
+                end if;
         end if;--if (pi_rst_n = '0') then
     end process;
 
@@ -1277,6 +1322,18 @@ begin
     end if;
 end;
 
+procedure set_condition_result (
+    flg   : in integer range 0 to 7;
+    chk_val : in std_logic
+) is
+begin
+    if (reg_status(flg) = chk_val) then
+        reg_tmp_condition <= '1';
+    else
+        reg_tmp_condition <= '0';
+    end if;
+end;
+
     begin
         --Most instructions that explicitly reference memory locations have bit patterns of the form aaabbbcc.
         if (pi_rst_n = '0') then
@@ -1286,6 +1343,7 @@ end;
             reg_status <= (others => '0');
             reg_tmp_carry <= '0';
             reg_tmp_ovf <= '0';
+            reg_tmp_condition <= '0';
         elsif (rising_edge(pi_base_clk)) then
             --not used status pin initialize (to avoid latches).
             reg_status(5 downto 3) <= "000";
@@ -1297,9 +1355,10 @@ end;
             --cli   iny     sed     txa
             --clv   lsr     sei     txs
             if (reg_main_state = ST_CM_T0) then
-                --init carry flag.
+                --init flag regs..
                 reg_tmp_carry <= '0';
                 reg_tmp_ovf <= '0';
+                reg_tmp_condition <= '0';
             elsif (reg_main_state = ST_A1_T1) then
                 --update reg
                 if (reg_sub_state = ST_SUB30) then
@@ -1638,6 +1697,47 @@ end;
                         update_status(reg_acc, 1, 1, 0);
                     end if;
                 end if;--if (reg_sub_state = ST_SUB30) then
+
+            --a58 branch inst.
+            --bcc   bne
+            --bcs   bpl
+            --beq   bvc
+            --bmi   bvs
+            elsif (reg_main_state = ST_A58_T1) then
+                if (reg_sub_state = ST_SUB30) then
+                    if (reg_inst = conv_std_logic_vector(16#90#, 8)) then
+                        --bcc
+                        set_condition_result(FL_C, '0');
+
+                    elsif (reg_inst = conv_std_logic_vector(16#b0#, 8)) then
+                        --bcs
+                        set_condition_result(FL_C, '1');
+
+                    elsif (reg_inst = conv_std_logic_vector(16#f0#, 8)) then
+                        --beq
+                        set_condition_result(FL_Z, '1');
+
+                    elsif (reg_inst = conv_std_logic_vector(16#30#, 8)) then
+                        --bmi
+                        set_condition_result(FL_N, '1');
+
+                    elsif (reg_inst = conv_std_logic_vector(16#d0#, 8)) then
+                        --bne
+                        set_condition_result(FL_Z, '0');
+
+                    elsif (reg_inst = conv_std_logic_vector(16#10#, 8)) then
+                        --bpl
+                        set_condition_result(FL_N, '0');
+
+                    elsif (reg_inst = conv_std_logic_vector(16#50#, 8)) then
+                        --bvc
+                        set_condition_result(FL_V, '0');
+
+                    elsif (reg_inst = conv_std_logic_vector(16#70#, 8)) then
+                        --bvs
+                        set_condition_result(FL_V, '1');
+                    end if;
+                end if;
             end if;--if (reg_main_state = ST_A21_T1 or...
         end if;--if (pi_rst_n = '0') then
     end process;
