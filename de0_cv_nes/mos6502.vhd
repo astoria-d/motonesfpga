@@ -1222,18 +1222,21 @@ end;
                 if (reg_inst = conv_std_logic_vector(16#9a#, 8)) then
                     reg_sp <= reg_idl_l;
                 end if;
-            elsif (reg_main_state = ST_A53_T3 or
+            elsif (reg_main_state = ST_A51_T2 or
+                reg_main_state = ST_A53_T3 or
                 reg_main_state = ST_A53_T4) then
-                --jsr. push pch/pcl.
+                --push, jsr.
                 if (reg_sub_state = ST_SUB70) then
                     reg_sp <= reg_sp - 1;
                 end if;
---            elsif (reg_main_state = ST_A23_T2 or
---                reg_main_state = ST_A562_T2) then
---                --pull
---                if (reg_sub_state = ST_SUB30) then
---                    reg_sp <= (others => '0');
---                end if;
+            elsif (reg_main_state = ST_A52_T2 or
+                reg_main_state = ST_A57_T2 or
+                reg_main_state = ST_A57_T3 or
+                reg_main_state = ST_A57_T4) then
+                --pull, rts.
+                if (reg_sub_state = ST_SUB70) then
+                    reg_sp <= reg_sp + 1;
+                end if;
             end if;--if (reg_main_state = ST_RS_T0)
         end if;--if (pi_rst_n = '0') then
     end process;
