@@ -28,40 +28,68 @@ type cpu_main_state is (
     ST_A1_T1,
 
     --mem data operation
+    --imm
     ST_A21_T1,
+    --zp
     ST_A22_T1, ST_A22_T2,
+    --abs
     ST_A23_T1, ST_A23_T2, ST_A23_T3,
+    --indir, x
     ST_A24_T1, ST_A24_T2, ST_A24_T3, ST_A24_T4, ST_A24_T5,
+    --abs xy
     ST_A25_T1, ST_A25_T2, ST_A25_T3, ST_A25_T4,
+    --zp xy
     ST_A26_T1, ST_A26_T2, ST_A26_T3,
+    --indir, y
     ST_A27_T1, ST_A27_T2, ST_A27_T3, ST_A27_T4, ST_A27_T5,
 
     --store op.
+    --zp
     ST_A31_T1, ST_A31_T2,
+    --abs
     ST_A32_T1, ST_A32_T2, ST_A32_T3,
+    --indir, x
     ST_A33_T1, ST_A33_T2, ST_A33_T3, ST_A33_T4, ST_A33_T5,
+    --abs xy
     ST_A34_T1, ST_A34_T2, ST_A34_T3, ST_A34_T4,
+    --zp xy
     ST_A35_T1, ST_A35_T2, ST_A35_T3,
+    --indir, y
     ST_A36_T1, ST_A36_T2, ST_A36_T3, ST_A36_T4, ST_A36_T5,
 
     --memory to memory op.
+    --zp
     ST_A41_T1, ST_A41_T2, ST_A41_T3, ST_A41_T4,
+    --abs
     ST_A42_T1, ST_A42_T2, ST_A42_T3, ST_A42_T4, ST_A42_T5,
+    --zp x
     ST_A43_T1, ST_A43_T2, ST_A43_T3, ST_A43_T4, ST_A43_T5,
+    --abs x
     ST_A44_T1, ST_A44_T2, ST_A44_T3, ST_A44_T4, ST_A44_T5, ST_A44_T6, 
 
     --misc operation.
+    --push
     ST_A51_T1, ST_A51_T2,
+    --pull
     ST_A52_T1, ST_A52_T2, ST_A52_T3,
+    --jmp
     ST_A53_T1, ST_A53_T2, ST_A53_T3,ST_A53_T4, ST_A53_T5,
+    --rti
     ST_A55_T1, ST_A55_T2, ST_A55_T3, ST_A55_T4, ST_A55_T5,
+    --jmp abs
     ST_A561_T1, ST_A561_T2,
+    --jmp indir
     ST_A562_T1, ST_A562_T2, ST_A562_T3, ST_A562_T4,
+    --rts
     ST_A57_T1, ST_A57_T2, ST_A57_T3, ST_A57_T4, ST_A57_T5,
+    --branch
     ST_A58_T1, ST_A58_T2, ST_A58_T3,
 
     --reset vector.
-    ST_RS_T0, ST_RS_T1, ST_RS_T2, ST_RS_T3, ST_RS_T4, ST_RS_T5, ST_RS_T6, ST_RS_T7
+    ST_RS_T0, ST_RS_T1, ST_RS_T2, ST_RS_T3, ST_RS_T4, ST_RS_T5, ST_RS_T6, ST_RS_T7,
+
+    --invalid state
+    ST_INV
     );
 
 --cpu sub state.
@@ -77,6 +105,76 @@ type cpu_sub_state is (
     ST_SUB60, ST_SUB61, ST_SUB62, ST_SUB63,
     ST_SUB70, ST_SUB71, ST_SUB72, ST_SUB73
     );
+
+--Most instructions that explicitly reference memory locations have bit patterns of the form aaabbbcc. 
+--The aaa and cc bits determine the opcode, and the bbb bits determine the addressing mode.
+type cpu_state_array    is array (0 to 255) of cpu_main_state;
+constant inst_decode_rom : cpu_state_array := (
+    --00 - 07
+    ST_INV,     ST_A24_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A22_T1,  ST_INV,     ST_INV,
+    --08 - 0f
+    ST_INV,     ST_A21_T1,  ST_A1_T1,   ST_INV,     ST_INV,     ST_A23_T1,  ST_INV,     ST_INV,
+    --10 - 17
+    ST_INV,     ST_A27_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A26_T1,  ST_INV,     ST_INV,
+    --18 - 1f
+    ST_A1_T1,   ST_A25_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A25_T1,  ST_INV,     ST_INV,
+    --20 - 27
+    ST_INV,     ST_A24_T1,  ST_INV,     ST_INV,     ST_A22_T1,  ST_A22_T1,  ST_INV,     ST_INV,
+    --28 - 2f
+    ST_INV,     ST_A21_T1,  ST_A1_T1,   ST_INV,     ST_A23_T1,  ST_A23_T1,  ST_INV,     ST_INV,
+    --30 - 37
+    ST_INV,     ST_A27_T1,  ST_INV,     ST_INV,     ST_A26_T1,  ST_INV,     ST_INV,     ST_INV,
+    --38 - 3f
+    ST_A1_T1,   ST_A25_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A25_T1,  ST_INV,     ST_INV,
+    --40 - 47
+    ST_INV,     ST_A24_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A22_T1,  ST_INV,     ST_INV,
+    --48 - 4f
+    ST_INV,     ST_A21_T1,  ST_A1_T1,   ST_INV,     ST_INV,     ST_A23_T1,  ST_INV,     ST_INV,
+    --50 - 57
+    ST_INV,     ST_A27_T1,  ST_INV,     ST_INV,     ST_A26_T1,  ST_INV,     ST_INV,     ST_INV,
+    --58 - 5f
+    ST_A1_T1,   ST_A25_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A25_T1,  ST_INV,     ST_INV,
+    --60 - 67
+    ST_INV,     ST_A24_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A22_T1,  ST_INV,     ST_INV,
+    --68 - 6f
+    ST_INV,     ST_A21_T1,  ST_A1_T1,   ST_INV,     ST_INV,     ST_A23_T1,  ST_INV,     ST_INV,
+    --70 - 77
+    ST_INV,     ST_A27_T1,  ST_INV,     ST_INV,     ST_A26_T1,  ST_INV,     ST_INV,     ST_INV,
+    --78 - 7f
+    ST_A1_T1,   ST_A25_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A25_T1,  ST_INV,     ST_INV,
+    --80 - 87
+    ST_INV,     ST_INV,     ST_INV,     ST_INV,     ST_INV,     ST_INV,     ST_INV,     ST_INV,
+    --88 - 8f
+    ST_A1_T1,   ST_INV,     ST_A1_T1,   ST_INV,     ST_INV,     ST_INV,     ST_INV,     ST_INV,
+    --90 - 97
+    ST_INV,     ST_INV,     ST_INV,     ST_INV,     ST_INV,     ST_INV,     ST_INV,     ST_INV,
+    --98 - 9f
+    ST_A1_T1,   ST_INV,     ST_A1_T1,   ST_INV,     ST_INV,     ST_INV,     ST_INV,     ST_INV,
+    --a0 - a7
+    ST_A21_T1,  ST_A24_T1,  ST_A21_T1,  ST_INV,     ST_A22_T1,  ST_A22_T1,  ST_A22_T1,  ST_INV,
+    --a8 - af
+    ST_A1_T1,   ST_A21_T1,  ST_A1_T1,   ST_INV,     ST_A23_T1,  ST_A23_T1,  ST_A23_T1,  ST_INV,
+    --b0 - b7
+    ST_INV,     ST_A27_T1,  ST_INV,     ST_A26_T1,  ST_A26_T1,  ST_A26_T1,  ST_INV,     ST_INV,
+    --b8 - bf
+    ST_A1_T1,   ST_A25_T1,  ST_A1_T1,   ST_INV,     ST_A25_T1,  ST_A25_T1,  ST_A25_T1,  ST_INV,
+    --c0 - c7
+    ST_A21_T1,  ST_A24_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A22_T1,  ST_INV,     ST_INV,
+    --c8 - cf
+    ST_A1_T1,   ST_A21_T1,  ST_A1_T1,   ST_INV,     ST_A23_T1,  ST_A23_T1,  ST_INV,     ST_INV,
+    --d0 - d7
+    ST_INV,     ST_A27_T1,  ST_INV,     ST_INV,     ST_A26_T1,  ST_INV,     ST_INV,     ST_INV,
+    --d8 - df
+    ST_A1_T1,   ST_A25_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A25_T1,  ST_INV,     ST_INV,
+    --e0 - e7
+    ST_A21_T1,  ST_A24_T1,  ST_INV,     ST_INV,     ST_A22_T1,  ST_A22_T1,  ST_INV,     ST_INV,
+    --e8 - ef
+    ST_A1_T1,   ST_A21_T1,  ST_A1_T1,   ST_INV,     ST_A23_T1,  ST_A23_T1,  ST_INV,     ST_INV,
+    --f0 - f7
+    ST_INV,     ST_A27_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A26_T1,  ST_INV,     ST_INV,
+    --f8 - ff
+    ST_A1_T1,   ST_A25_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A25_T1,  ST_INV,     ST_INV
+);
 
 signal reg_main_state           : cpu_main_state;
 signal reg_main_next_state      : cpu_main_state;
@@ -193,73 +291,6 @@ begin
     --state change to next.
     tx_next_main_stat_p : process (reg_main_state, reg_sub_state, pi_rst_n)
 
----fake docode function...
-variable test_index : integer range 0 to 26 := 0;
-variable next_inst_state : cpu_main_state;
-
-procedure get_next_inst_state is
-begin
-    if (test_index <= 25) then
-        test_index := test_index + 1;
-    else
-        test_index := 1;
-    end if;
-    
-    if (test_index = 1) then
-        next_inst_state := ST_A1_T1;
-    elsif (test_index = 2) then
-        next_inst_state := ST_A22_T1;
-    elsif (test_index = 3) then
-        next_inst_state := ST_A23_T1;
-    elsif (test_index = 4) then
-        next_inst_state := ST_A24_T1;
-    elsif (test_index = 5) then
-        next_inst_state := ST_A25_T1;
-    elsif (test_index = 6) then
-        next_inst_state := ST_A26_T1;
-    elsif (test_index = 7) then
-        next_inst_state := ST_A27_T1;
-    elsif (test_index = 8) then
-        next_inst_state := ST_A31_T1;
-    elsif (test_index = 9) then
-        next_inst_state := ST_A32_T1;
-    elsif (test_index = 10) then
-        next_inst_state := ST_A33_T1;
-    elsif (test_index = 11) then
-        next_inst_state := ST_A34_T1;
-    elsif (test_index = 12) then
-        next_inst_state := ST_A35_T1;
-    elsif (test_index = 13) then
-        next_inst_state := ST_A36_T1;
-    elsif (test_index = 14) then
-        next_inst_state := ST_A41_T1;
-    elsif (test_index = 15) then
-        next_inst_state := ST_A42_T1;
-    elsif (test_index = 16) then
-        next_inst_state := ST_A43_T1;
-    elsif (test_index = 17) then
-        next_inst_state := ST_A44_T1;
-    elsif (test_index = 18) then
-        next_inst_state := ST_A51_T1;
-    elsif (test_index = 19) then
-        next_inst_state := ST_A52_T1;
-    elsif (test_index = 20) then
-        next_inst_state := ST_A53_T1;
-    elsif (test_index = 21) then
-        next_inst_state := ST_A55_T1;
-    elsif (test_index = 22) then
-        next_inst_state := ST_A561_T1;
-    elsif (test_index = 23) then
-        next_inst_state := ST_A562_T1;
-    elsif (test_index = 24) then
-        next_inst_state := ST_A57_T1;
-    elsif (test_index = 25) then
-        next_inst_state := ST_A58_T1;
-    else
-        next_inst_state := ST_IDLE;
-    end if;
-end;
-
     begin
         case reg_main_state is
             -----idle...
@@ -322,8 +353,8 @@ end;
             --instruction fetch
             when ST_CM_T0 =>
                 if (reg_sub_state = ST_SUB73) then
-                    get_next_inst_state;
-                    reg_main_next_state <= next_inst_state;
+                    ---instruction decode next state.
+                    reg_main_next_state <= inst_decode_rom(conv_integer(reg_inst));
                 else
                     reg_main_next_state <= reg_main_state;
                 end if;
@@ -910,6 +941,9 @@ end;
                     reg_main_next_state <= reg_main_state;
                 end if;
 
+            when ST_INV =>
+                ---failed to decode next...
+                    reg_main_next_state <= reg_main_state;
 --            ---not ready yet...
 --            when others =>
 --                reg_main_next_state <= reg_main_state;
@@ -919,6 +953,18 @@ end;
     --addressing general process...
     --pc, io bus, r/w, instruction regs...
     ad_general_p : process (pi_rst_n, pi_base_clk)
+
+procedure pc_inc is
+begin
+    if (reg_pc_l = "11111111") then
+        --pch page next.
+        reg_pc_l    <= "00000000";
+        reg_pc_h    <= reg_pc_h + 1;
+    else
+        reg_pc_l    <= reg_pc_l + 1;
+    end if;
+end;
+
     begin
         if (pi_rst_n = '0') then
             reg_pc_l    <= (others => '0');
@@ -970,7 +1016,7 @@ end;
                 elsif (reg_sub_state = ST_SUB30) then
                     reg_inst    <= reg_d_in;
                 elsif (reg_sub_state = ST_SUB70) then
-                    reg_pc_l    <= reg_pc_l + 1;
+                    pc_inc;
                 end if;
             end if;
         end if;--if (pi_rst_n = '0') then
