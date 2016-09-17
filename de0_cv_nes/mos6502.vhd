@@ -1102,7 +1102,6 @@ end;
                 reg_main_state = ST_A53_T1 or
                 reg_main_state = ST_A561_T1 or
                 reg_main_state = ST_A562_T1 or
-                reg_main_state = ST_A562_T2 or
                 reg_main_state = ST_A57_T1 or
                 reg_main_state = ST_A58_T1) then
                 if (reg_sub_state = ST_SUB00) then
@@ -1159,6 +1158,18 @@ end;
                     reg_pc_h    <= reg_idl_h;
                 end if;
 
+           --jmp.
+            elsif (reg_main_state = ST_A561_T2) then
+                if (reg_sub_state = ST_SUB00) then
+                    --fetch next.
+                    reg_addr    <= reg_pc_h & reg_pc_l;
+                    reg_d_out   <= (others => 'Z');
+                    reg_r_nw    <= '1';
+                elsif (reg_sub_state = ST_SUB70) then
+                    reg_pc_l    <= reg_idl_l;
+                    reg_pc_h    <= reg_idl_h;
+                end if;
+
            --rts.
             elsif (reg_main_state = ST_A57_T2) then
                 --sp out (discarded.)
@@ -1168,7 +1179,7 @@ end;
             elsif (reg_main_state = ST_A57_T3) then
                 --pull pcl
                 if (reg_sub_state = ST_SUB00) then
-                    reg_addr    <= "00000001" & reg_sp + 1;
+                    reg_addr    <= "00000001" & reg_sp;
                     reg_d_out   <= (others => 'Z');
                     reg_r_nw    <= '1';
                 elsif (reg_sub_state = ST_SUB70) then
@@ -1177,7 +1188,7 @@ end;
             elsif (reg_main_state = ST_A57_T4) then
                 --pull pch
                 if (reg_sub_state = ST_SUB00) then
-                    reg_addr    <= "00000001" & reg_sp + 2;
+                    reg_addr    <= "00000001" & reg_sp;
                     reg_d_out   <= (others => 'Z');
                     reg_r_nw    <= '1';
                 elsif (reg_sub_state = ST_SUB70) then
@@ -1185,10 +1196,13 @@ end;
                 end if;
             elsif (reg_main_state = ST_A57_T5) then
                 --pc out (discarded.)
-                reg_addr    <= reg_pc_h & reg_pc_l;
-                reg_d_out   <= (others => 'Z');
-                reg_r_nw    <= '1';
-            end if;--if (reg_main_state = ST_RS_T0) then
+                if (reg_sub_state = ST_SUB00) then
+                    reg_addr    <= reg_pc_h & reg_pc_l;
+                    reg_d_out   <= (others => 'Z');
+                    reg_r_nw    <= '1';
+                elsif (reg_sub_state = ST_SUB70) then
+                    reg_pc_l    <= reg_pc_l + 1;
+                end if;
 
            --conditional branch.
             elsif (reg_main_state = ST_A58_T2) then
@@ -1210,6 +1224,7 @@ end;
                     reg_d_out   <= (others => 'Z');
                     reg_r_nw    <= '1';
                 end if;
+            end if;--if (reg_main_state = ST_RS_T0) then
         end if;--if (pi_rst_n = '0') then
     end process;
 
@@ -1253,6 +1268,7 @@ end;
                 reg_main_state = ST_A42_T2 or
                 reg_main_state = ST_A44_T2 or
                 reg_main_state = ST_A53_T5 or
+                reg_main_state = ST_A561_T2 or
                 reg_main_state = ST_A562_T2) then
                 if (reg_sub_state = ST_SUB30) then
                     --get high data from rom.
