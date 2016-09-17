@@ -175,6 +175,21 @@ constant inst_decode_rom : cpu_state_array := (
     ST_A1_T1,   ST_A25_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A25_T1,  ST_A44_T1,  ST_INV
 );
 
+--        Flags (bit 7 to bit 0):
+--        N   ....    Negative
+--        V   ....    Overflow
+--        -   ....    ignored   -- always 1 for NES 6502
+--        B   ....    Break
+--        D   ....    Decimal (use BCD for arithmetics)     -- not supported. always 0.
+--        I   ....    Interrupt (IRQ disable)
+--        Z   ....    Zero
+--        C   ....    Carry
+constant FL_N   : integer := 7;
+constant FL_V   : integer := 6;
+constant FL_I   : integer := 2;
+constant FL_Z   : integer := 1;
+constant FL_C   : integer := 0;
+
 signal reg_main_state           : cpu_main_state;
 signal reg_main_next_state      : cpu_main_state;
 signal reg_sub_state            : cpu_sub_state;
@@ -191,6 +206,11 @@ signal reg_sp       : std_logic_vector (7 downto 0);
 signal reg_status   : std_logic_vector (7 downto 0);
 signal reg_pc_l     : std_logic_vector (7 downto 0);
 signal reg_pc_h     : std_logic_vector (7 downto 0);
+
+--tmp acc carry/overflow reg.
+signal reg_tmp_carry    : std_logic;
+signal reg_tmp_ovf      : std_logic;
+
 
 --bus i/o reg.
 signal reg_r_nw     : std_logic;
@@ -288,7 +308,7 @@ begin
     end process;
 
     --state change to next.
-    tx_next_main_stat_p : process (reg_main_state, reg_sub_state, pi_rst_n)
+    tx_next_main_stat_p : process (pi_rst_n, reg_main_state, reg_sub_state, reg_inst)
 
     begin
         case reg_main_state is
@@ -1215,6 +1235,401 @@ end;
 --                    reg_sp <= (others => '0');
 --                end if;
             end if;--if (reg_main_state = ST_RS_T0)
+        end if;--if (pi_rst_n = '0') then
+    end process;
+
+    --calcuration process...
+    calc_p : process (pi_rst_n, pi_base_clk)
+
+    variable calc_res : std_logic_vector (8 downto 0);
+procedure update_status (
+    d       : in std_logic_vector(7 downto 0);
+    set_n   : in integer range 0 to 1;
+    set_z   : in integer range 0 to 1;
+    set_c   : in integer range 0 to 1
+) is
+begin
+    if (set_n = 1) then
+        if (d(7) = '1') then
+            reg_status(FL_N) <= '1';
+        else
+            reg_status(FL_N) <= '0';
+        end if;
+    end if;
+    if (set_z = 1) then
+        if (d = "00000000") then
+            reg_status(FL_Z) <= '1';
+        else
+            reg_status(FL_Z) <= '0';
+        end if;
+    end if;
+    if (set_c = 1) then
+        reg_status(FL_C) <= reg_tmp_carry;
+    end if;
+end;
+
+    begin
+        --Most instructions that explicitly reference memory locations have bit patterns of the form aaabbbcc.
+        if (pi_rst_n = '0') then
+            reg_acc <= (others => '0');
+            reg_x <= (others => '0');
+            reg_y <= (others => '0');
+            reg_status <= (others => '0');
+            reg_tmp_carry <= '0';
+            reg_tmp_ovf <= '0';
+        elsif (rising_edge(pi_base_clk)) then
+            --not used status pin initialize (to avoid latches).
+            reg_status(5 downto 3) <= "000";
+
+            --a1 instructions...
+            --asl   dex     nop     tax     tya
+            --clc   dey     rol     tay
+            --cld   inx     sec     tsx
+            --cli   iny     sed     txa
+            --clv   lsr     sei     txs
+            if (reg_main_state = ST_CM_T0) then
+                --init carry flag.
+                reg_tmp_carry <= '0';
+                reg_tmp_ovf <= '0';
+            elsif (reg_main_state = ST_A1_T1) then
+                --update reg
+                if (reg_sub_state = ST_SUB30) then
+                    --case cc=01
+                    if (reg_inst(1 downto 0) = "01") then
+                        if (reg_inst(7 downto 5) = "000") then
+                            --asl
+                            reg_acc <= reg_acc(6 downto 0) & "0";
+                            reg_tmp_carry <= reg_acc(7);
+                        elsif (reg_inst(7 downto 5) = "001") then
+                            --rol
+                            reg_acc <= reg_acc(6 downto 0) & reg_status(FL_C);
+                            reg_tmp_carry <= reg_acc(7);
+                        elsif (reg_inst(7 downto 5) = "010") then
+                            --lsr
+                            reg_acc <= "0" & reg_acc(7 downto 1);
+                            reg_tmp_carry <= reg_acc(0);
+                        elsif (reg_inst(7 downto 5) = "011") then
+                            --ror
+                            reg_acc <= reg_status(FL_C) & reg_acc(7 downto 1);
+                            reg_tmp_carry <= reg_acc(0);
+                        elsif (reg_inst(7 downto 5) = "110") then
+                            --dec
+                            reg_acc <= reg_acc - 1;
+                        elsif (reg_inst(7 downto 5) = "111") then
+                            --inc
+                            reg_acc <= reg_acc + 1;
+                        end if;
+                    elsif (reg_inst = conv_std_logic_vector(16#88#, 8)) then
+                        --dey
+                        reg_y <= reg_y - 1;
+                    elsif (reg_inst = conv_std_logic_vector(16#a8#, 8)) then
+                        --tay
+                        reg_y <= reg_acc;
+                    elsif (reg_inst = conv_std_logic_vector(16#c8#, 8)) then
+                        --iny
+                        reg_y <= reg_y + 1;
+                    elsif (reg_inst = conv_std_logic_vector(16#e8#, 8)) then
+                        --inx
+                        reg_x <= reg_x + 1;
+                    elsif (reg_inst = conv_std_logic_vector(16#18#, 8)) then
+                        --clc
+                        reg_status(FL_C) <= '0';
+                    elsif (reg_inst = conv_std_logic_vector(16#38#, 8)) then
+                        --sec
+                        reg_status(FL_C) <= '1';
+                    elsif (reg_inst = conv_std_logic_vector(16#58#, 8)) then
+                        --cli
+                        reg_status(FL_I) <= '0';
+                    elsif (reg_inst = conv_std_logic_vector(16#78#, 8)) then
+                        --sei
+                        reg_status(FL_I) <= '1';
+                    elsif (reg_inst = conv_std_logic_vector(16#98#, 8)) then
+                        --tya
+                        reg_acc <= reg_y;
+                    elsif (reg_inst = conv_std_logic_vector(16#b8#, 8)) then
+                        --clv
+                        reg_status(FL_V) <= '0';
+                    elsif (reg_inst = conv_std_logic_vector(16#8a#, 8)) then
+                        --txa
+                        reg_acc <= reg_y;
+                    elsif (reg_inst = conv_std_logic_vector(16#aa#, 8)) then
+                        --tax
+                        reg_x <= reg_acc;
+                    elsif (reg_inst = conv_std_logic_vector(16#ba#, 8)) then
+                        --tsx
+                        reg_x <= reg_sp;
+                    elsif (reg_inst = conv_std_logic_vector(16#ca#, 8)) then
+                        --dex
+                        reg_x <= reg_x - 1;
+                    elsif (reg_inst = conv_std_logic_vector(16#ea#, 8)) then
+                        --nop
+                        --do nothing...
+                    end if;
+
+                --update status reg
+                elsif (reg_sub_state = ST_SUB31) then
+                    --case cc=01
+                    if (reg_inst(1 downto 0) = "01") then
+                        if (reg_inst(7 downto 5) = "000") then
+                            --asl
+                            update_status(reg_acc, 1, 1, 1);
+                        elsif (reg_inst(7 downto 5) = "001") then
+                            --rol
+                            update_status(reg_acc, 1, 1, 1);
+                        elsif (reg_inst(7 downto 5) = "010") then
+                            --lsr
+                            update_status(reg_acc, 0, 1, 1);
+                        elsif (reg_inst(7 downto 5) = "011") then
+                            --ror
+                            update_status(reg_acc, 1, 1, 1);
+                        elsif (reg_inst(7 downto 5) = "110") then
+                            --dec
+                            update_status(reg_acc, 1, 1, 0);
+                        elsif (reg_inst(7 downto 5) = "111") then
+                            --inc
+                            update_status(reg_acc, 1, 1, 0);
+                        end if;
+                    elsif (reg_inst = conv_std_logic_vector(16#88#, 8)) then
+                        --dey
+                        update_status(reg_y, 1, 1, 0);
+                    elsif (reg_inst = conv_std_logic_vector(16#a8#, 8)) then
+                        --tay
+                        update_status(reg_y, 1, 1, 0);
+                    elsif (reg_inst = conv_std_logic_vector(16#c8#, 8)) then
+                        --iny
+                        update_status(reg_y, 1, 1, 0);
+                    elsif (reg_inst = conv_std_logic_vector(16#e8#, 8)) then
+                        --inx
+                        update_status(reg_x, 1, 1, 0);
+                    elsif (reg_inst = conv_std_logic_vector(16#98#, 8)) then
+                        --tya
+                        update_status(reg_acc, 1, 1, 0);
+                    elsif (reg_inst = conv_std_logic_vector(16#8a#, 8)) then
+                        --txa
+                        update_status(reg_acc, 1, 1, 0);
+                    elsif (reg_inst = conv_std_logic_vector(16#9a#, 8)) then
+                        --txs
+                        update_status(reg_sp, 1, 1, 0);
+                    elsif (reg_inst = conv_std_logic_vector(16#aa#, 8)) then
+                        --tax
+                        update_status(reg_x, 1, 1, 0);
+                    elsif (reg_inst = conv_std_logic_vector(16#ba#, 8)) then
+                        --tsx
+                        update_status(reg_x, 1, 1, 0);
+                    elsif (reg_inst = conv_std_logic_vector(16#ca#, 8)) then
+                        --dex
+                        update_status(reg_x, 1, 1, 0);
+                    elsif (reg_inst = conv_std_logic_vector(16#ea#, 8)) then
+                        --nop
+                        --do nothing...
+                    end if;
+                end if;--if (reg_sub_state = ST_SUB30) then
+
+            --a2 instructions...
+            --adc   cmp     eor     ldy
+            --and   cpx     lda     ora
+            --bit   cpy     ldx     sbc
+            elsif (reg_main_state = ST_A21_T1 or
+                reg_main_state = ST_A22_T2 or
+                reg_main_state = ST_A23_T3 or
+                reg_main_state = ST_A24_T5 or
+                reg_main_state = ST_A25_T4 or
+                reg_main_state = ST_A25_T3 or
+                reg_main_state = ST_A26_T3 or
+                reg_main_state = ST_A27_T5) then
+                
+                --update reg
+                if (reg_sub_state = ST_SUB30) then
+                    --case cc=01
+                    if (reg_inst(1 downto 0) = "01") then
+                        if (reg_inst(7 downto 5) = "000") then
+                            --ora
+                            reg_acc <= (reg_acc or reg_d_in);
+                        elsif (reg_inst(7 downto 5) = "001") then
+                            --and
+                            reg_acc <= (reg_acc and reg_d_in);
+                        elsif (reg_inst(7 downto 5) = "010") then
+                            --eor
+                            reg_acc <= (reg_acc xor reg_d_in);
+                        elsif (reg_inst(7 downto 5) = "011") then
+                            --adc
+                            calc_res := ("0" & reg_acc) + ("0" & reg_d_in) + reg_status(FL_C);
+                            reg_tmp_carry <= calc_res(8);
+                            if ((reg_acc(7) = reg_d_in(7)) and (reg_acc(7) /= calc_res(7))) then
+                                reg_tmp_ovf <= '1';
+                            else
+                                reg_tmp_ovf <= '0';
+                            end if;
+                            reg_acc <= calc_res(7 downto 0);
+                        elsif (reg_inst(7 downto 5) = "101") then
+                            --lda
+                            reg_acc <= reg_d_in;
+                        elsif (reg_inst(7 downto 5) = "110") then
+                            --cmp
+                            --do nothing.
+                        elsif (reg_inst(7 downto 5) = "111") then
+                            --sbc
+                            ---A - M - ~C -> A
+                            calc_res := ("0" & reg_acc) - ("0" & reg_d_in) - not reg_status(FL_C);
+
+                            --c Set if unsigned borrow not required; cleared if unsigned borrow.
+                            reg_tmp_carry <= not calc_res(7);
+                            --v Set if signed borrow required; cleared if no signed borrow.
+                            if ((reg_acc(7) /= reg_d_in(7)) and (reg_acc(7) /= calc_res(7))) then
+                                reg_tmp_ovf <= '1';
+                            else
+                                reg_tmp_ovf <= '0';
+                            end if;
+                            reg_acc <= calc_res(7 downto 0);
+                        end if;
+                    --case cc=10
+                    elsif (reg_inst(1 downto 0) = "10") then
+                        if (reg_inst(7 downto 5) = "101") then
+                            --ldx
+                            reg_x <= reg_d_in;
+                        end if;
+                    --case cc=00
+                    elsif (reg_inst(1 downto 0) = "00") then
+                        if (reg_inst(7 downto 5) = "001") then
+                            --bit
+                            --do nothing.
+                        elsif (reg_inst(7 downto 5) = "101") then
+                            --ldy
+                            reg_y <= reg_d_in;
+                        elsif (reg_inst(7 downto 5) = "110") then
+                            --cpy
+                            --do nothing.
+                        elsif (reg_inst(7 downto 5) = "111") then
+                            --cpx
+                            --do nothing.
+                        end if;
+                    end if;
+
+                --update status reg
+                elsif (reg_sub_state = ST_SUB31) then
+                    --case cc=01
+                    if (reg_inst(1 downto 0) = "01") then
+                        if (reg_inst(7 downto 5) = "000") then
+                            --ora
+                            update_status(reg_x, 1, 1, 0);
+                        elsif (reg_inst(7 downto 5) = "001") then
+                            --and
+                            update_status(reg_x, 1, 1, 0);
+                        elsif (reg_inst(7 downto 5) = "010") then
+                            --eor
+                            update_status(reg_x, 1, 1, 0);
+                        elsif (reg_inst(7 downto 5) = "011") then
+                            --adc
+                            update_status(reg_x, 1, 1, 1);
+                            reg_status(FL_V) <= reg_tmp_ovf;
+                        elsif (reg_inst(7 downto 5) = "101") then
+                            --lda
+                            update_status(reg_x, 1, 1, 0);
+                        elsif (reg_inst(7 downto 5) = "110") then
+                            --cmp
+                            calc_res := (("0" & reg_acc) - ("0" & reg_d_in));
+                            if (reg_acc >= reg_d_in) then
+                                reg_status(FL_C) <= '1';
+                            else
+                                reg_status(FL_C) <= '0';
+                            end if;
+                            if (calc_res(7) = '1') then
+                                reg_status(FL_N) <= '1';
+                            else
+                                reg_status(FL_N) <= '0';
+                            end if;
+                            if (calc_res = "000000000") then
+                                reg_status(FL_Z) <= '1';
+                            else
+                                reg_status(FL_Z) <= '0';
+                            end if;
+                        elsif (reg_inst(7 downto 5) = "111") then
+                            --sbc
+                            update_status(reg_x, 1, 1, 1);
+                            reg_status(FL_V) <= reg_tmp_ovf;
+                        end if;
+                    --case cc=10
+                    elsif (reg_inst(1 downto 0) = "10") then
+                        if (reg_inst(7 downto 5) = "101") then
+                            --ldx
+                            update_status(reg_x, 1, 1, 0);
+                        end if;
+                    --case cc=00
+                    elsif (reg_inst(1 downto 0) = "00") then
+                        if (reg_inst(7 downto 5) = "001") then
+                            --bit
+                            calc_res(7 downto 0) := (reg_acc and reg_d_in);
+                            reg_status(FL_N) <= reg_d_in(7);
+                            reg_status(FL_V) <= reg_d_in(6);
+                            if (calc_res(7 downto 0) = "00000000") then
+                                reg_status(FL_Z) <= '1';
+                            else
+                                reg_status(FL_Z) <= '0';
+                            end if;
+                        elsif (reg_inst(7 downto 5) = "101") then
+                            --ldy
+                            update_status(reg_x, 1, 1, 0);
+                        elsif (reg_inst(7 downto 5) = "110") then
+                            --cpy
+                            calc_res := (("0" & reg_y) - ("0" & reg_d_in));
+                            if (reg_y >= reg_d_in) then
+                                reg_status(FL_C) <= '1';
+                            else
+                                reg_status(FL_C) <= '0';
+                            end if;
+                            if (calc_res(7) = '1') then
+                                reg_status(FL_N) <= '1';
+                            else
+                                reg_status(FL_N) <= '0';
+                            end if;
+                            if (calc_res = "000000000") then
+                                reg_status(FL_Z) <= '1';
+                            else
+                                reg_status(FL_Z) <= '0';
+                            end if;
+                        elsif (reg_inst(7 downto 5) = "111") then
+                            --cpx
+                            calc_res := (("0" & reg_x) - ("0" & reg_d_in));
+                            if (reg_x >= reg_d_in) then
+                                reg_status(FL_C) <= '1';
+                            else
+                                reg_status(FL_C) <= '0';
+                            end if;
+                            if (calc_res(7) = '1') then
+                                reg_status(FL_N) <= '1';
+                            else
+                                reg_status(FL_N) <= '0';
+                            end if;
+                            if (calc_res = "000000000") then
+                                reg_status(FL_Z) <= '1';
+                            else
+                                reg_status(FL_Z) <= '0';
+                            end if;
+                        end if;
+                    end if;
+                end if;--if (reg_sub_state = ST_SUB30) then
+
+            --a5 instructions...
+            --plp, pla
+            elsif (reg_main_state = ST_A52_T3) then
+                --update reg
+                if (reg_sub_state = ST_SUB30) then
+                    if (reg_inst = conv_std_logic_vector(16#28#, 8)) then
+                        --plp
+                        reg_status <= reg_d_in;
+                    elsif (reg_inst = conv_std_logic_vector(16#68#, 8)) then
+                        --pla
+                        reg_acc <= reg_d_in;
+                    end if;
+
+                --update status reg
+                elsif (reg_sub_state = ST_SUB31) then
+                    if (reg_inst = conv_std_logic_vector(16#68#, 8)) then
+                        --pla
+                        update_status(reg_acc, 1, 1, 0);
+                    end if;
+                end if;--if (reg_sub_state = ST_SUB30) then
+            end if;--if (reg_main_state = ST_A21_T1 or...
         end if;--if (pi_rst_n = '0') then
     end process;
 
