@@ -122,7 +122,7 @@ constant inst_decode_rom : cpu_state_array := (
   --28          29          2a          2b          2c          2d          2e          2f
     ST_A52_T1,  ST_A21_T1,  ST_A1_T1,   ST_INV,     ST_A23_T1,  ST_A23_T1,  ST_A42_T1,  ST_INV,
   --30          31          32          33          34          35          36          37
-    ST_A58_T1,  ST_A27_T1,  ST_INV,     ST_INV,     ST_A26_T1,  ST_INV,     ST_A43_T1,  ST_INV,
+    ST_A58_T1,  ST_A27_T1,  ST_INV,     ST_INV,     ST_A26_T1,  ST_A26_T1,  ST_A43_T1,  ST_INV,
   --38          39          3a          3b          3c          3d          3e          3f
     ST_A1_T1,   ST_A25_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A25_T1,  ST_A44_T1,  ST_INV,
   --40          41          42          43          44          45          46          47
@@ -1048,6 +1048,7 @@ end;
                 reg_main_state = ST_A561_T1 or
                 reg_main_state = ST_A562_T1 or
                 reg_main_state = ST_A562_T2 or
+                reg_main_state = ST_A57_T1 or
                 reg_main_state = ST_A58_T1) then
                 if (reg_sub_state = ST_SUB00) then
                     --fetch next.
@@ -1058,6 +1059,7 @@ end;
                     --pc move next.
                     pc_inc;
                 end if;
+
            --jsr.
             elsif (reg_main_state = ST_A53_T2) then
                 --sp out (discarded.)
@@ -1101,6 +1103,36 @@ end;
                     reg_pc_l    <= reg_idl_l;
                     reg_pc_h    <= reg_idl_h;
                 end if;
+
+           --rts.
+            elsif (reg_main_state = ST_A57_T2) then
+                --sp out (discarded.)
+                reg_addr    <= "00000001" & reg_sp;
+                reg_d_out   <= (others => 'Z');
+                reg_r_nw    <= '1';
+            elsif (reg_main_state = ST_A57_T3) then
+                --pull pcl
+                if (reg_sub_state = ST_SUB00) then
+                    reg_addr    <= "00000001" & reg_sp + 1;
+                    reg_d_out   <= (others => 'Z');
+                    reg_r_nw    <= '1';
+                elsif (reg_sub_state = ST_SUB70) then
+                    reg_pc_l    <= reg_d_in;
+                end if;
+            elsif (reg_main_state = ST_A57_T4) then
+                --pull pch
+                if (reg_sub_state = ST_SUB00) then
+                    reg_addr    <= "00000001" & reg_sp + 2;
+                    reg_d_out   <= (others => 'Z');
+                    reg_r_nw    <= '1';
+                elsif (reg_sub_state = ST_SUB70) then
+                    reg_pc_h    <= reg_d_in;
+                end if;
+            elsif (reg_main_state = ST_A57_T5) then
+                --pc out (discarded.)
+                reg_addr    <= reg_pc_h & reg_pc_l;
+                reg_d_out   <= (others => 'Z');
+                reg_r_nw    <= '1';
             end if;--if (reg_main_state = ST_RS_T0) then
         end if;--if (pi_rst_n = '0') then
     end process;
@@ -1171,9 +1203,8 @@ end;
                     reg_sp <= reg_idl_l;
                 end if;
             elsif (reg_main_state = ST_A53_T3 or
-                reg_main_state = ST_A53_T4-- or
-                ) then
-                --push
+                reg_main_state = ST_A53_T4) then
+                --jsr. push pch/pcl.
                 if (reg_sub_state = ST_SUB70) then
                     reg_sp <= reg_sp - 1;
                 end if;
