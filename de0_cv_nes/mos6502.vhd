@@ -1008,15 +1008,56 @@ end;
                 reg_pc_h    <= reg_d_in;
             elsif (reg_main_state = ST_CM_T0) then
                 if (reg_sub_state = ST_SUB00) then
+                    --fetch next.
                     reg_addr    <= reg_pc_h & reg_pc_l;
                     reg_d_out   <= (others => 'Z');
                     reg_r_nw    <= '1';
                 elsif (reg_sub_state = ST_SUB30) then
+                    --update instruction register.
                     reg_inst    <= reg_d_in;
                 elsif (reg_sub_state = ST_SUB70) then
+                    --pc move next.
                     pc_inc;
                 end if;
-            end if;
+            elsif (reg_main_state = ST_A21_T1 or
+                   reg_main_state = ST_A22_T1 or
+                   reg_main_state = ST_A23_T1 or
+                   reg_main_state = ST_A23_T2 or
+                   reg_main_state = ST_A24_T1 or
+                   reg_main_state = ST_A25_T1 or
+                   reg_main_state = ST_A25_T2 or
+                   reg_main_state = ST_A26_T1 or
+                   reg_main_state = ST_A27_T1 or
+                   reg_main_state = ST_A31_T1 or
+                   reg_main_state = ST_A32_T1 or
+                   reg_main_state = ST_A32_T2 or
+                   reg_main_state = ST_A33_T1 or
+                   reg_main_state = ST_A34_T1 or
+                   reg_main_state = ST_A34_T2 or
+                   reg_main_state = ST_A35_T1 or
+                   reg_main_state = ST_A36_T1 or
+                   reg_main_state = ST_A41_T1 or
+                   reg_main_state = ST_A42_T1 or
+                   reg_main_state = ST_A42_T2 or
+                   reg_main_state = ST_A43_T1 or
+                   reg_main_state = ST_A44_T1 or
+                   reg_main_state = ST_A44_T2 or
+                   reg_main_state = ST_A53_T1 or
+                   reg_main_state = ST_A561_T1 or
+                   reg_main_state = ST_A562_T1 or
+                   reg_main_state = ST_A562_T2 or
+                   reg_main_state = ST_A58_T1) then
+               --fetch and move next case.
+                if (reg_sub_state = ST_SUB00) then
+                    --fetch next.
+                    reg_addr    <= reg_pc_h & reg_pc_l;
+                    reg_d_out   <= (others => 'Z');
+                    reg_r_nw    <= '1';
+                elsif (reg_sub_state = ST_SUB70) then
+                    --pc move next.
+                    pc_inc;
+                end if;
+            end if;--if (reg_main_state = ST_RS_T0) then
         end if;--if (pi_rst_n = '0') then
     end process;
 
@@ -1024,6 +1065,54 @@ end;
     po_addr     <= reg_addr;
     pio_d_io    <= reg_d_out;
     reg_d_in    <= pio_d_io;
+
+    --internal data latch...
+    --fetch first and second operand.
+    idl_p : process (pi_rst_n, pi_base_clk)
+    begin
+        if (pi_rst_n = '0') then
+            reg_idl_l <= (others => '0');
+            reg_idl_h <= (others => '0');
+        elsif (rising_edge(pi_base_clk)) then
+            if (reg_main_state = ST_A21_T1 or
+                   reg_main_state = ST_A22_T1 or
+                   reg_main_state = ST_A23_T1 or
+                   reg_main_state = ST_A24_T1 or
+                   reg_main_state = ST_A25_T1 or
+                   reg_main_state = ST_A26_T1 or
+                   reg_main_state = ST_A27_T1 or
+                   reg_main_state = ST_A31_T1 or
+                   reg_main_state = ST_A32_T1 or
+                   reg_main_state = ST_A33_T1 or
+                   reg_main_state = ST_A34_T1 or
+                   reg_main_state = ST_A35_T1 or
+                   reg_main_state = ST_A36_T1 or
+                   reg_main_state = ST_A41_T1 or
+                   reg_main_state = ST_A42_T1 or
+                   reg_main_state = ST_A43_T1 or
+                   reg_main_state = ST_A44_T1 or
+                   reg_main_state = ST_A53_T1 or
+                   reg_main_state = ST_A561_T1 or
+                   reg_main_state = ST_A562_T1 or
+                   reg_main_state = ST_A58_T1) then
+                if (reg_sub_state = ST_SUB30) then
+                    --get low data from rom.
+                    reg_idl_l <= reg_d_in;
+                end if;
+            elsif (reg_main_state = ST_A23_T2 or
+                   reg_main_state = ST_A25_T2 or
+                   reg_main_state = ST_A32_T2 or
+                   reg_main_state = ST_A34_T2 or
+                   reg_main_state = ST_A42_T2 or
+                   reg_main_state = ST_A44_T2 or
+                   reg_main_state = ST_A562_T2) then
+                if (reg_sub_state = ST_SUB30) then
+                    --get high data from rom.
+                    reg_idl_h <= reg_d_in;
+                end if;
+            end if;--if (reg_main_state = ST_RS_T0) then        end if;--if (pi_rst_n = '0') then
+        end if;--if (pi_rst_n = '0') then
+    end process;
 
 end rtl;
 
