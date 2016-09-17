@@ -232,7 +232,7 @@ begin
         end if;--if (pi_rst_n = '0') then
     end process;
 
-    --state change to next.
+    --fixed length sub status change (0 - 31 because cpu clock is 1/32 of base clock).
     tx_next_sub_stat_p : process (reg_sub_state, pi_cpu_en)
     begin
         case reg_sub_state is
@@ -969,6 +969,11 @@ begin
         end case;
     end process;
 
+
+    po_r_nw     <= reg_r_nw;
+    po_addr     <= reg_addr;
+    pio_d_io    <= reg_d_out;
+
     --addressing general process...
     --pc, io bus, r/w, instruction regs...
     ad_general_p : process (pi_rst_n, pi_base_clk)
@@ -991,8 +996,14 @@ end;
             reg_inst    <= (others => '0');
             reg_addr    <= (others => 'Z');
             reg_d_out   <= (others => 'Z');
+            reg_d_in    <= (others => '0');
             reg_r_nw    <= 'Z';
         elsif (rising_edge(pi_base_clk)) then
+
+            --general input data register.
+            reg_d_in    <= pio_d_io;
+            
+            --i/o data bus state change.
             if (reg_main_state = ST_RS_T0) then
                 reg_pc_l    <= (others => '0');
                 reg_pc_h    <= (others => '0');
@@ -1156,11 +1167,6 @@ end;
             end if;--if (reg_main_state = ST_RS_T0) then
         end if;--if (pi_rst_n = '0') then
     end process;
-
-    po_r_nw     <= reg_r_nw;
-    po_addr     <= reg_addr;
-    pio_d_io    <= reg_d_out;
-    reg_d_in    <= pio_d_io;
 
     --internal data latch...
     --fetch first and second operand.
