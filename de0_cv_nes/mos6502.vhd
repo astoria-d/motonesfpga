@@ -72,7 +72,7 @@ type cpu_main_state is (
     ST_A51_T1, ST_A51_T2,
     --pull
     ST_A52_T1, ST_A52_T2, ST_A52_T3,
-    --jmp
+    --jsr
     ST_A53_T1, ST_A53_T2, ST_A53_T3,ST_A53_T4, ST_A53_T5,
     --rti
     ST_A55_T1, ST_A55_T2, ST_A55_T3, ST_A55_T4, ST_A55_T5,
@@ -106,74 +106,72 @@ type cpu_sub_state is (
     ST_SUB70, ST_SUB71, ST_SUB72, ST_SUB73
     );
 
---Most instructions that explicitly reference memory locations have bit patterns of the form aaabbbcc. 
---The aaa and cc bits determine the opcode, and the bbb bits determine the addressing mode.
 type cpu_state_array    is array (0 to 255) of cpu_main_state;
 constant inst_decode_rom : cpu_state_array := (
-    --00,       01,         02,         03,         04,         05,         06,         07
-    ST_INV,     ST_A24_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A22_T1,  ST_INV,     ST_INV,
-    --08,       09,         0a,         0b,         0c,         0d,         0e,         0f
-    ST_INV,     ST_A21_T1,  ST_A1_T1,   ST_INV,     ST_INV,     ST_A23_T1,  ST_INV,     ST_INV,
-    --10,       11,         12,         13,         14,         15,         16,         17
-    ST_INV,     ST_A27_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A26_T1,  ST_INV,     ST_INV,
-    --18,       19,         1a,         1b,         1c,         1d,         1e,         1f
-    ST_A1_T1,   ST_A25_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A25_T1,  ST_INV,     ST_INV,
-    --20,       21,         22,         23,         24,         25,         26,         27
-    ST_INV,     ST_A24_T1,  ST_INV,     ST_INV,     ST_A22_T1,  ST_A22_T1,  ST_INV,     ST_INV,
-    --28,       29,         2a,         2b,         2c,         2d,         2e,         2f
-    ST_INV,     ST_A21_T1,  ST_A1_T1,   ST_INV,     ST_A23_T1,  ST_A23_T1,  ST_INV,     ST_INV,
-    --30,       31,         32,         33,         34,         35,         36,         37
-    ST_INV,     ST_A27_T1,  ST_INV,     ST_INV,     ST_A26_T1,  ST_INV,     ST_INV,     ST_INV,
-    --38,       39,         3a,         3b,         3c,         3d,         3e,         3f
-    ST_A1_T1,   ST_A25_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A25_T1,  ST_INV,     ST_INV,
-    --40,       41,         42,         43,         44,         45,         46,         47
-    ST_INV,     ST_A24_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A22_T1,  ST_INV,     ST_INV,
-    --48,       49,         4a,         4b,         4c,         4d,         4e,         4f
-    ST_INV,     ST_A21_T1,  ST_A1_T1,   ST_INV,     ST_INV,     ST_A23_T1,  ST_INV,     ST_INV,
-    --50,       51,         52,         53,         54,         55,         56,         57
-    ST_INV,     ST_A27_T1,  ST_INV,     ST_INV,     ST_A26_T1,  ST_INV,     ST_INV,     ST_INV,
-    --58,       59,         5a,         5b,         5c,         5d,         5e,         5f
-    ST_A1_T1,   ST_A25_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A25_T1,  ST_INV,     ST_INV,
-    --60,       61,         62,         63,         64,         65,         66,         67
-    ST_INV,     ST_A24_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A22_T1,  ST_INV,     ST_INV,
-    --68,       69,         6a,         6b,         6c,         6d,         6e,         6f
-    ST_INV,     ST_A21_T1,  ST_A1_T1,   ST_INV,     ST_INV,     ST_A23_T1,  ST_INV,     ST_INV,
-    --70,       71,         72,         73,         74,         75,         76,         77
-    ST_INV,     ST_A27_T1,  ST_INV,     ST_INV,     ST_A26_T1,  ST_INV,     ST_INV,     ST_INV,
-    --78,       79,         7a,         7b,         7c,         7d,         7e,         7f
-    ST_A1_T1,   ST_A25_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A25_T1,  ST_INV,     ST_INV,
-    --80,       81,         82,         83,         84,         85,         86,         87
-    ST_INV,     ST_INV,     ST_INV,     ST_INV,     ST_INV,     ST_INV,     ST_INV,     ST_INV,
-    --88,       89,         8a,         8b,         8c,         8d,         8e,         8f
-    ST_A1_T1,   ST_INV,     ST_A1_T1,   ST_INV,     ST_INV,     ST_INV,     ST_INV,     ST_INV,
-    --90,       91,         92,         93,         94,         95,         96,         97
-    ST_INV,     ST_INV,     ST_INV,     ST_INV,     ST_INV,     ST_INV,     ST_INV,     ST_INV,
-    --98,       99,         9a,         9b,         9c,         9d,         9e,         9f
-    ST_A1_T1,   ST_INV,     ST_A1_T1,   ST_INV,     ST_INV,     ST_INV,     ST_INV,     ST_INV,
-    --a0,       a1,         a2,         a3,         a4,         a5,         a6,         a7
+  --00          01          02          03          04          05          06          07
+    ST_INV,     ST_A24_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A22_T1,  ST_A41_T1,  ST_INV,
+  --08          09          0a          0b          0c          0d          0e          0f
+    ST_A51_T1,  ST_A21_T1,  ST_A1_T1,   ST_INV,     ST_INV,     ST_A23_T1,  ST_A42_T1,  ST_INV,
+  --10          11          12          13          14          15          16          17
+    ST_A58_T1,  ST_A27_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A26_T1,  ST_A43_T1,  ST_INV,
+  --18          19          1a          1b          1c          1d          1e          1f
+    ST_A1_T1,   ST_A25_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A25_T1,  ST_A44_T1,  ST_INV,
+  --20          21          22          23          24          25          26          27
+    ST_A53_T1,  ST_A24_T1,  ST_INV,     ST_INV,     ST_A22_T1,  ST_A22_T1,  ST_A41_T1,  ST_INV,
+  --28          29          2a          2b          2c          2d          2e          2f
+    ST_A52_T1,  ST_A21_T1,  ST_A1_T1,   ST_INV,     ST_A23_T1,  ST_A23_T1,  ST_A42_T1,  ST_INV,
+  --30          31          32          33          34          35          36          37
+    ST_A58_T1,  ST_A27_T1,  ST_INV,     ST_INV,     ST_A26_T1,  ST_INV,     ST_A43_T1,  ST_INV,
+  --38          39          3a          3b          3c          3d          3e          3f
+    ST_A1_T1,   ST_A25_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A25_T1,  ST_A44_T1,  ST_INV,
+  --40          41          42          43          44          45          46          47
+    ST_A55_T1,  ST_A24_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A22_T1,  ST_A41_T1,  ST_INV,
+  --48          49          4a          4b          4c          4d          4e          4f
+    ST_A51_T1,  ST_A21_T1,  ST_A1_T1,   ST_INV,     ST_A561_T1, ST_A23_T1,  ST_A42_T1,  ST_INV,
+  --50          51          52          53          54          55          56          57
+    ST_A58_T1,  ST_A27_T1,  ST_INV,     ST_INV,     ST_A26_T1,  ST_INV,     ST_A43_T1,  ST_INV,
+  --58          59          5a          5b          5c          5d          5e          5f
+    ST_A1_T1,   ST_A25_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A25_T1,  ST_A44_T1,  ST_INV,
+  --60          61          62          63          64          65          66          67
+    ST_A57_T1,  ST_A24_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A22_T1,  ST_A41_T1,  ST_INV,
+  --68          69          6a          6b          6c          6d          6e          6f
+    ST_A52_T1,  ST_A21_T1,  ST_A1_T1,   ST_INV,     ST_A562_T1, ST_A23_T1,  ST_A42_T1,  ST_INV,
+  --70          71          72          73          74          75          76          77
+    ST_A58_T1,  ST_A27_T1,  ST_INV,     ST_INV,     ST_A26_T1,  ST_INV,     ST_A43_T1,  ST_INV,
+  --78          79          7a          7b          7c          7d          7e          7f
+    ST_A1_T1,   ST_A25_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A25_T1,  ST_A44_T1,  ST_INV,
+  --80          81          82          83          84          85          86          87
+    ST_INV,     ST_A33_T1,  ST_INV,     ST_INV,     ST_A31_T1,  ST_A31_T1,  ST_A31_T1,  ST_INV,
+  --88          89          8a          8b          8c          8d          8e          8f
+    ST_A1_T1,   ST_INV,     ST_A1_T1,   ST_INV,     ST_A32_T1,  ST_A32_T1,  ST_A32_T1,  ST_INV,
+  --90          91          92          93          94          95          96          97
+    ST_A58_T1,  ST_A36_T1,  ST_INV,     ST_INV,     ST_A35_T1,  ST_A35_T1,  ST_A35_T1,  ST_INV,
+  --98          99          9a          9b          9c          9d          9e          9f
+    ST_A1_T1,   ST_A34_T1,  ST_A1_T1,   ST_INV,     ST_INV,     ST_A34_T1,  ST_INV,     ST_INV,
+  --a0          a1          a2          a3          a4          a5          a6          a7
     ST_A21_T1,  ST_A24_T1,  ST_A21_T1,  ST_INV,     ST_A22_T1,  ST_A22_T1,  ST_A22_T1,  ST_INV,
-    --a8,       a9,         aa,         ab,         ac,         ad,         ae,         af
+  --a8          a9          aa          ab          ac          ad          ae          af
     ST_A1_T1,   ST_A21_T1,  ST_A1_T1,   ST_INV,     ST_A23_T1,  ST_A23_T1,  ST_A23_T1,  ST_INV,
-    --b0,       b1,         b2,         b3,         b4,         b5,         b6,         b7
-    ST_INV,     ST_A27_T1,  ST_INV,     ST_A26_T1,  ST_A26_T1,  ST_A26_T1,  ST_INV,     ST_INV,
-    --b8,       b9,         ba,         bb,         bc,         bd,         be,         bf
+  --b0          b1          b2          b3          b4          b5          b6          b7
+    ST_A58_T1,  ST_A27_T1,  ST_INV,     ST_A26_T1,  ST_A26_T1,  ST_A26_T1,  ST_INV,     ST_INV,
+  --b8          b9          ba          bb          bc          bd          be          bf
     ST_A1_T1,   ST_A25_T1,  ST_A1_T1,   ST_INV,     ST_A25_T1,  ST_A25_T1,  ST_A25_T1,  ST_INV,
-    --c0,       c1,         c2,         c3,         c4,         c5,         c6,         c7
-    ST_A21_T1,  ST_A24_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A22_T1,  ST_INV,     ST_INV,
-    --c8,       c9,         ca,         cb,         cc,         cd,         ce,         cf
-    ST_A1_T1,   ST_A21_T1,  ST_A1_T1,   ST_INV,     ST_A23_T1,  ST_A23_T1,  ST_INV,     ST_INV,
-    --d0,       d1,         d2,         d3,         d4,         d5,         d6,         d7
-    ST_INV,     ST_A27_T1,  ST_INV,     ST_INV,     ST_A26_T1,  ST_INV,     ST_INV,     ST_INV,
-    --d8,       d9,         da,         db,         dc,         dd,         de,         df
-    ST_A1_T1,   ST_A25_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A25_T1,  ST_INV,     ST_INV,
-    --e0,       e1,         e2,         e3,         e4,         e5,         e6,         e7
-    ST_A21_T1,  ST_A24_T1,  ST_INV,     ST_INV,     ST_A22_T1,  ST_A22_T1,  ST_INV,     ST_INV,
-    --e8,       e9,         ea,         eb,         ec,         ed,         ee,         ef
-    ST_A1_T1,   ST_A21_T1,  ST_A1_T1,   ST_INV,     ST_A23_T1,  ST_A23_T1,  ST_INV,     ST_INV,
-    --f0,       f1,         f2,         f3,         f4,         f5,         f6,         f7
-    ST_INV,     ST_A27_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A26_T1,  ST_INV,     ST_INV,
-    --f8,       f9,         fa,         fb,         fc,         fd,         fe,         ff
-    ST_A1_T1,   ST_A25_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A25_T1,  ST_INV,     ST_INV
+  --c0          c1          c2          c3          c4          c5          c6          c7
+    ST_A21_T1,  ST_A24_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A22_T1,  ST_A41_T1,  ST_INV,
+  --c8          c9          ca          cb          cc          cd          ce          cf
+    ST_A1_T1,   ST_A21_T1,  ST_A1_T1,   ST_INV,     ST_A23_T1,  ST_A23_T1,  ST_A42_T1,  ST_INV,
+  --d0          d1          d2          d3          d4          d5          d6          d7
+    ST_A58_T1,  ST_A27_T1,  ST_INV,     ST_INV,     ST_A26_T1,  ST_INV,     ST_A43_T1,  ST_INV,
+  --d8          d9          da          db          dc          dd          de          df
+    ST_A1_T1,   ST_A25_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A25_T1,  ST_A44_T1,  ST_INV,
+  --e0          e1          e2          e3          e4          e5          e6          e7
+    ST_A21_T1,  ST_A24_T1,  ST_INV,     ST_INV,     ST_A22_T1,  ST_A22_T1,  ST_A41_T1,  ST_INV,
+  --e8          e9          ea          eb          ec          ed          ee          ef
+    ST_A1_T1,   ST_A21_T1,  ST_A1_T1,   ST_INV,     ST_A23_T1,  ST_A23_T1,  ST_A42_T1,  ST_INV,
+  --f0          f1          f2          f3          f4          f5          f6          f7
+    ST_A58_T1,  ST_A27_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A26_T1,  ST_A43_T1,  ST_INV,
+  --f8          f9          fa          fb          fc          fd          fe          ff
+    ST_A1_T1,   ST_A25_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A25_T1,  ST_A44_T1,  ST_INV
 );
 
 signal reg_main_state           : cpu_main_state;
