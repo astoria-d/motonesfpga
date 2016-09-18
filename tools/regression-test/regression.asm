@@ -54,10 +54,10 @@
 ;    jsr status_test
     jsr ppu_test
 
-;    jsr pg_border_test
-;    jsr dma_test
-;
-;    jsr simple_dma_test
+    jsr pg_border_test
+    jsr dma_test
+
+    jsr simple_dma_test
 
 .endproc
 
