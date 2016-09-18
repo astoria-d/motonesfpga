@@ -27,22 +27,22 @@
 	ldx	#$ff
 	txs
 
-    jsr cpu_simple_test
-    jmp short_cut1
-    
-    jsr init_global
-    jsr init_ppu
-
-    lda ad_start_msg
-    sta $00
-    lda ad_start_msg+1
-    sta $01
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
+;    jsr cpu_simple_test
+;    jmp short_cut1
+;    
+;    jsr init_global
+;    jsr init_ppu
+;
+;    lda ad_start_msg
+;    sta $00
+;    lda ad_start_msg+1
+;    sta $01
+;    jsr print_ln
+;    jsr print_ln
+;    jsr print_ln
+;    jsr print_ln
+;    jsr print_ln
+;    jsr print_ln
 
     ;;test start...
     jsr addr_test
@@ -3405,7 +3405,7 @@ ad_single_test:
 
 ;;ppu test flag.
 use_ppu:
-    .byte   $01
+    .byte   $00
 
 full_dma_test:
     .byte   $01
