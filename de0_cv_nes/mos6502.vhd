@@ -1118,6 +1118,7 @@ end;
                 reg_main_state = ST_A53_T1 or
                 reg_main_state = ST_A561_T1 or
                 reg_main_state = ST_A562_T1 or
+                reg_main_state = ST_A562_T2 or
                 reg_main_state = ST_A57_T1 or
                 reg_main_state = ST_A58_T1) then
                 if (reg_sub_state = ST_SUB00) then
@@ -1536,6 +1537,24 @@ end;
                 elsif (reg_sub_state = ST_SUB70) then
                     reg_pc_l    <= reg_idl_l;
                     reg_pc_h    <= reg_idl_h;
+                end if;
+
+           --jmp (indir).
+            elsif (reg_main_state = ST_A562_T3) then
+                if (reg_sub_state = ST_SUB00) then
+                    reg_addr    <= (reg_idl_h & reg_idl_l);
+                    reg_d_out   <= (others => 'Z');
+                    reg_r_nw    <= '1';
+                elsif (reg_sub_state = ST_SUB70) then
+                    reg_pc_l    <= reg_d_in;
+                end if;
+            elsif (reg_main_state = ST_A562_T4) then
+                if (reg_sub_state = ST_SUB00) then
+                    reg_addr    <= (reg_idl_h & reg_idl_l) + 1;
+                    reg_d_out   <= (others => 'Z');
+                    reg_r_nw    <= '1';
+                elsif (reg_sub_state = ST_SUB70) then
+                    reg_pc_h    <= reg_d_in;
                 end if;
 
            --rts.
