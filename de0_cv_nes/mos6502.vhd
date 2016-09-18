@@ -1220,6 +1220,22 @@ end;
                 reg_r_nw    <= '1';
                 calc_adl    := ("0" & reg_tmp_l) + ("0" & reg_y);
                 reg_tmp_pg_crossed <= calc_adl(8);
+            elsif (reg_main_state = ST_A51_T1 or
+                reg_main_state = ST_A52_T1) then
+                --push/pull
+                --discard pc cycle.
+                reg_addr    <= reg_pc_h & (reg_pc_l + 1);
+                reg_d_out   <= (others => 'Z');
+                reg_r_nw    <= '1';
+            elsif (reg_main_state = ST_A52_T2 or
+                reg_main_state = ST_A53_T2
+                ) then
+                --pull, jsr
+                --discard sp cycle.
+                reg_addr    <= "00000001" & reg_sp;
+                reg_d_out   <= (others => 'Z');
+                reg_r_nw    <= '1';
+
 
 
            --a2 instructions.
@@ -1444,12 +1460,34 @@ end;
                     reg_addr    <= (reg_idl_h + reg_tmp_pg_crossed) & (reg_idl_l + reg_x);
                 end if;
 
-            --jsr.
-            elsif (reg_main_state = ST_A53_T2) then
-                --sp out (discarded.)
+            --a5 instruction...
+            --push
+            elsif (reg_main_state = ST_A51_T2) then
                 reg_addr    <= "00000001" & reg_sp;
-                reg_d_out   <= (others => 'Z');
+                if (reg_sub_state = ST_SUB32 or
+                    reg_sub_state = ST_SUB33 or
+                    reg_sub_state = ST_SUB40 or
+                    reg_sub_state = ST_SUB41
+                    ) then
+                    reg_r_nw    <= '0';
+                else
+                    reg_r_nw    <= 'Z';
+                end if;
+                if (reg_inst = conv_std_logic_vector(16#48#, 8)) then
+                    --pha
+                    reg_d_out   <= reg_acc;
+                elsif (reg_inst = conv_std_logic_vector(16#08#, 8)) then
+                    --php
+                    reg_d_out   <= reg_status;
+                end if;
+
+            --pull
+            elsif (reg_main_state = ST_A52_T3) then
+                reg_addr    <= "00000001" & reg_sp;
                 reg_r_nw    <= '1';
+                reg_d_out   <= (others => 'Z');
+
+            --jsr.
             elsif (reg_main_state = ST_A53_T3) then
                 --push pch
                 reg_addr    <= "00000001" & reg_sp;
@@ -1488,7 +1526,7 @@ end;
                     reg_pc_h    <= reg_idl_h;
                 end if;
 
-           --jmp.
+           --jmp abs.
             elsif (reg_main_state = ST_A561_T2) then
                 if (reg_sub_state = ST_SUB00) then
                     --fetch next.
