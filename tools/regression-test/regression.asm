@@ -50,7 +50,7 @@
     jsr a2_inst_test
     jsr a3_inst_test
     jsr a4_inst_test
-;    jsr a5_inst_test
+    jsr a5_inst_test
 ;    jsr status_test
     jsr ppu_test
 
