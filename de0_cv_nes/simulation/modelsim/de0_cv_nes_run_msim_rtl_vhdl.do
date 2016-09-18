@@ -39,7 +39,7 @@ add wave -label d_io -radix hex     sim:/testbench_motones_sim/sim_board/wr_d_io
 #add wave -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg*;
 add wave -divider cpu
 
-add wave -label reg_main_cur_state  sim:/testbench_motones_sim/sim_board/cpu_inst/reg_main_state;
+#add wave -label reg_main_cur_state  sim:/testbench_motones_sim/sim_board/cpu_inst/reg_main_state;
 #add wave -label reg_sub_cur_state   sim:/testbench_motones_sim/sim_board/cpu_inst/reg_sub_state;
 
 add wave -label reg_inst -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_inst;
@@ -49,10 +49,10 @@ add wave -label reg_x -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/r
 add wave -label reg_y -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_y;
 add wave -label reg_sp -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_sp;
 
-add wave -label reg_pc_l -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_pc_l;
-add wave -label reg_pc_h -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_pc_h;
-add wave -label reg_idl_l -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_idl_l;
-add wave -label reg_idl_h -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_idl_h;
+#add wave -label reg_pc_l -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_pc_l;
+#add wave -label reg_pc_h -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_pc_h;
+#add wave -label reg_idl_l -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_idl_l;
+#add wave -label reg_idl_h -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_idl_h;
 
 
 view structure

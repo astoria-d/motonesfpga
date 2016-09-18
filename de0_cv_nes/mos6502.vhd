@@ -217,6 +217,9 @@ signal reg_tmp_pg_crossed   : std_logic;
 signal reg_tmp_l    : std_logic_vector (7 downto 0);
 signal reg_tmp_h    : std_logic_vector (7 downto 0);
 
+--tmp data reg.
+signal reg_tmp_data : std_logic_vector (7 downto 0);
+
 --bus i/o reg.
 signal reg_r_nw     : std_logic;
 signal reg_addr     : std_logic_vector (15 downto 0);
@@ -1133,7 +1136,8 @@ end;
                 reg_main_state = ST_A33_T2 or
                 reg_main_state = ST_A35_T2 or
                 reg_main_state = ST_A27_T2 or
-                reg_main_state = ST_A36_T2
+                reg_main_state = ST_A36_T2 or
+                reg_main_state = ST_A43_T2
                 ) then
                 --zp xy
                 --ind, x
@@ -1144,7 +1148,8 @@ end;
                 reg_d_out   <= (others => 'Z');
                 reg_r_nw    <= '1';
             elsif (reg_main_state = ST_A24_T3 or
-                reg_main_state = ST_A33_T3) then
+                reg_main_state = ST_A33_T3
+                ) then
                 --ind, x
                 --bal + x cycle.
                 reg_addr    <= "00000000" & (reg_idl_l + reg_x);
@@ -1158,7 +1163,9 @@ end;
                 reg_d_out   <= (others => 'Z');
                 reg_r_nw    <= '1';
             elsif (reg_main_state = ST_A25_T3 or
-                reg_main_state = ST_A34_T3) then
+                reg_main_state = ST_A34_T3 or
+                reg_main_state = ST_A44_T3
+                ) then
                 --abs xy
                 --(discarded cycle for store inst..)
                 if (reg_inst(1 downto 0) = "01") then
@@ -1185,6 +1192,13 @@ end;
                     --sta, y
                     reg_addr    <= reg_idl_h & (reg_idl_l + reg_y);
                     calc_adl    := ("0" & reg_idl_l) + ("0" & reg_y);
+                elsif (reg_inst(1 downto 0) = "10") then
+                    --a4 inst.
+                    if (reg_inst(4 downto 2) = "111") then
+                        --abs x
+                        reg_addr    <= reg_idl_h & (reg_idl_l + reg_x);
+                        calc_adl    := ("0" & reg_idl_l) + ("0" & reg_y);
+                    end if; 
                 end if;
                 reg_d_out   <= (others => 'Z');
                 reg_r_nw    <= '1';
@@ -1347,6 +1361,87 @@ end;
                 elsif (reg_main_state = ST_A36_T5) then
                     --ind y
                     reg_addr    <= (reg_tmp_h + reg_tmp_pg_crossed) & (reg_tmp_l + reg_y);
+                end if;
+
+           --a4 instructions.
+           --asl    lsr
+           --dec    rol
+           --inc    ror
+            elsif (reg_main_state = ST_A41_T2 or
+                reg_main_state = ST_A42_T3 or
+                reg_main_state = ST_A43_T3 or
+                reg_main_state = ST_A44_T4
+            ) then
+                --data fetch cycle.
+                reg_d_out   <= (others => 'Z');
+                reg_r_nw    <= '1';
+
+                --address bus out.
+                if (reg_main_state = ST_A41_T2) then
+                    --zp
+                    reg_addr    <= "00000000" & reg_idl_l;
+
+                elsif (reg_main_state = ST_A42_T3) then
+                    --abs
+                    reg_addr    <= reg_idl_h & reg_idl_l;
+
+                elsif (reg_main_state = ST_A43_T3) then
+                    --zp x
+                    reg_addr    <= "00000000" & (reg_idl_l + reg_x);
+
+                elsif (reg_main_state = ST_A44_T4) then
+                    --abs x
+                    reg_addr    <= (reg_idl_h + reg_tmp_pg_crossed) & (reg_idl_l + reg_x);
+                end if;
+
+            elsif (reg_main_state = ST_A41_T3 or
+                reg_main_state = ST_A41_T4 or
+                reg_main_state = ST_A42_T4 or
+                reg_main_state = ST_A42_T5 or
+                reg_main_state = ST_A43_T4 or
+                reg_main_state = ST_A43_T5 or
+                reg_main_state = ST_A44_T5 or
+                reg_main_state = ST_A44_T6
+            ) then
+                --data store cycle.
+                --data out
+                reg_d_out   <= reg_tmp_data;
+
+                --rw ctrl
+                if (reg_sub_state = ST_SUB32 or
+                    reg_sub_state = ST_SUB33 or
+                    reg_sub_state = ST_SUB40 or
+                    reg_sub_state = ST_SUB41
+                    ) then
+                    reg_r_nw    <= '0';
+                else
+                    reg_r_nw    <= 'Z';
+                end if;
+
+                --address bus out.
+                if (reg_main_state = ST_A41_T3 or
+                    reg_main_state = ST_A41_T4
+                    ) then
+                    --zp
+                    reg_addr    <= "00000000" & reg_idl_l;
+
+                elsif (reg_main_state = ST_A42_T4 or
+                    reg_main_state = ST_A42_T5
+                    ) then
+                    --abs
+                    reg_addr    <= reg_idl_h & reg_idl_l;
+
+                elsif (reg_main_state = ST_A43_T4 or
+                    reg_main_state = ST_A43_T5
+                    ) then
+                    --zp x
+                    reg_addr    <= "00000000" & (reg_idl_l + reg_x);
+
+                elsif (reg_main_state = ST_A44_T5 or
+                    reg_main_state = ST_A44_T6
+                    ) then
+                    --abs x
+                    reg_addr    <= (reg_idl_h + reg_tmp_pg_crossed) & (reg_idl_l + reg_x);
                 end if;
 
             --jsr.
@@ -1632,8 +1727,8 @@ end;
             elsif (reg_main_state = ST_A1_T1) then
                 --update reg
                 if (reg_sub_state = ST_SUB30) then
-                    --case cc=01
-                    if (reg_inst(1 downto 0) = "01") then
+                    --case cc=10
+                    if (reg_inst(1 downto 0) = "10") then
                         if (reg_inst(7 downto 5) = "000") then
                             --asl
                             reg_acc <= reg_acc(6 downto 0) & "0";
@@ -1706,8 +1801,8 @@ end;
 
                 --update status reg
                 elsif (reg_sub_state = ST_SUB31) then
-                    --case cc=01
-                    if (reg_inst(1 downto 0) = "01") then
+                    --case cc=10
+                    if (reg_inst(1 downto 0) = "10") then
                         if (reg_inst(7 downto 5) = "000") then
                             --asl
                             update_status(reg_acc, 1, 1, 1);
@@ -1946,6 +2041,80 @@ end;
                         end if;
                     end if;
                 end if;--if (reg_sub_state = ST_SUB30) then
+
+           --a4 instructions.
+           --asl    lsr
+           --dec    rol
+           --inc    ror
+            elsif (reg_main_state = ST_A41_T2 or
+                reg_main_state = ST_A42_T3 or
+                reg_main_state = ST_A43_T3 or
+                reg_main_state = ST_A44_T4
+                ) then
+                --data fetch cycle.
+                reg_tmp_data <= reg_d_in;
+
+            elsif (reg_main_state = ST_A41_T4 or
+                reg_main_state = ST_A42_T5 or
+                reg_main_state = ST_A43_T5 or
+                reg_main_state = ST_A44_T6
+                ) then
+                --data modify cycle.
+
+                --update reg
+                if (reg_sub_state = ST_SUB10) then
+                    --case cc=10
+                    if (reg_inst(1 downto 0) = "10") then
+                        if (reg_inst(7 downto 5) = "000") then
+                            --asl
+                            reg_tmp_data <= reg_tmp_data(6 downto 0) & "0";
+                            reg_tmp_carry <= reg_tmp_data(7);
+                        elsif (reg_inst(7 downto 5) = "001") then
+                            --rol
+                            reg_tmp_data <= reg_tmp_data(6 downto 0) & reg_status(FL_C);
+                            reg_tmp_carry <= reg_tmp_data(7);
+                        elsif (reg_inst(7 downto 5) = "010") then
+                            --lsr
+                            reg_tmp_data <= "0" & reg_tmp_data(7 downto 1);
+                            reg_tmp_carry <= reg_tmp_data(0);
+                        elsif (reg_inst(7 downto 5) = "011") then
+                            --ror
+                            reg_tmp_data <= reg_status(FL_C) & reg_tmp_data(7 downto 1);
+                            reg_tmp_carry <= reg_tmp_data(0);
+                        elsif (reg_inst(7 downto 5) = "110") then
+                            --dec
+                            reg_tmp_data <= reg_tmp_data - 1;
+                        elsif (reg_inst(7 downto 5) = "111") then
+                            --inc
+                            reg_tmp_data <= reg_tmp_data + 1;
+                        end if;
+                    end if;
+
+                --update status reg
+                elsif (reg_sub_state = ST_SUB20) then
+                    --case cc=10
+                    if (reg_inst(1 downto 0) = "10") then
+                        if (reg_inst(7 downto 5) = "000") then
+                            --asl
+                            update_status(reg_tmp_data, 1, 1, 1);
+                        elsif (reg_inst(7 downto 5) = "001") then
+                            --rol
+                            update_status(reg_tmp_data, 1, 1, 1);
+                        elsif (reg_inst(7 downto 5) = "010") then
+                            --lsr
+                            update_status(reg_tmp_data, 0, 1, 1);
+                        elsif (reg_inst(7 downto 5) = "011") then
+                            --ror
+                            update_status(reg_tmp_data, 1, 1, 1);
+                        elsif (reg_inst(7 downto 5) = "110") then
+                            --dec
+                            update_status(reg_tmp_data, 1, 1, 0);
+                        elsif (reg_inst(7 downto 5) = "111") then
+                            --inc
+                            update_status(reg_tmp_data, 1, 1, 0);
+                        end if;
+                    end if;
+                end if;
 
             --a5 instructions...
             --plp, pla
