@@ -48,12 +48,12 @@
     jsr addr_test
     jsr single_inst_test
     jsr a2_inst_test
-;    jsr a3_inst_test
-;    jsr a4_inst_test
+    jsr a3_inst_test
+    jsr a4_inst_test
 ;    jsr a5_inst_test
-;    jsr status_test
-;    jsr ppu_test
-;
+    jsr status_test
+    jsr ppu_test
+
 ;    jsr pg_border_test
 ;    jsr dma_test
 ;
