@@ -473,7 +473,12 @@ begin
                 end if;
             when ST_A25_T3 =>
                 if (reg_sub_state = ST_SUB73) then
-                    reg_main_next_state <= ST_A25_T4;
+                    --abs xy move to next only when page crossed.
+                    if (reg_tmp_pg_crossed = '1') then
+                        reg_main_next_state <= ST_A25_T4;
+                    else
+                        reg_main_next_state <= ST_CM_T0;
+                    end if;
                 else
                     reg_main_next_state <= reg_main_state;
                 end if;
@@ -521,7 +526,12 @@ begin
                 end if;
             when ST_A27_T4 =>
                 if (reg_sub_state = ST_SUB73) then
-                    reg_main_next_state <= ST_A27_T5;
+                    --indir, y move to next only when page crossed.
+                    if (reg_tmp_pg_crossed = '1') then
+                        reg_main_next_state <= ST_A27_T5;
+                    else
+                        reg_main_next_state <= ST_CM_T0;
+                    end if;
                 else
                     reg_main_next_state <= reg_main_state;
                 end if;
@@ -1117,33 +1127,57 @@ end;
                     pc_inc;
                 end if;
 
-           --a3 instructions.
-           --sta, stx, sty
-            elsif (reg_main_state = ST_A33_T2 or
-                reg_main_state = ST_A35_T2
+            --intermediate cycles..
+            elsif (reg_main_state = ST_A24_T2 or
+                reg_main_state = ST_A26_T2 or
+                reg_main_state = ST_A33_T2 or
+                reg_main_state = ST_A35_T2 or
+                reg_main_state = ST_A27_T2 or
+                reg_main_state = ST_A36_T2
                 ) then
                 --zp xy
                 --ind, x
-                --discarded cycle.
+                -->>discarded cycle.
+                --ind, y
+                --ial cycle.
                 reg_addr    <= "00000000" & reg_idl_l;
                 reg_d_out   <= (others => 'Z');
                 reg_r_nw    <= '1';
-            elsif (reg_main_state = ST_A33_T3) then
+            elsif (reg_main_state = ST_A24_T3 or
+                reg_main_state = ST_A33_T3) then
                 --ind, x
                 --bal + x cycle.
-                reg_addr    <= "00000000" & reg_idl_l;
+                reg_addr    <= "00000000" & (reg_idl_l + reg_x);
                 reg_d_out   <= (others => 'Z');
                 reg_r_nw    <= '1';
-            elsif (reg_main_state = ST_A33_T4) then
+            elsif (reg_main_state = ST_A24_T4 or
+                reg_main_state = ST_A33_T4) then
                 --ind, x
                 --bal + x + 1 cycle.
-                reg_addr    <= "00000000" & (reg_idl_l + 1);
+                reg_addr    <= "00000000" & (reg_idl_l + reg_x + 1);
                 reg_d_out   <= (others => 'Z');
                 reg_r_nw    <= '1';
-            elsif (reg_main_state = ST_A34_T3) then
+            elsif (reg_main_state = ST_A25_T3 or
+                reg_main_state = ST_A34_T3) then
                 --abs xy
-                --discarded cycle.
-                if (reg_inst = conv_std_logic_vector(16#9d#, 8)) then
+                --(discarded cycle for store inst..)
+                if (reg_inst(1 downto 0) = "01") then
+                    if (reg_inst(4 downto 2) = "110") then
+                        --abs y
+                        reg_addr    <= reg_idl_h & (reg_idl_l + reg_y);
+                    elsif (reg_inst(4 downto 2) = "111") then
+                        --abs x
+                        reg_addr    <= reg_idl_h & (reg_idl_l + reg_x);
+                    end if; 
+                elsif (reg_inst = conv_std_logic_vector(16#be#, 8)) then
+                    --abs y
+                    --ldx
+                    reg_addr    <= reg_idl_h & (reg_idl_l + reg_y);
+                elsif (reg_inst = conv_std_logic_vector(16#bc#, 8)) then
+                    --abs x
+                    --ldy
+                    reg_addr    <= reg_idl_h & (reg_idl_l + reg_x);
+                elsif (reg_inst = conv_std_logic_vector(16#9d#, 8)) then
                     --sta, x
                     reg_addr    <= reg_idl_h & (reg_idl_l + reg_x);
                     calc_adl    := ("0" & reg_idl_l) + ("0" & reg_x);
@@ -1156,19 +1190,15 @@ end;
                 reg_r_nw    <= '1';
 
                 reg_tmp_pg_crossed <= calc_adl(8);
-            elsif (reg_main_state = ST_A36_T2) then
-                --ind, y
-                --ial cycle.
-                reg_addr    <= "00000000" & reg_idl_l;
-                reg_d_out   <= (others => 'Z');
-                reg_r_nw    <= '1';
-            elsif (reg_main_state = ST_A36_T3) then
+            elsif (reg_main_state = ST_A27_T3 or
+                reg_main_state = ST_A36_T3) then
                 --ind, y
                 --ial + 1 cycle.
                 reg_addr    <= "00000000" & (reg_idl_l + 1);
                 reg_d_out   <= (others => 'Z');
                 reg_r_nw    <= '1';
-            elsif (reg_main_state = ST_A36_T4) then
+            elsif (reg_main_state = ST_A27_T4 or
+                reg_main_state = ST_A36_T4) then
                 --ind, y
                 --bal + y cycle.
                 reg_addr    <= reg_tmp_h & (reg_tmp_l + reg_y);
@@ -1177,6 +1207,76 @@ end;
                 calc_adl    := ("0" & reg_tmp_l) + ("0" & reg_y);
                 reg_tmp_pg_crossed <= calc_adl(8);
 
+
+           --a2 instructions.
+            elsif (reg_main_state = ST_A22_T2 or
+                reg_main_state = ST_A23_T3 or
+                reg_main_state = ST_A24_T5 or
+                reg_main_state = ST_A25_T4 or
+                reg_main_state = ST_A26_T3 or
+                reg_main_state = ST_A27_T5
+            ) then
+                --execute cycle.
+                reg_d_out   <= (others => 'Z');
+                reg_r_nw    <= '1';
+
+                --address bus out.
+                if (reg_main_state = ST_A22_T2) then
+                    --zp
+                    reg_addr    <= "00000000" & reg_idl_l;
+
+                elsif (reg_main_state = ST_A23_T3) then
+                    --abs
+                    reg_addr    <= reg_idl_h & reg_idl_l;
+
+                elsif (reg_main_state = ST_A24_T5) then
+                    --ind, x
+                    reg_addr    <= reg_tmp_h & reg_tmp_l;
+
+                elsif (reg_main_state = ST_A25_T4) then
+                    --abs xy
+                    if (reg_inst(1 downto 0) = "01") then
+                        if (reg_inst(4 downto 2) = "110") then
+                            --abs y
+                            reg_addr    <= (reg_idl_h + reg_tmp_pg_crossed) & (reg_idl_l + reg_y);
+                        elsif (reg_inst(4 downto 2) = "111") then
+                            --abs x
+                            reg_addr    <= (reg_idl_h + reg_tmp_pg_crossed) & (reg_idl_l + reg_x);
+                        end if; 
+                    elsif (reg_inst = conv_std_logic_vector(16#be#, 8)) then
+                        --abs y
+                        --ldx
+                        reg_addr    <= (reg_idl_h + reg_tmp_pg_crossed) & (reg_idl_l + reg_y);
+                    elsif (reg_inst = conv_std_logic_vector(16#bc#, 8)) then
+                        --abs x
+                        --ldy
+                        reg_addr    <= (reg_idl_h + reg_tmp_pg_crossed) & (reg_idl_l + reg_x);
+                    end if; 
+
+                elsif (reg_main_state = ST_A26_T3) then
+                    --zp xy
+                    if (reg_inst(1 downto 0) = "01") then
+                        if (reg_inst(4 downto 2) = "101") then
+                            --zp x
+                            reg_addr    <= "00000000" & (reg_idl_l + reg_x);
+                        end if; 
+                    elsif (reg_inst = conv_std_logic_vector(16#b6#, 8)) then
+                        --zp y
+                        --ldx
+                        reg_addr    <= "00000000" & (reg_idl_l + reg_y);
+                    elsif (reg_inst = conv_std_logic_vector(16#b4#, 8)) then
+                        --zp y
+                        --ldy
+                        reg_addr    <= "00000000" & (reg_idl_l + reg_x);
+                    end if; 
+
+                elsif (reg_main_state = ST_A27_T5) then
+                    --ind y
+                    reg_addr    <= (reg_tmp_h + reg_tmp_pg_crossed) & (reg_tmp_l + reg_y);
+                end if;
+
+           --a3 instructions.
+           --sta, stx, sty
             elsif (reg_main_state = ST_A31_T2 or
                 reg_main_state = ST_A32_T3 or
                 reg_main_state = ST_A33_T5 or
