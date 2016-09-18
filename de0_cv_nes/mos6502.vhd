@@ -743,7 +743,7 @@ begin
                 end if;
             when ST_A43_T2 =>
                 if (reg_sub_state = ST_SUB73) then
-                    reg_main_next_state <= ST_CM_T0;
+                    reg_main_next_state <= ST_A43_T3;
                 else
                     reg_main_next_state <= reg_main_state;
                 end if;
