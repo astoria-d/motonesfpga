@@ -1192,7 +1192,7 @@ end;
                     if (reg_inst(4 downto 2) = "111") then
                         --abs x
                         reg_addr    <= reg_idl_h & (reg_idl_l + reg_x);
-                        calc_adl    := ("0" & reg_idl_l) + ("0" & reg_y);
+                        calc_adl    := ("0" & reg_idl_l) + ("0" & reg_x);
                     end if; 
                 elsif (reg_inst(1 downto 0) = "01") then
                     --a2 inst
@@ -1600,7 +1600,12 @@ end;
             elsif (reg_main_state = ST_A58_T2) then
                 if (reg_sub_state = ST_SUB10) then
                     calc_adl    := ("0" & reg_pc_l) + ("0" & reg_idl_l);
-                    reg_tmp_pg_crossed <= calc_adl(8);
+                    --conditional branch is signed add.
+                    if ((reg_idl_l(7) xor calc_adl(8)) = '1') then
+                        reg_tmp_pg_crossed <= '1';
+                    else
+                        reg_tmp_pg_crossed <= '0';
+                    end if;
 
                     reg_pc_l    <= calc_adl(7 downto 0);
                     reg_addr    <= reg_pc_h & calc_adl(7 downto 0);
@@ -1611,8 +1616,15 @@ end;
             --page crossed.
             elsif (reg_main_state = ST_A58_T3) then
                 if (reg_sub_state = ST_SUB10) then
-                    reg_pc_h    <= reg_pc_h + "1";
-                    reg_addr    <= (reg_pc_h + "1") & reg_pc_l;
+                    if (reg_idl_l(7) = '0') then
+                        --page crossig forward branch.
+                        reg_pc_h    <= reg_pc_h + "1";
+                        reg_addr    <= (reg_pc_h + "1") & reg_pc_l;
+                    else
+                        --page crossig backward branch.
+                        reg_pc_h    <= reg_pc_h - "1";
+                        reg_addr    <= (reg_pc_h - "1") & reg_pc_l;
+                    end if;
                     reg_d_out   <= (others => 'Z');
                     reg_r_nw    <= '1';
                 end if;
