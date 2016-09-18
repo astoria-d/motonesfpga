@@ -1823,7 +1823,7 @@ end;
                         reg_status(FL_V) <= '0';
                     elsif (reg_inst = conv_std_logic_vector(16#8a#, 8)) then
                         --txa
-                        reg_acc <= reg_y;
+                        reg_acc <= reg_x;
                     elsif (reg_inst = conv_std_logic_vector(16#aa#, 8)) then
                         --tax
                         reg_x <= reg_acc;
