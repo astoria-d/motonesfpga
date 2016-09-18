@@ -1606,19 +1606,27 @@ end;
                     --get high data from rom.
                     reg_idl_h <= reg_d_in;
                 end if;
-            elsif (reg_main_state = ST_A33_T3 or
+            elsif (reg_main_state = ST_A24_T3 or
+                reg_main_state = ST_A27_T2 or
+                reg_main_state = ST_A33_T3 or
                 reg_main_state = ST_A36_T2
                 ) then
+                --a24 indr, x
+                --a27 indr, y
                 --a33 indr, x
-                --a33 indr, y
+                --a36 indr, y
                 if (reg_sub_state = ST_SUB30) then
                     reg_tmp_l <= reg_d_in;
                 end if;
-            elsif (reg_main_state = ST_A33_T4 or
+            elsif (reg_main_state = ST_A24_T4 or
+                reg_main_state = ST_A27_T3 or
+                reg_main_state = ST_A33_T4 or
                 reg_main_state = ST_A36_T3
                 ) then
+                --a24 indr, x
+                --a27 indr, y
                 --a33 indr, x
-                --a33 indr, y
+                --a36 indr, y
                 if (reg_sub_state = ST_SUB30) then
                     reg_tmp_h <= reg_d_in;
                 end if;
