@@ -207,12 +207,15 @@ signal reg_status   : std_logic_vector (7 downto 0);
 signal reg_pc_l     : std_logic_vector (7 downto 0);
 signal reg_pc_h     : std_logic_vector (7 downto 0);
 
---tmp acc carry/overflow reg.
+--tmp flag reg.
 signal reg_tmp_carry    : std_logic;
 signal reg_tmp_ovf      : std_logic;
 signal reg_tmp_condition    : std_logic;
 signal reg_tmp_pg_crossed   : std_logic;
 
+--tmp address reg.
+signal reg_tmp_l    : std_logic_vector (7 downto 0);
+signal reg_tmp_h    : std_logic_vector (7 downto 0);
 
 --bus i/o reg.
 signal reg_r_nw     : std_logic;
@@ -1114,7 +1117,139 @@ end;
                     pc_inc;
                 end if;
 
-           --jsr.
+           --a3 instructions.
+           --sta, stx, sty
+            elsif (reg_main_state = ST_A33_T2 or
+                reg_main_state = ST_A35_T2
+                ) then
+                --zp xy
+                --ind, x
+                --discarded cycle.
+                reg_addr    <= "00000000" & reg_idl_l;
+                reg_d_out   <= (others => 'Z');
+                reg_r_nw    <= '1';
+            elsif (reg_main_state = ST_A33_T3) then
+                --ind, x
+                --bal + x cycle.
+                reg_addr    <= "00000000" & reg_idl_l;
+                reg_d_out   <= (others => 'Z');
+                reg_r_nw    <= '1';
+            elsif (reg_main_state = ST_A33_T4) then
+                --ind, x
+                --bal + x + 1 cycle.
+                reg_addr    <= "00000000" & (reg_idl_l + 1);
+                reg_d_out   <= (others => 'Z');
+                reg_r_nw    <= '1';
+            elsif (reg_main_state = ST_A34_T3) then
+                --abs xy
+                --discarded cycle.
+                if (reg_inst = conv_std_logic_vector(16#9d#, 8)) then
+                    --sta, x
+                    reg_addr    <= reg_idl_h & (reg_idl_l + reg_x);
+                    calc_adl    := ("0" & reg_idl_l) + ("0" & reg_x);
+                elsif (reg_inst = conv_std_logic_vector(16#99#, 8)) then
+                    --sta, y
+                    reg_addr    <= reg_idl_h & (reg_idl_l + reg_y);
+                    calc_adl    := ("0" & reg_idl_l) + ("0" & reg_y);
+                end if;
+                reg_d_out   <= (others => 'Z');
+                reg_r_nw    <= '1';
+
+                reg_tmp_pg_crossed <= calc_adl(8);
+            elsif (reg_main_state = ST_A36_T2) then
+                --ind, y
+                --ial cycle.
+                reg_addr    <= "00000000" & reg_idl_l;
+                reg_d_out   <= (others => 'Z');
+                reg_r_nw    <= '1';
+            elsif (reg_main_state = ST_A36_T3) then
+                --ind, y
+                --ial + 1 cycle.
+                reg_addr    <= "00000000" & (reg_idl_l + 1);
+                reg_d_out   <= (others => 'Z');
+                reg_r_nw    <= '1';
+            elsif (reg_main_state = ST_A36_T4) then
+                --ind, y
+                --bal + y cycle.
+                reg_addr    <= reg_tmp_h & (reg_tmp_l + reg_y);
+                reg_d_out   <= (others => 'Z');
+                reg_r_nw    <= '1';
+                calc_adl    := ("0" & reg_tmp_l) + ("0" & reg_y);
+                reg_tmp_pg_crossed <= calc_adl(8);
+
+            elsif (reg_main_state = ST_A31_T2 or
+                reg_main_state = ST_A32_T3 or
+                reg_main_state = ST_A33_T5 or
+                reg_main_state = ST_A34_T4 or
+                reg_main_state = ST_A35_T3 or
+                reg_main_state = ST_A36_T5
+            ) then
+                --store cycle.
+                --data out
+                if (reg_inst(1 downto 0) = "01" and reg_inst(7 downto 5) = "100") then
+                    --sta
+                    reg_d_out   <= reg_acc;
+                elsif (reg_inst(1 downto 0) = "10" and reg_inst(7 downto 5) = "100") then
+                    --stx
+                    reg_d_out   <= reg_x;
+                elsif (reg_inst(1 downto 0) = "00" and reg_inst(7 downto 5) = "100") then
+                    --sty
+                    reg_d_out   <= reg_y;
+                end if;
+
+                --rw ctrl
+                if (reg_sub_state = ST_SUB32 or
+                    reg_sub_state = ST_SUB33 or
+                    reg_sub_state = ST_SUB40 or
+                    reg_sub_state = ST_SUB41
+                    ) then
+                    reg_r_nw    <= '0';
+                else
+                    reg_r_nw    <= 'Z';
+                end if;
+
+                --address bus out.
+                if (reg_main_state = ST_A31_T2) then
+                    --zp
+                    reg_addr    <= "00000000" & reg_idl_l;
+
+                elsif (reg_main_state = ST_A32_T3) then
+                    --abs
+                    reg_addr    <= reg_idl_h & reg_idl_l;
+
+                elsif (reg_main_state = ST_A33_T5) then
+                    --ind, x
+                    reg_addr    <= reg_tmp_h & reg_tmp_l;
+
+                elsif (reg_main_state = ST_A34_T4) then
+                    --abs xy
+                    if (reg_inst = conv_std_logic_vector(16#9d#, 8)) then
+                        --sta, x
+                        reg_addr    <= (reg_idl_h + reg_tmp_pg_crossed) & (reg_idl_l + reg_x);
+                    elsif (reg_inst = conv_std_logic_vector(16#99#, 8)) then
+                        --sta, y
+                        reg_addr    <= (reg_idl_h + reg_tmp_pg_crossed) & (reg_idl_l + reg_y);
+                    end if;
+
+                elsif (reg_main_state = ST_A35_T3) then
+                    --zp xy
+                    --sta and sty has index x access,
+                    --stx has index y access.
+                    if (reg_inst = conv_std_logic_vector(16#95#, 8) or --sta
+                        reg_inst = conv_std_logic_vector(16#94#, 8) --sty
+                    ) then
+                        reg_addr    <= "00000000" & (reg_idl_l + reg_x);
+                    elsif (reg_inst = conv_std_logic_vector(16#96#, 8)) then
+                        --stx
+                        reg_addr    <= "00000000" & (reg_idl_l + reg_y);
+                    end if;
+
+                elsif (reg_main_state = ST_A36_T5) then
+                    --ind y
+                    reg_addr    <= (reg_tmp_h + reg_tmp_pg_crossed) & (reg_tmp_l + reg_y);
+                end if;
+
+            --jsr.
             elsif (reg_main_state = ST_A53_T2) then
                 --sp out (discarded.)
                 reg_addr    <= "00000001" & reg_sp;
@@ -1235,6 +1370,8 @@ end;
         if (pi_rst_n = '0') then
             reg_idl_l <= (others => '0');
             reg_idl_h <= (others => '0');
+            reg_tmp_l <= (others => '0');
+            reg_tmp_h <= (others => '0');
         elsif (rising_edge(pi_base_clk)) then
             if (reg_main_state = ST_A21_T1 or
                 reg_main_state = ST_A22_T1 or
@@ -1274,6 +1411,22 @@ end;
                     --get high data from rom.
                     reg_idl_h <= reg_d_in;
                 end if;
+            elsif (reg_main_state = ST_A33_T3 or
+                reg_main_state = ST_A36_T2
+                ) then
+                --a33 indr, x
+                --a33 indr, y
+                if (reg_sub_state = ST_SUB30) then
+                    reg_tmp_l <= reg_d_in;
+                end if;
+            elsif (reg_main_state = ST_A33_T4 or
+                reg_main_state = ST_A36_T3
+                ) then
+                --a33 indr, x
+                --a33 indr, y
+                if (reg_sub_state = ST_SUB30) then
+                    reg_tmp_h <= reg_d_in;
+                end if;
             end if;--if (reg_main_state = ST_RS_T0)
         end if;--if (pi_rst_n = '0') then
     end process;
@@ -1309,6 +1462,7 @@ end;
     end process;
 
     --calcuration process...
+    --update acc, x, y, status registers.
     calc_p : process (pi_rst_n, pi_base_clk)
 
     variable calc_res : std_logic_vector (8 downto 0);
