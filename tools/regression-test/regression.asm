@@ -283,6 +283,15 @@ mainloop:
     jmp @l_bnz
 @l_bz:
 
+    jmp (@ind_addr)
+    nop
+    nop
+@ind_addr:
+	.word	@jmp_addr
+    nop
+    nop    
+@jmp_addr:
+
     rts
 .endproc
 
