@@ -1774,13 +1774,13 @@ end;
             reg_acc <= (others => '0');
             reg_x <= (others => '0');
             reg_y <= (others => '0');
-            reg_status <= (others => '0');
+            reg_status <= "00100000";
             reg_tmp_carry <= '0';
             reg_tmp_ovf <= '0';
             reg_tmp_condition <= '0';
         elsif (rising_edge(pi_base_clk)) then
             --not used status pin initialize (to avoid latches).
-            reg_status(5 downto 3) <= "000";
+            reg_status(5 downto 3) <= "100";
 
             --a1 instructions...
             --asl   dex     nop     tax     tya
@@ -1935,9 +1935,10 @@ end;
                 reg_main_state = ST_A22_T2 or
                 reg_main_state = ST_A23_T3 or
                 reg_main_state = ST_A24_T5 or
-                reg_main_state = ST_A25_T4 or
                 reg_main_state = ST_A25_T3 or
+                reg_main_state = ST_A25_T4 or
                 reg_main_state = ST_A26_T3 or
+                reg_main_state = ST_A27_T4 or
                 reg_main_state = ST_A27_T5) then
                 
                 --update reg
