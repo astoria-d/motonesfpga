@@ -1700,7 +1700,7 @@ end;
             if (reg_main_state = ST_A1_T1) then
                 --txs inst.
                 if (reg_inst = conv_std_logic_vector(16#9a#, 8)) then
-                    reg_sp <= reg_idl_l;
+                    reg_sp <= reg_x;
                 end if;
             elsif (reg_main_state = ST_A51_T2 or
                 reg_main_state = ST_A53_T3 or
