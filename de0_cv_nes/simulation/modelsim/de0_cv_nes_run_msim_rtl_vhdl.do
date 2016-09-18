@@ -39,9 +39,6 @@ add wave -label d_io -radix hex     sim:/testbench_motones_sim/sim_board/wr_d_io
 #add wave -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg*;
 add wave -divider cpu
 
-#add wave -label reg_main_cur_state  sim:/testbench_motones_sim/sim_board/cpu_inst/reg_main_state;
-#add wave -label reg_sub_cur_state   sim:/testbench_motones_sim/sim_board/cpu_inst/reg_sub_state;
-
 add wave -label reg_inst -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_inst;
 add wave -label reg_status -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_status;
 add wave -label reg_acc -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_acc;
@@ -49,19 +46,23 @@ add wave -label reg_x -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/r
 add wave -label reg_y -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_y;
 add wave -label reg_sp -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_sp;
 
+add wave -divider internal_reg
+add wave -label reg_main_cur_state  sim:/testbench_motones_sim/sim_board/cpu_inst/reg_main_state;
+#add wave -label reg_sub_cur_state   sim:/testbench_motones_sim/sim_board/cpu_inst/reg_sub_state;
 #add wave -label reg_pc_l -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_pc_l;
 #add wave -label reg_pc_h -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_pc_h;
-#add wave -label reg_idl_l -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_idl_l;
-#add wave -label reg_idl_h -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_idl_h;
+add wave -label reg_idl_l -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_idl_l;
+add wave -label reg_idl_h -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_idl_h;
+add wave -label reg_tmp_pg_crossed  sim:/testbench_motones_sim/sim_board/cpu_inst/reg_tmp_pg_crossed;
 
 
 view structure
 view signals
 
-run 12 us
+run 25 us
 wave zoom full
 
-run 200 us
+run 780 us
 
 
 #################################### PPU part.... ###########################################

@@ -158,7 +158,7 @@ constant inst_decode_rom : cpu_state_array := (
   --b8          b9          ba          bb          bc          bd          be          bf
     ST_A1_T1,   ST_A25_T1,  ST_A1_T1,   ST_INV,     ST_A25_T1,  ST_A25_T1,  ST_A25_T1,  ST_INV,
   --c0          c1          c2          c3          c4          c5          c6          c7
-    ST_A21_T1,  ST_A24_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A22_T1,  ST_A41_T1,  ST_INV,
+    ST_A21_T1,  ST_A24_T1,  ST_INV,     ST_INV,     ST_A22_T1,  ST_A22_T1,  ST_A41_T1,  ST_INV,
   --c8          c9          ca          cb          cc          cd          ce          cf
     ST_A1_T1,   ST_A21_T1,  ST_A1_T1,   ST_INV,     ST_A23_T1,  ST_A23_T1,  ST_A42_T1,  ST_INV,
   --d0          d1          d2          d3          d4          d5          d6          d7
@@ -1169,22 +1169,16 @@ end;
                 ) then
                 --abs xy
                 --(discarded cycle for store inst..)
-                if (reg_inst(1 downto 0) = "01") then
-                    if (reg_inst(4 downto 2) = "110") then
-                        --abs y
-                        reg_addr    <= reg_idl_h & (reg_idl_l + reg_y);
-                    elsif (reg_inst(4 downto 2) = "111") then
-                        --abs x
-                        reg_addr    <= reg_idl_h & (reg_idl_l + reg_x);
-                    end if; 
-                elsif (reg_inst = conv_std_logic_vector(16#be#, 8)) then
+                if (reg_inst = conv_std_logic_vector(16#be#, 8)) then
                     --abs y
                     --ldx
                     reg_addr    <= reg_idl_h & (reg_idl_l + reg_y);
+                    calc_adl    := ("0" & reg_idl_l) + ("0" & reg_y);
                 elsif (reg_inst = conv_std_logic_vector(16#bc#, 8)) then
                     --abs x
                     --ldy
                     reg_addr    <= reg_idl_h & (reg_idl_l + reg_x);
+                    calc_adl    := ("0" & reg_idl_l) + ("0" & reg_x);
                 elsif (reg_inst = conv_std_logic_vector(16#9d#, 8)) then
                     --sta, x
                     reg_addr    <= reg_idl_h & (reg_idl_l + reg_x);
@@ -1199,6 +1193,17 @@ end;
                         --abs x
                         reg_addr    <= reg_idl_h & (reg_idl_l + reg_x);
                         calc_adl    := ("0" & reg_idl_l) + ("0" & reg_y);
+                    end if; 
+                elsif (reg_inst(1 downto 0) = "01") then
+                    --a2 inst
+                    if (reg_inst(4 downto 2) = "110") then
+                        --abs y
+                        reg_addr    <= reg_idl_h & (reg_idl_l + reg_y);
+                        calc_adl    := ("0" & reg_idl_l) + ("0" & reg_y);
+                    elsif (reg_inst(4 downto 2) = "111") then
+                        --abs x
+                        reg_addr    <= reg_idl_h & (reg_idl_l + reg_x);
+                        calc_adl    := ("0" & reg_idl_l) + ("0" & reg_x);
                     end if; 
                 end if;
                 reg_d_out   <= (others => 'Z');
