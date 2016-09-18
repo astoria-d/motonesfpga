@@ -45,9 +45,9 @@
 ;    jsr print_ln
 ;
 ;    ;;test start...
-;    jsr addr_test
-;    jsr single_inst_test
-;    jsr a2_inst_test
+    jsr addr_test
+    jsr single_inst_test
+    jsr a2_inst_test
 ;    jsr a3_inst_test
 ;    jsr a4_inst_test
 ;    jsr a5_inst_test

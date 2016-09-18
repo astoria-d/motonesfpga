@@ -604,7 +604,9 @@ begin
                 --fetch low first.
                 if (reg_prf_x mod 8 = 6 and reg_v_cur_state = REG_SET1) then
                     --TODO: must reverse order if attr not set.
-                    reg_tmp_ptn_l <= reg_v_data;
+                    reg_tmp_ptn_l <= 
+                        reg_v_data(0) & reg_v_data(1) & reg_v_data(2) & reg_v_data(3) &
+                        reg_v_data(4) & reg_v_data(5) & reg_v_data(6) & reg_v_data(7);
                 end if;
 
                 if (reg_prf_x mod 8 = 0) then
@@ -613,7 +615,10 @@ begin
                         reg_sft_ptn_l <= reg_tmp_ptn_l & reg_sft_ptn_l(8 downto 1);
                         --fetch high & shift.
                         --TODO: must reverse order if attr not set.
-                        reg_sft_ptn_h <= reg_v_data & reg_sft_ptn_h(8 downto 1);
+                        reg_sft_ptn_h <= 
+                            reg_v_data(0) & reg_v_data(1) & reg_v_data(2) & reg_v_data(3) &
+                            reg_v_data(4) & reg_v_data(5) & reg_v_data(6) & reg_v_data(7) &
+                            reg_sft_ptn_h(8 downto 1);
                     end if;
                 else
                     if (reg_v_cur_state = AD_SET1 or reg_v_cur_state = REG_SET1) then
@@ -756,13 +761,13 @@ end;
                 if (reg_nes_x < HSCAN and reg_nes_y < VSCAN) then
                     --if or if not bg/sprite is shown, output color anyway 
                     --sinse universal bg color is included..
-                    po_b <= nes_color_palette(conv_integer(reg_plt_data(5 downto 0))) (11 downto 8);
+                    po_r <= nes_color_palette(conv_integer(reg_plt_data(5 downto 0))) (11 downto 8);
                     po_g <= nes_color_palette(conv_integer(reg_plt_data(5 downto 0))) (7 downto 4);
-                    po_r <= nes_color_palette(conv_integer(reg_plt_data(5 downto 0))) (3 downto 0);
+                    po_b <= nes_color_palette(conv_integer(reg_plt_data(5 downto 0))) (3 downto 0);
                 else
-                    po_b <= (others => '0');
-                    po_g <= (others => '0');
                     po_r <= (others => '0');
+                    po_g <= (others => '0');
+                    po_b <= (others => '0');
                 end if;
             end if; --if (rising_edge(emu_ppu_clk)) then
         end if;--if (rst_n = '0') then
