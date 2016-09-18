@@ -976,7 +976,7 @@ begin
                 if (reg_sub_state = ST_SUB73) then
                     if (reg_tmp_pg_crossed = '1') then
                         --page crossed. move to next.
-                        reg_main_next_state <= ST_A58_T2;
+                        reg_main_next_state <= ST_A58_T3;
                     else
                         --page not crossed. move to next inst fetch.
                         reg_main_next_state <= ST_CM_T0;
@@ -1596,7 +1596,7 @@ end;
                     reg_pc_l    <= reg_pc_l + 1;
                 end if;
 
-           --conditional branch.
+            --conditional branch.
             elsif (reg_main_state = ST_A58_T2) then
                 if (reg_sub_state = ST_SUB10) then
                     calc_adl    := ("0" & reg_pc_l) + ("0" & reg_idl_l);
@@ -1611,7 +1611,7 @@ end;
             --page crossed.
             elsif (reg_main_state = ST_A58_T3) then
                 if (reg_sub_state = ST_SUB10) then
-                    reg_pc_l    <= reg_pc_h + "1";
+                    reg_pc_h    <= reg_pc_h + "1";
                     reg_addr    <= (reg_pc_h + "1") & reg_pc_l;
                     reg_d_out   <= (others => 'Z');
                     reg_r_nw    <= '1';
