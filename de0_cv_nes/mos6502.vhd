@@ -1341,7 +1341,7 @@ end;
                     ) then
                     reg_r_nw    <= '0';
                 else
-                    reg_r_nw    <= 'Z';
+                    reg_r_nw    <= '1';
                 end if;
 
                 --address bus out.
@@ -1437,7 +1437,7 @@ end;
                     ) then
                     reg_r_nw    <= '0';
                 else
-                    reg_r_nw    <= 'Z';
+                    reg_r_nw    <= '1';
                 end if;
 
                 --address bus out.
@@ -1477,7 +1477,7 @@ end;
                     ) then
                     reg_r_nw    <= '0';
                 else
-                    reg_r_nw    <= 'Z';
+                    reg_r_nw    <= '1';
                 end if;
                 if (reg_inst = conv_std_logic_vector(16#48#, 8)) then
                     --pha
@@ -1505,7 +1505,7 @@ end;
                     ) then
                     reg_r_nw    <= '0';
                 else
-                    reg_r_nw    <= 'Z';
+                    reg_r_nw    <= '1';
                 end if;
             elsif (reg_main_state = ST_A53_T4) then
                 --push pcl
@@ -1518,7 +1518,7 @@ end;
                     ) then
                     reg_r_nw    <= '0';
                 else
-                    reg_r_nw    <= 'Z';
+                    reg_r_nw    <= '1';
                 end if;
             elsif (reg_main_state = ST_A53_T5) then
                 if (reg_sub_state = ST_SUB00) then
