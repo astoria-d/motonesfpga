@@ -1083,9 +1083,25 @@ end;
                     --sprite pattern is read from vram.
                     if (reg_s_oam_cur_state = REG_SET1) then
                         if (reg_nes_x mod 8 = 6) then
-                            reg_spr_ptn_l((reg_nes_x - 256) / 8) <= pi_v_data;
+                            if (reg_spr_attr((reg_nes_x - 256) / 8)(SPRHFL) = '1') then
+                                --normal
+                                reg_spr_ptn_l((reg_nes_x - 256) / 8) <=
+                                    reg_v_data(0) & reg_v_data(1) & reg_v_data(2) & reg_v_data(3) &
+                                    reg_v_data(4) & reg_v_data(5) & reg_v_data(6) & reg_v_data(7);
+                            else
+                                --flip horizontally
+                                reg_spr_ptn_l((reg_nes_x - 256) / 8) <= reg_v_data;
+                            end if;
                         elsif (reg_nes_x mod 8 = 0) then
-                            reg_spr_ptn_h((reg_nes_x - 256) / 8 - 1) <= pi_v_data;
+                            if (reg_spr_attr((reg_nes_x - 256) / 8 - 1)(SPRHFL) = '1') then
+                                --normal
+                                reg_spr_ptn_h((reg_nes_x - 256) / 8 - 1) <=
+                                    reg_v_data(0) & reg_v_data(1) & reg_v_data(2) & reg_v_data(3) &
+                                    reg_v_data(4) & reg_v_data(5) & reg_v_data(6) & reg_v_data(7);
+                            else
+                                --flip horizontally
+                                reg_spr_ptn_h((reg_nes_x - 256) / 8 - 1) <= reg_v_data;
+                            end if;
                         end if;
                     end if;
 
