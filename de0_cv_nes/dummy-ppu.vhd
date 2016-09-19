@@ -8,7 +8,8 @@ entity ppu is
                 pi_base_clk    : in std_logic;
                 pi_cpu_en      : in std_logic_vector (7 downto 0);
                 pi_ce_n        : in std_logic;
-                pi_r_nw        : in std_logic;
+                pi_oe_n        : in std_logic;
+                pi_we_n        : in std_logic;
                 pi_cpu_addr    : in std_logic_vector (2 downto 0);
                 pio_cpu_d      : inout std_logic_vector (7 downto 0);
 
@@ -162,6 +163,7 @@ entity chr_rom is
     port (  
             pi_base_clk     : in std_logic;
             pi_ce_n         : in std_logic;
+            pi_oe_n         : in std_logic;
             pi_addr         : in std_logic_vector (12 downto 0);
             po_data         : out std_logic_vector (7 downto 0)
         );

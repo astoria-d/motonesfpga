@@ -11,7 +11,8 @@ entity mos6502 is
             pi_rdy         : in std_logic;
             pi_irq_n       : in std_logic;
             pi_nmi_n       : in std_logic;
-            po_r_nw        : out std_logic;
+            po_oe_n        : out std_logic;
+            po_we_n        : out std_logic;
             po_addr        : out std_logic_vector ( 15 downto 0);
             pio_d_io       : inout std_logic_vector ( 7 downto 0)
     );
@@ -221,7 +222,8 @@ signal reg_tmp_h    : std_logic_vector (7 downto 0);
 signal reg_tmp_data : std_logic_vector (7 downto 0);
 
 --bus i/o reg.
-signal reg_r_nw     : std_logic;
+signal reg_oe_n     : std_logic;
+signal reg_we_n     : std_logic;
 signal reg_addr     : std_logic_vector (15 downto 0);
 signal reg_d_in     : std_logic_vector (7 downto 0);
 signal reg_d_out    : std_logic_vector (7 downto 0);
@@ -1001,7 +1003,8 @@ begin
     end process;
 
 
-    po_r_nw     <= reg_r_nw;
+    po_oe_n     <= reg_oe_n;
+    po_we_n     <= reg_we_n;
     po_addr     <= reg_addr;
     pio_d_io    <= reg_d_out;
 
@@ -1031,7 +1034,8 @@ end;
             reg_addr    <= (others => 'Z');
             reg_d_out   <= (others => 'Z');
             reg_d_in    <= (others => '0');
-            reg_r_nw    <= 'Z';
+            reg_oe_n    <= 'Z';
+            reg_we_n    <= 'Z';
             reg_tmp_pg_crossed  <= '0';
             calc_adl    := (others => '0');
         elsif (rising_edge(pi_base_clk)) then
@@ -1046,44 +1050,45 @@ end;
                 reg_inst    <= (others => '0');
                 reg_addr    <= (others => '0');
                 reg_d_out   <= (others => 'Z');
-                reg_r_nw    <= '1';
+                reg_oe_n    <= '1';
+                reg_we_n    <= '1';
             elsif (reg_main_state = ST_RS_T3) then
                 --dummy sp out 1.
                 reg_addr    <= "11111111" & reg_sp;
                 reg_d_out   <= (others => '0');
-                reg_r_nw    <= '0';
+                reg_we_n    <= '0';
             elsif (reg_main_state = ST_RS_T4) then
                 --dummy sp out 2.
                 reg_addr    <= "11111111" & (reg_sp - 1);
                 reg_d_out   <= (others => '0');
-                reg_r_nw    <= '0';
+                reg_we_n    <= '0';
             elsif (reg_main_state = ST_RS_T5) then
                 --dummy sp out 3.
                 reg_addr    <= "11111111" & (reg_sp - 2);
                 reg_d_out   <= (others => '0');
-                reg_r_nw    <= '0';
+                reg_we_n    <= '0';
             elsif (reg_main_state = ST_RS_T6) then
                 --reset vector low...
                 reg_addr    <= "1111111111111100";
                 reg_d_out   <= (others => 'Z');
-                reg_r_nw    <= '1';
+                reg_oe_n    <= '0';
+                reg_we_n    <= '1';
                 reg_pc_l    <= reg_d_in;
             elsif (reg_main_state = ST_RS_T7) then
                 --reset vector high...
                 reg_addr    <= "1111111111111101";
-                reg_d_out   <= (others => 'Z');
-                reg_r_nw    <= '1';
                 reg_pc_h    <= reg_d_in;
             elsif (reg_main_state = ST_CM_T0) then
                 --init pg crossing flag.
                 reg_tmp_pg_crossed <= '0';
                 calc_adl    := (others => '0');
+                reg_d_out   <= (others => 'Z');
+                reg_oe_n    <= '0';
+                reg_we_n    <= '1';
 
                 if (reg_sub_state = ST_SUB00) then
                     --fetch next.
                     reg_addr    <= reg_pc_h & reg_pc_l;
-                    reg_d_out   <= (others => 'Z');
-                    reg_r_nw    <= '1';
                 elsif (reg_sub_state = ST_SUB30) then
                     --update instruction register.
                     reg_inst    <= reg_d_in;
@@ -1124,8 +1129,6 @@ end;
                 if (reg_sub_state = ST_SUB00) then
                     --fetch next.
                     reg_addr    <= reg_pc_h & reg_pc_l;
-                    reg_d_out   <= (others => 'Z');
-                    reg_r_nw    <= '1';
                 elsif (reg_sub_state = ST_SUB70) then
                     --pc move next.
                     pc_inc;
@@ -1146,23 +1149,17 @@ end;
                 --ind, y
                 --ial cycle.
                 reg_addr    <= "00000000" & reg_idl_l;
-                reg_d_out   <= (others => 'Z');
-                reg_r_nw    <= '1';
             elsif (reg_main_state = ST_A24_T3 or
                 reg_main_state = ST_A33_T3
                 ) then
                 --ind, x
                 --bal + x cycle.
                 reg_addr    <= "00000000" & (reg_idl_l + reg_x);
-                reg_d_out   <= (others => 'Z');
-                reg_r_nw    <= '1';
             elsif (reg_main_state = ST_A24_T4 or
                 reg_main_state = ST_A33_T4) then
                 --ind, x
                 --bal + x + 1 cycle.
                 reg_addr    <= "00000000" & (reg_idl_l + reg_x + 1);
-                reg_d_out   <= (others => 'Z');
-                reg_r_nw    <= '1';
             elsif (reg_main_state = ST_A25_T3 or
                 reg_main_state = ST_A34_T3 or
                 reg_main_state = ST_A44_T3
@@ -1206,8 +1203,6 @@ end;
                         calc_adl    := ("0" & reg_idl_l) + ("0" & reg_x);
                     end if; 
                 end if;
-                reg_d_out   <= (others => 'Z');
-                reg_r_nw    <= '1';
 
                 reg_tmp_pg_crossed <= calc_adl(8);
             elsif (reg_main_state = ST_A27_T3 or
@@ -1215,15 +1210,11 @@ end;
                 --ind, y
                 --ial + 1 cycle.
                 reg_addr    <= "00000000" & (reg_idl_l + 1);
-                reg_d_out   <= (others => 'Z');
-                reg_r_nw    <= '1';
             elsif (reg_main_state = ST_A27_T4 or
                 reg_main_state = ST_A36_T4) then
                 --ind, y
                 --bal + y cycle.
                 reg_addr    <= reg_tmp_h & (reg_tmp_l + reg_y);
-                reg_d_out   <= (others => 'Z');
-                reg_r_nw    <= '1';
                 calc_adl    := ("0" & reg_tmp_l) + ("0" & reg_y);
                 reg_tmp_pg_crossed <= calc_adl(8);
             elsif (reg_main_state = ST_A51_T1 or
@@ -1231,17 +1222,12 @@ end;
                 --push/pull
                 --discard pc cycle.
                 reg_addr    <= reg_pc_h & (reg_pc_l + 1);
-                reg_d_out   <= (others => 'Z');
-                reg_r_nw    <= '1';
             elsif (reg_main_state = ST_A52_T2 or
                 reg_main_state = ST_A53_T2
                 ) then
                 --pull, jsr
                 --discard sp cycle.
                 reg_addr    <= "00000001" & reg_sp;
-                reg_d_out   <= (others => 'Z');
-                reg_r_nw    <= '1';
-
 
 
            --a2 instructions.
@@ -1253,8 +1239,6 @@ end;
                 reg_main_state = ST_A27_T5
             ) then
                 --execute cycle.
-                reg_d_out   <= (others => 'Z');
-                reg_r_nw    <= '1';
 
                 --address bus out.
                 if (reg_main_state = ST_A22_T2) then
@@ -1334,14 +1318,15 @@ end;
                 end if;
 
                 --rw ctrl
+                reg_oe_n    <= '1';
                 if (reg_sub_state = ST_SUB32 or
                     reg_sub_state = ST_SUB33 or
                     reg_sub_state = ST_SUB40 or
                     reg_sub_state = ST_SUB41
                     ) then
-                    reg_r_nw    <= '0';
+                    reg_we_n    <= '0';
                 else
-                    reg_r_nw    <= 'Z';
+                    reg_we_n    <= '1';
                 end if;
 
                 --address bus out.
@@ -1395,8 +1380,6 @@ end;
                 reg_main_state = ST_A44_T4
             ) then
                 --data fetch cycle.
-                reg_d_out   <= (others => 'Z');
-                reg_r_nw    <= '1';
 
                 --address bus out.
                 if (reg_main_state = ST_A41_T2) then
@@ -1428,6 +1411,7 @@ end;
                 --data store cycle.
                 --data out
                 reg_d_out   <= reg_tmp_data;
+                reg_oe_n    <= '1';
 
                 --rw ctrl
                 if (reg_sub_state = ST_SUB32 or
@@ -1435,9 +1419,9 @@ end;
                     reg_sub_state = ST_SUB40 or
                     reg_sub_state = ST_SUB41
                     ) then
-                    reg_r_nw    <= '0';
+                    reg_we_n    <= '0';
                 else
-                    reg_r_nw    <= 'Z';
+                    reg_we_n    <= '1';
                 end if;
 
                 --address bus out.
@@ -1470,43 +1454,42 @@ end;
             --push
             elsif (reg_main_state = ST_A51_T2) then
                 reg_addr    <= "00000001" & reg_sp;
+                reg_oe_n    <= '1';
+                if (reg_inst = conv_std_logic_vector(16#48#, 8)) then
+                    --pha
+                    reg_d_out   <= reg_acc;
+                elsif (reg_inst = conv_std_logic_vector(16#08#, 8)) then
+                    --php
+                    reg_d_out   <= reg_status;
+                end if;
                 if (reg_sub_state = ST_SUB32 or
                     reg_sub_state = ST_SUB33 or
                     reg_sub_state = ST_SUB40 or
                     reg_sub_state = ST_SUB41
                     ) then
-                    if (reg_inst = conv_std_logic_vector(16#48#, 8)) then
-                        --pha
-                        reg_d_out   <= reg_acc;
-                    elsif (reg_inst = conv_std_logic_vector(16#08#, 8)) then
-                        --php
-                        reg_d_out   <= reg_status;
-                    end if;
-                    reg_r_nw    <= '0';
+                    reg_we_n    <= '0';
                 else
-                    reg_d_out   <= (others => 'Z');
-                    reg_r_nw    <= '1';
+                    reg_we_n    <= '1';
                 end if;
 
             --pull
             elsif (reg_main_state = ST_A52_T3) then
                 reg_addr    <= "00000001" & reg_sp;
-                reg_r_nw    <= '1';
-                reg_d_out   <= (others => 'Z');
 
             --jsr.
             elsif (reg_main_state = ST_A53_T3) then
                 --push pch
                 reg_addr    <= "00000001" & reg_sp;
                 reg_d_out   <= reg_pc_h;
+                reg_oe_n    <= '1';
                 if (reg_sub_state = ST_SUB32 or
                     reg_sub_state = ST_SUB33 or
                     reg_sub_state = ST_SUB40 or
                     reg_sub_state = ST_SUB41
                     ) then
-                    reg_r_nw    <= '0';
+                    reg_we_n    <= '0';
                 else
-                    reg_r_nw    <= 'Z';
+                    reg_we_n    <= '1';
                 end if;
             elsif (reg_main_state = ST_A53_T4) then
                 --push pcl
@@ -1517,16 +1500,16 @@ end;
                     reg_sub_state = ST_SUB40 or
                     reg_sub_state = ST_SUB41
                     ) then
-                    reg_r_nw    <= '0';
+                    reg_we_n    <= '0';
                 else
-                    reg_r_nw    <= 'Z';
+                    reg_we_n    <= '1';
                 end if;
             elsif (reg_main_state = ST_A53_T5) then
                 if (reg_sub_state = ST_SUB00) then
                     --fetch next.
                     reg_addr    <= reg_pc_h & reg_pc_l;
                     reg_d_out   <= (others => 'Z');
-                    reg_r_nw    <= '1';
+                    reg_oe_n    <= '0';
                 elsif (reg_sub_state = ST_SUB70) then
                     --go to sub-routine addr.
                     reg_pc_l    <= reg_idl_l;
@@ -1538,8 +1521,6 @@ end;
                 if (reg_sub_state = ST_SUB00) then
                     --fetch next.
                     reg_addr    <= reg_pc_h & reg_pc_l;
-                    reg_d_out   <= (others => 'Z');
-                    reg_r_nw    <= '1';
                 elsif (reg_sub_state = ST_SUB70) then
                     reg_pc_l    <= reg_idl_l;
                     reg_pc_h    <= reg_idl_h;
@@ -1549,16 +1530,12 @@ end;
             elsif (reg_main_state = ST_A562_T3) then
                 if (reg_sub_state = ST_SUB00) then
                     reg_addr    <= (reg_idl_h & reg_idl_l);
-                    reg_d_out   <= (others => 'Z');
-                    reg_r_nw    <= '1';
                 elsif (reg_sub_state = ST_SUB70) then
                     reg_pc_l    <= reg_d_in;
                 end if;
             elsif (reg_main_state = ST_A562_T4) then
                 if (reg_sub_state = ST_SUB00) then
                     reg_addr    <= (reg_idl_h & reg_idl_l) + 1;
-                    reg_d_out   <= (others => 'Z');
-                    reg_r_nw    <= '1';
                 elsif (reg_sub_state = ST_SUB70) then
                     reg_pc_h    <= reg_d_in;
                 end if;
@@ -1567,14 +1544,10 @@ end;
             elsif (reg_main_state = ST_A57_T2) then
                 --sp out (discarded.)
                 reg_addr    <= "00000001" & reg_sp;
-                reg_d_out   <= (others => 'Z');
-                reg_r_nw    <= '1';
             elsif (reg_main_state = ST_A57_T3) then
                 --pull pcl
                 if (reg_sub_state = ST_SUB00) then
                     reg_addr    <= "00000001" & reg_sp;
-                    reg_d_out   <= (others => 'Z');
-                    reg_r_nw    <= '1';
                 elsif (reg_sub_state = ST_SUB70) then
                     reg_pc_l    <= reg_d_in;
                 end if;
@@ -1582,8 +1555,6 @@ end;
                 --pull pch
                 if (reg_sub_state = ST_SUB00) then
                     reg_addr    <= "00000001" & reg_sp;
-                    reg_d_out   <= (others => 'Z');
-                    reg_r_nw    <= '1';
                 elsif (reg_sub_state = ST_SUB70) then
                     reg_pc_h    <= reg_d_in;
                 end if;
@@ -1591,8 +1562,6 @@ end;
                 --pc out (discarded.)
                 if (reg_sub_state = ST_SUB00) then
                     reg_addr    <= reg_pc_h & reg_pc_l;
-                    reg_d_out   <= (others => 'Z');
-                    reg_r_nw    <= '1';
                 elsif (reg_sub_state = ST_SUB70) then
                     reg_pc_l    <= reg_pc_l + 1;
                 end if;
@@ -1610,8 +1579,6 @@ end;
 
                     reg_pc_l    <= calc_adl(7 downto 0);
                     reg_addr    <= reg_pc_h & calc_adl(7 downto 0);
-                    reg_d_out   <= (others => 'Z');
-                    reg_r_nw    <= '1';
                 end if;
 
             --page crossed.
@@ -1626,8 +1593,6 @@ end;
                         reg_pc_h    <= reg_pc_h - "1";
                         reg_addr    <= (reg_pc_h - "1") & reg_pc_l;
                     end if;
-                    reg_d_out   <= (others => 'Z');
-                    reg_r_nw    <= '1';
                 end if;
             end if;--if (reg_main_state = ST_RS_T0) then
         end if;--if (pi_rst_n = '0') then

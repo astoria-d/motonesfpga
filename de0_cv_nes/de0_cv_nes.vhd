@@ -38,7 +38,8 @@ architecture rtl of de0_cv_nes is
                 pi_rdy         : in std_logic;
                 pi_irq_n       : in std_logic;
                 pi_nmi_n       : in std_logic;
-                po_r_nw        : out std_logic;
+                po_oe_n        : out std_logic;
+                po_we_n        : out std_logic;
                 po_addr        : out std_logic_vector ( 15 downto 0);
                 pio_d_io       : inout std_logic_vector ( 7 downto 0)
         );
@@ -68,6 +69,7 @@ architecture rtl of de0_cv_nes is
     component prg_rom port (
                 pi_base_clk 	: in std_logic;
                 pi_ce_n         : in std_logic;
+                pi_oe_n         : in std_logic;
                 pi_addr         : in std_logic_vector (14 downto 0);
                 po_data         : out std_logic_vector (7 downto 0)
             );
@@ -78,7 +80,8 @@ architecture rtl of de0_cv_nes is
                 pi_base_clk    : in std_logic;
                 pi_cpu_en      : in std_logic_vector (7 downto 0);
                 pi_ce_n        : in std_logic;
-                pi_r_nw        : in std_logic;
+                pi_oe_n        : in std_logic;
+                pi_we_n        : in std_logic;
                 pi_cpu_addr    : in std_logic_vector (2 downto 0);
                 pio_cpu_d      : inout std_logic_vector (7 downto 0);
 
@@ -135,6 +138,7 @@ architecture rtl of de0_cv_nes is
         port (  
                 pi_base_clk     : in std_logic;
                 pi_ce_n         : in std_logic;
+                pi_oe_n         : in std_logic;
                 pi_addr         : in std_logic_vector (12 downto 0);
                 po_data         : out std_logic_vector (7 downto 0)
             );
@@ -206,9 +210,8 @@ signal wr_rnd_en       : std_logic_vector (3 downto 0);
 signal wr_rdy       : std_logic;
 signal wr_irq_n     : std_logic;
 signal wr_nmi_n     : std_logic;
-signal wr_r_nw      : std_logic;
---r_n is negative logic of wr_r_nw.
-signal lg_r_n       : std_logic;
+signal wr_oe_n      : std_logic;
+signal wr_we_n      : std_logic;
 
 signal wr_addr      : std_logic_vector ( 15 downto 0);
 signal wr_d_io      : std_logic_vector ( 7 downto 0);
@@ -268,7 +271,8 @@ begin
             wr_rdy,
             wr_irq_n, 
             wr_nmi_n, 
-            wr_r_nw, 
+            wr_oe_n, 
+            wr_we_n, 
             wr_addr, 
             wr_d_io
             );
@@ -288,18 +292,18 @@ begin
     prom_inst : prg_rom port map (
             pi_base_clk, 
             wr_rom_ce_n,
+            wr_oe_n,
             wr_addr(14 downto 0), 
             wr_d_io
             );
 
-    lg_r_n <= not wr_r_nw;
     --cpu ram inst.
     cpu_ram_inst : ram generic map
         (ram_2k, 8) port map (
             pi_base_clk,
             wr_ram_ce_n,
-            lg_r_n, 
-            wr_r_nw, 
+            wr_oe_n,
+            wr_we_n,
             wr_addr(10 downto 0), 
             wr_d_io
             );
@@ -310,7 +314,8 @@ begin
             pi_base_clk, 
             wr_cpu_en,
             wr_ppu_ce_n,
-            wr_r_nw, 
+            wr_oe_n,
+            wr_we_n,
             wr_addr(2 downto 0), 
             wr_d_io,
 
@@ -388,6 +393,7 @@ begin
     chr_rom_inst : chr_rom port map (
             pi_base_clk,
             wr_pt_ce_n,
+            wr_v_rd_n,
             wr_v_addr(12 downto 0),
             wr_v_data
             );

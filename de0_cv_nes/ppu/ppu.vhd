@@ -8,7 +8,8 @@ entity ppu is
                 pi_base_clk    : in std_logic;
                 pi_cpu_en      : in std_logic_vector (7 downto 0);
                 pi_ce_n        : in std_logic;
-                pi_r_nw        : in std_logic;
+                pi_oe_n        : in std_logic;
+                pi_we_n        : in std_logic;
                 pi_cpu_addr    : in std_logic_vector (2 downto 0);
                 pio_cpu_d      : inout std_logic_vector (7 downto 0);
 
@@ -48,6 +49,13 @@ constant OAMDATA   : std_logic_vector(2 downto 0) := "100";
 constant PPUSCROLL : std_logic_vector(2 downto 0) := "101";
 constant PPUADDR   : std_logic_vector(2 downto 0) := "110";
 constant PPUDATA   : std_logic_vector(2 downto 0) := "111";
+
+---cpu timing synchronization.
+constant CP_ST0   : integer := 4;
+constant CP_ST1   : integer := (CP_ST0 + 1) mod 8;
+constant CP_ST2   : integer := (CP_ST0 + 2) mod 8;
+constant CP_ST3   : integer := (CP_ST0 + 3) mod 8;
+constant CP_ST4   : integer := (CP_ST0 + 4) mod 8;
 
 signal reg_ppu_ctrl         : std_logic_vector (7 downto 0);
 signal reg_ppu_mask         : std_logic_vector (7 downto 0);
@@ -113,7 +121,7 @@ begin
             scr_set := 0;
             oam_addr_inc := 0;
         elsif (rising_edge(pi_base_clk)) then
-            if (pi_cpu_en(1) = '1' and pi_ce_n = '0' and pi_r_nw = '0') then
+            if (pi_cpu_en(CP_ST0) = '1' and pi_ce_n = '0' and pi_we_n = '0') then
                 if (pi_cpu_addr = PPUCTRL) then
                     reg_ppu_ctrl <= pio_cpu_d;
                 elsif (pi_cpu_addr = PPUMASK) then
@@ -161,7 +169,7 @@ begin
                     reg_oam_addr <= reg_oam_addr + 1;
                     oam_addr_inc := 0;
                 end if;
-            end if;--if (pi_cpu_en(0) = '1' and pi_ce_n = '0') then
+            end if;--if (pi_cpu_en(CP_ST0) = '1' and pi_ce_n = '0') then
         end if;--if (pi_rst_n = '0') then
     end process;
 
@@ -171,13 +179,13 @@ begin
         if (pi_rst_n = '0') then
             pio_cpu_d <= (others => 'Z');
         elsif (rising_edge(pi_base_clk)) then
-            if (pi_cpu_en(1) = '1' and pi_ce_n = '0' and pi_r_nw = '1') then
+            if (pi_cpu_en(CP_ST0) = '1' and pi_ce_n = '0' and pi_oe_n = '0') then
                 if (pi_cpu_addr = PPUSTATUS) then
                     pio_cpu_d <= pi_ppu_status;
                 end if;
             elsif (pi_ce_n = '1') then
                 pio_cpu_d <= (others => 'Z');
-            end if;--if (pi_cpu_en(0) = '1' and pi_ce_n = '0') then
+            end if;--if (pi_cpu_en(CP_ST0) = '1' and pi_ce_n = '0') then
         end if;--if (pi_rst_n = '0') then
     end process;
 
@@ -207,35 +215,35 @@ begin
     end process;
 
     --state change to next.
-    vac_next_stat_p : process (reg_v_cur_state, pi_cpu_en, pi_ce_n, pi_r_nw, pi_cpu_addr)
+    vac_next_stat_p : process (reg_v_cur_state, pi_cpu_en, pi_ce_n, pi_we_n, pi_cpu_addr)
     begin
         case reg_v_cur_state is
             when idle =>
-                if (pi_cpu_en(1) = '1' and pi_ce_n = '0' and pi_r_nw = '0' and pi_cpu_addr = PPUDATA) then
+                if (pi_cpu_en(CP_ST0) = '1' and pi_ce_n = '0' and pi_we_n = '0' and pi_cpu_addr = PPUDATA) then
                     reg_v_next_state <= reg_set;
                 else
                     reg_v_next_state <= reg_v_cur_state;
                 end if;
             when reg_set =>
-                if (pi_cpu_en(2) = '1' and pi_ce_n = '0' and pi_r_nw = '0' and pi_cpu_addr = PPUDATA) then
+                if (pi_cpu_en(CP_ST1) = '1') then
                     reg_v_next_state <= reg_out;
                 else
                     reg_v_next_state <= reg_v_cur_state;
                 end if;
             when reg_out =>
-                if (pi_cpu_en(3) = '1' and pi_ce_n = '0' and pi_r_nw = '0' and pi_cpu_addr = PPUDATA) then
+                if (pi_cpu_en(CP_ST2) = '1') then
                     reg_v_next_state <= mem_write;
                 else
                     reg_v_next_state <= reg_v_cur_state;
                 end if;
             when mem_write =>
-                if (pi_cpu_en(4) = '1' and pi_ce_n = '0' and pi_r_nw = '0' and pi_cpu_addr = PPUDATA) then
+                if (pi_cpu_en(CP_ST3) = '1') then
                     reg_v_next_state <= write_end;
                 else
                     reg_v_next_state <= reg_v_cur_state;
                 end if;
             when write_end =>
-                if (pi_cpu_en(5) = '1' and pi_ce_n = '0' and pi_r_nw = '0' and pi_cpu_addr = PPUDATA) then
+                if (pi_cpu_en(CP_ST4) = '1') then
                     reg_v_next_state <= complete;
                 else
                     reg_v_next_state <= reg_v_cur_state;
@@ -318,35 +326,35 @@ begin
     po_spr_data     <= reg_spr_data;
 
     --sprite state change to next.
-    sac_next_stat_p : process (reg_spr_cur_state, pi_cpu_en, pi_ce_n, pi_r_nw, pi_cpu_addr)
+    sac_next_stat_p : process (reg_spr_cur_state, pi_cpu_en, pi_ce_n, pi_we_n, pi_cpu_addr)
     begin
         case reg_spr_cur_state is
             when idle =>
-                if (pi_cpu_en(1) = '1' and pi_ce_n = '0' and pi_r_nw = '0' and pi_cpu_addr = OAMDATA) then
+                if (pi_cpu_en(CP_ST0) = '1' and pi_ce_n = '0' and pi_we_n = '0' and pi_cpu_addr = OAMDATA) then
                     reg_spr_next_state <= reg_set;
                 else
                     reg_spr_next_state <= reg_spr_cur_state;
                 end if;
             when reg_set =>
-                if (pi_cpu_en(2) = '1' and pi_ce_n = '0' and pi_r_nw = '0' and pi_cpu_addr = OAMDATA) then
+                if (pi_cpu_en(CP_ST1) = '1') then
                     reg_spr_next_state <= reg_out;
                 else
                     reg_spr_next_state <= reg_spr_cur_state;
                 end if;
             when reg_out =>
-                if (pi_cpu_en(3) = '1' and pi_ce_n = '0' and pi_r_nw = '0' and pi_cpu_addr = OAMDATA) then
+                if (pi_cpu_en(CP_ST2) = '1') then
                     reg_spr_next_state <= mem_write;
                 else
                     reg_spr_next_state <= reg_spr_cur_state;
                 end if;
             when mem_write =>
-                if (pi_cpu_en(4) = '1' and pi_ce_n = '0' and pi_r_nw = '0' and pi_cpu_addr = OAMDATA) then
+                if (pi_cpu_en(CP_ST3) = '1') then
                     reg_spr_next_state <= write_end;
                 else
                     reg_spr_next_state <= reg_spr_cur_state;
                 end if;
             when write_end =>
-                if (pi_cpu_en(5) = '1' and pi_ce_n = '0' and pi_r_nw = '0' and pi_cpu_addr = OAMDATA) then
+                if (pi_cpu_en(CP_ST4) = '1') then
                     reg_spr_next_state <= complete;
                 else
                     reg_spr_next_state <= reg_spr_cur_state;

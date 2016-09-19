@@ -8,6 +8,7 @@ entity prg_rom is
     port (  
             pi_base_clk     : in std_logic;
             pi_ce_n         : in std_logic;
+            pi_oe_n         : in std_logic;
             pi_addr         : in std_logic_vector (14 downto 0);
             po_data         : out std_logic_vector (7 downto 0)
         );
@@ -53,7 +54,7 @@ begin
     p : process (pi_base_clk)
     begin
     if (rising_edge(pi_base_clk)) then
-        if (pi_ce_n = '0') then
+        if (pi_ce_n = '0' and pi_oe_n = '0') then
             po_data <= p_rom(conv_integer(pi_addr));
         else
             po_data <= (others => 'Z');
