@@ -1050,17 +1050,17 @@ end;
             elsif (reg_main_state = ST_RS_T3) then
                 --dummy sp out 1.
                 reg_addr    <= "11111111" & reg_sp;
-                reg_d_out   <= (others => 'Z');
+                reg_d_out   <= (others => '0');
                 reg_r_nw    <= '0';
             elsif (reg_main_state = ST_RS_T4) then
                 --dummy sp out 2.
                 reg_addr    <= "11111111" & (reg_sp - 1);
-                reg_d_out   <= (others => 'Z');
+                reg_d_out   <= (others => '0');
                 reg_r_nw    <= '0';
             elsif (reg_main_state = ST_RS_T5) then
                 --dummy sp out 3.
                 reg_addr    <= "11111111" & (reg_sp - 2);
-                reg_d_out   <= (others => 'Z');
+                reg_d_out   <= (others => '0');
                 reg_r_nw    <= '0';
             elsif (reg_main_state = ST_RS_T6) then
                 --reset vector low...
@@ -1341,7 +1341,7 @@ end;
                     ) then
                     reg_r_nw    <= '0';
                 else
-                    reg_r_nw    <= '1';
+                    reg_r_nw    <= 'Z';
                 end if;
 
                 --address bus out.
@@ -1437,7 +1437,7 @@ end;
                     ) then
                     reg_r_nw    <= '0';
                 else
-                    reg_r_nw    <= '1';
+                    reg_r_nw    <= 'Z';
                 end if;
 
                 --address bus out.
@@ -1475,16 +1475,17 @@ end;
                     reg_sub_state = ST_SUB40 or
                     reg_sub_state = ST_SUB41
                     ) then
+                    if (reg_inst = conv_std_logic_vector(16#48#, 8)) then
+                        --pha
+                        reg_d_out   <= reg_acc;
+                    elsif (reg_inst = conv_std_logic_vector(16#08#, 8)) then
+                        --php
+                        reg_d_out   <= reg_status;
+                    end if;
                     reg_r_nw    <= '0';
                 else
+                    reg_d_out   <= (others => 'Z');
                     reg_r_nw    <= '1';
-                end if;
-                if (reg_inst = conv_std_logic_vector(16#48#, 8)) then
-                    --pha
-                    reg_d_out   <= reg_acc;
-                elsif (reg_inst = conv_std_logic_vector(16#08#, 8)) then
-                    --php
-                    reg_d_out   <= reg_status;
                 end if;
 
             --pull
@@ -1505,7 +1506,7 @@ end;
                     ) then
                     reg_r_nw    <= '0';
                 else
-                    reg_r_nw    <= '1';
+                    reg_r_nw    <= 'Z';
                 end if;
             elsif (reg_main_state = ST_A53_T4) then
                 --push pcl
@@ -1518,7 +1519,7 @@ end;
                     ) then
                     reg_r_nw    <= '0';
                 else
-                    reg_r_nw    <= '1';
+                    reg_r_nw    <= 'Z';
                 end if;
             elsif (reg_main_state = ST_A53_T5) then
                 if (reg_sub_state = ST_SUB00) then
