@@ -72,19 +72,11 @@ begin
     nmi_p: process
     constant nmi_wait     : time := 880us;
     constant vblank_time     : time := 60 us;
-    variable wait_cnt : integer := 0;
     begin
-
-        if (wait_cnt = 0) then
-            po_vblank_n <= '1';
-            wait for nmi_wait;
-            wait_cnt := wait_cnt + 1;
-        else
-            po_vblank_n <= '0';
-            wait for vblank_time ;
-            po_vblank_n <= '1';
-            wait for vblank_time / 4;
-        end if;
+        po_vblank_n <= '1';
+        wait for nmi_wait;
+        po_vblank_n <= '0';
+        wait for vblank_time ;
     end process;
 
 end rtl;

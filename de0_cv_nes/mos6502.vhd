@@ -90,6 +90,9 @@ type cpu_main_state is (
     --reset vector.
     ST_RS_T0, ST_RS_T1, ST_RS_T2, ST_RS_T3, ST_RS_T4, ST_RS_T5, ST_RS_T6, ST_RS_T7,
 
+    --nmi interrupt.
+              ST_NM_T1, ST_NM_T2, ST_NM_T3, ST_NM_T4, ST_NM_T5, ST_NM_T6, ST_NM_T7,
+
     --invalid state
     ST_INV
     );
@@ -228,6 +231,7 @@ signal reg_addr     : std_logic_vector (15 downto 0);
 signal reg_d_in     : std_logic_vector (7 downto 0);
 signal reg_d_out    : std_logic_vector (7 downto 0);
 
+signal reg_nmi_handled  : integer range 0 to 1;
 
 begin
     --state transition process...
@@ -319,7 +323,8 @@ begin
 
     --state change to next.
     tx_next_main_stat_p : process (pi_rst_n, reg_main_state, reg_sub_state,
-                                   reg_inst, reg_tmp_condition, reg_tmp_pg_crossed)
+                                   reg_inst, reg_tmp_condition, reg_tmp_pg_crossed,
+                                   pi_nmi_n, reg_nmi_handled)
 
     begin
         case reg_main_state is
@@ -383,8 +388,12 @@ begin
             --instruction fetch
             when ST_CM_T0 =>
                 if (reg_sub_state = ST_SUB73) then
-                    ---instruction decode next state.
-                    reg_main_next_state <= inst_decode_rom(conv_integer(reg_inst));
+                    if (pi_nmi_n = '0' and reg_nmi_handled = 0) then
+                        reg_main_next_state <= ST_NM_T1;
+                    else
+                        ---instruction decode next state.
+                        reg_main_next_state <= inst_decode_rom(conv_integer(reg_inst));
+                    end if;
                 else
                     reg_main_next_state <= reg_main_state;
                 end if;
@@ -993,10 +1002,55 @@ begin
                     reg_main_next_state <= reg_main_state;
                 end if;
 
+            -----nmi...
+            when ST_NM_T1 =>
+                if (reg_sub_state = ST_SUB73) then
+                    reg_main_next_state <= ST_NM_T2;
+                else
+                    reg_main_next_state <= reg_main_state;
+                end if;
+            when ST_NM_T2 =>
+                if (reg_sub_state = ST_SUB73) then
+                    reg_main_next_state <= ST_NM_T3;
+                else
+                    reg_main_next_state <= reg_main_state;
+                end if;
+            when ST_NM_T3 =>
+                if (reg_sub_state = ST_SUB73) then
+                    reg_main_next_state <= ST_NM_T4;
+                else
+                    reg_main_next_state <= reg_main_state;
+                end if;
+            when ST_NM_T4 =>
+                if (reg_sub_state = ST_SUB73) then
+                    reg_main_next_state <= ST_NM_T5;
+                else
+                    reg_main_next_state <= reg_main_state;
+                end if;
+            when ST_NM_T5 =>
+                if (reg_sub_state = ST_SUB73) then
+                    reg_main_next_state <= ST_NM_T6;
+                else
+                    reg_main_next_state <= reg_main_state;
+                end if;
+            when ST_NM_T6 =>
+                if (reg_sub_state = ST_SUB73) then
+                    reg_main_next_state <= ST_NM_T7;
+                else
+                    reg_main_next_state <= reg_main_state;
+                end if;
+            when ST_NM_T7 =>
+                if (reg_sub_state = ST_SUB73) then
+                    reg_main_next_state <= ST_CM_T0;
+                else
+                    reg_main_next_state <= reg_main_state;
+                end if;
+
+            --invalid state
             when ST_INV =>
                 ---failed to decode next...
                     reg_main_next_state <= reg_main_state;
---            ---not ready yet...
+
 --            when others =>
 --                reg_main_next_state <= reg_main_state;
         end case;
@@ -1043,7 +1097,7 @@ end;
             --general input data register.
             reg_d_in    <= pio_d_io;
             
-            --i/o data bus state change.
+            --reset vector
             if (reg_main_state = ST_RS_T0) then
                 reg_pc_l    <= (others => '0');
                 reg_pc_h    <= (others => '0');
@@ -1078,24 +1132,35 @@ end;
                 --reset vector high...
                 reg_addr    <= "1111111111111101";
                 reg_pc_h    <= reg_d_in;
+
+            --common entry cycle.
             elsif (reg_main_state = ST_CM_T0) then
-                --init pg crossing flag.
+                --init flags.
                 reg_tmp_pg_crossed <= '0';
                 calc_adl    := (others => '0');
                 reg_d_out   <= (others => 'Z');
-                reg_oe_n    <= '0';
-                reg_we_n    <= '1';
 
-                if (reg_sub_state = ST_SUB00) then
-                    --fetch next.
-                    reg_addr    <= reg_pc_h & reg_pc_l;
-                elsif (reg_sub_state = ST_SUB30) then
-                    --update instruction register.
-                    reg_inst    <= reg_d_in;
-                elsif (reg_sub_state = ST_SUB70) then
-                    --pc move next.
-                    pc_inc;
+                if (pi_nmi_n = '0' and reg_nmi_handled = 0) then
+                    --nmi raised cycle.
+                    reg_oe_n    <= '1';
+                    reg_we_n    <= '1';
+                    reg_addr    <= (others => 'Z');
+                else
+                    --normal cycle.
+                    reg_oe_n    <= '0';
+                    reg_we_n    <= '1';
+                    if (reg_sub_state = ST_SUB00) then
+                        --fetch next.
+                        reg_addr    <= reg_pc_h & reg_pc_l;
+                    elsif (reg_sub_state = ST_SUB30) then
+                        --update instruction register.
+                        reg_inst    <= reg_d_in;
+                    elsif (reg_sub_state = ST_SUB70) then
+                        --pc move next.
+                        pc_inc;
+                    end if;
                 end if;
+
             --fetch and move next case.
             elsif (reg_main_state = ST_A21_T1 or
                 reg_main_state = ST_A22_T1 or
@@ -2229,5 +2294,18 @@ end;
         end if;--if (pi_rst_n = '0') then
     end process;
 
+    --nmi handled flag process...
+    nmi_handle_p : process (pi_rst_n, pi_base_clk)
+    begin
+        if (pi_rst_n = '0') then
+            reg_nmi_handled <= 0;
+        elsif (rising_edge(pi_base_clk)) then
+            if (pi_nmi_n = '1') then
+                reg_nmi_handled <= 0;
+            elsif (reg_main_state = ST_NM_T7 and reg_sub_state = ST_SUB73) then
+                reg_nmi_handled <= 1;
+            end if;
+        end if;--if (pi_rst_n = '0') then
+    end process;
 end rtl;
 
