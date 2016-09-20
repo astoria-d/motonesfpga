@@ -12,6 +12,7 @@ entity ppu is
                 pi_we_n        : in std_logic;
                 pi_cpu_addr    : in std_logic_vector (2 downto 0);
                 pio_cpu_d      : inout std_logic_vector (7 downto 0);
+                po_vblank_n    : out std_logic;
 
                 po_v_ce_n       : out std_logic;
                 po_v_rd_n       : out std_logic;
@@ -42,6 +43,7 @@ end ppu;
 architecture rtl of ppu is
 begin
     pio_cpu_d      <= (others => 'Z');
+    --po_vblank_n    <= '1';
 
     po_v_ce_n       <= 'Z';
     po_v_rd_n       <= 'Z';
@@ -65,6 +67,26 @@ begin
     po_ppu_mask        <= (others => 'Z');
     po_ppu_scroll_x    <= (others => 'Z');
     po_ppu_scroll_y    <= (others => 'Z');
+
+    --- initiate nmi.
+    nmi_p: process
+    constant nmi_wait     : time := 880us;
+    constant vblank_time     : time := 60 us;
+    variable wait_cnt : integer := 0;
+    begin
+
+        if (wait_cnt = 0) then
+            po_vblank_n <= '1';
+            wait for nmi_wait;
+            wait_cnt := wait_cnt + 1;
+        else
+            po_vblank_n <= '0';
+            wait for vblank_time ;
+            po_vblank_n <= '1';
+            wait for vblank_time / 4;
+        end if;
+    end process;
+
 end rtl;
 
 

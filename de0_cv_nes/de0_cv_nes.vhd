@@ -84,6 +84,7 @@ architecture rtl of de0_cv_nes is
                 pi_we_n        : in std_logic;
                 pi_cpu_addr    : in std_logic_vector (2 downto 0);
                 pio_cpu_d      : inout std_logic_vector (7 downto 0);
+                po_vblank_n    : out std_logic;
 
                 po_v_ce_n       : out std_logic;
                 po_v_rd_n       : out std_logic;
@@ -318,6 +319,7 @@ begin
             wr_we_n,
             wr_addr(2 downto 0), 
             wr_d_io,
+            wr_nmi_n,
 
             wr_v_ce_n,
             wr_v_rd_n,
@@ -453,7 +455,6 @@ begin
 
     wr_rdy <= '1';
     wr_irq_n <= '1';
-    wr_nmi_n <= '1';
 
     po_dbg_cnt <= reg_dbg_cnt;
     deb_cnt_p : process (pi_rst_n, pi_base_clk)

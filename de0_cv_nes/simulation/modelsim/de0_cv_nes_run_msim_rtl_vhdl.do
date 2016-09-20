@@ -28,6 +28,7 @@ vsim -t 1ps -L altera -L lpm -L sgate -L altera_mf -L altera_lnsim -L cyclonev -
 
 add wave -label dbg_cnt -radix hex  sim:/testbench_motones_sim/sim_board/po_dbg_cnt;
 add wave -label rst_n               sim:/testbench_motones_sim/sim_board/pi_rst_n;
+add wave -label wr_nmi_n            sim:/testbench_motones_sim/sim_board/wr_nmi_n;
 #add wave -label base_clk            sim:/testbench_motones_sim/sim_board/pi_base_clk;
 add wave -label wr_cpu_en           sim:/testbench_motones_sim/sim_board/wr_cpu_en;
 add wave -label wr_cpu_en           sim:/testbench_motones_sim/sim_board/wr_cpu_en(0);
@@ -49,7 +50,7 @@ add wave -label reg_y -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/r
 add wave -label reg_sp -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_sp;
 
 add wave -divider internal_reg
-#add wave -label reg_main_cur_state  sim:/testbench_motones_sim/sim_board/cpu_inst/reg_main_state;
+add wave -label reg_main_cur_state  sim:/testbench_motones_sim/sim_board/cpu_inst/reg_main_state;
 #add wave -label reg_sub_cur_state   sim:/testbench_motones_sim/sim_board/cpu_inst/reg_sub_state;
 add wave -label reg_pc_l -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_pc_l;
 add wave -label reg_pc_h -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_pc_h;
@@ -64,7 +65,7 @@ view signals
 run 25 us
 wave zoom full
 
-run 4923 us
+run 880 us
 
 
 ##################################### PPU part.... ###########################################
