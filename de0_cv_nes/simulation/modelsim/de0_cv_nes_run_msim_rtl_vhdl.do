@@ -57,8 +57,8 @@ add wave -label reg_sp -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/
 #add wave -label reg_idl_l -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_idl_l;
 #add wave -label reg_idl_h -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_idl_h;
 #add wave -label reg_tmp_pg_crossed  sim:/testbench_motones_sim/sim_board/cpu_inst/reg_tmp_pg_crossed;
-#
-#
+
+
 #view structure
 #view signals
 #
@@ -113,6 +113,10 @@ add wave -label reg_s_oam_rd_n  sim:/testbench_motones_sim/sim_board/render_inst
 add wave -label reg_s_oam_wr_n  sim:/testbench_motones_sim/sim_board/render_inst/reg_s_oam_wr_n;
 add wave -label reg_s_oam_addr -radix hex  sim:/testbench_motones_sim/sim_board/render_inst/reg_s_oam_addr;
 add wave -label reg_s_oam_data -radix hex  sim:/testbench_motones_sim/sim_board/render_inst/reg_s_oam_data;
+
+#add wave -label reg_s_oam_cpy_cnt   sim:/testbench_motones_sim/sim_board/render_inst/reg_s_oam_cpy_cnt;
+#add wave -label reg_p_oam_cpy_cnt   sim:/testbench_motones_sim/sim_board/render_inst/reg_p_oam_cpy_cnt;
+#add wave -label reg_spr_eval_cnt    sim:/testbench_motones_sim/sim_board/render_inst/reg_spr_eval_cnt;
 
 add wave -label wr_spr_ce_n  sim:/testbench_motones_sim/sim_board/wr_spr_ce_n;
 add wave -label wr_spr_rd_n  sim:/testbench_motones_sim/sim_board/wr_spr_rd_n;
