@@ -12,6 +12,7 @@ entity ppu is
                 pi_we_n        : in std_logic;
                 pi_cpu_addr    : in std_logic_vector (2 downto 0);
                 pio_cpu_d      : inout std_logic_vector (7 downto 0);
+                po_vblank_n    : out std_logic;
 
                 po_v_ce_n       : out std_logic;
                 po_v_rd_n       : out std_logic;
@@ -50,6 +51,13 @@ constant PPUSCROLL : std_logic_vector(2 downto 0) := "101";
 constant PPUADDR   : std_logic_vector(2 downto 0) := "110";
 constant PPUDATA   : std_logic_vector(2 downto 0) := "111";
 
+--ppu ctl reg flag.
+constant PPUVAI     : integer := 2;  --vram address increment
+constant PPUNEN     : integer := 7;  --nmi enable
+
+--ppu status reg flag.
+constant ST_VBL     : integer := 7;  --vblank
+
 ---cpu timing synchronization.
 constant CP_ST0   : integer := 4;
 constant CP_ST1   : integer := (CP_ST0 + 1) mod 8;
@@ -86,6 +94,9 @@ signal reg_spr_rd_n       : std_logic;
 signal reg_spr_wr_n       : std_logic;
 signal reg_spr_addr       : std_logic_vector (7 downto 0);
 signal reg_spr_data       : std_logic_vector (7 downto 0);
+
+signal reg_out_cpu_d    : std_logic_vector (7 downto 0);
+signal reg_vblank_n     : std_logic;
 
 begin
 
@@ -169,22 +180,6 @@ begin
                     reg_oam_addr <= reg_oam_addr + 1;
                     oam_addr_inc := 0;
                 end if;
-            end if;--if (pi_cpu_en(CP_ST0) = '1' and pi_ce_n = '0') then
-        end if;--if (pi_rst_n = '0') then
-    end process;
-
-    --ppu register get process..
-    get_ppu_p : process (pi_rst_n, pi_base_clk)
-    begin
-        if (pi_rst_n = '0') then
-            pio_cpu_d <= (others => 'Z');
-        elsif (rising_edge(pi_base_clk)) then
-            if (pi_cpu_en(CP_ST0) = '1' and pi_ce_n = '0' and pi_oe_n = '0') then
-                if (pi_cpu_addr = PPUSTATUS) then
-                    pio_cpu_d <= pi_ppu_status;
-                end if;
-            elsif (pi_ce_n = '1') then
-                pio_cpu_d <= (others => 'Z');
             end if;--if (pi_cpu_en(CP_ST0) = '1' and pi_ce_n = '0') then
         end if;--if (pi_rst_n = '0') then
     end process;
@@ -406,6 +401,40 @@ begin
                 reg_spr_addr    <= (others => 'Z');
                 reg_spr_data    <= (others => 'Z');
         end case;
+    end process;
+
+    pio_cpu_d <= reg_out_cpu_d;
+
+    --cpu out process..
+    get_ppu_p : process (pi_rst_n, pi_base_clk)
+    begin
+        if (pi_rst_n = '0') then
+            reg_out_cpu_d <= (others => 'Z');
+        elsif (rising_edge(pi_base_clk)) then
+            if (pi_cpu_en(CP_ST0) = '1' and pi_ce_n = '0' and pi_oe_n = '0') then
+                if (pi_cpu_addr = PPUSTATUS) then
+                    reg_out_cpu_d <= pi_ppu_status;
+                end if;
+            elsif (pi_ce_n = '1') then
+                reg_out_cpu_d <= (others => 'Z');
+            end if;--if (pi_cpu_en(CP_ST0) = '1' and pi_ce_n = '0') then
+        end if;--if (pi_rst_n = '0') then
+    end process;
+
+    po_vblank_n <= reg_vblank_n;
+
+    --nmi signal process..
+    nmi_p : process (pi_rst_n, pi_base_clk)
+    begin
+        if (pi_rst_n = '0') then
+            reg_vblank_n <= '1';
+        elsif (rising_edge(pi_base_clk)) then
+            if (reg_ppu_mask(PPUNEN) = '1' and pi_ppu_status(ST_VBL) = '1') then
+                reg_vblank_n <= '0';
+            else
+                reg_vblank_n <= '1';
+            end if;--if (pi_cpu_en(CP_ST0) = '1' and pi_ce_n = '0') then
+        end if;--if (pi_rst_n = '0') then
     end process;
 
 end rtl;
