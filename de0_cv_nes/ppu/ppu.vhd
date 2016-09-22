@@ -429,7 +429,7 @@ begin
         if (pi_rst_n = '0') then
             reg_vblank_n <= '1';
         elsif (rising_edge(pi_base_clk)) then
-            if (reg_ppu_mask(PPUNEN) = '1' and pi_ppu_status(ST_VBL) = '1') then
+            if (reg_ppu_ctrl(PPUNEN) = '1' and pi_ppu_status(ST_VBL) = '1') then
                 reg_vblank_n <= '0';
             else
                 reg_vblank_n <= '1';
