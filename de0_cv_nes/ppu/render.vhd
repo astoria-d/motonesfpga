@@ -311,7 +311,7 @@ signal reg_s_oam_addr       : std_logic_vector (4 downto 0);
 signal reg_s_oam_data       : std_logic_vector (7 downto 0);
 signal wr_s_oam_data        : std_logic_vector (7 downto 0);
 
-signal reg_p_oam_cpy_cnt    : integer range 0 to 255;
+signal reg_p_oam_cpy_cnt    : integer range 0 to 256;
 signal reg_s_oam_cpy_cnt    : integer range 0 to 32;
 signal reg_spr_eval_cnt     : integer range 0 to 3;
 
@@ -957,16 +957,16 @@ end;
                     reg_spr_eval_cnt <= 0;
                 elsif (is_spr_eval(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
                     --copy data from primary oam ram.
-                    reg_s_oam_addr <= conv_std_logic_vector(reg_s_oam_cpy_cnt, 5);
+                    reg_s_oam_addr <= conv_std_logic_vector(reg_s_oam_cpy_cnt mod 32, 5);
                     reg_s_oam_data <= pi_spr_data;
                     reg_s_oam_rd_n <= '1';
 
                     reg_p_oam_ce_n <= '0';
                     reg_p_oam_rd_n <= '0';
                     reg_p_oam_wr_n <= '1';
-                    reg_p_oam_addr <= conv_std_logic_vector(reg_p_oam_cpy_cnt, 8);
+                    reg_p_oam_addr <= conv_std_logic_vector(reg_p_oam_cpy_cnt mod 256, 8);
 
-                    if (reg_s_oam_cpy_cnt < 32) then
+                    if (reg_s_oam_cpy_cnt < 32 and reg_p_oam_cpy_cnt < 256) then
                         if (reg_s_oam_cur_state = AD_SET0) then
                             reg_s_oam_ce_n <= '0';
                             reg_s_oam_wr_n <= '1';
