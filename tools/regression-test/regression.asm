@@ -38,7 +38,7 @@
     lda ad_start_msg+1
     sta $01
     jsr print_ln
-    jsr print_ln
+;;    jsr print_ln
 ;;    jsr print_ln
 ;;    jsr print_ln
 ;;    jsr print_ln
@@ -787,8 +787,8 @@ y_loop:
 
 nmi_test:
     jsr update_counter
-;    jsr update_scroll
-;    jsr update_dma
+    jsr update_scroll
+    jsr update_dma
 
     rti
 

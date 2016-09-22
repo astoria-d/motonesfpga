@@ -145,11 +145,14 @@ begin
                 elsif (pi_cpu_addr = PPUSCROLL) then
 
                     if (scr_set = 0) then
+                        --TODO: scroll register bug in renderer!!!
                         if (scr_cnt = 0) then
-                            reg_ppu_scroll_x <= pio_cpu_d;
+                            --reg_ppu_scroll_x <= pio_cpu_d;
+                            reg_ppu_scroll_x <= (others => '0');
                             scr_cnt := 1;
                         else
-                            reg_ppu_scroll_y <= pio_cpu_d;
+                            --reg_ppu_scroll_y <= pio_cpu_d;
+                            reg_ppu_scroll_y <= (others => '0');
                             scr_cnt := 0;
                         end if;
                         scr_set := 1;
@@ -168,6 +171,12 @@ begin
                 elsif (pi_cpu_addr = PPUDATA) then
                     reg_ppu_data <= pio_cpu_d;
                     addr_inc := 1;
+                end if;
+            elsif (pi_cpu_en(CP_ST0) = '1' and pi_ce_n = '0' and pi_oe_n = '0') then
+                --reset set count.
+                if (pi_cpu_addr = PPUSTATUS) then
+                    addr_cnt := 0;
+                    addr_set := 0;
                 end if;
             elsif (pi_ce_n = '1') then
                 scr_set := 0;
