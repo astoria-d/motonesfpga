@@ -389,6 +389,7 @@ begin
             when ST_CM_T0 =>
                 if (reg_sub_state = ST_SUB73) then
                     if (pi_nmi_n = '0' and reg_nmi_handled = 0) then
+                        --nmi raised. transit to nmi state.
                         reg_main_next_state <= ST_NM_T1;
                     else
                         ---instruction decode next state.
@@ -1080,6 +1081,20 @@ begin
     end if;
 end;
 
+procedure write_enable is
+begin
+    reg_oe_n    <= '1';
+    if (reg_sub_state = ST_SUB32 or
+        reg_sub_state = ST_SUB33 or
+        reg_sub_state = ST_SUB40 or
+        reg_sub_state = ST_SUB41
+        ) then
+        reg_we_n    <= '0';
+    else
+        reg_we_n    <= '1';
+    end if;
+end;
+
     begin
         if (pi_rst_n = '0') then
             reg_pc_l    <= (others => '0');
@@ -1108,19 +1123,19 @@ end;
                 reg_we_n    <= '1';
             elsif (reg_main_state = ST_RS_T3) then
                 --dummy sp out 1.
-                reg_addr    <= "11111111" & reg_sp;
+                reg_addr    <= "00000001" & reg_sp;
                 reg_d_out   <= (others => '0');
-                reg_we_n    <= '0';
+                write_enable;
             elsif (reg_main_state = ST_RS_T4) then
                 --dummy sp out 2.
-                reg_addr    <= "11111111" & (reg_sp - 1);
+                reg_addr    <= "00000001" & (reg_sp - 1);
                 reg_d_out   <= (others => '0');
-                reg_we_n    <= '0';
+                write_enable;
             elsif (reg_main_state = ST_RS_T5) then
                 --dummy sp out 3.
-                reg_addr    <= "11111111" & (reg_sp - 2);
+                reg_addr    <= "00000001" & (reg_sp - 2);
                 reg_d_out   <= (others => '0');
-                reg_we_n    <= '0';
+                write_enable;
             elsif (reg_main_state = ST_RS_T6) then
                 --reset vector low...
                 reg_addr    <= "1111111111111100";
@@ -1383,16 +1398,7 @@ end;
                 end if;
 
                 --rw ctrl
-                reg_oe_n    <= '1';
-                if (reg_sub_state = ST_SUB32 or
-                    reg_sub_state = ST_SUB33 or
-                    reg_sub_state = ST_SUB40 or
-                    reg_sub_state = ST_SUB41
-                    ) then
-                    reg_we_n    <= '0';
-                else
-                    reg_we_n    <= '1';
-                end if;
+                write_enable;
 
                 --address bus out.
                 if (reg_main_state = ST_A31_T2) then
@@ -1476,18 +1482,7 @@ end;
                 --data store cycle.
                 --data out
                 reg_d_out   <= reg_tmp_data;
-                reg_oe_n    <= '1';
-
-                --rw ctrl
-                if (reg_sub_state = ST_SUB32 or
-                    reg_sub_state = ST_SUB33 or
-                    reg_sub_state = ST_SUB40 or
-                    reg_sub_state = ST_SUB41
-                    ) then
-                    reg_we_n    <= '0';
-                else
-                    reg_we_n    <= '1';
-                end if;
+                write_enable;
 
                 --address bus out.
                 if (reg_main_state = ST_A41_T3 or
@@ -1519,7 +1514,6 @@ end;
             --push
             elsif (reg_main_state = ST_A51_T2) then
                 reg_addr    <= "00000001" & reg_sp;
-                reg_oe_n    <= '1';
                 if (reg_inst = conv_std_logic_vector(16#48#, 8)) then
                     --pha
                     reg_d_out   <= reg_acc;
@@ -1527,15 +1521,7 @@ end;
                     --php
                     reg_d_out   <= reg_status;
                 end if;
-                if (reg_sub_state = ST_SUB32 or
-                    reg_sub_state = ST_SUB33 or
-                    reg_sub_state = ST_SUB40 or
-                    reg_sub_state = ST_SUB41
-                    ) then
-                    reg_we_n    <= '0';
-                else
-                    reg_we_n    <= '1';
-                end if;
+                write_enable;
 
             --pull
             elsif (reg_main_state = ST_A52_T3) then
@@ -1546,29 +1532,12 @@ end;
                 --push pch
                 reg_addr    <= "00000001" & reg_sp;
                 reg_d_out   <= reg_pc_h;
-                reg_oe_n    <= '1';
-                if (reg_sub_state = ST_SUB32 or
-                    reg_sub_state = ST_SUB33 or
-                    reg_sub_state = ST_SUB40 or
-                    reg_sub_state = ST_SUB41
-                    ) then
-                    reg_we_n    <= '0';
-                else
-                    reg_we_n    <= '1';
-                end if;
+                write_enable;
             elsif (reg_main_state = ST_A53_T4) then
                 --push pcl
                 reg_addr    <= "00000001" & reg_sp;
                 reg_d_out   <= reg_pc_l;
-                if (reg_sub_state = ST_SUB32 or
-                    reg_sub_state = ST_SUB33 or
-                    reg_sub_state = ST_SUB40 or
-                    reg_sub_state = ST_SUB41
-                    ) then
-                    reg_we_n    <= '0';
-                else
-                    reg_we_n    <= '1';
-                end if;
+                write_enable;
             elsif (reg_main_state = ST_A53_T5) then
                 if (reg_sub_state = ST_SUB00) then
                     --fetch next.
@@ -1659,6 +1628,40 @@ end;
                         reg_addr    <= (reg_pc_h - "1") & reg_pc_l;
                     end if;
                 end if;
+
+            --nmi
+            elsif (reg_main_state = ST_NM_T1) then
+                reg_inst    <= (others => '0');
+                reg_addr    <= (others => '0');
+                reg_d_out   <= (others => 'Z');
+                reg_oe_n    <= '1';
+                reg_we_n    <= '1';
+            elsif (reg_main_state = ST_NM_T3) then
+                --push pch.
+                reg_addr    <= "00000001" & reg_sp;
+                reg_d_out   <= reg_pc_h;
+                write_enable;
+            elsif (reg_main_state = ST_NM_T4) then
+                --push pcl.
+                reg_addr    <= "00000001" & reg_sp;
+                reg_d_out   <= reg_pc_l;
+                write_enable;
+            elsif (reg_main_state = ST_NM_T5) then
+                --push status.
+                reg_addr    <= "00000001" & reg_sp;
+                reg_d_out   <= reg_status;
+                write_enable;
+            elsif (reg_main_state = ST_NM_T6) then
+                --vector low...
+                reg_addr    <= "1111111111111010";
+                reg_d_out   <= (others => 'Z');
+                reg_oe_n    <= '0';
+                reg_we_n    <= '1';
+                reg_pc_l    <= reg_d_in;
+            elsif (reg_main_state = ST_NM_T7) then
+                --vector high...
+                reg_addr    <= "1111111111111011";
+                reg_pc_h    <= reg_d_in;
             end if;--if (reg_main_state = ST_RS_T0) then
         end if;--if (pi_rst_n = '0') then
     end process;
@@ -1752,8 +1755,12 @@ end;
                 end if;
             elsif (reg_main_state = ST_A51_T2 or
                 reg_main_state = ST_A53_T3 or
-                reg_main_state = ST_A53_T4) then
-                --push, jsr.
+                reg_main_state = ST_A53_T4 or
+                reg_main_state = ST_NM_T3 or
+                reg_main_state = ST_NM_T4 or
+                reg_main_state = ST_NM_T5
+                ) then
+                --push, jsr, nmi.
                 if (reg_sub_state = ST_SUB70) then
                     reg_sp <= reg_sp - 1;
                 end if;
