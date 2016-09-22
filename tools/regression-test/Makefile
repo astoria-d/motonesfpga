@@ -15,7 +15,7 @@ all :	$(OBJECTS) $(LIBRARIES)
 	cp sample1-prg.hex ../../de0_cv_nes/
 
 run : all
-	VirtuaNES.exe regression.nes
+	date; VirtuaNES.exe regression.nes
 
 
 .SUFFIXES : .asm .o
