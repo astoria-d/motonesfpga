@@ -33,12 +33,12 @@
     jsr init_global
     jsr init_ppu
 
-;    lda ad_start_msg
-;    sta $00
-;    lda ad_start_msg+1
-;    sta $01
-;    jsr print_ln
-;;    jsr print_ln
+    lda ad_start_msg
+    sta $00
+    lda ad_start_msg+1
+    sta $01
+    jsr print_ln
+    jsr print_ln
 ;;    jsr print_ln
 ;;    jsr print_ln
 ;;    jsr print_ln
@@ -787,8 +787,8 @@ y_loop:
 
 nmi_test:
     jsr update_counter
-    jsr update_scroll
-    jsr update_dma
+;    jsr update_scroll
+;    jsr update_dma
 
     rti
 
@@ -818,6 +818,7 @@ nmi_test:
     lda #'2'
 @do_disp:
 
+
     ;;update display
     ;; clear previous
     ldx vram_current
@@ -833,7 +834,6 @@ nmi_test:
     inc vram_current + 1
     ldx vram_current + 1
     stx $2006
-
     sta $2007
 
 	;;load from ppu status
@@ -845,10 +845,14 @@ nmi_test:
 
 @cnt_done:
 
-    lda #50
-	sta $2005
-    lda #200
-	sta $2005
+;    lda #50
+;	sta $2005
+;    lda #200
+;	sta $2005
+    lda #00
+    sta $2005
+    sta $2005
+
     rts
 .endproc
 
