@@ -40,8 +40,8 @@ architecture rtl of de0_cv_nes is
                 pi_nmi_n       : in std_logic;
                 po_oe_n        : out std_logic;
                 po_we_n        : out std_logic;
-                po_addr        : out std_logic_vector ( 15 downto 0);
-                pio_d_io       : inout std_logic_vector ( 7 downto 0)
+                po_addr        : out std_logic_vector (15 downto 0);
+                pio_d_io       : inout std_logic_vector (7 downto 0)
         );
     end component;
 
@@ -199,6 +199,30 @@ architecture rtl of de0_cv_nes is
             po_g           : out std_logic_vector(3 downto 0);
             po_b           : out std_logic_vector(3 downto 0)
             );
+    end component;
+
+    component apu
+        port (
+            pi_rst_n       : in std_logic;
+            pi_base_clk    : in std_logic;
+            pi_cpu_en      : in std_logic_vector (7 downto 0);
+            pi_rnd_en      : in std_logic_vector (3 downto 0);
+            pi_ce_n        : in std_logic;
+
+            --cpu i/f
+            pio_oe_n       : inout std_logic;
+            pio_we_n       : inout std_logic;
+            pio_cpu_addr   : inout std_logic_vector (15 downto 0);
+            pio_cpu_d      : inout std_logic_vector (7 downto 0);
+            po_rdy         : out std_logic;
+
+            --sprite i/f
+            po_spr_ce_n    : out std_logic;
+            po_spr_rd_n    : out std_logic;
+            po_spr_wr_n    : out std_logic;
+            po_spr_addr    : out std_logic_vector (7 downto 0);
+            po_spr_data    : out std_logic_vector (7 downto 0)
+        );
     end component;
 
 constant ram_2k     : integer := 11;    --2k = 11   bit width.
@@ -453,7 +477,28 @@ begin
             po_b
             );
 
-    wr_rdy <= '1';
+    apu_inst : apu port map (
+            pi_rst_n, 
+            pi_base_clk,
+            wr_cpu_en, 
+            wr_rnd_en,
+            wr_apu_ce_n,
+
+            --cpu i/f
+            wr_oe_n,
+            wr_we_n,
+            wr_addr,
+            wr_d_io,
+            wr_rdy,
+
+            --sprite i/f
+            wr_spr_ce_n,
+            wr_spr_rd_n,
+            wr_spr_wr_n,
+            wr_spr_addr,
+            wr_spr_data
+        );
+
     wr_irq_n <= '1';
 
     po_dbg_cnt <= reg_dbg_cnt;

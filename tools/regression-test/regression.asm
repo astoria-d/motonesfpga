@@ -32,19 +32,19 @@
     
     jsr init_global
     jsr init_ppu
-
-    lda ad_start_msg
-    sta $00
-    lda ad_start_msg+1
-    sta $01
-    jsr print_ln
-;;    jsr print_ln
-;;    jsr print_ln
-;;    jsr print_ln
-;;    jsr print_ln
-;;    jsr print_ln
-;;
-;;    ;;test start...
+;
+;    lda ad_start_msg
+;    sta $00
+;    lda ad_start_msg+1
+;    sta $01
+;    jsr print_ln
+;    jsr print_ln
+;    jsr print_ln
+;    jsr print_ln
+;    jsr print_ln
+;    jsr print_ln
+;
+;    ;;test start...
 ;    jsr addr_test
 ;    jsr single_inst_test
 ;    jsr a2_inst_test
@@ -57,7 +57,7 @@
 ;    jsr pg_border_test
 ;    jsr dma_test
 ;
-;    jsr simple_dma_test
+    jsr simple_dma_test
 
 .endproc
 

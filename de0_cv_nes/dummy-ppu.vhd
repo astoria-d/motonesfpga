@@ -68,16 +68,16 @@ begin
     po_ppu_scroll_x    <= (others => 'Z');
     po_ppu_scroll_y    <= (others => 'Z');
 
-    --- initiate nmi.
-    nmi_p: process
-    constant nmi_wait     : time := 880us;
-    constant vblank_time     : time := 1000 us;
-    begin
-        po_vblank_n <= '1';
-        wait for nmi_wait;
-        po_vblank_n <= '0';
-        wait for vblank_time ;
-    end process;
+--    --- initiate nmi.
+--    nmi_p: process
+--    constant nmi_wait     : time := 880us;
+--    constant vblank_time     : time := 1000 us;
+--    begin
+--        po_vblank_n <= '1';
+--        wait for nmi_wait;
+--        po_vblank_n <= '0';
+--        wait for vblank_time ;
+--    end process;
 
 end rtl;
 
