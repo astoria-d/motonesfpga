@@ -849,6 +849,7 @@ nmi_test:
 ;	sta $2005
 ;    lda #200
 ;	sta $2005
+    lda $2003
     lda #00
     sta $2005
     sta $2005
