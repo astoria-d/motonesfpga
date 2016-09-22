@@ -71,7 +71,7 @@ begin
     --- initiate nmi.
     nmi_p: process
     constant nmi_wait     : time := 880us;
-    constant vblank_time     : time := 60 us;
+    constant vblank_time     : time := 1000 us;
     begin
         po_vblank_n <= '1';
         wait for nmi_wait;

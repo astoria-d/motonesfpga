@@ -1170,7 +1170,7 @@ end;
                     elsif (reg_sub_state = ST_SUB30) then
                         --update instruction register.
                         reg_inst    <= reg_d_in;
-                    elsif (reg_sub_state = ST_SUB70) then
+                    elsif (reg_sub_state = ST_SUB73) then
                         --pc move next.
                         pc_inc;
                     end if;
@@ -1201,6 +1201,7 @@ end;
                 reg_main_state = ST_A44_T1 or
                 reg_main_state = ST_A44_T2 or
                 reg_main_state = ST_A53_T1 or
+                reg_main_state = ST_A55_T1 or
                 reg_main_state = ST_A561_T1 or
                 reg_main_state = ST_A562_T1 or
                 reg_main_state = ST_A562_T2 or
@@ -1662,6 +1663,30 @@ end;
                 --vector high...
                 reg_addr    <= "1111111111111011";
                 reg_pc_h    <= reg_d_in;
+
+           --rti.
+            elsif (reg_main_state = ST_A55_T2) then
+                --sp out (discarded.)
+                reg_addr    <= "00000001" & reg_sp;
+            elsif (reg_main_state = ST_A55_T3) then
+                --pull status
+                reg_addr    <= "00000001" & reg_sp;
+            elsif (reg_main_state = ST_A55_T4) then
+                --pull pcl
+                if (reg_sub_state = ST_SUB00) then
+                    reg_addr    <= "00000001" & reg_sp;
+                elsif (reg_sub_state = ST_SUB70) then
+                    reg_pc_l    <= reg_d_in;
+                end if;
+            elsif (reg_main_state = ST_A55_T5) then
+                --pull pch
+                if (reg_sub_state = ST_SUB00) then
+                    reg_addr    <= "00000001" & reg_sp;
+                elsif (reg_sub_state = ST_SUB70) then
+                    reg_pc_h    <= reg_d_in;
+                end if;
+
+
             end if;--if (reg_main_state = ST_RS_T0) then
         end if;--if (pi_rst_n = '0') then
     end process;
@@ -1765,9 +1790,12 @@ end;
                     reg_sp <= reg_sp - 1;
                 end if;
             elsif (reg_main_state = ST_A52_T2 or
+                reg_main_state = ST_A55_T2 or
+                reg_main_state = ST_A55_T3 or
+                reg_main_state = ST_A55_T4 or
                 reg_main_state = ST_A57_T2 or
                 reg_main_state = ST_A57_T3) then
-                --pull, rts.
+                --pull, rts, rti.
                 if (reg_sub_state = ST_SUB70) then
                     reg_sp <= reg_sp + 1;
                 end if;
@@ -2297,6 +2325,14 @@ end;
                         set_condition_result(FL_V, '1');
                     end if;
                 end if;
+
+            elsif (reg_main_state = ST_A55_T3) then
+                --rti, pull status reg.
+                if (reg_sub_state = ST_SUB30) then
+                    reg_status <= reg_d_in;
+                end if;--if (reg_sub_state = ST_SUB30) then
+
+
             end if;--if (reg_main_state = ST_A21_T1 or...
         end if;--if (pi_rst_n = '0') then
     end process;
