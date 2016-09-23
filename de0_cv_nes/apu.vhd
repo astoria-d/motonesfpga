@@ -116,7 +116,7 @@ begin
                     reg_dma_next_state <= reg_dma_cur_state;
                 end if;
             when rd_data =>
-                if (pi_rnd_en(2) = '1') then
+                if (pi_rnd_en(0) = '1') then
                     reg_dma_next_state <= wr_data;
                 else
                     reg_dma_next_state <= reg_dma_cur_state;
