@@ -27,15 +27,14 @@ end apu;
 
 architecture rtl of apu is
 
+---cpu timing synchronization.
+constant CP_ST0   : integer := 4;
 
+--APU memory map:
+--0x4000-0x401F (5 bits.)
 constant OAM_DMA   : std_logic_vector(4 downto 0) := "10100";
 constant OAM_JP1   : std_logic_vector(4 downto 0) := "10110";
 constant OAM_JP2   : std_logic_vector(4 downto 0) := "10111";
-
---oamaddr=0x2003
-constant OAMADDR   : std_logic_vector(15 downto 0) := "0010000000000011";
---oamdata=0x2004
-constant OAMDATA   : std_logic_vector(15 downto 0) := "0010000000000100";
 
 type dma_state is (
     idle,
@@ -46,14 +45,16 @@ type dma_state is (
     dma_end
 );
 
+signal reg_dma_addr     : std_logic_vector (7 downto 0);
+signal reg_dma_cnt      : integer range 0 to 256;
+
 signal reg_dma_cur_state      : dma_state;
 signal reg_dma_next_state     : dma_state;
-
 
 signal reg_cpu_oe_n     : std_logic;
 signal reg_cpu_we_n     : std_logic;
 signal reg_cpu_addr     : std_logic_vector (15 downto 0);
-signal reg_cpu_d        : std_logic_vector (7 downto 0);
+signal reg_cpu_out      : std_logic_vector (7 downto 0);
 signal reg_rdy          : std_logic;
 
         --sprite i/f
@@ -64,6 +65,21 @@ signal reg_spr_addr     : std_logic_vector (7 downto 0);
 signal reg_spr_data     : std_logic_vector (7 downto 0);
 
 begin
+
+    --apu port access.
+    apu_set_p : process (pi_rst_n, pi_base_clk)
+    begin
+        if (pi_rst_n = '0') then
+            reg_dma_addr    <= (others => '0');
+        elsif (rising_edge(pi_base_clk)) then
+            if (pi_cpu_en(CP_ST0) = '1' and pi_ce_n = '0' and pio_we_n = '0') then
+                if (pio_cpu_addr(4 downto 0) = OAM_DMA) then
+                    reg_dma_addr    <= pio_cpu_d;
+                end if;
+            end if;--if (pi_cpu_en(CP_ST0) = '1' and pi_ce_n = '0') then
+        end if;--if (pi_rst_n = '0') then
+    end process;
+
 
     --state machine (state transition)...
     dma_stat_tx_p : process (pi_rst_n, pi_base_clk)
@@ -76,29 +92,82 @@ begin
     end process;
 
     --state change to next.
-    dma_stat_p : process (reg_dma_cur_state)
+    dma_stat_p : process (reg_dma_cur_state, pi_cpu_en, pi_rnd_en, 
+                            pi_ce_n, pio_we_n, pio_cpu_addr, reg_dma_cnt)
     begin
         case reg_dma_cur_state is
             when idle =>
-                reg_dma_next_state <= reg_dma_cur_state;
+                if (pi_cpu_en(CP_ST0) = '1' and pi_ce_n = '0' and pio_we_n = '0' and
+                    pio_cpu_addr(4 downto 0) = OAM_DMA) then
+                    reg_dma_next_state <= reg_set;
+                else
+                    reg_dma_next_state <= reg_dma_cur_state;
+                end if;
             when reg_set =>
-                reg_dma_next_state <= reg_dma_cur_state;
+                if (pi_cpu_en(0) = '1') then
+                    reg_dma_next_state <= dma_init;
+                else
+                    reg_dma_next_state <= reg_dma_cur_state;
+                end if;
             when dma_init =>
-                reg_dma_next_state <= reg_dma_cur_state;
+                if (pi_cpu_en(0) = '1') then
+                    reg_dma_next_state <= rd_data;
+                else
+                    reg_dma_next_state <= reg_dma_cur_state;
+                end if;
             when rd_data =>
-                reg_dma_next_state <= reg_dma_cur_state;
+                if (pi_rnd_en(2) = '1') then
+                    reg_dma_next_state <= wr_data;
+                else
+                    reg_dma_next_state <= reg_dma_cur_state;
+                end if;
             when wr_data =>
-                reg_dma_next_state <= reg_dma_cur_state;
+                if (pi_rnd_en(0) = '1') then
+                    if (reg_dma_cnt = 255) then
+                        reg_dma_next_state <= dma_end;
+                    else
+                        reg_dma_next_state <= rd_data;
+                    end if;
+                else
+                    reg_dma_next_state <= reg_dma_cur_state;
+                end if;
             when dma_end =>
-                reg_dma_next_state <= reg_dma_cur_state;
+                if (pi_cpu_en(0) = '1') then
+                    reg_dma_next_state <= idle;
+                else
+                    reg_dma_next_state <= reg_dma_cur_state;
+                end if;
         end case;
+    end process;
+
+    po_rdy         <= reg_rdy;
+
+    --dma copy count process.
+    dma_cnt_p : process (pi_rst_n, pi_base_clk)
+    begin
+        if (pi_rst_n = '0') then
+            reg_dma_cnt <= 0;
+            reg_rdy <= '1';
+        elsif (rising_edge(pi_base_clk)) then
+            if (reg_dma_cur_state = dma_init) then
+                reg_dma_cnt <= 0;
+            elsif (reg_dma_cur_state = wr_data and pi_rnd_en(0) = '1') then
+                reg_dma_cnt <= reg_dma_cnt + 1;
+            end if;
+
+            --cpu ready flag set.
+            if (reg_dma_cur_state = reg_set) then
+                reg_rdy <= '0';
+            elsif (reg_dma_cur_state = dma_end) then
+                reg_rdy <= '1';
+            end if;
+        end if;--if (pi_rst_n = '0') then
     end process;
 
     pio_oe_n       <= reg_cpu_oe_n;
     pio_we_n       <= reg_cpu_we_n;
     pio_cpu_addr   <= reg_cpu_addr;
-    pio_cpu_d      <= reg_cpu_d;
-    po_rdy         <= reg_rdy;
+    pio_cpu_d      <= reg_cpu_out;
 
     po_spr_ce_n    <= reg_spr_ce_n;
     po_spr_rd_n    <= reg_spr_rd_n;
@@ -109,17 +178,15 @@ begin
     cpu_out_p : process (pi_rst_n, pi_base_clk)
     begin
         if (pi_rst_n = '0') then
-            reg_cpu_oe_n <= 'Z';
-            reg_cpu_we_n <= 'Z';
-            reg_cpu_addr <= (others => 'Z');
-            reg_cpu_d    <= (others => 'Z');
-            reg_rdy      <= '1';
+            reg_cpu_oe_n    <= 'Z';
+            reg_cpu_we_n    <= 'Z';
+            reg_cpu_addr    <= (others => 'Z');
+            reg_cpu_out     <= (others => 'Z');
         elsif (rising_edge(pi_base_clk)) then
-            reg_cpu_oe_n <= 'Z';
-            reg_cpu_we_n <= 'Z';
-            reg_cpu_addr <= (others => 'Z');
-            reg_cpu_d    <= (others => 'Z');
-            reg_rdy      <= '1';
+            reg_cpu_oe_n    <= 'Z';
+            reg_cpu_we_n    <= 'Z';
+            reg_cpu_addr    <= (others => 'Z');
+            reg_cpu_out     <= (others => 'Z');
         end if;--if (pi_rst_n = '0') then
     end process;
 

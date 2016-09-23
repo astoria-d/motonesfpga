@@ -61,7 +61,12 @@ add wave -label reg_sp -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/
 
 
 #################################### APU part.... ###########################################
+add wave -divider apu
+add wave -label wr_rdy  sim:/testbench_motones_sim/sim_board/wr_rdy;
 add wave -label reg_dma_cur_state   sim:/testbench_motones_sim/sim_board/apu_inst/reg_dma_cur_state;
+add wave -label reg_dma_addr -radix hex     sim:/testbench_motones_sim/sim_board/apu_inst/reg_dma_addr;
+#add wave -label pi_rnd_en  sim:/testbench_motones_sim/sim_board/apu_inst/pi_rnd_en;
+add wave -label reg_dma_cnt sim:/testbench_motones_sim/sim_board/apu_inst/reg_dma_cnt;
 
 
 
@@ -71,7 +76,7 @@ view signals
 run 25 us
 wave zoom full
 
-run 860 us
+run 890 us
 
 
 ##################################### PPU part.... ###########################################
