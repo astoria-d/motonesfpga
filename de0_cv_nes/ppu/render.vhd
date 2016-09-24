@@ -336,8 +336,17 @@ signal reg_spr_hit              : std_logic;
 --status register.
 signal reg_ppu_status       : std_logic_vector (7 downto 0);
 
+--vga output register.
+signal reg_h_sync_n    : std_logic;
+signal reg_v_sync_n    : std_logic;
+signal reg_r           : std_logic_vector(3 downto 0);
+signal reg_g           : std_logic_vector(3 downto 0);
+signal reg_b           : std_logic_vector(3 downto 0);
 
 begin
+
+    po_h_sync_n <= reg_h_sync_n;
+    po_v_sync_n <= reg_v_sync_n;
 
     --position and sync signal generate.
     pos_p : process (pi_rst_n, pi_base_clk)
@@ -349,6 +358,8 @@ begin
             reg_nes_y <= 0;
             reg_prf_x <= 0;
             reg_prf_y <= 0;
+            reg_h_sync_n <= '1';
+            reg_v_sync_n <= '1';
         elsif (rising_edge(pi_base_clk)) then
             if ((pi_rnd_en(0) or pi_rnd_en(2))= '1') then
                 if (reg_vga_x = VGA_W_MAX - 1) then
@@ -368,15 +379,15 @@ begin
 
                 --sync signal assert.
                 if (reg_vga_x >= H_SYNC_S and reg_vga_x < H_SYNC_E) then
-                    po_h_sync_n <= '0';
+                    reg_h_sync_n <= '0';
                 else
-                    po_h_sync_n <= '1';
+                    reg_h_sync_n <= '1';
                 end if;
 
                 if (reg_vga_y >= V_SYNC_S and reg_vga_y < V_SYNC_E) then
-                    po_v_sync_n <= '0';
+                    reg_v_sync_n <= '0';
                 else
-                    po_v_sync_n <= '1';
+                    reg_v_sync_n <= '1';
                 end if;
             end if;--if (pi_rnd_en(1) = '1' or pi_rnd_en(3) = '1' ) then
 
@@ -738,7 +749,9 @@ end;
                 end if;
             else
                 --reset sprite hit.
-                reg_spr_hit     <= '0';
+                if (reg_nes_y >= VSCAN_NEXT_START - 1) then
+                    reg_spr_hit     <= '0';
+                end if;
                 --release plt bus.
                 reg_plt_ce_n <= 'Z';
                 reg_plt_rd_n <= 'Z';
@@ -749,25 +762,29 @@ end;
         end if;--if (pi_rst_n = '0') then
     end process;
 
+    po_r <= reg_r;
+    po_g <= reg_g;
+    po_b <= reg_b;
+
     --vga output process...
     rgb_out_p : process (pi_rst_n, pi_base_clk)
     begin
         if (pi_rst_n = '0') then
-            po_b <= (others => '0');
-            po_g <= (others => '0');
-            po_r <= (others => '0');
+            reg_b <= (others => '0');
+            reg_g <= (others => '0');
+            reg_r <= (others => '0');
         else
             if (rising_edge(pi_base_clk)) then
                 if (reg_nes_x < HSCAN and reg_nes_y < VSCAN) then
                     --if or if not bg/sprite is shown, output color anyway 
                     --sinse universal bg color is included..
-                    po_r <= nes_color_palette(conv_integer(reg_plt_data(5 downto 0))) (11 downto 8);
-                    po_g <= nes_color_palette(conv_integer(reg_plt_data(5 downto 0))) (7 downto 4);
-                    po_b <= nes_color_palette(conv_integer(reg_plt_data(5 downto 0))) (3 downto 0);
+                    reg_r <= nes_color_palette(conv_integer(reg_plt_data(5 downto 0))) (11 downto 8);
+                    reg_g <= nes_color_palette(conv_integer(reg_plt_data(5 downto 0))) (7 downto 4);
+                    reg_b <= nes_color_palette(conv_integer(reg_plt_data(5 downto 0))) (3 downto 0);
                 else
-                    po_r <= (others => '0');
-                    po_g <= (others => '0');
-                    po_b <= (others => '0');
+                    reg_r <= (others => '0');
+                    reg_g <= (others => '0');
+                    reg_b <= (others => '0');
                 end if;
             end if; --if (rising_edge(emu_ppu_clk)) then
         end if;--if (rst_n = '0') then
