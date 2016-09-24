@@ -1,5 +1,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.std_logic_arith.conv_std_logic_vector;
 
 entity apu is 
     port (
@@ -175,35 +176,64 @@ begin
     po_spr_addr    <= reg_spr_addr;
     po_spr_data    <= reg_spr_data;
 
-    cpu_out_p : process (pi_rst_n, pi_base_clk)
+    dma_main_p : process (pi_rst_n, pi_base_clk)
     begin
         if (pi_rst_n = '0') then
-            reg_cpu_oe_n    <= 'Z';
-            reg_cpu_we_n    <= 'Z';
-            reg_cpu_addr    <= (others => 'Z');
-            reg_cpu_out     <= (others => 'Z');
-        elsif (rising_edge(pi_base_clk)) then
-            reg_cpu_oe_n    <= 'Z';
-            reg_cpu_we_n    <= 'Z';
-            reg_cpu_addr    <= (others => 'Z');
-            reg_cpu_out     <= (others => 'Z');
-        end if;--if (pi_rst_n = '0') then
-    end process;
 
-    spr_out_p : process (pi_rst_n, pi_base_clk)
-    begin
-        if (pi_rst_n = '0') then
-            reg_spr_ce_n <= 'Z';
-            reg_spr_rd_n <= 'Z';
-            reg_spr_wr_n <= 'Z';
-            reg_spr_addr <= (others => 'Z');
-            reg_spr_data <= (others => 'Z');
+            --cpu i/f
+            reg_cpu_oe_n    <= 'Z';
+            reg_cpu_we_n    <= 'Z';
+            reg_cpu_addr    <= (others => 'Z');
+            reg_cpu_out     <= (others => 'Z');
+
+            --sprite i/f
+            reg_spr_ce_n    <= 'Z';
+            reg_spr_rd_n    <= 'Z';
+            reg_spr_wr_n    <= 'Z';
+            reg_spr_addr    <= (others => 'Z');
+            reg_spr_data    <= (others => 'Z');
         elsif (rising_edge(pi_base_clk)) then
-            reg_spr_ce_n <= 'Z';
-            reg_spr_rd_n <= 'Z';
-            reg_spr_wr_n <= 'Z';
-            reg_spr_addr <= (others => 'Z');
-            reg_spr_data <= (others => 'Z');
+            if (reg_dma_cur_state = idle) then
+                --cpu i/f
+                reg_cpu_oe_n    <= 'Z';
+                reg_cpu_we_n    <= 'Z';
+                reg_cpu_addr    <= (others => 'Z');
+                reg_cpu_out     <= (others => 'Z');
+
+                --sprite i/f
+                reg_spr_ce_n    <= 'Z';
+                reg_spr_rd_n    <= 'Z';
+                reg_spr_wr_n    <= 'Z';
+                reg_spr_addr    <= (others => 'Z');
+                reg_spr_data    <= (others => 'Z');
+            elsif (reg_dma_cur_state = dma_init) then
+                reg_cpu_oe_n    <= '0';
+                reg_cpu_we_n    <= '1';
+                reg_spr_ce_n    <= '0';
+                reg_spr_rd_n    <= '1';
+                reg_spr_wr_n    <= '1';
+            elsif (reg_dma_cur_state = rd_data) then
+                reg_cpu_addr    <= reg_dma_addr & conv_std_logic_vector(reg_dma_cnt, 8);
+                reg_spr_wr_n    <= '1';
+                reg_spr_addr    <= conv_std_logic_vector(reg_dma_cnt, 8);
+                reg_spr_data    <= pio_cpu_d;
+            elsif (reg_dma_cur_state = wr_data) then
+                if (pi_rnd_en(1) = '1') then
+                    reg_spr_wr_n    <= '0';
+                else
+                    reg_spr_wr_n    <= '1';
+                end if;
+            elsif (reg_dma_cur_state = dma_end) then
+                reg_cpu_oe_n    <= 'Z';
+                reg_cpu_we_n    <= 'Z';
+                reg_cpu_addr    <= (others => 'Z');
+                reg_cpu_out     <= (others => 'Z');
+                reg_spr_ce_n    <= 'Z';
+                reg_spr_rd_n    <= 'Z';
+                reg_spr_wr_n    <= 'Z';
+                reg_spr_addr    <= (others => 'Z');
+                reg_spr_data    <= (others => 'Z');
+            end if;
         end if;--if (pi_rst_n = '0') then
     end process;
 

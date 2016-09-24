@@ -66,7 +66,13 @@ add wave -label wr_rdy  sim:/testbench_motones_sim/sim_board/wr_rdy;
 add wave -label reg_dma_cur_state   sim:/testbench_motones_sim/sim_board/apu_inst/reg_dma_cur_state;
 add wave -label reg_dma_addr -radix hex     sim:/testbench_motones_sim/sim_board/apu_inst/reg_dma_addr;
 #add wave -label pi_rnd_en  sim:/testbench_motones_sim/sim_board/apu_inst/pi_rnd_en;
-add wave -label reg_dma_cnt sim:/testbench_motones_sim/sim_board/apu_inst/reg_dma_cnt;
+#add wave -label reg_dma_cnt sim:/testbench_motones_sim/sim_board/apu_inst/reg_dma_cnt;
+
+add wave -label reg_spr_ce_n  sim:/testbench_motones_sim/sim_board/apu_inst/reg_spr_ce_n;
+add wave -label reg_spr_rd_n  sim:/testbench_motones_sim/sim_board/apu_inst/reg_spr_rd_n;
+add wave -label reg_spr_wr_n  sim:/testbench_motones_sim/sim_board/apu_inst/reg_spr_wr_n;
+add wave -label reg_spr_addr -radix hex  sim:/testbench_motones_sim/sim_board/apu_inst/reg_spr_addr;
+add wave -label reg_spr_data -radix hex  sim:/testbench_motones_sim/sim_board/apu_inst/reg_spr_data;
 
 
 
