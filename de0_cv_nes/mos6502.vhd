@@ -406,6 +406,7 @@ begin
                         reg_main_next_state <= ST_IDLE;
                     else
                         ---instruction decode next state.
+                        ---pc inc is executed at the end of the cycle (ST_SUB73).
                         reg_main_next_state <= inst_decode_rom(conv_integer(reg_inst));
                     end if;
                 else

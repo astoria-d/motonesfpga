@@ -51,7 +51,7 @@ add wave -label reg_y -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/r
 add wave -label reg_sp -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_sp;
 
 #add wave -divider internal_reg
-#add wave -label reg_main_cur_state  sim:/testbench_motones_sim/sim_board/cpu_inst/reg_main_state;
+add wave -label reg_main_cur_state  sim:/testbench_motones_sim/sim_board/cpu_inst/reg_main_state;
 ##add wave -label reg_sub_cur_state   sim:/testbench_motones_sim/sim_board/cpu_inst/reg_sub_state;
 #add wave -label reg_pc_l -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_pc_l;
 #add wave -label reg_pc_h -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_pc_h;
@@ -76,7 +76,7 @@ view signals
 run 25 us
 wave zoom full
 
-run 890 us
+run 900 us
 
 
 ##################################### PPU part.... ###########################################
