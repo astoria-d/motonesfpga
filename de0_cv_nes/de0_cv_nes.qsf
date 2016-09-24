@@ -100,10 +100,10 @@ set_global_assignment -name VHDL_FILE chip_selector.vhd
 set_global_assignment -name VHDL_FILE apu.vhd
 
 #ppu
-#set_global_assignment -name VHDL_FILE mem/chr_rom.vhd
-#set_global_assignment -name VHDL_FILE ppu/render.vhd
-#set_global_assignment -name VHDL_FILE ppu/ppu.vhd
-set_global_assignment -name VHDL_FILE dummy-ppu.vhd
+set_global_assignment -name VHDL_FILE mem/chr_rom.vhd
+set_global_assignment -name VHDL_FILE ppu/render.vhd
+set_global_assignment -name VHDL_FILE ppu/ppu.vhd
+#set_global_assignment -name VHDL_FILE dummy-ppu.vhd
 
 #cpu
 set_global_assignment -name VHDL_FILE mem/prg_rom.vhd
