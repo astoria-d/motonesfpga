@@ -730,7 +730,7 @@ end;
                         reg_plt_addr <=
                             "1" & reg_spr_attr(spr_i)(1 downto 0) & reg_spr_ptn_h(spr_i)(0) & reg_spr_ptn_l(spr_i)(0);
                         --check sprite hit.
-                        if ((reg_sft_ptn_h(0) or reg_sft_ptn_l(0)) = '1') then
+                        if (spr_i = 0 and (reg_sft_ptn_h(0) or reg_sft_ptn_l(0)) = '1') then
                             reg_spr_hit     <= '1';
                         end if;
                     elsif (conv_std_logic_vector(reg_nes_y, 9)(4) = '0'
