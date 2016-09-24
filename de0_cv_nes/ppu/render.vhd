@@ -331,7 +331,8 @@ signal reg_spr_x            : oam_reg_array;
 signal reg_spr_ptn_sft_start    : std_logic_vector (7 downto 0);
 signal reg_spr_ptn_l            : oam_reg_array;
 signal reg_spr_ptn_h            : oam_reg_array;
-signal reg_spr_hit              : std_logic;
+signal reg_spr0_eval            : std_logic;
+signal reg_spr0_hit             : std_logic;
 
 --status register.
 signal reg_ppu_status       : std_logic_vector (7 downto 0);
@@ -712,7 +713,7 @@ end;
 
             reg_plt_addr    <= (others => 'Z');
             reg_plt_data    <= (others => 'Z');
-            reg_spr_hit     <= '0';
+            reg_spr0_hit     <= '0';
         elsif (rising_edge(pi_base_clk)) then
             
             reg_plt_data    <= pi_plt_data;
@@ -730,8 +731,9 @@ end;
                         reg_plt_addr <=
                             "1" & reg_spr_attr(spr_i)(1 downto 0) & reg_spr_ptn_h(spr_i)(0) & reg_spr_ptn_l(spr_i)(0);
                         --check sprite hit.
-                        if (spr_i = 0 and (reg_sft_ptn_h(0) or reg_sft_ptn_l(0)) = '1') then
-                            reg_spr_hit     <= '1';
+                        if (spr_i = 0 and (reg_sft_ptn_h(0) or reg_sft_ptn_l(0)) = '1' and
+                            reg_spr0_eval = '1') then
+                            reg_spr0_hit     <= '1';
                         end if;
                     elsif (conv_std_logic_vector(reg_nes_y, 9)(4) = '0'
                         and (reg_sft_ptn_h(0) or reg_sft_ptn_l(0)) = '1') then
@@ -750,7 +752,7 @@ end;
             else
                 --reset sprite hit.
                 if (reg_nes_y >= VSCAN_NEXT_START - 1) then
-                    reg_spr_hit     <= '0';
+                    reg_spr0_hit     <= '0';
                 end if;
                 --release plt bus.
                 reg_plt_ce_n <= 'Z';
@@ -947,6 +949,9 @@ end;
             for i in 0 to 7 loop
                 reg_spr_attr(i)         <= (others => '0');
             end loop;
+            
+            --sprite 0 check.
+            reg_spr0_eval <= '0';
         else
             if (rising_edge(pi_base_clk)) then
                 if (is_s_oam_clear(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
@@ -972,6 +977,7 @@ end;
                     reg_s_oam_cpy_cnt <= 0;
                     reg_p_oam_cpy_cnt <= 0;
                     reg_spr_eval_cnt <= 0;
+                    reg_spr0_eval <= '0';
                 elsif (is_spr_eval(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
                     --copy data from primary oam ram.
                     reg_s_oam_addr <= conv_std_logic_vector(reg_s_oam_cpy_cnt mod 32, 5);
@@ -990,6 +996,9 @@ end;
                         elsif (reg_s_oam_cur_state = REG_SET0) then
                             reg_s_oam_ce_n <= '0';
                             reg_s_oam_wr_n <= '0';
+                            if (reg_p_oam_cpy_cnt = 0) then
+                                reg_spr0_eval <= '1';
+                            end if;
                         elsif (reg_s_oam_cur_state = REG_SET1) then
                             reg_s_oam_ce_n <= '1';
                             reg_s_oam_wr_n <= '1';
@@ -1171,7 +1180,7 @@ end;
                 if (reg_nes_y = VSCAN_NEXT_START - 1) then
                     reg_ppu_status(ST_SP0) <= '0';
                 else
-                    reg_ppu_status(ST_SP0) <= reg_spr_hit;
+                    reg_ppu_status(ST_SP0) <= reg_spr0_hit;
                 end if;
 
                 if (reg_nes_y > VSCAN and reg_nes_y < VSCAN_NEXT_START) then
