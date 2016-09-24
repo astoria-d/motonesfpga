@@ -996,15 +996,16 @@ end;
                         elsif (reg_s_oam_cur_state = REG_SET0) then
                             reg_s_oam_ce_n <= '0';
                             reg_s_oam_wr_n <= '0';
-                            if (reg_p_oam_cpy_cnt = 0) then
-                                reg_spr0_eval <= '1';
-                            end if;
                         elsif (reg_s_oam_cur_state = REG_SET1) then
                             reg_s_oam_ce_n <= '1';
                             reg_s_oam_wr_n <= '1';
                             if (reg_spr_eval_cnt = 0 and
                                 (pi_spr_data - 1 <= reg_nes_y and reg_nes_y < pi_spr_data + 7)) then
                                 --evaluate and found sprite in the range.
+                                --set sprite 0 eval flag.
+                                if (reg_p_oam_cpy_cnt = 0) then
+                                    reg_spr0_eval <= '1';
+                                end if;
                                 --increment s-oam.
                                 reg_s_oam_cpy_cnt <= reg_s_oam_cpy_cnt + 1;
                                 reg_p_oam_cpy_cnt <= reg_p_oam_cpy_cnt + 1;
