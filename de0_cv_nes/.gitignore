@@ -26,7 +26,7 @@ simulation/modelsim/transcript
 simulation/modelsim/motones_modelsim.cr.mti
 simulation/modelsim/bookmarks.do
 undo_redo.txt
-*.stp
+*-analyze-all.stp
 *.work
 serv_req_info.txt
 *_dump.txt
