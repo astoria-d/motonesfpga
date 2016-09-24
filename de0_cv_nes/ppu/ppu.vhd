@@ -420,9 +420,11 @@ begin
         if (pi_rst_n = '0') then
             reg_out_cpu_d <= (others => 'Z');
         elsif (rising_edge(pi_base_clk)) then
-            if (pi_cpu_en(CP_ST0) = '1' and pi_ce_n = '0' and pi_oe_n = '0') then
+            if (pi_ce_n = '0' and pi_oe_n = '0') then
                 if (pi_cpu_addr = PPUSTATUS) then
                     reg_out_cpu_d <= pi_ppu_status;
+                else
+                    reg_out_cpu_d <= (others => 'Z');
                 end if;
             elsif (pi_ce_n = '1') then
                 reg_out_cpu_d <= (others => 'Z');

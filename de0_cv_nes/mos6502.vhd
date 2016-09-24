@@ -135,7 +135,7 @@ constant inst_decode_rom : cpu_state_array := (
   --48          49          4a          4b          4c          4d          4e          4f
     ST_A51_T1,  ST_A21_T1,  ST_A1_T1,   ST_INV,     ST_A561_T1, ST_A23_T1,  ST_A42_T1,  ST_INV,
   --50          51          52          53          54          55          56          57
-    ST_A58_T1,  ST_A27_T1,  ST_INV,     ST_INV,     ST_A26_T1,  ST_INV,     ST_A43_T1,  ST_INV,
+    ST_A58_T1,  ST_A27_T1,  ST_INV,     ST_INV,     ST_A26_T1,  ST_A26_T1,  ST_A43_T1,  ST_INV,
   --58          59          5a          5b          5c          5d          5e          5f
     ST_A1_T1,   ST_A25_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A25_T1,  ST_A44_T1,  ST_INV,
   --60          61          62          63          64          65          66          67
@@ -143,7 +143,7 @@ constant inst_decode_rom : cpu_state_array := (
   --68          69          6a          6b          6c          6d          6e          6f
     ST_A52_T1,  ST_A21_T1,  ST_A1_T1,   ST_INV,     ST_A562_T1, ST_A23_T1,  ST_A42_T1,  ST_INV,
   --70          71          72          73          74          75          76          77
-    ST_A58_T1,  ST_A27_T1,  ST_INV,     ST_INV,     ST_A26_T1,  ST_INV,     ST_A43_T1,  ST_INV,
+    ST_A58_T1,  ST_A27_T1,  ST_INV,     ST_INV,     ST_A26_T1,  ST_A26_T1,  ST_A43_T1,  ST_INV,
   --78          79          7a          7b          7c          7d          7e          7f
     ST_A1_T1,   ST_A25_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A25_T1,  ST_A44_T1,  ST_INV,
   --80          81          82          83          84          85          86          87
@@ -159,7 +159,7 @@ constant inst_decode_rom : cpu_state_array := (
   --a8          a9          aa          ab          ac          ad          ae          af
     ST_A1_T1,   ST_A21_T1,  ST_A1_T1,   ST_INV,     ST_A23_T1,  ST_A23_T1,  ST_A23_T1,  ST_INV,
   --b0          b1          b2          b3          b4          b5          b6          b7
-    ST_A58_T1,  ST_A27_T1,  ST_INV,     ST_A26_T1,  ST_A26_T1,  ST_A26_T1,  ST_INV,     ST_INV,
+    ST_A58_T1,  ST_A27_T1,  ST_INV,     ST_A26_T1,  ST_A26_T1,  ST_A26_T1,  ST_A26_T1,  ST_INV,
   --b8          b9          ba          bb          bc          bd          be          bf
     ST_A1_T1,   ST_A25_T1,  ST_A1_T1,   ST_INV,     ST_A25_T1,  ST_A25_T1,  ST_A25_T1,  ST_INV,
   --c0          c1          c2          c3          c4          c5          c6          c7
@@ -167,7 +167,7 @@ constant inst_decode_rom : cpu_state_array := (
   --c8          c9          ca          cb          cc          cd          ce          cf
     ST_A1_T1,   ST_A21_T1,  ST_A1_T1,   ST_INV,     ST_A23_T1,  ST_A23_T1,  ST_A42_T1,  ST_INV,
   --d0          d1          d2          d3          d4          d5          d6          d7
-    ST_A58_T1,  ST_A27_T1,  ST_INV,     ST_INV,     ST_A26_T1,  ST_INV,     ST_A43_T1,  ST_INV,
+    ST_A58_T1,  ST_A27_T1,  ST_INV,     ST_INV,     ST_A26_T1,  ST_A26_T1,  ST_A43_T1,  ST_INV,
   --d8          d9          da          db          dc          dd          de          df
     ST_A1_T1,   ST_A25_T1,  ST_INV,     ST_INV,     ST_INV,     ST_A25_T1,  ST_A44_T1,  ST_INV,
   --e0          e1          e2          e3          e4          e5          e6          e7
