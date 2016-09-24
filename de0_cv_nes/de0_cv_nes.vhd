@@ -25,7 +25,8 @@ entity de0_cv_nes is
         pi_nt_v_mirror : in std_logic;
         
         --for debugging..
-        po_dbg_cnt     : out std_logic_vector (63 downto 0)
+        po_dbg_cnt     : out std_logic_vector (63 downto 0);
+        po_exc_cnt     : out std_logic_vector (63 downto 0)
          );
 end de0_cv_nes;
 
@@ -41,7 +42,8 @@ architecture rtl of de0_cv_nes is
                 po_oe_n        : out std_logic;
                 po_we_n        : out std_logic;
                 po_addr        : out std_logic_vector (15 downto 0);
-                pio_d_io       : inout std_logic_vector (7 downto 0)
+                pio_d_io       : inout std_logic_vector (7 downto 0);
+                po_exc_cnt     : out std_logic_vector (63 downto 0)
         );
     end component;
 
@@ -299,7 +301,8 @@ begin
             wr_oe_n, 
             wr_we_n, 
             wr_addr, 
-            wr_d_io
+            wr_d_io,
+            po_exc_cnt
             );
 
     --chip select (address decode)

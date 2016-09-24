@@ -28,6 +28,7 @@ vsim -t 1ps -L altera -L lpm -L sgate -L altera_mf -L altera_lnsim -L cyclonev -
 #################################### General.... ###########################################
 
 add wave -label dbg_cnt -radix hex  sim:/testbench_motones_sim/sim_board/po_dbg_cnt;
+add wave -label po_exc_cnt -radix hex  sim:/testbench_motones_sim/sim_board/po_exc_cnt;
 add wave -label rst_n               sim:/testbench_motones_sim/sim_board/pi_rst_n;
 add wave -label wr_nmi_n            sim:/testbench_motones_sim/sim_board/wr_nmi_n;
 #add wave -label base_clk            sim:/testbench_motones_sim/sim_board/pi_base_clk;

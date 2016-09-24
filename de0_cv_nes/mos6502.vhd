@@ -14,7 +14,8 @@ entity mos6502 is
             po_oe_n        : out std_logic;
             po_we_n        : out std_logic;
             po_addr        : out std_logic_vector ( 15 downto 0);
-            pio_d_io       : inout std_logic_vector ( 7 downto 0)
+            pio_d_io       : inout std_logic_vector ( 7 downto 0);
+            po_exc_cnt     : out std_logic_vector (63 downto 0)
     );
 end mos6502;
 
@@ -234,6 +235,8 @@ signal reg_d_out    : std_logic_vector (7 downto 0);
 signal reg_nmi_handled  : integer range 0 to 1;
 signal reg_dma_set      : integer range 0 to 1;
 
+--debug purpose...
+signal reg_exc_cnt          : std_logic_vector (63 downto 0);
 
 begin
     --state transition process...
@@ -2384,5 +2387,19 @@ end;
         end if;--if (pi_rst_n = '0') then
     end process;
 
+    --debug cnt...
+    po_exc_cnt <= reg_exc_cnt;
+    exc_cnt_p : process (pi_rst_n, pi_base_clk)
+    begin
+        if (pi_rst_n = '0') then
+            reg_exc_cnt <= (others => '0');
+        else
+            if (rising_edge(pi_base_clk)) then
+                if (reg_main_state = ST_CM_T0 and reg_sub_state = ST_SUB73) then
+                    reg_exc_cnt <= reg_exc_cnt + 1;
+                end if;
+            end if;
+        end if;
+    end process;
 end rtl;
 
