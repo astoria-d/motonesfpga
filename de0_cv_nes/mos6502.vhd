@@ -2397,6 +2397,11 @@ end;
             if (rising_edge(pi_base_clk)) then
                 if (reg_main_state = ST_CM_T0 and reg_sub_state = ST_SUB73) then
                     reg_exc_cnt <= reg_exc_cnt + 1;
+                elsif (reg_main_state = ST_NM_T7 and reg_sub_state = ST_SUB73) then
+                    --reg_exc_cnt upper 8 bit is nmi count.
+                    --lower 56 bit is cpu exec count from nmi initiated.
+                    reg_exc_cnt(55 downto 0) <= (others => '0');
+                    reg_exc_cnt(63 downto 56) <= reg_exc_cnt(63 downto 56) + 1;
                 end if;
             end if;
         end if;
