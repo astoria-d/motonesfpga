@@ -232,13 +232,15 @@ signal reg_d_in     : std_logic_vector (7 downto 0);
 signal reg_d_out    : std_logic_vector (7 downto 0);
 
 signal reg_nmi_handled  : integer range 0 to 1;
+signal reg_dma_set      : integer range 0 to 1;
+
 
 begin
     --state transition process...
     set_stat_p : process (pi_rst_n, pi_base_clk)
     begin
         if (pi_rst_n = '0') then
-            reg_main_state <= ST_IDLE;
+            reg_main_state <= ST_RS_T0;
             reg_sub_state <= ST_SUB00;
         elsif (rising_edge(pi_base_clk)) then
             reg_main_state <= reg_main_next_state;
@@ -324,21 +326,29 @@ begin
     --state change to next.
     tx_next_main_stat_p : process (pi_rst_n, reg_main_state, reg_sub_state,
                                    reg_inst, reg_tmp_condition, reg_tmp_pg_crossed,
-                                   pi_nmi_n, reg_nmi_handled)
+                                   pi_nmi_n, reg_nmi_handled, reg_dma_set, pi_rdy)
 
     begin
         case reg_main_state is
             -----idle...
             when ST_IDLE =>
                 if (pi_rst_n = '0') then
-                    reg_main_next_state <= reg_main_state;
-                else
                     reg_main_next_state <= ST_RS_T0;
+                elsif (reg_sub_state = ST_SUB73 and reg_dma_set = 1 and pi_rdy = '1') then
+                    --ST_CM_T0 is canceled when dma initiated.
+                    --redo ST_CM_T0.
+                    reg_main_next_state <= ST_CM_T0;
+                else
+                    reg_main_next_state <= reg_main_state;
                 end if;
             -----reset...
             when ST_RS_T0 =>
                 if (reg_sub_state = ST_SUB73) then
-                    reg_main_next_state <= ST_RS_T1;
+                    if (pi_rst_n = '0') then
+                        reg_main_next_state <= reg_main_state;
+                    else
+                        reg_main_next_state <= ST_RS_T1;
+                    end if;
                 else
                     reg_main_next_state <= reg_main_state;
                 end if;
@@ -391,6 +401,9 @@ begin
                     if (pi_nmi_n = '0' and reg_nmi_handled = 0) then
                         --nmi raised. transit to nmi state.
                         reg_main_next_state <= ST_NM_T1;
+                    elsif (pi_rdy = '0') then
+                        --dma started.
+                        reg_main_next_state <= ST_IDLE;
                     else
                         ---instruction decode next state.
                         reg_main_next_state <= inst_decode_rom(conv_integer(reg_inst));
@@ -1159,6 +1172,11 @@ end;
                     --nmi raised cycle.
                     reg_oe_n    <= '1';
                     reg_we_n    <= '1';
+                    reg_addr    <= (others => 'Z');
+                elsif (pi_rdy = '0') then
+                    --dma started cycle.
+                    reg_oe_n    <= 'Z';
+                    reg_we_n    <= 'Z';
                     reg_addr    <= (others => 'Z');
                 else
                     --normal cycle.
@@ -2350,5 +2368,20 @@ end;
             end if;
         end if;--if (pi_rst_n = '0') then
     end process;
+
+    --dma flag process...
+    dma_set_p : process (pi_rst_n, pi_base_clk)
+    begin
+        if (pi_rst_n = '0') then
+            reg_dma_set <= 0;
+        elsif (rising_edge(pi_base_clk)) then
+            if (pi_rdy = '0') then
+                reg_dma_set <= 1;
+            elsif (reg_main_state = ST_CM_T0) then
+                reg_dma_set <= 0;
+            end if;
+        end if;--if (pi_rst_n = '0') then
+    end process;
+
 end rtl;
 
