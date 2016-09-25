@@ -6,6 +6,7 @@ all :
 	./dd-img.sh $(IMAGE)
 	cp sample1-chr.hex ../../de0_cv_nes/
 	cp sample1-prg.hex ../../de0_cv_nes/
+	cp $(IMAGE).nes ../../de0_cv_nes/simulation/modelsim/rom-file.nes
 
     
 run : all
