@@ -977,7 +977,6 @@ end;
                     reg_s_oam_cpy_cnt <= 0;
                     reg_p_oam_cpy_cnt <= 0;
                     reg_spr_eval_cnt <= 0;
-                    reg_spr0_eval <= '0';
                 elsif (is_spr_eval(pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
                     --copy data from primary oam ram.
                     reg_s_oam_addr <= conv_std_logic_vector(reg_s_oam_cpy_cnt mod 32, 5);
@@ -1058,6 +1057,9 @@ end;
                     reg_s_oam_wr_n <= '1';
                     reg_s_oam_rd_n <= '1';
                 else
+                    if (reg_nes_y > VSCAN) then
+                        reg_spr0_eval <= '0';
+                    end if;
                     reg_s_oam_ce_n <= '1';
                     reg_s_oam_rd_n <= '1';
                     reg_s_oam_wr_n <= '1';

@@ -25,7 +25,7 @@ vsim -t 1ps -L altera -L lpm -L sgate -L altera_mf -L altera_lnsim -L cyclonev -
 
 ##script custom part...
 
-run 400ms
+run 450ms
 
 #################################### General.... ###########################################
 
@@ -170,5 +170,5 @@ view signals
 run 25 us
 wave zoom full
 
-run 400ms
+run 16ms
 
