@@ -14,9 +14,9 @@ vcom -93 -work work {../../ppu/ppu.vhd}
 vcom -93 -work work {../../ppu/render.vhd}
 #vcom -93 -work work {../../dummy-ppu.vhd}
 
-#vcom -93 -work work {../../dummy-mos6502.vhd}
-vcom -93 -work work {../../mem/prg_rom.vhd}
-vcom -93 -work work {../../mos6502.vhd}
+vcom -93 -work work {../../dummy-mos6502.vhd}
+#vcom -93 -work work {../../mem/prg_rom.vhd}
+#vcom -93 -work work {../../mos6502.vhd}
 
 vcom -93 -work work {../../de0_cv_nes.vhd}
 vcom -93 -work work {../../testbench_motones_sim.vhd}
@@ -25,7 +25,7 @@ vsim -t 1ps -L altera -L lpm -L sgate -L altera_mf -L altera_lnsim -L cyclonev -
 
 ##script custom part...
 
-run 450ms
+#run 450ms
 
 #################################### General.... ###########################################
 
@@ -41,28 +41,28 @@ add wave -label wr_we_n             sim:/testbench_motones_sim/sim_board/wr_we_n
 add wave -label addr -radix hex     sim:/testbench_motones_sim/sim_board/wr_addr;
 add wave -label d_io -radix hex     sim:/testbench_motones_sim/sim_board/wr_d_io;
 
-#################################### CPU part.... ###########################################
-
-#add wave -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg*;
-add wave -divider cpu
-
-add wave -label reg_inst -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_inst;
-add wave -label reg_status -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_status;
-add wave -label reg_acc -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_acc;
-add wave -label reg_x -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_x;
-add wave -label reg_y -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_y;
-add wave -label reg_sp -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_sp;
-
-#add wave -divider internal_reg
-#add wave -label reg_main_cur_state  sim:/testbench_motones_sim/sim_board/cpu_inst/reg_main_state;
-##add wave -label reg_sub_cur_state   sim:/testbench_motones_sim/sim_board/cpu_inst/reg_sub_state;
-#add wave -label reg_pc_l -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_pc_l;
-#add wave -label reg_pc_h -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_pc_h;
-#add wave -label reg_idl_l -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_idl_l;
-#add wave -label reg_idl_h -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_idl_h;
-#add wave -label reg_tmp_pg_crossed  sim:/testbench_motones_sim/sim_board/cpu_inst/reg_tmp_pg_crossed;
-
-
+##################################### CPU part.... ###########################################
+#
+##add wave -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg*;
+#add wave -divider cpu
+#
+#add wave -label reg_inst -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_inst;
+#add wave -label reg_status -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_status;
+#add wave -label reg_acc -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_acc;
+#add wave -label reg_x -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_x;
+#add wave -label reg_y -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_y;
+#add wave -label reg_sp -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_sp;
+#
+##add wave -divider internal_reg
+##add wave -label reg_main_cur_state  sim:/testbench_motones_sim/sim_board/cpu_inst/reg_main_state;
+###add wave -label reg_sub_cur_state   sim:/testbench_motones_sim/sim_board/cpu_inst/reg_sub_state;
+##add wave -label reg_pc_l -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_pc_l;
+##add wave -label reg_pc_h -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_pc_h;
+##add wave -label reg_idl_l -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_idl_l;
+##add wave -label reg_idl_h -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_idl_h;
+##add wave -label reg_tmp_pg_crossed  sim:/testbench_motones_sim/sim_board/cpu_inst/reg_tmp_pg_crossed;
+#
+#
 ##################################### APU part.... ###########################################
 #add wave -divider apu
 #add wave -label wr_rdy  sim:/testbench_motones_sim/sim_board/wr_rdy;
@@ -170,5 +170,6 @@ view signals
 run 25 us
 wave zoom full
 
-run 16ms
+#run 16ms
+run 150 us
 

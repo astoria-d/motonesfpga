@@ -9,15 +9,21 @@ entity mos6502 is
             pi_rdy         : in std_logic;
             pi_irq_n       : in std_logic;
             pi_nmi_n       : in std_logic;
-            po_r_nw        : out std_logic;
+            po_oe_n        : out std_logic;
+            po_we_n        : out std_logic;
             po_addr        : out std_logic_vector ( 15 downto 0);
-            pio_d_io       : inout std_logic_vector ( 7 downto 0)
+            pio_d_io       : inout std_logic_vector ( 7 downto 0);
+
+            --for debugging..
+            po_dbg_cnt     : out std_logic_vector (63 downto 0);
+            po_exc_cnt     : out std_logic_vector (63 downto 0)
     );
 end mos6502;
 
 architecture rtl of mos6502 is
 
-signal reg_r_nw     : std_logic;
+signal reg_oe_n     : std_logic;
+signal reg_we_n     : std_logic;
 signal reg_addr     : std_logic_vector ( 15 downto 0);
 signal reg_d_in     : std_logic_vector ( 7 downto 0);
 signal reg_d_out    : std_logic_vector ( 7 downto 0);
@@ -27,7 +33,8 @@ signal dummy_cnt    : integer := 0;
 
 begin
 
-    po_r_nw     <= reg_r_nw;
+    po_oe_n     <= reg_oe_n;
+    po_we_n     <= reg_we_n;
     po_addr     <= reg_addr;
     pio_d_io    <= reg_d_out;
     reg_d_in    <= pio_d_io;
@@ -51,7 +58,8 @@ begin
 
 procedure io_out (ad: in integer; dt : in integer) is
 begin
-    reg_r_nw <= '0';
+    reg_oe_n <= '1';
+    reg_we_n <= '0';
     reg_addr <= conv_std_logic_vector(ad, 16);
     reg_d_out <= conv_std_logic_vector(dt, 8);
 end;
@@ -64,18 +72,21 @@ begin
     dummy_ad <= dummy_ad + 1;
     if (dummy_cnt = 0) then
         reg_d_out <= (others => 'Z');
-        reg_r_nw <= '1';
+        reg_oe_n <= '1';
+        reg_we_n <= '1';
         dummy_cnt <= 1;
     else
         reg_d_out <= dummy_ad(7 downto 0);
-        reg_r_nw <= '0';
+        reg_oe_n <= '1';
+        reg_we_n <= '1';
         dummy_cnt <= 0;
     end if;
 end;
 
 procedure io_read (ad: in integer) is
 begin
-    reg_r_nw <= '1';
+    reg_oe_n <= '0';
+    reg_we_n <= '1';
     reg_addr <= conv_std_logic_vector(ad, 16);
     reg_d_out <= (others => 'Z');
 end;
@@ -83,7 +94,8 @@ end;
     begin
         if (pi_rst_n = '0') then
             
-            reg_r_nw <= 'Z';
+            reg_oe_n <= '1';
+            reg_we_n <= '1';
             reg_addr <= (others => 'Z');
             reg_d_out <= (others => 'Z');
             
@@ -539,7 +551,8 @@ end;
                     io_brk;
                 end if;--if (init_done = '0') then
             else
-                reg_r_nw <= 'Z';
+                reg_oe_n <= '1';
+                reg_we_n <= '1';
                 reg_addr <= (others => 'Z');
                 reg_d_out <= (others => 'Z');
             end if;--if (rdy = '1') then
@@ -558,25 +571,23 @@ library ieee;
 use ieee.std_logic_1164.all;
 entity prg_rom is 
     port (
-            pi_rst_n        : in std_logic;
             pi_base_clk 	: in std_logic;
             pi_ce_n         : in std_logic;
+            pi_oe_n         : in std_logic;
             pi_addr         : in std_logic_vector (14 downto 0);
-            pi_data         : out std_logic_vector (7 downto 0)
+            po_data         : out std_logic_vector (7 downto 0)
         );
 end prg_rom;
 architecture rtl of prg_rom is
 begin
-    p_read : process (pi_rst_n, pi_base_clk)
+    p_read : process (pi_base_clk)
     begin
-        if (pi_rst_n = '0') then
-            pi_data <= (others => 'Z');
-        elsif (rising_edge(pi_base_clk)) then
+        if (rising_edge(pi_base_clk)) then
             if (pi_ce_n = '0') then
                 ---dummy data.
-                pi_data <= "00110011";
+                po_data <= "00110011";
             else
-                pi_data <= (others => 'Z');
+                po_data <= (others => 'Z');
             end if;
         end if;
     end process;
