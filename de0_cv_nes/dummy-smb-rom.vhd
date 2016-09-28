@@ -122,6 +122,7 @@ begin
     constant cpu_io_multi : integer := 3; --io happens every 4 cpu cycle.
     variable init_plt_cnt : integer;
     variable init_vram_cnt : integer;
+    variable init_final_cnt : integer;
     variable init_done : std_logic;
     variable global_step_cnt : integer;
 
@@ -164,6 +165,7 @@ end;
             global_step_cnt := 0;
             init_plt_cnt := 0;
             init_vram_cnt := 0;
+            init_final_cnt := 0;
 
         elsif (rising_edge(pi_base_clk)) then
             if (pi_cpu_en(0) = '1') then
@@ -214,6 +216,25 @@ end;
                             end if;
                         end if;
                         init_vram_cnt := init_vram_cnt + 1;
+
+                    elsif (global_step_cnt = 2) then
+                        --enable bg.
+                        if (init_final_cnt = 0 * cpu_io_multi) then
+                            --show bg
+                            --PPUMASK=1e (show bg and sprite)
+                            --PPUMASK=0e (show bg only)
+                            io_out(16#2001#, 16#1e#);
+                        elsif (init_final_cnt = 1 * cpu_io_multi) then
+                            --enable nmi
+                            --PPUCTRL=80
+                            io_out(16#2000#, 16#80#);
+                        else
+                            io_read(16#00#);
+                            if (init_final_cnt > 2 * cpu_io_multi) then
+                                global_step_cnt := global_step_cnt + 1;
+                            end if;
+                        end if;
+                        init_final_cnt := init_final_cnt + 1;
 
                     end if;
                 else
