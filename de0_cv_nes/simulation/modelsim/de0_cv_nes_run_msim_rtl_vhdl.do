@@ -14,7 +14,8 @@ vcom -93 -work work {../../ppu/ppu.vhd}
 vcom -93 -work work {../../ppu/render.vhd}
 #vcom -93 -work work {../../dummy-ppu.vhd}
 
-vcom -93 -work work {../../dummy-mos6502.vhd}
+#vcom -93 -work work {../../dummy-mos6502.vhd}
+vcom -93 -work work {../../dummy-smb-rom.vhd}
 #vcom -93 -work work {../../mem/prg_rom.vhd}
 #vcom -93 -work work {../../mos6502.vhd}
 
@@ -171,5 +172,6 @@ run 25 us
 wave zoom full
 
 #run 16ms
-run 150 us
+run 140 us
 
+run 140 us

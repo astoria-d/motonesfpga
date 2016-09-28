@@ -68,19 +68,22 @@ procedure io_brk is
 use ieee.std_logic_unsigned.all;
 begin
     --fake ram read/write to emulate dummy i/o.
-    reg_addr <= "000" & dummy_ad;
-    dummy_ad <= dummy_ad + 1;
-    if (dummy_cnt = 0) then
-        reg_d_out <= (others => 'Z');
-        reg_oe_n <= '1';
-        reg_we_n <= '1';
-        dummy_cnt <= 1;
-    else
-        reg_d_out <= dummy_ad(7 downto 0);
-        reg_oe_n <= '1';
-        reg_we_n <= '1';
-        dummy_cnt <= 0;
-    end if;
+--    reg_addr <= "000" & dummy_ad;
+--    dummy_ad <= dummy_ad + 1;
+--    if (dummy_cnt = 0) then
+--        reg_d_out <= (others => 'Z');
+--        reg_oe_n <= '1';
+--        reg_we_n <= '1';
+--        dummy_cnt <= 1;
+--    else
+--        reg_d_out <= dummy_ad(7 downto 0);
+--        reg_oe_n <= '1';
+--        reg_we_n <= '1';
+--        dummy_cnt <= 0;
+--    end if;
+    reg_d_out <= (others => 'Z');
+    reg_oe_n <= 'Z';
+    reg_we_n <= 'Z';
 end;
 
 procedure io_read (ad: in integer) is
@@ -142,7 +145,7 @@ end;
                         elsif (init_step_cnt = 7 * cpu_io_multi) then
                             io_out(16#2005#, 16#5#);
                         else
-                            io_brk;
+                            io_read(16#00#);
                             if (init_step_cnt > 8 * cpu_io_multi) then
                                 global_step_cnt := global_step_cnt + 1;
                             end if;
@@ -235,7 +238,7 @@ end;
                             io_out(16#2007#, 16#31#);
 
                         else
-                            io_brk;
+                            io_read(16#00#);
                             if (plt_step_cnt > 30 * cpu_io_multi) then
                                 global_step_cnt := global_step_cnt + 1;
                             end if;
@@ -290,7 +293,7 @@ end;
                             io_out(16#2007#, 16#00#);
 
                         else
-                            io_brk;
+                            io_read(16#00#);
                             if (nt_step_cnt > 4 * cpu_io_multi) then
                                 global_step_cnt := global_step_cnt + 1;
                             end if;
@@ -357,7 +360,7 @@ end;
                             io_out(16#2004#, 45);
 
                         else
-                            io_brk;
+                            io_read(16#00#);
                             if (spr_step_cnt > 8 * cpu_io_multi) then
                                 global_step_cnt := global_step_cnt + 2;
                             end if;
@@ -389,16 +392,16 @@ end;
 --                                        (dma_step_cnt = (1 + j) * cpu_io_multi + 1) or
 --                                        (dma_step_cnt = (2 + j) * cpu_io_multi + 1) or
 --                                        (dma_step_cnt = (3 + j) * cpu_io_multi + 1) then
---                                    io_brk;
+--                                    io_read(16#00#);
 --                                end if;
 --                            else
 --                                if    (dma_step_cnt = (0 + j) * cpu_io_multi) then
 --                                    --start dma
 --                                    io_out(16#4014#, 16#02#);
 --                                elsif (dma_step_cnt = (0 + j) * cpu_io_multi + 1) then
---                                    io_brk;
+--                                    io_read(16#00#);
 --                                elsif (dma_step_cnt = (0 + j) * cpu_io_multi + 2) then
-                                    io_brk;
+                                    io_read(16#00#);
                                     global_step_cnt := global_step_cnt + 1;
 --                                end if;
 --                            end if;
@@ -471,7 +474,7 @@ end;
                             io_read(16#2007#);
 
                         else
-                            io_brk;
+                            io_read(16#00#);
                             if (scl_step_cnt > 17 * cpu_io_multi) then
                                 global_step_cnt := global_step_cnt + 1;
                             end if;
@@ -490,7 +493,7 @@ end;
                             --PPUCTRL=80
                             io_out(16#2000#, 16#80#);
                         else
-                            io_brk;
+                            io_read(16#00#);
                             if (enable_ppu_step_cnt > 1 * cpu_io_multi) then
                                 --skip nmi test at this momemnt..
                                 global_step_cnt := global_step_cnt + 3;
@@ -511,11 +514,11 @@ end;
                             elsif (nmi_step_cnt = 2 * cpu_io_multi) then
                                 --scroll x=0
 --                                io_out(16#2005#, nmi_scl_y);
-                                io_brk;
+                                io_read(16#00#);
                             elsif (nmi_step_cnt = 3 * cpu_io_multi) then
                                 --scroll y++
 --                                io_out(16#2005#, nmi_scl_y);
-                                io_brk;
+                                io_read(16#00#);
                             elsif (nmi_step_cnt = 4 * cpu_io_multi) then
                                 --set sprite addr=00 (first sprite)
                                 io_out(16#2003#, 16#04#);
@@ -529,7 +532,7 @@ end;
                                 if (nmi_step_cnt mod 10 = 0) then
                                     nmi_scl_y := nmi_scl_y + 1;
                                 end if;
-                                io_brk;
+                                io_read(16#00#);
                                 if (nmi_step_cnt > 5 * cpu_io_multi) then
                                     ref_cnt := ref_cnt + 1;
                                     global_step_cnt := global_step_cnt + 1;
@@ -544,17 +547,14 @@ end;
                             global_step_cnt := global_step_cnt - 1;
                         end if;
                     else
-                        io_brk;
+                        io_read(16#00#);
                         init_done := '1';
                     end if;
                 else
-                    io_brk;
+                    io_read(16#00#);
                 end if;--if (init_done = '0') then
             else
-                reg_oe_n <= '1';
-                reg_we_n <= '1';
-                reg_addr <= (others => 'Z');
-                reg_d_out <= (others => 'Z');
+                io_brk;
             end if;--if (rdy = '1') then
             end if;--if (pi_cpu_en(0) = '1') then
         end if; --if (rst_n = '0') then
