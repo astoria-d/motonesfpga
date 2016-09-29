@@ -22,6 +22,10 @@ end mos6502;
 
 architecture rtl of mos6502 is
 
+constant cpu_io_multi   : integer := 3; --io happens every 4 cpu cycle.
+constant bg_tile_cnt    : integer := 1023;
+constant spr_tile_cnt    : integer := 255;
+    
 signal reg_oe_n     : std_logic;
 signal reg_we_n     : std_logic;
 signal reg_addr     : std_logic_vector ( 15 downto 0);
@@ -137,11 +141,6 @@ begin
     set_ppu_p : process (pi_base_clk, pi_rst_n)
     use ieee.std_logic_arith.conv_std_logic_vector;
 
-    constant cpu_io_multi   : integer := 3; --io happens every 4 cpu cycle.
-    constant bg_tile_cnt    : integer := 1023;
-    constant spr_tile_cnt    : integer := 255;
-    --constant bg_tile_cnt    : integer := 127;
-    
     variable init_plt_cnt : integer;
     variable init_vram_cnt : integer;
     variable init_spr_cnt : integer;
@@ -162,6 +161,7 @@ use ieee.std_logic_unsigned.all;
 begin
     --fake ram read/write to emulate dummy i/o.
     reg_d_out <= (others => 'Z');
+    reg_addr <= (others => 'Z');
     reg_oe_n <= 'Z';
     reg_we_n <= 'Z';
 end;
@@ -215,7 +215,7 @@ end;
                         else
                             io_read(16#00#);
                             if (init_plt_cnt > (32 + 3) * cpu_io_multi) then
-                                global_step_cnt := global_step_cnt + 2;
+                                global_step_cnt := global_step_cnt + 1;
                             end if;
                         end if;
                         init_plt_cnt := init_plt_cnt + 1;
@@ -242,10 +242,10 @@ end;
                     elsif (global_step_cnt = 2) then
                         --set dma data.
                         --dma addr = 0x0300.
-                        if (init_spr_cnt mod cpu_io_multi = 0 and init_spr_cnt <= (spr_tile_cnt + 2) * cpu_io_multi) then
+                        if (init_spr_cnt mod cpu_io_multi = 0 and init_spr_cnt <= (spr_tile_cnt + 0) * cpu_io_multi) then
                             io_out(16#0300# + init_spr_cnt / cpu_io_multi, nes_spr_data(init_spr_cnt / cpu_io_multi));
 
-                        elsif (init_spr_cnt = (spr_tile_cnt + 0) * cpu_io_multi) then
+                        elsif (init_spr_cnt = (spr_tile_cnt + 1) * cpu_io_multi) then
                             --dma start.
                             io_out(16#4014#, 3);
 
@@ -324,46 +324,46 @@ end rtl;
 
 
 
------------dummy apu
-library ieee;
-use ieee.std_logic_1164.all;
-use ieee.std_logic_arith.conv_std_logic_vector;
-
-entity apu is 
-    port (
-        pi_rst_n       : in std_logic;
-        pi_base_clk    : in std_logic;
-        pi_cpu_en      : in std_logic_vector (7 downto 0);
-        pi_rnd_en      : in std_logic_vector (3 downto 0);
-        pi_ce_n        : in std_logic;
-
-        --cpu i/f
-        pio_oe_n       : inout std_logic;
-        pio_we_n       : inout std_logic;
-        pio_cpu_addr   : inout std_logic_vector (15 downto 0);
-        pio_cpu_d      : inout std_logic_vector (7 downto 0);
-        po_rdy         : out std_logic;
-
-        --sprite i/f
-        po_spr_ce_n    : out std_logic;
-        po_spr_rd_n    : out std_logic;
-        po_spr_wr_n    : out std_logic;
-        po_spr_addr    : out std_logic_vector (7 downto 0);
-        po_spr_data    : out std_logic_vector (7 downto 0)
-    );
-end apu;
-
-architecture rtl of apu is
-begin
-    pio_oe_n       <= 'Z';
-    pio_we_n       <= 'Z';
-    pio_cpu_addr   <= (others => 'Z');
-    pio_cpu_d      <= (others => 'Z');
-    po_rdy         <= '1';
-    po_spr_ce_n    <= 'Z';
-    po_spr_rd_n    <= 'Z';
-    po_spr_wr_n    <= 'Z';
-    po_spr_addr    <= (others => 'Z');
-    po_spr_data    <= (others => 'Z');
-end rtl;
-
+-------------dummy apu
+--library ieee;
+--use ieee.std_logic_1164.all;
+--use ieee.std_logic_arith.conv_std_logic_vector;
+--
+--entity apu is 
+--    port (
+--        pi_rst_n       : in std_logic;
+--        pi_base_clk    : in std_logic;
+--        pi_cpu_en      : in std_logic_vector (7 downto 0);
+--        pi_rnd_en      : in std_logic_vector (3 downto 0);
+--        pi_ce_n        : in std_logic;
+--
+--        --cpu i/f
+--        pio_oe_n       : inout std_logic;
+--        pio_we_n       : inout std_logic;
+--        pio_cpu_addr   : inout std_logic_vector (15 downto 0);
+--        pio_cpu_d      : inout std_logic_vector (7 downto 0);
+--        po_rdy         : out std_logic;
+--
+--        --sprite i/f
+--        po_spr_ce_n    : out std_logic;
+--        po_spr_rd_n    : out std_logic;
+--        po_spr_wr_n    : out std_logic;
+--        po_spr_addr    : out std_logic_vector (7 downto 0);
+--        po_spr_data    : out std_logic_vector (7 downto 0)
+--    );
+--end apu;
+--
+--architecture rtl of apu is
+--begin
+--    pio_oe_n       <= 'Z';
+--    pio_we_n       <= 'Z';
+--    pio_cpu_addr   <= (others => 'Z');
+--    pio_cpu_d      <= (others => 'Z');
+--    po_rdy         <= '1';
+--    po_spr_ce_n    <= 'Z';
+--    po_spr_rd_n    <= 'Z';
+--    po_spr_wr_n    <= 'Z';
+--    po_spr_addr    <= (others => 'Z');
+--    po_spr_data    <= (others => 'Z');
+--end rtl;
+--

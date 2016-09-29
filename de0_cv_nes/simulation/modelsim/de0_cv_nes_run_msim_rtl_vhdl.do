@@ -171,9 +171,13 @@ view signals
 run 25 us
 wave zoom full
 
+#palette
 #run 16ms
 run 70 us
 
+#vram
+run 2000 us
+
+#sprite
 run 550 us
-#run 2000 us
 
