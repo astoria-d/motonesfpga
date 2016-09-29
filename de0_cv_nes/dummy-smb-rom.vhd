@@ -147,6 +147,7 @@ begin
     variable init_final_cnt : integer;
     variable nmi_step_cnt : integer;
     variable global_step_cnt : integer;
+    variable nmi_handled : integer;
 
     variable spr_x : integer;
     variable spr_y : integer;
@@ -195,6 +196,7 @@ end;
             spr_y := 16#b0#;
             scr_x := 0;
             nmi_step_cnt := 100;
+            nmi_handled := 1;
 
         elsif (rising_edge(pi_base_clk)) then
             if (pi_cpu_en(0) = '1') then
@@ -286,7 +288,11 @@ end;
 
                     --nmi
                     else
-                        if (pi_nmi_n = '0') then
+                        if (pi_nmi_n = '0' and nmi_handled = 1) then
+                            nmi_handled := 0;
+                        end if;
+
+                        if (nmi_handled = 0) then
 
                             --stop ppu.
                             if (nmi_step_cnt = 0 * cpu_io_multi) then
@@ -333,6 +339,7 @@ end;
                                 io_out(16#2001#, 16#1e#);
                             elsif (nmi_step_cnt = 14 * cpu_io_multi) then
                                 io_out(16#2000#, 16#90#);
+                                nmi_handled := 1;
 
                             else
                                 io_read(16#00#);
@@ -341,7 +348,7 @@ end;
                         else
                             nmi_step_cnt := 0;
                             io_read(16#00#);
-                        end if;--if (pi_nmi_n = '0') then
+                        end if;--if (nmi_handled = 0) then
 
                     end if;--if (global_step_cnt = 0) then
                 else
