@@ -117,14 +117,15 @@ begin
     set_ppu_p : process (pi_base_clk, pi_rst_n)
     use ieee.std_logic_arith.conv_std_logic_vector;
 
-    constant cpu_io_multi : integer := 3; --io happens every 4 cpu cycle.
+    constant cpu_io_multi   : integer := 3; --io happens every 4 cpu cycle.
+    constant bg_tile_cnt    : integer := 1023;
+    --constant bg_tile_cnt    : integer := 127;
+    
     variable init_plt_cnt : integer;
     variable init_vram_cnt : integer;
     variable init_final_cnt : integer;
     variable init_done : std_logic;
     variable global_step_cnt : integer;
-
-    variable ref_cnt : integer range 0 to 120;
 
 procedure io_out (ad: in integer; dt : in integer) is
 begin
@@ -154,8 +155,8 @@ end;
     begin
         if (pi_rst_n = '0') then
             
-            reg_oe_n <= '1';
-            reg_we_n <= '1';
+            reg_oe_n <= 'Z';
+            reg_we_n <= 'Z';
             reg_addr <= (others => 'Z');
             reg_d_out <= (others => 'Z');
             
@@ -203,13 +204,13 @@ end;
                         elsif (init_vram_cnt = 1 * cpu_io_multi) then
                             io_out(16#2006#, 16#00#);
 
-                        elsif (init_vram_cnt mod cpu_io_multi = 0 and init_vram_cnt <= (1023 + 2) * cpu_io_multi) then
+                        elsif (init_vram_cnt mod cpu_io_multi = 0 and init_vram_cnt <= (bg_tile_cnt + 2) * cpu_io_multi) then
                             --ppuaddr
                             io_out(16#2007#, nes_bg_data(init_vram_cnt / cpu_io_multi - 2));
 
                         else
                             io_read(16#00#);
-                            if (init_vram_cnt > (1023 + 2) * cpu_io_multi) then
+                            if (init_vram_cnt > (bg_tile_cnt + 2) * cpu_io_multi) then
                                 global_step_cnt := global_step_cnt + 1;
                             end if;
                         end if;
@@ -224,8 +225,9 @@ end;
                             io_out(16#2001#, 16#1e#);
                         elsif (init_final_cnt = 1 * cpu_io_multi) then
                             --enable nmi
-                            --PPUCTRL=80
-                            io_out(16#2000#, 16#80#);
+                            --bg base = 0x1000
+                            --PPUCTRL=90
+                            io_out(16#2000#, 16#90#);
                         else
                             io_read(16#00#);
                             if (init_final_cnt > 2 * cpu_io_multi) then
