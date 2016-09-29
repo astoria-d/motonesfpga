@@ -172,7 +172,7 @@ run 25 us
 wave zoom full
 
 #run 16ms
-run 140 us
+run 70 us
 
-run 2100 us
+run 2000 us
 

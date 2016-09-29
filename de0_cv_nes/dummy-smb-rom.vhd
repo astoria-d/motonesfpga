@@ -30,13 +30,11 @@ signal reg_d_out    : std_logic_vector ( 7 downto 0);
 
 
 
-type nes_plt_array    is array (0 to 63) of integer;
+type nes_plt_array    is array (0 to 31) of integer;
 
 constant nes_palette_data : nes_plt_array := (
-16#aa#, 16#aa#, 16#ea#, 16#aa#, 16#aa#, 16#aa#, 16#aa#, 16#aa#,     16#00#, 16#55#, 16#55#, 16#55#, 16#55#, 16#55#, 16#55#, 16#55#,
-16#55#, 16#55#, 16#55#, 16#55#, 16#55#, 16#55#, 16#55#, 16#55#,     16#55#, 16#55#, 16#55#, 16#55#, 16#55#, 16#55#, 16#55#, 16#00#,
-16#00#, 16#00#, 16#99#, 16#aa#, 16#aa#, 16#aa#, 16#00#, 16#00#,     16#00#, 16#00#, 16#99#, 16#aa#, 16#aa#, 16#aa#, 16#00#, 16#00#,
-16#50#, 16#50#, 16#50#, 16#50#, 16#50#, 16#50#, 16#50#, 16#50#,     16#05#, 16#05#, 16#05#, 16#05#, 16#05#, 16#05#, 16#05#, 16#05#
+16#22#, 16#29#, 16#1a#, 16#0f#, 16#0f#, 16#36#, 16#17#, 16#0f#, 16#0f#, 16#30#, 16#21#, 16#0f#, 16#0f#, 16#27#, 16#17#, 16#0f#,
+16#22#, 16#16#, 16#27#, 16#18#, 16#0f#, 16#1a#, 16#30#, 16#27#, 16#0f#, 16#16#, 16#30#, 16#27#, 16#0f#, 16#0f#, 16#36#, 16#17#
 );
 
 type nes_bg_array    is array (0 to 1023) of integer;
@@ -186,13 +184,13 @@ end;
                         elsif (init_plt_cnt = 3 * cpu_io_multi) then
                             io_out(16#2006#, 16#00#);
 
-                        elsif (init_plt_cnt mod cpu_io_multi = 0 and init_plt_cnt <= (64 + 4) * cpu_io_multi) then
+                        elsif (init_plt_cnt mod cpu_io_multi = 0 and init_plt_cnt <= (32 + 4) * cpu_io_multi) then
                             --ppuaddr
-                            io_out(16#2007#, nes_palette_data((init_plt_cnt -4)/ 4));
+                            io_out(16#2007#, nes_palette_data(init_plt_cnt / cpu_io_multi - 4));
 
                         else
                             io_read(16#00#);
-                            if (init_plt_cnt > (64 + 3) * cpu_io_multi) then
+                            if (init_plt_cnt > (32 + 3) * cpu_io_multi) then
                                 global_step_cnt := global_step_cnt + 1;
                             end if;
                         end if;
@@ -207,7 +205,7 @@ end;
 
                         elsif (init_vram_cnt mod cpu_io_multi = 0 and init_vram_cnt <= (1023 + 2) * cpu_io_multi) then
                             --ppuaddr
-                            io_out(16#2007#, nes_bg_data((init_vram_cnt -2)/ 4));
+                            io_out(16#2007#, nes_bg_data(init_vram_cnt / cpu_io_multi - 2));
 
                         else
                             io_read(16#00#);
