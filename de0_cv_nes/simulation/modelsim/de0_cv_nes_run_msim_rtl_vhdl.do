@@ -174,5 +174,6 @@ wave zoom full
 #run 16ms
 run 70 us
 
-run 2000 us
+run 550 us
+#run 2000 us
 

@@ -105,6 +105,26 @@ constant nes_bg_data : nes_bg_array := (
 16#50#, 16#50#, 16#50#, 16#50#, 16#50#, 16#50#, 16#50#, 16#50#, 16#05#, 16#05#, 16#05#, 16#05#, 16#05#, 16#05#, 16#05#, 16#05#
 );
 
+type nes_spr_array    is array (0 to 255) of integer;
+constant nes_spr_data : nes_spr_array := (
+16#18#, 16#ff#, 16#23#, 16#58#, 16#b0#, 16#fc#, 16#00#, 16#28#, 16#b0#, 16#fc#, 16#00#, 16#30#, 16#b8#, 16#fc#, 16#00#, 16#28#,
+16#b8#, 16#fc#, 16#00#, 16#30#, 16#c0#, 16#3a#, 16#00#, 16#28#, 16#c0#, 16#37#, 16#00#, 16#30#, 16#c8#, 16#4f#, 16#00#, 16#28#,
+16#c8#, 16#4f#, 16#40#, 16#30#, 16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#,
+16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#,
+16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#,
+16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#,
+16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#,
+16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#,
+16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#,
+16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#,
+16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#,
+16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#,
+16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#,
+16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#,
+16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#,
+16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#, 16#f8#, 16#00#, 16#00#, 16#00#
+);
+
 begin
 
     po_oe_n     <= reg_oe_n;
@@ -119,10 +139,12 @@ begin
 
     constant cpu_io_multi   : integer := 3; --io happens every 4 cpu cycle.
     constant bg_tile_cnt    : integer := 1023;
+    constant spr_tile_cnt    : integer := 255;
     --constant bg_tile_cnt    : integer := 127;
     
     variable init_plt_cnt : integer;
     variable init_vram_cnt : integer;
+    variable init_spr_cnt : integer;
     variable init_final_cnt : integer;
     variable init_done : std_logic;
     variable global_step_cnt : integer;
@@ -164,6 +186,7 @@ end;
             global_step_cnt := 0;
             init_plt_cnt := 0;
             init_vram_cnt := 0;
+            init_spr_cnt := 0;
             init_final_cnt := 0;
 
         elsif (rising_edge(pi_base_clk)) then
@@ -192,7 +215,7 @@ end;
                         else
                             io_read(16#00#);
                             if (init_plt_cnt > (32 + 3) * cpu_io_multi) then
-                                global_step_cnt := global_step_cnt + 1;
+                                global_step_cnt := global_step_cnt + 2;
                             end if;
                         end if;
                         init_plt_cnt := init_plt_cnt + 1;
@@ -217,6 +240,24 @@ end;
                         init_vram_cnt := init_vram_cnt + 1;
 
                     elsif (global_step_cnt = 2) then
+                        --set dma data.
+                        --dma addr = 0x0300.
+                        if (init_spr_cnt mod cpu_io_multi = 0 and init_spr_cnt <= (spr_tile_cnt + 2) * cpu_io_multi) then
+                            io_out(16#0300# + init_spr_cnt / cpu_io_multi, nes_spr_data(init_spr_cnt / cpu_io_multi));
+
+                        elsif (init_spr_cnt = (spr_tile_cnt + 0) * cpu_io_multi) then
+                            --dma start.
+                            io_out(16#4014#, 3);
+
+                        else
+                            io_read(16#00#);
+                            if (init_spr_cnt > (spr_tile_cnt + 2) * cpu_io_multi) then
+                                global_step_cnt := global_step_cnt + 1;
+                            end if;
+                        end if;
+                        init_spr_cnt := init_spr_cnt + 1;
+
+                    elsif (global_step_cnt = 3) then
                         --enable bg.
                         if (init_final_cnt = 0 * cpu_io_multi) then
                             --show bg
