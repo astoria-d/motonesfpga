@@ -155,12 +155,37 @@ begin
 
 procedure io_out (ad: in integer; dt : in integer) is
 begin
+
+----real cpu implementation..
+----ST_SUB00, ST_SUB01, ST_SUB02, ST_SUB03,
+----ST_SUB10, ST_SUB11, ST_SUB12, ST_SUB13,
+----ST_SUB20, ST_SUB21, ST_SUB22, ST_SUB23,
+----ST_SUB30, ST_SUB31, ST_SUB32, ST_SUB33,
+----ST_SUB40, ST_SUB41, ST_SUB42, ST_SUB43,
+----ST_SUB50, ST_SUB51, ST_SUB52, ST_SUB53,
+----ST_SUB60, ST_SUB61, ST_SUB62, ST_SUB63,
+----ST_SUB70, ST_SUB71, ST_SUB72, ST_SUB73
+----procedure write_enable is
+----begin
+----    reg_oe_n    <= '1';
+----    if (reg_sub_state = ST_SUB32 or
+----        reg_sub_state = ST_SUB33 or
+----        reg_sub_state = ST_SUB40 or
+----        reg_sub_state = ST_SUB41
+----        ) then
+----        reg_we_n    <= '0';
+----    else
+----        reg_we_n    <= '1';
+----    end if;
+----end;
+
+
     reg_oe_n <= '1';
     if (pi_cpu_en(0) = '1') then
         reg_we_n <= '1';
     elsif (pi_cpu_en(3) = '1') then
         reg_we_n <= '0';
-    elsif (pi_cpu_en(6) = '1') then
+    elsif (pi_cpu_en(5) = '1') then
         reg_we_n <= '1';
     end if;
     reg_addr <= conv_std_logic_vector(ad, 16);
@@ -359,6 +384,7 @@ end;
                         nmi_step_cnt := cnt_next(pi_cpu_en, nmi_step_cnt, 1);
                     else
                         nmi_step_cnt := 0;
+                        nmi_handled := 0;
                         io_read(16#00#);
                     end if;--if (pi_nmi_n = '0' and nmi_handled = 0) then
 
