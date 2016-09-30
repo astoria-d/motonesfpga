@@ -367,7 +367,7 @@ end;
                         --scroll
                         elsif (nmi_step_cnt = 11 * cpu_io_multi) then
                             io_out(16#2005#, (scr_x) mod 255);
-                            scr_x := scr_x + 3;
+                            scr_x := cnt_next(pi_cpu_en, scr_x, 3);
                         elsif (nmi_step_cnt = 12 * cpu_io_multi) then
                             io_out(16#2005#, 0);
 
@@ -376,15 +376,16 @@ end;
                             io_out(16#2001#, 16#1e#);
                         elsif (nmi_step_cnt = 14 * cpu_io_multi) then
                             io_out(16#2000#, 16#90#);
-                            nmi_handled := 1;
 
                         else
                             io_read(16#00#);
                         end if;
                         nmi_step_cnt := cnt_next(pi_cpu_en, nmi_step_cnt, 1);
                     else
+                        if (pi_nmi_n = '1' and  nmi_handled = 1) then
+                            nmi_handled := 0;
+                        end if;
                         nmi_step_cnt := 0;
-                        nmi_handled := 0;
                         io_read(16#00#);
                     end if;--if (pi_nmi_n = '0' and nmi_handled = 0) then
 

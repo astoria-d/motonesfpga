@@ -442,7 +442,7 @@ begin
         elsif (rising_edge(pi_base_clk)) then
             if (reg_ppu_ctrl(PPUNEN) = '1' and pi_ppu_status(ST_VBL) = '1') then
                 reg_vblank_n <= '0';
-            else
+            elsif (pi_ppu_status(ST_VBL) = '0') then
                 reg_vblank_n <= '1';
             end if;--if (pi_cpu_en(CP_ST0) = '1' and pi_ce_n = '0') then
         end if;--if (pi_rst_n = '0') then
