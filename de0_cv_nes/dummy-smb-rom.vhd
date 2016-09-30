@@ -217,155 +217,155 @@ end;
             nmi_handled := 0;
 
         elsif (rising_edge(pi_base_clk)) then
-                if (pi_rdy = '1') then
-                    if (global_step_cnt = 0) then
-                        --step0.0 = init ppu.
-                        if (init_plt_cnt = 0 * cpu_io_multi) then
-                            --PPUCTRL=00
-                            io_out(16#2000#, 16#00#);
-                        elsif (init_plt_cnt = 1 * cpu_io_multi) then
-                            --PPUMASK=00
-                            io_out(16#2001#, 16#00#);
+            if (pi_rdy = '1') then
+                if (global_step_cnt = 0) then
+                    --step0.0 = init ppu.
+                    if (init_plt_cnt = 0 * cpu_io_multi) then
+                        --PPUCTRL=00
+                        io_out(16#2000#, 16#00#);
+                    elsif (init_plt_cnt = 1 * cpu_io_multi) then
+                        --PPUMASK=00
+                        io_out(16#2001#, 16#00#);
 
-                            --set vram addr 3f00
-                        elsif (init_plt_cnt = 2 * cpu_io_multi) then
-                            io_out(16#2006#, 16#3f#);
-                        elsif (init_plt_cnt = 3 * cpu_io_multi) then
-                            io_out(16#2006#, 16#00#);
+                        --set vram addr 3f00
+                    elsif (init_plt_cnt = 2 * cpu_io_multi) then
+                        io_out(16#2006#, 16#3f#);
+                    elsif (init_plt_cnt = 3 * cpu_io_multi) then
+                        io_out(16#2006#, 16#00#);
 
-                        elsif (init_plt_cnt mod cpu_io_multi = 0 and init_plt_cnt <= (32 + 4) * cpu_io_multi) then
-                            --ppuaddr
-                            io_out(16#2007#, nes_palette_data(init_plt_cnt / cpu_io_multi - 4));
-
-                        else
-                            io_read(16#00#);
-                            if (init_plt_cnt > (32 + 3) * cpu_io_multi) then
-                                global_step_cnt := cnt_next(pi_cpu_en, global_step_cnt, 3);
-                            end if;
-                        end if;
-                        init_plt_cnt := cnt_next(pi_cpu_en, init_plt_cnt, 1);
-
-                    elsif (global_step_cnt = 1) then
-                            --set vram addr 2000
-                        if (init_vram_cnt = 0* cpu_io_multi) then
-                            io_out(16#2006#, 16#20#);
-                        elsif (init_vram_cnt = 1 * cpu_io_multi) then
-                            io_out(16#2006#, 16#00#);
-
-                        elsif (init_vram_cnt mod cpu_io_multi = 0 and init_vram_cnt <= (bg_tile_cnt + 2) * cpu_io_multi) then
-                            --ppuaddr
-                            io_out(16#2007#, nes_bg_data(init_vram_cnt / cpu_io_multi - 2));
-
-                        else
-                            io_read(16#00#);
-                            if (init_vram_cnt > (bg_tile_cnt + 2) * cpu_io_multi) then
-                                global_step_cnt := cnt_next(pi_cpu_en, global_step_cnt, 1);
-                            end if;
-                        end if;
-                        init_vram_cnt := cnt_next(pi_cpu_en, init_vram_cnt, 1);
-
-                    elsif (global_step_cnt = 2) then
-                        --set dma data.
-                        --dma addr = 0x0300.
-                        if (init_spr_cnt mod cpu_io_multi = 0 and init_spr_cnt <= (spr_tile_cnt + 0) * cpu_io_multi) then
-                            io_out(16#0300# + init_spr_cnt / cpu_io_multi, nes_spr_data(init_spr_cnt / cpu_io_multi));
-
-                        elsif (init_spr_cnt = (spr_tile_cnt + 1) * cpu_io_multi) then
-                            --dma start.
-                            io_out(16#4014#, 3);
-
-                        else
-                            io_read(16#00#);
-                            if (init_spr_cnt > (spr_tile_cnt + 2) * cpu_io_multi) then
-                                global_step_cnt := cnt_next(pi_cpu_en, global_step_cnt, 1);
-                            end if;
-                        end if;
-                        init_spr_cnt := cnt_next(pi_cpu_en, init_spr_cnt, 1);
-
-                    elsif (global_step_cnt = 3) then
-                        --enable bg.
-                        if (init_final_cnt = 0 * cpu_io_multi) then
-                            --show bg
-                            --PPUMASK=1e (show bg and sprite)
-                            --PPUMASK=0e (show bg only)
-                            io_out(16#2001#, 16#1e#);
-                        elsif (init_final_cnt = 1 * cpu_io_multi) then
-                            --enable nmi
-                            --bg base = 0x1000
-                            --PPUCTRL=90
-                            io_out(16#2000#, 16#90#);
-                        else
-                            io_read(16#00#);
-                            if (init_final_cnt > 2 * cpu_io_multi) then
-                                global_step_cnt := cnt_next(pi_cpu_en, global_step_cnt, 1);
-                            end if;
-                        end if;
-                        init_final_cnt := cnt_next(pi_cpu_en, init_final_cnt, 1);
+                    elsif (init_plt_cnt mod cpu_io_multi = 0 and init_plt_cnt <= (32 + 4) * cpu_io_multi) then
+                        --ppuaddr
+                        io_out(16#2007#, nes_palette_data(init_plt_cnt / cpu_io_multi - 4));
 
                     else
-                    --nmi
-                        if (pi_nmi_n = '0' and nmi_handled = 0) then
+                        io_read(16#00#);
+                        if (init_plt_cnt > (32 + 3) * cpu_io_multi) then
+                            global_step_cnt := cnt_next(pi_cpu_en, global_step_cnt, 3);
+                        end if;
+                    end if;
+                    init_plt_cnt := cnt_next(pi_cpu_en, init_plt_cnt, 1);
 
-                            --stop ppu.
-                            if (nmi_step_cnt = 0 * cpu_io_multi) then
-                                io_out(16#2001#, 0);
-                            elsif (nmi_step_cnt = 1 * cpu_io_multi) then
-                                io_out(16#2000#, 0);
+                elsif (global_step_cnt = 1) then
+                        --set vram addr 2000
+                    if (init_vram_cnt = 0* cpu_io_multi) then
+                        io_out(16#2006#, 16#20#);
+                    elsif (init_vram_cnt = 1 * cpu_io_multi) then
+                        io_out(16#2006#, 16#00#);
 
-                            --sprite x,y change.
-                            elsif (nmi_step_cnt = 2 * cpu_io_multi) then
-                                io_out(16#0314#, (spr_x) mod 255);
-                            elsif (nmi_step_cnt = 3 * cpu_io_multi) then
-                                io_out(16#0317#, (spr_y) mod 255);
+                    elsif (init_vram_cnt mod cpu_io_multi = 0 and init_vram_cnt <= (bg_tile_cnt + 2) * cpu_io_multi) then
+                        --ppuaddr
+                        io_out(16#2007#, nes_bg_data(init_vram_cnt / cpu_io_multi - 2));
 
-                            elsif (nmi_step_cnt = 4 * cpu_io_multi) then
-                                io_out(16#0318#, (spr_x + 8) mod 255);
-                            elsif (nmi_step_cnt = 5 * cpu_io_multi) then
-                                io_out(16#031b#, (spr_y) mod 255);
+                    else
+                        io_read(16#00#);
+                        if (init_vram_cnt > (bg_tile_cnt + 2) * cpu_io_multi) then
+                            global_step_cnt := cnt_next(pi_cpu_en, global_step_cnt, 1);
+                        end if;
+                    end if;
+                    init_vram_cnt := cnt_next(pi_cpu_en, init_vram_cnt, 1);
 
-                            elsif (nmi_step_cnt = 6 * cpu_io_multi) then
-                                io_out(16#031c#, (spr_x) mod 255);
-                            elsif (nmi_step_cnt = 7 * cpu_io_multi) then
-                                io_out(16#031f#, (spr_y  + 8) mod 255);
+                elsif (global_step_cnt = 2) then
+                    --set dma data.
+                    --dma addr = 0x0300.
+                    if (init_spr_cnt mod cpu_io_multi = 0 and init_spr_cnt <= (spr_tile_cnt + 0) * cpu_io_multi) then
+                        io_out(16#0300# + init_spr_cnt / cpu_io_multi, nes_spr_data(init_spr_cnt / cpu_io_multi));
 
-                            elsif (nmi_step_cnt = 8 * cpu_io_multi) then
-                                io_out(16#0320#, (spr_x  + 8) mod 255);
-                            elsif (nmi_step_cnt = 9 * cpu_io_multi) then
-                                io_out(16#0323#, (spr_y + 8) mod 255);
+                    elsif (init_spr_cnt = (spr_tile_cnt + 1) * cpu_io_multi) then
+                        --dma start.
+                        io_out(16#4014#, 3);
 
-                            elsif (nmi_step_cnt = 10 * cpu_io_multi) then
-                                --dma start.
-                                io_out(16#4014#, 3);
-                                spr_x := spr_x + 1;
-                                spr_y := spr_y + 4;
+                    else
+                        io_read(16#00#);
+                        if (init_spr_cnt > (spr_tile_cnt + 2) * cpu_io_multi) then
+                            global_step_cnt := cnt_next(pi_cpu_en, global_step_cnt, 1);
+                        end if;
+                    end if;
+                    init_spr_cnt := cnt_next(pi_cpu_en, init_spr_cnt, 1);
 
-                            --scroll
-                            elsif (nmi_step_cnt = 11 * cpu_io_multi) then
-                                io_out(16#2005#, (scr_x) mod 255);
-                                scr_x := scr_x + 3;
-                            elsif (nmi_step_cnt = 12 * cpu_io_multi) then
-                                io_out(16#2005#, 0);
+                elsif (global_step_cnt = 3) then
+                    --enable bg.
+                    if (init_final_cnt = 0 * cpu_io_multi) then
+                        --show bg
+                        --PPUMASK=1e (show bg and sprite)
+                        --PPUMASK=0e (show bg only)
+                        io_out(16#2001#, 16#1e#);
+                    elsif (init_final_cnt = 1 * cpu_io_multi) then
+                        --enable nmi
+                        --bg base = 0x1000
+                        --PPUCTRL=90
+                        io_out(16#2000#, 16#90#);
+                    else
+                        io_read(16#00#);
+                        if (init_final_cnt > 2 * cpu_io_multi) then
+                            global_step_cnt := cnt_next(pi_cpu_en, global_step_cnt, 1);
+                        end if;
+                    end if;
+                    init_final_cnt := cnt_next(pi_cpu_en, init_final_cnt, 1);
 
-                            --enable ppu
-                            elsif (nmi_step_cnt = 13 * cpu_io_multi) then
-                                io_out(16#2001#, 16#1e#);
-                            elsif (nmi_step_cnt = 14 * cpu_io_multi) then
-                                io_out(16#2000#, 16#90#);
-                                nmi_handled := 1;
-
-                            else
-                                io_read(16#00#);
-                            end if;
-                            nmi_step_cnt := cnt_next(pi_cpu_en, nmi_step_cnt, 1);
-                        else
-                            nmi_step_cnt := 0;
-                            io_read(16#00#);
-                        end if;--if (pi_nmi_n = '0' and nmi_handled = 0) then
-
-                    end if;--if (global_step_cnt = 0) then
                 else
-                    io_brk;
-                end if;--if (rdy = '1') then
+                --nmi
+                    if (pi_nmi_n = '0' and nmi_handled = 0) then
+
+                        --stop ppu.
+                        if (nmi_step_cnt = 0 * cpu_io_multi) then
+                            io_out(16#2001#, 0);
+                        elsif (nmi_step_cnt = 1 * cpu_io_multi) then
+                            io_out(16#2000#, 0);
+
+                        --sprite x,y change.
+                        elsif (nmi_step_cnt = 2 * cpu_io_multi) then
+                            io_out(16#0314#, (spr_x) mod 255);
+                        elsif (nmi_step_cnt = 3 * cpu_io_multi) then
+                            io_out(16#0317#, (spr_y) mod 255);
+
+                        elsif (nmi_step_cnt = 4 * cpu_io_multi) then
+                            io_out(16#0318#, (spr_x + 8) mod 255);
+                        elsif (nmi_step_cnt = 5 * cpu_io_multi) then
+                            io_out(16#031b#, (spr_y) mod 255);
+
+                        elsif (nmi_step_cnt = 6 * cpu_io_multi) then
+                            io_out(16#031c#, (spr_x) mod 255);
+                        elsif (nmi_step_cnt = 7 * cpu_io_multi) then
+                            io_out(16#031f#, (spr_y  + 8) mod 255);
+
+                        elsif (nmi_step_cnt = 8 * cpu_io_multi) then
+                            io_out(16#0320#, (spr_x  + 8) mod 255);
+                        elsif (nmi_step_cnt = 9 * cpu_io_multi) then
+                            io_out(16#0323#, (spr_y + 8) mod 255);
+
+                        elsif (nmi_step_cnt = 10 * cpu_io_multi) then
+                            --dma start.
+                            io_out(16#4014#, 3);
+                            spr_x := spr_x + 1;
+                            spr_y := spr_y + 4;
+
+                        --scroll
+                        elsif (nmi_step_cnt = 11 * cpu_io_multi) then
+                            io_out(16#2005#, (scr_x) mod 255);
+                            scr_x := scr_x + 3;
+                        elsif (nmi_step_cnt = 12 * cpu_io_multi) then
+                            io_out(16#2005#, 0);
+
+                        --enable ppu
+                        elsif (nmi_step_cnt = 13 * cpu_io_multi) then
+                            io_out(16#2001#, 16#1e#);
+                        elsif (nmi_step_cnt = 14 * cpu_io_multi) then
+                            io_out(16#2000#, 16#90#);
+                            nmi_handled := 1;
+
+                        else
+                            io_read(16#00#);
+                        end if;
+                        nmi_step_cnt := cnt_next(pi_cpu_en, nmi_step_cnt, 1);
+                    else
+                        nmi_step_cnt := 0;
+                        io_read(16#00#);
+                    end if;--if (pi_nmi_n = '0' and nmi_handled = 0) then
+
+                end if;--if (global_step_cnt = 0) then
+            else
+                io_brk;
+            end if;--if (rdy = '1') then
         end if; --if (rst_n = '0') then
     end process;
 
