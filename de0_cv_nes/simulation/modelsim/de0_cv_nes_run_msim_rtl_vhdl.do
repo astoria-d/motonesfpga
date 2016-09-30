@@ -165,6 +165,8 @@ add wave -label r -radix hex sim:/testbench_motones_sim/sim_board/po_r;
 add wave -label g -radix hex sim:/testbench_motones_sim/sim_board/po_g;
 add wave -label b -radix hex sim:/testbench_motones_sim/sim_board/po_b;
 
+
+
 view structure
 view signals
 
@@ -172,7 +174,6 @@ run 25 us
 wave zoom full
 
 #palette
-#run 16ms
 run 70 us
 
 #vram
@@ -181,3 +182,4 @@ run 2000 us
 #sprite
 run 550 us
 
+#run 16ms

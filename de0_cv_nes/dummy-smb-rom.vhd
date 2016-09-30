@@ -240,7 +240,7 @@ end;
                     else
                         io_read(16#00#);
                         if (init_plt_cnt > (32 + 3) * cpu_io_multi) then
-                            global_step_cnt := cnt_next(pi_cpu_en, global_step_cnt, 3);
+                            global_step_cnt := cnt_next(pi_cpu_en, global_step_cnt, 1);
                         end if;
                     end if;
                     init_plt_cnt := cnt_next(pi_cpu_en, init_plt_cnt, 1);
