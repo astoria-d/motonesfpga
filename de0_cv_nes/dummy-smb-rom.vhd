@@ -148,6 +148,7 @@ begin
     variable nmi_step_cnt : integer;
     variable global_step_cnt : integer;
     variable nmi_handled : integer;
+    variable nmi_cnt : integer;
 
     variable spr_x : integer;
     variable spr_y : integer;
@@ -240,6 +241,7 @@ end;
             scr_x := 0;
             nmi_step_cnt := 0;
             nmi_handled := 0;
+            nmi_cnt := 0;
 
         elsif (rising_edge(pi_base_clk)) then
             if (pi_rdy = '1') then
@@ -361,8 +363,10 @@ end;
                         elsif (nmi_step_cnt = 10 * cpu_io_multi) then
                             --dma start.
                             io_out(16#4014#, 3);
-                            spr_x := spr_x + 1;
-                            spr_y := spr_y + 4;
+                            if (nmi_cnt mod 10 = 0) then
+                                spr_x := spr_x + 3;
+                                spr_y := spr_y + 1;
+                            end if;
 
                         --scroll
                         elsif (nmi_step_cnt = 11 * cpu_io_multi) then
@@ -376,6 +380,11 @@ end;
                             io_out(16#2001#, 16#1e#);
                         elsif (nmi_step_cnt = 14 * cpu_io_multi) then
                             io_out(16#2000#, 16#90#);
+                            if (nmi_cnt = 59) then
+                                nmi_cnt := 0;
+                            else
+                                nmi_cnt := cnt_next(pi_cpu_en, nmi_cnt, 1);
+                            end if;
 
                         else
                             io_read(16#00#);
