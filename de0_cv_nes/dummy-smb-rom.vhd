@@ -156,7 +156,13 @@ begin
 procedure io_out (ad: in integer; dt : in integer) is
 begin
     reg_oe_n <= '1';
-    reg_we_n <= '0';
+    if (pi_cpu_en(0) = '1') then
+        reg_we_n <= '1';
+    elsif (pi_cpu_en(3) = '1') then
+        reg_we_n <= '0';
+    elsif (pi_cpu_en(6) = '1') then
+        reg_we_n <= '1';
+    end if;
     reg_addr <= conv_std_logic_vector(ad, 16);
     reg_d_out <= conv_std_logic_vector(dt, 8);
 end;
@@ -179,6 +185,18 @@ begin
     reg_d_out <= (others => 'Z');
 end;
 
+function cnt_next (
+    pr_cpu_en   : in std_logic_vector (7 downto 0);
+    val         : in integer;
+    step        : in integer) return integer is
+begin
+    if (pr_cpu_en(0) = '1') then
+        return val + step;
+    else
+        return val;
+    end if;
+end;
+
     begin
         if (pi_rst_n = '0') then
             
@@ -195,11 +213,10 @@ end;
             spr_x := 16#28#;
             spr_y := 16#b0#;
             scr_x := 0;
-            nmi_step_cnt := 100;
-            nmi_handled := 1;
+            nmi_step_cnt := 0;
+            nmi_handled := 0;
 
         elsif (rising_edge(pi_base_clk)) then
-            if (pi_cpu_en(0) = '1') then
                 if (pi_rdy = '1') then
                     if (global_step_cnt = 0) then
                         --step0.0 = init ppu.
@@ -223,10 +240,10 @@ end;
                         else
                             io_read(16#00#);
                             if (init_plt_cnt > (32 + 3) * cpu_io_multi) then
-                                global_step_cnt := global_step_cnt + 1;
+                                global_step_cnt := cnt_next(pi_cpu_en, global_step_cnt, 3);
                             end if;
                         end if;
-                        init_plt_cnt := init_plt_cnt + 1;
+                        init_plt_cnt := cnt_next(pi_cpu_en, init_plt_cnt, 1);
 
                     elsif (global_step_cnt = 1) then
                             --set vram addr 2000
@@ -242,10 +259,10 @@ end;
                         else
                             io_read(16#00#);
                             if (init_vram_cnt > (bg_tile_cnt + 2) * cpu_io_multi) then
-                                global_step_cnt := global_step_cnt + 1;
+                                global_step_cnt := cnt_next(pi_cpu_en, global_step_cnt, 1);
                             end if;
                         end if;
-                        init_vram_cnt := init_vram_cnt + 1;
+                        init_vram_cnt := cnt_next(pi_cpu_en, init_vram_cnt, 1);
 
                     elsif (global_step_cnt = 2) then
                         --set dma data.
@@ -260,10 +277,10 @@ end;
                         else
                             io_read(16#00#);
                             if (init_spr_cnt > (spr_tile_cnt + 2) * cpu_io_multi) then
-                                global_step_cnt := global_step_cnt + 1;
+                                global_step_cnt := cnt_next(pi_cpu_en, global_step_cnt, 1);
                             end if;
                         end if;
-                        init_spr_cnt := init_spr_cnt + 1;
+                        init_spr_cnt := cnt_next(pi_cpu_en, init_spr_cnt, 1);
 
                     elsif (global_step_cnt = 3) then
                         --enable bg.
@@ -280,19 +297,14 @@ end;
                         else
                             io_read(16#00#);
                             if (init_final_cnt > 2 * cpu_io_multi) then
-                                global_step_cnt := global_step_cnt + 1;
+                                global_step_cnt := cnt_next(pi_cpu_en, global_step_cnt, 1);
                             end if;
                         end if;
-                        init_final_cnt := init_final_cnt + 1;
+                        init_final_cnt := cnt_next(pi_cpu_en, init_final_cnt, 1);
 
-
-                    --nmi
                     else
-                        if (pi_nmi_n = '0' and nmi_handled = 1) then
-                            nmi_handled := 0;
-                        end if;
-
-                        if (nmi_handled = 0) then
+                    --nmi
+                        if (pi_nmi_n = '0' and nmi_handled = 0) then
 
                             --stop ppu.
                             if (nmi_step_cnt = 0 * cpu_io_multi) then
@@ -344,17 +356,16 @@ end;
                             else
                                 io_read(16#00#);
                             end if;
-                            nmi_step_cnt := nmi_step_cnt + 1;
+                            nmi_step_cnt := cnt_next(pi_cpu_en, nmi_step_cnt, 1);
                         else
                             nmi_step_cnt := 0;
                             io_read(16#00#);
-                        end if;--if (nmi_handled = 0) then
+                        end if;--if (pi_nmi_n = '0' and nmi_handled = 0) then
 
                     end if;--if (global_step_cnt = 0) then
                 else
                     io_brk;
                 end if;--if (rdy = '1') then
-            end if;--if (pi_cpu_en(0) = '1') then
         end if; --if (rst_n = '0') then
     end process;
 
@@ -381,7 +392,7 @@ begin
     p_read : process (pi_base_clk)
     begin
         if (rising_edge(pi_base_clk)) then
-            if (pi_ce_n = '0') then
+            if (pi_ce_n = '0' and pi_oe_n = '0') then
                 ---dummy data.
                 po_data <= "00110011";
             else
@@ -392,48 +403,3 @@ begin
 
 end rtl;
 
-
-
--------------dummy apu
---library ieee;
---use ieee.std_logic_1164.all;
---use ieee.std_logic_arith.conv_std_logic_vector;
---
---entity apu is 
---    port (
---        pi_rst_n       : in std_logic;
---        pi_base_clk    : in std_logic;
---        pi_cpu_en      : in std_logic_vector (7 downto 0);
---        pi_rnd_en      : in std_logic_vector (3 downto 0);
---        pi_ce_n        : in std_logic;
---
---        --cpu i/f
---        pio_oe_n       : inout std_logic;
---        pio_we_n       : inout std_logic;
---        pio_cpu_addr   : inout std_logic_vector (15 downto 0);
---        pio_cpu_d      : inout std_logic_vector (7 downto 0);
---        po_rdy         : out std_logic;
---
---        --sprite i/f
---        po_spr_ce_n    : out std_logic;
---        po_spr_rd_n    : out std_logic;
---        po_spr_wr_n    : out std_logic;
---        po_spr_addr    : out std_logic_vector (7 downto 0);
---        po_spr_data    : out std_logic_vector (7 downto 0)
---    );
---end apu;
---
---architecture rtl of apu is
---begin
---    pio_oe_n       <= 'Z';
---    pio_we_n       <= 'Z';
---    pio_cpu_addr   <= (others => 'Z');
---    pio_cpu_d      <= (others => 'Z');
---    po_rdy         <= '1';
---    po_spr_ce_n    <= 'Z';
---    po_spr_rd_n    <= 'Z';
---    po_spr_wr_n    <= 'Z';
---    po_spr_addr    <= (others => 'Z');
---    po_spr_data    <= (others => 'Z');
---end rtl;
---
