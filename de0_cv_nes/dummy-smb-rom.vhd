@@ -364,8 +364,8 @@ end;
                             --dma start.
                             io_out(16#4014#, 3);
                             if (nmi_cnt mod 10 = 0) then
-                                spr_x := spr_x + 3;
-                                spr_y := spr_y + 1;
+                                spr_x := cnt_next(pi_cpu_en, spr_x, 3);
+                                spr_y := cnt_next(pi_cpu_en, spr_y, 1);
                             end if;
 
                         --scroll
