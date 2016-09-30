@@ -236,7 +236,7 @@ end;
             init_spr_cnt := 0;
             init_final_cnt := 0;
             spr_x := 16#28#;
-            spr_y := 16#b0#;
+            spr_y := 16#c8#;
             scr_x := 0;
             nmi_step_cnt := 0;
             nmi_handled := 0;
@@ -339,24 +339,24 @@ end;
 
                         --sprite x,y change.
                         elsif (nmi_step_cnt = 2 * cpu_io_multi) then
-                            io_out(16#0314#, (spr_x) mod 255);
+                            io_out(16#0314#, (spr_y) mod 255);
                         elsif (nmi_step_cnt = 3 * cpu_io_multi) then
-                            io_out(16#0317#, (spr_y) mod 255);
+                            io_out(16#0317#, (spr_x) mod 255);
 
                         elsif (nmi_step_cnt = 4 * cpu_io_multi) then
-                            io_out(16#0318#, (spr_x + 8) mod 255);
+                            io_out(16#0318#, (spr_y) mod 255);
                         elsif (nmi_step_cnt = 5 * cpu_io_multi) then
-                            io_out(16#031b#, (spr_y) mod 255);
+                            io_out(16#031b#, (spr_x + 8) mod 255);
 
                         elsif (nmi_step_cnt = 6 * cpu_io_multi) then
-                            io_out(16#031c#, (spr_x) mod 255);
+                            io_out(16#031c#, (spr_y  + 8) mod 255);
                         elsif (nmi_step_cnt = 7 * cpu_io_multi) then
-                            io_out(16#031f#, (spr_y  + 8) mod 255);
+                            io_out(16#031f#, (spr_x) mod 255);
 
                         elsif (nmi_step_cnt = 8 * cpu_io_multi) then
-                            io_out(16#0320#, (spr_x  + 8) mod 255);
+                            io_out(16#0320#, (spr_y  + 8) mod 255);
                         elsif (nmi_step_cnt = 9 * cpu_io_multi) then
-                            io_out(16#0323#, (spr_y + 8) mod 255);
+                            io_out(16#0323#, (spr_x + 8) mod 255);
 
                         elsif (nmi_step_cnt = 10 * cpu_io_multi) then
                             --dma start.
