@@ -144,9 +144,24 @@ end;
                             io_out(16#2005#, 16#21#);
                         elsif (init_step_cnt = 7 * cpu_io_multi) then
                             io_out(16#2005#, 16#5#);
+
+                        elsif (init_step_cnt = 8 * cpu_io_multi) then
+                            --vram read test.
+                            io_out(16#2006#, 16#1e#);
+                        elsif (init_step_cnt = 9 * cpu_io_multi) then
+                            --vram read test.
+                            io_out(16#2006#, 16#c0#);
+                        elsif (init_step_cnt = 10 * cpu_io_multi) then
+                            --vram read test.
+                            io_out(16#2007#, 10);
+                        elsif (init_step_cnt = 11 * cpu_io_multi) then
+                            io_read(16#2007#);
+                        elsif (init_step_cnt = 12 * cpu_io_multi) then
+                            io_read(16#2007#);
+
                         else
                             io_read(16#00#);
-                            if (init_step_cnt > 8 * cpu_io_multi) then
+                            if (init_step_cnt > 13 * cpu_io_multi) then
                                 global_step_cnt := global_step_cnt + 1;
                             end if;
                         end if;

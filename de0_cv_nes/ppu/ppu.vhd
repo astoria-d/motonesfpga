@@ -74,12 +74,13 @@ signal reg_ppu_scroll_y     : std_logic_vector (7 downto 0);
 signal reg_ppu_addr         : std_logic_vector (13 downto 0);
 signal reg_ppu_data         : std_logic_vector (7 downto 0);
 
-type vac_state is (idle, reg_set, reg_out, mem_write, write_end, complete);
+type vram_state is (idle, reg_set, reg_out, mem_write, write_end, mem_read, complete);
+type spr_state is (idle, reg_set, reg_out, mem_write, write_end, complete);
 
-signal reg_v_cur_state      : vac_state;
-signal reg_v_next_state     : vac_state;
-signal reg_spr_cur_state    : vac_state;
-signal reg_spr_next_state   : vac_state;
+signal reg_v_cur_state      : vram_state;
+signal reg_v_next_state     : vram_state;
+signal reg_spr_cur_state    : spr_state;
+signal reg_spr_next_state   : spr_state;
 
 signal reg_v_ce_n       : std_logic;
 signal reg_v_rd_n       : std_logic;
@@ -177,6 +178,8 @@ begin
                 if (pi_cpu_addr = PPUSTATUS) then
                     addr_cnt := 0;
                     addr_set := 0;
+                elsif (pi_cpu_addr = PPUDATA) then
+                    addr_inc := 1;
                 end if;
             elsif (pi_ce_n = '1') then
                 scr_set := 0;
@@ -219,12 +222,14 @@ begin
     end process;
 
     --state change to next.
-    vac_next_stat_p : process (reg_v_cur_state, pi_cpu_en, pi_ce_n, pi_we_n, pi_cpu_addr)
+    vac_next_stat_p : process (reg_v_cur_state, pi_cpu_en, pi_ce_n, pi_we_n, pi_oe_n, pi_cpu_addr)
     begin
         case reg_v_cur_state is
             when idle =>
                 if (pi_cpu_en(CP_ST0) = '1' and pi_ce_n = '0' and pi_we_n = '0' and pi_cpu_addr = PPUDATA) then
                     reg_v_next_state <= reg_set;
+                elsif (pi_ce_n = '0' and pi_oe_n = '0' and pi_cpu_addr = PPUDATA) then
+                    reg_v_next_state <= mem_read;
                 else
                     reg_v_next_state <= reg_v_cur_state;
                 end if;
@@ -254,6 +259,12 @@ begin
                 end if;
             when complete =>
                     reg_v_next_state <= idle;
+            when mem_read =>
+                if (pi_cpu_en(CP_ST4) = '1') then
+                    reg_v_next_state <= complete;
+                else
+                    reg_v_next_state <= reg_v_cur_state;
+                end if;
         end case;
     end process;
 
@@ -317,6 +328,13 @@ begin
                 reg_v_rd_n      <= '1';
                 reg_v_wr_n      <= '1';
                 reg_v_addr    <= (others => 'Z');
+                reg_v_data    <= (others => 'Z');
+                reg_plt_ce_n    <= '1';
+            when mem_read =>
+                reg_v_ce_n      <= '0';
+                reg_v_rd_n      <= '0';
+                reg_v_wr_n      <= '1';
+                reg_v_addr    <= reg_ppu_addr;
                 reg_v_data    <= (others => 'Z');
                 reg_plt_ce_n    <= '1';
         end case;
@@ -423,6 +441,8 @@ begin
             if (pi_ce_n = '0' and pi_oe_n = '0') then
                 if (pi_cpu_addr = PPUSTATUS) then
                     reg_out_cpu_d <= pi_ppu_status;
+                elsif (pi_cpu_addr = PPUDATA) then
+                    reg_out_cpu_d <= pio_v_data;
                 else
                     reg_out_cpu_d <= (others => 'Z');
                 end if;
