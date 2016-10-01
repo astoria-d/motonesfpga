@@ -168,7 +168,6 @@ begin
     pio_oe_n       <= reg_cpu_oe_n;
     pio_we_n       <= reg_cpu_we_n;
     pio_cpu_addr   <= reg_cpu_addr;
-    pio_cpu_d      <= reg_cpu_out;
 
     po_spr_ce_n    <= reg_spr_ce_n;
     po_spr_rd_n    <= reg_spr_rd_n;
@@ -184,7 +183,6 @@ begin
             reg_cpu_oe_n    <= 'Z';
             reg_cpu_we_n    <= 'Z';
             reg_cpu_addr    <= (others => 'Z');
-            reg_cpu_out     <= (others => 'Z');
 
             --sprite i/f
             reg_spr_ce_n    <= 'Z';
@@ -198,7 +196,6 @@ begin
                 reg_cpu_oe_n    <= 'Z';
                 reg_cpu_we_n    <= 'Z';
                 reg_cpu_addr    <= (others => 'Z');
-                reg_cpu_out     <= (others => 'Z');
 
                 --sprite i/f
                 reg_spr_ce_n    <= 'Z';
@@ -227,13 +224,34 @@ begin
                 reg_cpu_oe_n    <= 'Z';
                 reg_cpu_we_n    <= 'Z';
                 reg_cpu_addr    <= (others => 'Z');
-                reg_cpu_out     <= (others => 'Z');
                 reg_spr_ce_n    <= 'Z';
                 reg_spr_rd_n    <= 'Z';
                 reg_spr_wr_n    <= 'Z';
                 reg_spr_addr    <= (others => 'Z');
                 reg_spr_data    <= (others => 'Z');
             end if;
+        end if;--if (pi_rst_n = '0') then
+    end process;
+
+    pio_cpu_d      <= reg_cpu_out;
+
+    jp_get_p : process (pi_rst_n, pi_base_clk)
+    begin
+        if (pi_rst_n = '0') then
+            reg_cpu_out     <= (others => 'Z');
+        elsif (rising_edge(pi_base_clk)) then
+            if (pi_ce_n = '0' and pio_oe_n = '0') then
+                if (pio_cpu_addr(4 downto 0) = OAM_JP1) then
+                    reg_cpu_out <= (others => '0');
+                elsif (pio_cpu_addr(4 downto 0) = OAM_JP2) then
+                    reg_cpu_out <= (others => '0');
+                else
+                    reg_cpu_out <= (others => '0');
+                end if;
+            else
+                reg_cpu_out <= (others => 'Z');
+            end if;--if (pi_ce_n = '0' and pi_oe_n = '0') then
+
         end if;--if (pi_rst_n = '0') then
     end process;
 
