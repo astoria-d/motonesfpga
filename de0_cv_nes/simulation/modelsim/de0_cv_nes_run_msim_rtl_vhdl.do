@@ -48,11 +48,11 @@ add wave -label d_io -radix hex     sim:/testbench_motones_sim/sim_board/wr_d_io
 add wave -divider cpu
 
 add wave -label reg_inst -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_inst;
-add wave -label reg_status -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_status;
 add wave -label reg_acc -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_acc;
 add wave -label reg_x -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_x;
 add wave -label reg_y -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_y;
 add wave -label reg_sp -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_sp;
+add wave -label reg_status -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_status;
 
 #add wave -divider internal_reg
 #add wave -label reg_main_cur_state  sim:/testbench_motones_sim/sim_board/cpu_inst/reg_main_state;

@@ -1183,9 +1183,6 @@ end;
                 if (reg_nes_y = VSCAN_NEXT_START - 1) then
                     reg_ppu_status(ST_SP0) <= '0';
                 else
---                    if (reg_nes_y = 241) then
---                        reg_ppu_status(ST_SP0) <= '1';
---                    end if;
                     reg_ppu_status(ST_SP0) <= reg_spr0_hit;
                 end if;
 
