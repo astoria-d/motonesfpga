@@ -182,4 +182,5 @@ wave zoom full
 ##sprite
 #run 550 us
 
-run 65ms
+#until nmi 0x15
+run 435ms
