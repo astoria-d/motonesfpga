@@ -148,12 +148,10 @@ begin
                     if (scr_set = 0) then
                         --TODO: scroll register bug in renderer!!!
                         if (scr_cnt = 0) then
-                            --reg_ppu_scroll_x <= pio_cpu_d;
-                            reg_ppu_scroll_x <= (others => '0');
+                            reg_ppu_scroll_x <= pio_cpu_d;
                             scr_cnt := 1;
                         else
-                            --reg_ppu_scroll_y <= pio_cpu_d;
-                            reg_ppu_scroll_y <= (others => '0');
+                            reg_ppu_scroll_y <= pio_cpu_d;
                             scr_cnt := 0;
                         end if;
                         scr_set := 1;

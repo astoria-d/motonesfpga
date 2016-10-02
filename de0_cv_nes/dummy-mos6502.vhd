@@ -428,11 +428,10 @@ end;
                         --step4 = scroll test and ppu reg read test.
                         if (scl_step_cnt = 0) then
                             --x scroll pos=123
-                            --io_out(16#2005#, 11);
-                            io_out(16#2005#, 0);
+                            io_out(16#2005#, 123);
                         elsif (scl_step_cnt = 1 * cpu_io_multi) then
                             --y scroll pos=100
-                            io_out(16#2005#, 0);
+                            io_out(16#2005#, 110);
 
                         elsif (scl_step_cnt = 2 * cpu_io_multi) then
                             --read status reg.
@@ -511,7 +510,7 @@ end;
                             io_read(16#00#);
                             if (enable_ppu_step_cnt > 1 * cpu_io_multi) then
                                 --skip nmi test at this momemnt..
-                                global_step_cnt := global_step_cnt + 3;
+                                global_step_cnt := global_step_cnt + 1;
                             end if;
                         end if;
                         enable_ppu_step_cnt := enable_ppu_step_cnt + 1;
@@ -528,12 +527,10 @@ end;
                                 io_out(16#2004#, nmi_oam_x);
                             elsif (nmi_step_cnt = 2 * cpu_io_multi) then
                                 --scroll x=0
---                                io_out(16#2005#, nmi_scl_y);
-                                io_read(16#00#);
+                                io_out(16#2005#, nmi_scl_y);
                             elsif (nmi_step_cnt = 3 * cpu_io_multi) then
                                 --scroll y++
---                                io_out(16#2005#, nmi_scl_y);
-                                io_read(16#00#);
+                                io_out(16#2005#, nmi_scl_y);
                             elsif (nmi_step_cnt = 4 * cpu_io_multi) then
                                 --set sprite addr=00 (first sprite)
                                 io_out(16#2003#, 16#04#);
