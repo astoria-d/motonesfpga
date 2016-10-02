@@ -115,6 +115,7 @@ begin
     variable scr_cnt        : integer range 0 to 1;
     variable scr_set        : integer range 0 to 1;
     variable oam_addr_inc   : integer range 0 to 1;
+    variable ppu_read_invalid : integer range 0 to 1;
     begin
         if (pi_rst_n = '0') then
             reg_ppu_ctrl <= (others => '0');
@@ -132,6 +133,7 @@ begin
             scr_cnt := 0;
             scr_set := 0;
             oam_addr_inc := 0;
+            ppu_read_invalid := 1;
         elsif (rising_edge(pi_base_clk)) then
             if (pi_cpu_en(CP_ST0) = '1' and pi_ce_n = '0' and pi_we_n = '0') then
                 if (pi_cpu_addr = PPUCTRL) then
@@ -167,6 +169,9 @@ begin
                         end if;
                         addr_set := 1;
                     end if;
+
+                    --ppu read invaliate.
+                    ppu_read_invalid := 1;
                 elsif (pi_cpu_addr = PPUDATA) then
                     reg_ppu_data <= pio_cpu_d;
                     addr_inc := 1;
@@ -177,7 +182,11 @@ begin
                     addr_cnt := 0;
                     addr_set := 0;
                 elsif (pi_cpu_addr = PPUDATA) then
-                    addr_inc := 1;
+                    if (ppu_read_invalid = 1) then
+                        ppu_read_invalid := 0;
+                    else
+                        addr_inc := 1;
+                    end if;
                 end if;
             elsif (pi_ce_n = '1') then
                 scr_set := 0;
