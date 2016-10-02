@@ -182,5 +182,13 @@ wave zoom full
 ##sprite
 #run 550 us
 
-#until nmi 0x15
-run 435ms
+#until nmi 0x08 end.
+run 230ms
+
+mem save -o D:/daisuke/nes/repo/motonesfpga/doc/dbg/sim-dump/after-08-sim-ram.mem -f mti -data hex -addr hex -wordsperline 16 /testbench_motones_sim/sim_board/cpu_ram_inst/work_ram
+mem save -o D:/daisuke/nes/repo/motonesfpga/doc/dbg/sim-dump/after-08-sim-vram.mem -f mti -data hex -addr hex -wordsperline 16 /testbench_motones_sim/sim_board/vram_nt0_inst/work_ram
+
+run 16.8ms
+mem save -o D:/daisuke/nes/repo/motonesfpga/doc/dbg/sim-dump/after-09-sim-ram.mem -f mti -data hex -addr hex -wordsperline 16 /testbench_motones_sim/sim_board/cpu_ram_inst/work_ram
+mem save -o D:/daisuke/nes/repo/motonesfpga/doc/dbg/sim-dump/after-09-sim-vram.mem -f mti -data hex -addr hex -wordsperline 16 /testbench_motones_sim/sim_board/vram_nt0_inst/work_ram
+

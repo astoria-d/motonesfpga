@@ -185,7 +185,11 @@ begin
                 scr_set := 0;
                 addr_set := 0;
                 if (addr_inc = 1) then
-                    reg_ppu_addr <= reg_ppu_addr + 1;
+                    if (reg_ppu_ctrl(PPUVAI) = '1') then
+                        reg_ppu_addr <= reg_ppu_addr + 32;
+                    else
+                        reg_ppu_addr <= reg_ppu_addr + 1;
+                    end if;
                     addr_inc := 0;
                 end if;
                 if (oam_addr_inc = 1) then
