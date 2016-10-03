@@ -170,7 +170,7 @@ add wave -label b -radix hex sim:/testbench_motones_sim/sim_board/po_b;
 view structure
 view signals
 
-run 25 us
+run 2 us
 wave zoom full
 
-run 150us
+run 165us

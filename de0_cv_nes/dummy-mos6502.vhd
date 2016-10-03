@@ -427,8 +427,8 @@ end;
                     elsif (global_step_cnt = 5) then
                         --step4 = scroll test and ppu reg read test.
                         if (scl_step_cnt = 0) then
-                            --x scroll pos=5
-                            io_out(16#2005#, 5);
+                            --x scroll pos=9
+                            io_out(16#2005#, 9);
                         elsif (scl_step_cnt = 1 * cpu_io_multi) then
                             --y scroll pos=9
                             io_out(16#2005#, 9);
