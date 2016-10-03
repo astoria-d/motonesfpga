@@ -263,10 +263,10 @@ end;
                     elsif (global_step_cnt = 2) then
                         --step1 = name table set.
                         if (nt_step_cnt = 0 * cpu_io_multi) then
-                            --set vram addr 2005 (first row, 6th col)
+                            --set vram addr 2005 (2nd row, 6th col)
                             io_out(16#2006#, 16#20#);
                         elsif (nt_step_cnt = 1 * cpu_io_multi) then
-                            io_out(16#2006#, 16#08#);
+                            io_out(16#2006#, 16#26#);
                         elsif (nt_step_cnt = 2 * cpu_io_multi) then
                             --set name tbl data
                             --0x44, 45, 45 = DEM
@@ -348,31 +348,31 @@ end;
                             --set sprite data: x=100
                             io_out(16#2004#, 16#64#);
 
-                        elsif (spr_step_cnt = 9 * cpu_io_multi) then
-                            --set sprite data: y=60
-                            io_out(16#2004#, 60);
-                        elsif (spr_step_cnt = 10 * cpu_io_multi) then
-                            --tile=0x4d (ascii 'P')
-                            io_out(16#2004#, 16#50#);
-                        elsif (spr_step_cnt = 11 * cpu_io_multi) then
-                            --set sprite attr=01
-                            io_out(16#2004#, 16#01#);
-                        elsif (spr_step_cnt = 12 * cpu_io_multi) then
-                            --set sprite data: x=33
-                            io_out(16#2004#, 16#21#);
-
-                        elsif (spr_step_cnt = 13 * cpu_io_multi) then
-                            --set sprite data: y=61
-                            io_out(16#2004#, 16#3d#);
-                        elsif (spr_step_cnt = 14 * cpu_io_multi) then
-                            --tile=0x4d (ascii 'Q')
-                            io_out(16#2004#, 16#51#);
-                        elsif (spr_step_cnt = 15 * cpu_io_multi) then
-                            --set sprite attr=02
-                            io_out(16#2004#, 16#02#);
-                        elsif (spr_step_cnt = 16 * cpu_io_multi) then
-                            --set sprite data: x=45
-                            io_out(16#2004#, 45);
+--                        elsif (spr_step_cnt = 9 * cpu_io_multi) then
+--                            --set sprite data: y=60
+--                            io_out(16#2004#, 60);
+--                        elsif (spr_step_cnt = 10 * cpu_io_multi) then
+--                            --tile=0x4d (ascii 'P')
+--                            io_out(16#2004#, 16#50#);
+--                        elsif (spr_step_cnt = 11 * cpu_io_multi) then
+--                            --set sprite attr=01
+--                            io_out(16#2004#, 16#01#);
+--                        elsif (spr_step_cnt = 12 * cpu_io_multi) then
+--                            --set sprite data: x=33
+--                            io_out(16#2004#, 16#21#);
+--
+--                        elsif (spr_step_cnt = 13 * cpu_io_multi) then
+--                            --set sprite data: y=61
+--                            io_out(16#2004#, 16#3d#);
+--                        elsif (spr_step_cnt = 14 * cpu_io_multi) then
+--                            --tile=0x4d (ascii 'Q')
+--                            io_out(16#2004#, 16#51#);
+--                        elsif (spr_step_cnt = 15 * cpu_io_multi) then
+--                            --set sprite attr=02
+--                            io_out(16#2004#, 16#02#);
+--                        elsif (spr_step_cnt = 16 * cpu_io_multi) then
+--                            --set sprite data: x=45
+--                            io_out(16#2004#, 45);
 
                         else
                             io_read(16#00#);
@@ -427,11 +427,11 @@ end;
                     elsif (global_step_cnt = 5) then
                         --step4 = scroll test and ppu reg read test.
                         if (scl_step_cnt = 123) then
-                            --x scroll pos=123
-                            io_out(16#2005#, 123);
+                            --x scroll pos=5
+                            io_out(16#2005#, 5);
                         elsif (scl_step_cnt = 1 * cpu_io_multi) then
-                            --y scroll pos=100
-                            io_out(16#2005#, 100);
+                            --y scroll pos=9
+                            io_out(16#2005#, 9);
 
                         elsif (scl_step_cnt = 2 * cpu_io_multi) then
                             --read status reg.
