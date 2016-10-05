@@ -2076,7 +2076,7 @@ end;
                             calc_res := ("0" & reg_acc) - ("0" & reg_d_in) - not reg_status(FL_C);
 
                             --c Set if unsigned borrow not required; cleared if unsigned borrow.
-                            reg_tmp_carry <= not calc_res(7);
+                            reg_tmp_carry <= not calc_res(8);
                             --v Set if signed borrow required; cleared if no signed borrow.
                             if ((reg_acc(7) /= reg_d_in(7)) and (reg_acc(7) /= calc_res(7))) then
                                 reg_tmp_ovf <= '1';
