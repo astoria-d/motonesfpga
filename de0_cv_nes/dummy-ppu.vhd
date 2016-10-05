@@ -43,7 +43,7 @@ end ppu;
 architecture rtl of ppu is
 begin
     pio_cpu_d      <= (others => 'Z');
-    --po_vblank_n    <= '1';
+    po_vblank_n    <= '1';
 
     po_v_ce_n       <= 'Z';
     po_v_rd_n       <= 'Z';
