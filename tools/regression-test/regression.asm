@@ -787,7 +787,7 @@ y_loop:
 
 nmi_test:
     jsr update_counter
-    jsr update_scroll
+;    jsr update_scroll
     jsr update_dma
 
     rti
@@ -2492,6 +2492,216 @@ nmi_test:
     sbc ($55, x)        ;;6a - 7f - 1= bf
     cmp #$ea
     beq :+
+    jsr test_failure
+:
+
+
+    lda #$54
+    sta $50
+
+    ;;cmp inst overwrites status.
+    ;;calc a -m.
+    ;;z is set if equal.
+    ;;n is set by the result of bit 7
+    ;;c is set if m is less or equal to a
+    clc
+    lda #$78
+    ;;78+54=cc
+    adc $50
+    cmp #$cc
+
+    beq :+
+    jsr test_failure
+:
+    bpl :+
+    jsr test_failure
+:
+    bcs :+
+    jsr test_failure
+:
+
+    ;;;carry and overflow test....
+    ;;a=positive, mem=positive case.
+    clc
+    lda #$78
+
+    ;;78+54=cc
+    adc $50
+    bmi :+
+    jsr test_failure
+:
+    bcc :+
+    jsr test_failure
+:
+    bvs :+
+    jsr test_failure
+:
+
+    ;;a=positive, mem=negative case.
+    lda #$d1
+    sta $50
+    clc
+    lda #$78
+
+    ;;78+d1=149
+    adc $50
+    bpl :+
+    jsr test_failure
+:
+    bcs :+
+    jsr test_failure
+:
+    bvc :+
+    jsr test_failure
+:
+
+    ;;a=negative, mem=positive case.
+    lda #$41
+    sta $50
+    clc
+    lda #$a8
+
+    ;;a8+41=e9
+    adc $50
+    bmi :+
+    jsr test_failure
+:
+    bcc :+
+    jsr test_failure
+:
+    bvc :+
+    jsr test_failure
+:
+
+    ;;a=negative, mem=negative case.
+    lda #$f0
+    sta $50
+    clc
+    lda #$a8
+
+    ;;a8+f0=198
+    adc $50
+    bmi :+
+    jsr test_failure
+:
+    bcs :+
+    jsr test_failure
+:
+    bvc :+
+    jsr test_failure
+:
+
+    ;;borrow case.
+    lda #$64
+    sta $50
+    clc
+    lda #$40
+
+    ;;40+64=a4
+    adc $50
+    bmi :+
+    jsr test_failure
+:
+    bcc :+
+    jsr test_failure
+:
+    bvs :+
+    jsr test_failure
+:
+
+
+
+    ;;cmp inst overwrites status.
+    ;;calc a -m.
+    ;;z is set if equal.
+    ;;n is set by the result of bit 7
+    ;;c is set if m is less or equal to a
+    lda #$54
+    sta $50
+    clc
+    lda #$78
+    ;;78-54-1=23
+    sbc $50
+    cmp #$23
+
+    beq :+
+    jsr test_failure
+:
+    bpl :+
+    jsr test_failure
+:
+    bcs :+
+    jsr test_failure
+:
+
+    ;;;carry and overflow test....
+    ;;a=positive, mem=positive case.
+    sec
+    lda #$78
+
+    ;;78-54=23
+    sbc $50
+    bpl :+
+    jsr test_failure
+:
+    bcs :+
+    jsr test_failure
+:
+    bvc :+
+    jsr test_failure
+:
+
+    ;;a=positive, mem=negative case.
+    lda #$d1
+    sta $50
+    sec
+    lda #$78
+
+    ;;78-d1=1a7
+    sbc $50
+    bmi :+
+    jsr test_failure
+:
+    bcc :+
+    jsr test_failure
+:
+    bvs :+
+    jsr test_failure
+:
+
+    ;;a=negative, mem=positive case.
+    lda #$41
+    sta $50
+    sec
+    lda #$a8
+
+    ;;a8-41=67
+    sbc $50
+    bpl :+
+    jsr test_failure
+:
+    bcs :+
+    jsr test_failure
+:
+    bvs :+
+    jsr test_failure
+:
+
+    ;;a=negative, mem=negative case.
+    lda #$f0
+    sta $50
+    sec
+    lda #$a8
+
+    ;;a8-f0=1b8
+    sbc $50
+    bmi :+
+    jsr test_failure
+:
+    bcc :+
+    jsr test_failure
+:
+    bvc :+
     jsr test_failure
 :
 
