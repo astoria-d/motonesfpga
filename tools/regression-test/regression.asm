@@ -37,27 +37,27 @@
     sta $00
     lda ad_start_msg+1
     sta $01
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-    jsr print_ln
-
-    ;;test start...
-    jsr addr_test
-    jsr single_inst_test
+;    jsr print_ln
+;    jsr print_ln
+;    jsr print_ln
+;    jsr print_ln
+;    jsr print_ln
+;    jsr print_ln
+;
+;    ;;test start...
+;    jsr addr_test
+;    jsr single_inst_test
     jsr a2_inst_test
-    jsr a3_inst_test
-    jsr a4_inst_test
-    jsr a5_inst_test
-    jsr status_test
-    jsr ppu_test
-
-    jsr pg_border_test
-    jsr dma_test
-
-    jsr simple_dma_test
+;    jsr a3_inst_test
+;    jsr a4_inst_test
+;    jsr a5_inst_test
+;    jsr status_test
+;    jsr ppu_test
+;
+;    jsr pg_border_test
+;    jsr dma_test
+;
+;    jsr simple_dma_test
 
 .endproc
 
@@ -2705,6 +2705,23 @@ nmi_test:
     jsr test_failure
 :
 
+    ldy #$28
+    sty $86
+    ldx #0
+    lda #$ff
+    sec
+    ;;ff-28=d7
+    sbc $86, x
+    bmi :+
+    jsr test_failure
+:
+    bcs :+
+    jsr test_failure
+:
+    bvc :+
+    jsr test_failure
+:
+    
     rts
 
 .endproc
