@@ -101,7 +101,7 @@ add wave -label ppu_scroll_x    -radix hex sim:/testbench_motones_sim/sim_board/
 add wave -label ppu_scroll_y    -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/reg_ppu_scroll_y;
 add wave -label ppu_addr        -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/reg_ppu_addr;
 add wave -label ppu_data        -radix hex sim:/testbench_motones_sim/sim_board/ppu_inst/reg_ppu_data;
-#add wave -label reg_v_cur_state            sim:/testbench_motones_sim/sim_board/ppu_inst/reg_v_cur_state;
+add wave -label reg_v_cur_state            sim:/testbench_motones_sim/sim_board/ppu_inst/reg_v_cur_state;
 
 add wave -divider vram
 add wave -label v_rd_n        -radix hex sim:/testbench_motones_sim/sim_board/wr_v_rd_n;
@@ -112,15 +112,15 @@ add wave -label vram_data        -radix hex sim:/testbench_motones_sim/sim_board
 add wave -divider render
 #add wave -label vga_x       sim:/testbench_motones_sim/sim_board/render_inst/reg_vga_x;
 #add wave -label vga_y       sim:/testbench_motones_sim/sim_board/render_inst/reg_vga_y;
+add wave -label prf_x       sim:/testbench_motones_sim/sim_board/render_inst/reg_prf_x;
 add wave -label nes_x       sim:/testbench_motones_sim/sim_board/render_inst/reg_nes_x;
 add wave -label nes_y       sim:/testbench_motones_sim/sim_board/render_inst/reg_nes_y;
+#add wave -label prf_y       sim:/testbench_motones_sim/sim_board/render_inst/reg_prf_y;
 
 
 add wave -divider bg
-#add wave -label wr_rnd_en  sim:/testbench_motones_sim/sim_board/wr_rnd_en;
+add wave -label wr_rnd_en  sim:/testbench_motones_sim/sim_board/wr_rnd_en;
 add wave -label reg_v_cur_state sim:/testbench_motones_sim/sim_board/render_inst/reg_v_cur_state;
-#add wave -label prf_x       sim:/testbench_motones_sim/sim_board/render_inst/reg_prf_x;
-#add wave -label prf_y       sim:/testbench_motones_sim/sim_board/render_inst/reg_prf_y;
 
 add wave -label disp_nt -radix hex sim:/testbench_motones_sim/sim_board/render_inst/reg_disp_nt;
 add wave -label disp_attr   -radix hex sim:/testbench_motones_sim/sim_board/render_inst/reg_disp_attr;

@@ -390,25 +390,25 @@ begin
                 else
                     reg_v_sync_n <= '1';
                 end if;
-            end if;--if (pi_rnd_en(1) = '1' or pi_rnd_en(3) = '1' ) then
 
-            --pre-fetch x/y position...
-            if (reg_vga_x < HSCAN_NEXT_START * 2) then
-                reg_prf_x <= reg_vga_x / 2 + conv_integer(pi_ppu_scroll_x) + PREFETCH_INT;
-            else
-                reg_prf_x <= reg_vga_x / 2 + conv_integer(pi_ppu_scroll_x)
-                                - HSCAN_NEXT_START + PREFETCH_INT;
-            end if;
-
-            if (reg_vga_y < VSCAN * 2) then
+                --pre-fetch x/y position...
                 if (reg_vga_x < HSCAN_NEXT_START * 2) then
-                    reg_prf_y <= reg_vga_y / 2 + conv_integer(pi_ppu_scroll_y);
+                    reg_prf_x <= (reg_vga_x + 1) / 2 + conv_integer(pi_ppu_scroll_x) + PREFETCH_INT;
                 else
-                    reg_prf_y <= (reg_vga_y + 1) / 2 + conv_integer(pi_ppu_scroll_y);
+                    reg_prf_x <= (reg_vga_x + 1) / 2 + conv_integer(pi_ppu_scroll_x)
+                                    - HSCAN_NEXT_START + PREFETCH_INT;
                 end if;
-            else
-                reg_prf_y <= 0;
-            end if;
+
+                if (reg_vga_y < VSCAN * 2) then
+                    if (reg_vga_x < HSCAN_NEXT_START * 2) then
+                        reg_prf_y <= reg_vga_y / 2 + conv_integer(pi_ppu_scroll_y);
+                    else
+                        reg_prf_y <= (reg_vga_y + 1) / 2 + conv_integer(pi_ppu_scroll_y);
+                    end if;
+                else
+                    reg_prf_y <= 0;
+                end if;
+            end if;--if (pi_rnd_en(1) = '1' or pi_rnd_en(3) = '1' ) then
         end if;--if (pi_rst_n = '0') then
     end process;
 
@@ -425,15 +425,28 @@ begin
     end process;
 
     --state change to next.
-    vac_next_stat_p : process (reg_v_cur_state, pi_rnd_en, pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y)
+    vac_next_stat_p : process (reg_v_cur_state, pi_rnd_en, pi_ppu_mask(PPUSBG), reg_nes_x, reg_nes_y, reg_prf_x)
     begin
         case reg_v_cur_state is
             when IDLE =>
                 if (is_v_access(pi_ppu_mask(PPUSBG), pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1 and
-                    pi_rnd_en(2) = '1' and
-                    reg_nes_x mod 8 = 0) then
+                    pi_rnd_en(2) = '1') then
                     --start vram access process.
-                    reg_v_next_state <= AD_SET0;
+                    if (reg_nes_x > HSCAN_NEXT_START or reg_nes_x < HSCAN) then
+                        --bg vram fetch.
+                        if (reg_prf_x mod 8 = 0) then
+                            reg_v_next_state <= AD_SET0;
+                        else
+                            reg_v_next_state <= reg_v_cur_state;
+                        end if;
+                    else
+                        --sprite vram fetch.
+                        if (reg_nes_x mod 8 = 0) then
+                            reg_v_next_state <= AD_SET0;
+                        else
+                            reg_v_next_state <= reg_v_cur_state;
+                        end if;
+                    end if;
                 else
                     reg_v_next_state <= reg_v_cur_state;
                 end if;
