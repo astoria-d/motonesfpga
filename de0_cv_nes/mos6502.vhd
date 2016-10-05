@@ -1620,7 +1620,7 @@ end;
                 if (reg_sub_state = ST_SUB00) then
                     reg_addr    <= reg_pc_h & reg_pc_l;
                 elsif (reg_sub_state = ST_SUB70) then
-                    reg_pc_l    <= reg_pc_l + 1;
+                    pc_inc;
                 end if;
 
             --conditional branch.
