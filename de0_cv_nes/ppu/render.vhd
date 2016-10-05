@@ -470,7 +470,13 @@ begin
                 end if;
             when AD_SET3 =>
                 if (is_v_access(pi_ppu_mask(PPUSBG), pi_ppu_mask(PPUSSP), reg_nes_x, reg_nes_y) = 1) then
-                    reg_v_next_state <= REG_SET0;
+                    if (reg_nes_x = HSCAN and reg_prf_x mod 2 /= reg_nes_x mod 2) then
+                        --scroll reg is odd case.
+                        --reset for sprite.
+                        reg_v_next_state <= AD_SET0;
+                    else
+                        reg_v_next_state <= REG_SET0;
+                    end if;
                 else
                     reg_v_next_state <= IDLE;
                 end if;
