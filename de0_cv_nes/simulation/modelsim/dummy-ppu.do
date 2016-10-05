@@ -61,8 +61,11 @@ add wave -label reg_status -radix hex sim:/testbench_motones_sim/sim_board/cpu_i
 #add wave -label reg_pc_h -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_pc_h;
 #add wave -label reg_idl_l -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_idl_l;
 #add wave -label reg_idl_h -radix hex sim:/testbench_motones_sim/sim_board/cpu_inst/reg_idl_h;
-#add wave -label reg_tmp_pg_crossed  sim:/testbench_motones_sim/sim_board/cpu_inst/reg_tmp_pg_crossed;
 
+add wave -label reg_tmp_carry sim:/testbench_motones_sim/sim_board/cpu_inst/reg_tmp_carry;
+add wave -label reg_tmp_ovf sim:/testbench_motones_sim/sim_board/cpu_inst/reg_tmp_ovf;
+add wave -label reg_tmp_condition sim:/testbench_motones_sim/sim_board/cpu_inst/reg_tmp_condition;
+#add wave -label reg_tmp_pg_crossed  sim:/testbench_motones_sim/sim_board/cpu_inst/reg_tmp_pg_crossed;
 
 view structure
 view signals
