@@ -9,7 +9,7 @@ use ieee.std_logic_unsigned.conv_integer;
 
 ----SRAM syncronous memory.
 entity ram is
-    generic (abus_size : integer := 16; dbus_size : integer := 8);
+    generic (abus_size : integer := 16; dbus_size : integer := 8; debug_mem : string := "null-file.bin");
     port (
             pi_base_clk     : in std_logic;
             pi_ce_n         : in std_logic;
@@ -25,8 +25,31 @@ architecture rtl of ram is
 subtype ram_data is std_logic_vector (dbus_size -1 downto 0);
 type ram_array is array (0 to 2**abus_size - 1) of ram_data;
 
+function ram_fill return ram_array is 
+use ieee.std_logic_arith.conv_std_logic_vector;
+type binary_file is file of character;
+FILE bin_file : binary_file OPEN read_mode IS debug_mem;
+variable read_data : character;
+variable i : integer;
+variable ret : ram_array;
+begin
+    if (debug_mem = "null-file.bin") then
+        for i in ret'range loop
+            ret(i) := (others => '0');
+        end loop;
+    else
+        for i in ret'range loop
+            read(bin_file, read_data);
+            ret(i) :=
+                conv_std_logic_vector(character'pos(read_data), 8);
+        end loop;
+    end if;
+    return ret;
+end ram_fill;
+
+
 ---ram is initialized with 0.
-signal work_ram : ram_array := (others => (others => '0'));
+signal work_ram : ram_array := ram_fill;
 
 begin
     p_write : process (pi_base_clk)
@@ -74,7 +97,7 @@ end palette_ram;
 
 architecture rtl of palette_ram is
 component ram
-    generic (abus_size : integer := 16; dbus_size : integer := 8);
+    generic (abus_size : integer := 16; dbus_size : integer := 8; debug_mem : string := "null-file.bin");
     port (
             pi_base_clk     : in std_logic;
             pi_ce_n         : in std_logic;

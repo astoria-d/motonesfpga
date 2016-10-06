@@ -238,12 +238,37 @@ signal reg_dma_set      : integer range 0 to 1;
 --debug purpose...
 signal reg_exc_cnt          : std_logic_vector (63 downto 0);
 
+--constant INIT_ACC       : std_logic_vector (7 downto 0) := "00000000";
+--constant INIT_X         : std_logic_vector (7 downto 0) := "00000000";
+--constant INIT_Y         : std_logic_vector (7 downto 0) := "00000000";
+--constant INIT_SP        : std_logic_vector (7 downto 0) := "00000000";
+--constant INIT_STATUS    : std_logic_vector (7 downto 0) := "00100000";
+--constant INIT_PCL       : std_logic_vector (7 downto 0) := "00000000";
+--constant INIT_PCH       : std_logic_vector (7 downto 0) := "00000000";
+--constant INIT_EXC_CNT   : std_logic_vector (63 downto 0) := conv_std_logic_vector(16#0#, 64);
+
+constant INIT_ACC       : std_logic_vector (7 downto 0) := conv_std_logic_vector(16#91#, 8);
+constant INIT_X         : std_logic_vector (7 downto 0) := conv_std_logic_vector(16#0d#, 8);
+constant INIT_Y         : std_logic_vector (7 downto 0) := conv_std_logic_vector(16#1d#, 8);
+constant INIT_SP        : std_logic_vector (7 downto 0) := conv_std_logic_vector(16#fc#, 8);
+constant INIT_STATUS    : std_logic_vector (7 downto 0) := conv_std_logic_vector(16#a5#, 8);
+constant INIT_PCL       : std_logic_vector (7 downto 0) := conv_std_logic_vector(16#82#, 8);
+constant INIT_PCH       : std_logic_vector (7 downto 0) := conv_std_logic_vector(16#80#, 8);
+constant INIT_EXC_CNT   : std_logic_vector (63 downto 0) := conv_std_logic_vector(16#02b1#, 16) & conv_std_logic_vector(0, 48);
+
+constant DEBUG_SW       : integer := 1;
+
 begin
     --state transition process...
     set_stat_p : process (pi_rst_n, pi_base_clk)
     begin
         if (pi_rst_n = '0') then
-            reg_main_state <= ST_RS_T0;
+            if (DEBUG_SW = 0) then
+                reg_main_state <= ST_RS_T0;
+            else
+                --for test....
+                reg_main_state <= ST_NM_T1;
+            end if;
             reg_sub_state <= ST_SUB00;
         elsif (rising_edge(pi_base_clk)) then
             reg_main_state <= reg_main_next_state;
@@ -336,7 +361,12 @@ begin
             -----idle...
             when ST_IDLE =>
                 if (pi_rst_n = '0') then
-                    reg_main_next_state <= ST_RS_T0;
+                    if (DEBUG_SW = 0) then
+                        reg_main_next_state <= ST_RS_T0;
+                    else
+                        --for test....
+                        reg_main_next_state <= ST_NM_T1;
+                    end if;
                 elsif (reg_sub_state = ST_SUB73 and reg_dma_set = 1 and pi_rdy = '1') then
                     --ST_CM_T0 is canceled when dma initiated.
                     --redo ST_CM_T0.
@@ -1114,8 +1144,8 @@ end;
 
     begin
         if (pi_rst_n = '0') then
-            reg_pc_l    <= (others => '0');
-            reg_pc_h    <= (others => '0');
+            reg_pc_l    <= INIT_PCL;
+            reg_pc_h    <= INIT_PCH;
             reg_inst    <= (others => '0');
             reg_addr    <= (others => 'Z');
             reg_d_out   <= (others => 'Z');
@@ -1793,7 +1823,7 @@ end;
     sp_p : process (pi_rst_n, pi_base_clk)
     begin
         if (pi_rst_n = '0') then
-            reg_sp <= (others => '0');
+            reg_sp <= INIT_SP;
         elsif (rising_edge(pi_base_clk)) then
             if (reg_main_state = ST_A1_T1) then
                 --txs inst.
@@ -1871,10 +1901,10 @@ end;
     begin
         --Most instructions that explicitly reference memory locations have bit patterns of the form aaabbbcc.
         if (pi_rst_n = '0') then
-            reg_acc <= (others => '0');
-            reg_x <= (others => '0');
-            reg_y <= (others => '0');
-            reg_status <= "00100000";
+            reg_acc <= INIT_ACC;
+            reg_x <= INIT_X;
+            reg_y <= INIT_Y;
+            reg_status <= INIT_STATUS;
             reg_tmp_carry <= '0';
             reg_tmp_ovf <= '0';
             reg_tmp_condition <= '0';
@@ -2392,7 +2422,7 @@ end;
     exc_cnt_p : process (pi_rst_n, pi_base_clk)
     begin
         if (pi_rst_n = '0') then
-            reg_exc_cnt <= (others => '0');
+            reg_exc_cnt <= INIT_EXC_CNT;
         else
             if (rising_edge(pi_base_clk)) then
                 if (reg_main_state = ST_CM_T0 and reg_sub_state = ST_SUB73) then

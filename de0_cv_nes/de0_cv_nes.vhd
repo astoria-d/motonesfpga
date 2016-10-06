@@ -115,7 +115,7 @@ architecture rtl of de0_cv_nes is
     end component;
 
     component ram
-        generic (abus_size : integer := 16; dbus_size : integer := 8);
+        generic (abus_size : integer := 16; dbus_size : integer := 8; debug_mem : string := "null-file.bin");
         port (
                 pi_base_clk     : in std_logic;
                 pi_ce_n         : in std_logic;
@@ -327,7 +327,7 @@ begin
 
     --cpu ram inst.
     cpu_ram_inst : ram generic map
-        (ram_2k, 8) port map (
+        (ram_2k, 8, "mem-before-02b1000000000000.bin") port map (
             pi_base_clk,
             wr_ram_ce_n,
             wr_oe_n,

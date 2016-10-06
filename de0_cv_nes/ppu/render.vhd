@@ -56,7 +56,7 @@ architecture rtl of render is
 
 --secondary oam ram.
 component ram
-    generic (abus_size : integer := 16; dbus_size : integer := 8);
+    generic (abus_size : integer := 16; dbus_size : integer := 8; debug_mem : string := "null-file.bin");
     port (
             pi_base_clk     : in std_logic;
             pi_ce_n         : in std_logic;
