@@ -254,7 +254,7 @@ constant INIT_SP        : std_logic_vector (7 downto 0) := conv_std_logic_vector
 constant INIT_STATUS    : std_logic_vector (7 downto 0) := conv_std_logic_vector(16#a5#, 8);
 constant INIT_PCL       : std_logic_vector (7 downto 0) := conv_std_logic_vector(16#82#, 8);
 constant INIT_PCH       : std_logic_vector (7 downto 0) := conv_std_logic_vector(16#80#, 8);
-constant INIT_EXC_CNT   : std_logic_vector (63 downto 0) := conv_std_logic_vector(16#02b0#, 16) & conv_std_logic_vector(0, 48);
+constant INIT_EXC_CNT   : std_logic_vector (63 downto 0) := conv_std_logic_vector(16#02b1#, 16) & conv_std_logic_vector(0, 48);
 
 constant DEBUG_SW       : integer := 1;
 
@@ -267,7 +267,7 @@ begin
                 reg_main_state <= ST_RS_T0;
             else
                 --for test....
-                reg_main_state <= ST_NM_T1;
+                reg_main_state <= ST_CM_T0;
             end if;
             reg_sub_state <= ST_SUB00;
         elsif (rising_edge(pi_base_clk)) then
@@ -365,7 +365,7 @@ begin
                         reg_main_next_state <= ST_RS_T0;
                     else
                         --for test....
-                        reg_main_next_state <= ST_NM_T1;
+                        reg_main_next_state <= ST_CM_T0;
                     end if;
                 elsif (reg_sub_state = ST_SUB73 and reg_dma_set = 1 and pi_rdy = '1') then
                     --ST_CM_T0 is canceled when dma initiated.
