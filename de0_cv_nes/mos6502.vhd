@@ -254,7 +254,7 @@ constant INIT_SP        : std_logic_vector (7 downto 0) := conv_std_logic_vector
 constant INIT_STATUS    : std_logic_vector (7 downto 0) := conv_std_logic_vector(16#a5#, 8);
 constant INIT_PCL       : std_logic_vector (7 downto 0) := conv_std_logic_vector(16#82#, 8);
 constant INIT_PCH       : std_logic_vector (7 downto 0) := conv_std_logic_vector(16#80#, 8);
-constant INIT_EXC_CNT   : std_logic_vector (63 downto 0) := conv_std_logic_vector(16#02b1#, 16) & conv_std_logic_vector(0, 48);
+constant INIT_EXC_CNT   : std_logic_vector (63 downto 0) := conv_std_logic_vector(16#02b0#, 16) & conv_std_logic_vector(0, 48);
 
 constant DEBUG_SW       : integer := 1;
 
