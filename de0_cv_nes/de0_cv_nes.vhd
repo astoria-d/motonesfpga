@@ -327,7 +327,7 @@ begin
 
     --cpu ram inst.
     cpu_ram_inst : ram generic map
-        (ram_2k, 8, "mem-before-02b1000000000000.bin") port map (
+        (ram_2k, 8, "mem-before-02bd000000000000.bin") port map (
             pi_base_clk,
             wr_ram_ce_n,
             wr_oe_n,
