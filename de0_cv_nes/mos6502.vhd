@@ -245,7 +245,6 @@ signal reg_exc_cnt          : std_logic_vector (63 downto 0);
 --constant INIT_STATUS    : std_logic_vector (7 downto 0) := "00100000";
 --constant INIT_PCL       : std_logic_vector (7 downto 0) := "00000000";
 --constant INIT_PCH       : std_logic_vector (7 downto 0) := "00000000";
---constant INIT_EXC_CNT   : std_logic_vector (63 downto 0) := conv_std_logic_vector(16#0#, 64);
 
 constant INIT_ACC       : std_logic_vector (7 downto 0) := conv_std_logic_vector(16#95#, 8);
 constant INIT_X         : std_logic_vector (7 downto 0) := conv_std_logic_vector(16#0d#, 8);
@@ -256,7 +255,7 @@ constant INIT_PCL       : std_logic_vector (7 downto 0) := conv_std_logic_vector
 constant INIT_PCH       : std_logic_vector (7 downto 0) := conv_std_logic_vector(16#80#, 8);
 constant INIT_EXC_CNT   : std_logic_vector (63 downto 0) := conv_std_logic_vector(16#02bd#, 16) & conv_std_logic_vector(0, 48);
 
-constant DEBUG_SW       : integer := 1;
+constant DEBUG_SW       : integer := 0;
 
 begin
     --state transition process...
@@ -2422,7 +2421,12 @@ end;
     exc_cnt_p : process (pi_rst_n, pi_base_clk)
     begin
         if (pi_rst_n = '0') then
-            reg_exc_cnt <= INIT_EXC_CNT;
+            if (DEBUG_SW = 0) then
+                reg_exc_cnt <= (others => '0');
+            else
+                --for test....
+                reg_exc_cnt <= INIT_EXC_CNT;
+            end if;
         else
             if (rising_edge(pi_base_clk)) then
                 if (reg_main_state = ST_CM_T0 and reg_sub_state = ST_SUB73) then

@@ -118,37 +118,37 @@ add wave -label nes_y       sim:/testbench_motones_sim/sim_board/render_inst/reg
 #add wave -label reg_v_cur_state sim:/testbench_motones_sim/sim_board/render_inst/reg_v_cur_state;
 ##add wave -label prf_x       sim:/testbench_motones_sim/sim_board/render_inst/reg_prf_x;
 ##add wave -label prf_y       sim:/testbench_motones_sim/sim_board/render_inst/reg_prf_y;
-#
-#add wave -label disp_nt -radix hex sim:/testbench_motones_sim/sim_board/render_inst/reg_disp_nt;
-#add wave -label disp_attr   -radix hex sim:/testbench_motones_sim/sim_board/render_inst/reg_disp_attr;
-#add wave -label sft_ptn_l -radix hex sim:/testbench_motones_sim/sim_board/render_inst/reg_sft_ptn_l;
-#add wave -label sft_ptn_h -radix hex sim:/testbench_motones_sim/sim_board/render_inst/reg_sft_ptn_h;
-#
-#add wave -divider sprite
-#add wave -label reg_s_oam_cur_state sim:/testbench_motones_sim/sim_board/render_inst/reg_s_oam_cur_state;
-#add wave -label reg_s_oam_ce_n  sim:/testbench_motones_sim/sim_board/render_inst/reg_s_oam_ce_n;
-#add wave -label reg_s_oam_rd_n  sim:/testbench_motones_sim/sim_board/render_inst/reg_s_oam_rd_n;
-#add wave -label reg_s_oam_wr_n  sim:/testbench_motones_sim/sim_board/render_inst/reg_s_oam_wr_n;
-#add wave -label reg_s_oam_addr -radix hex  sim:/testbench_motones_sim/sim_board/render_inst/reg_s_oam_addr;
-#add wave -label reg_s_oam_data -radix hex  sim:/testbench_motones_sim/sim_board/render_inst/reg_s_oam_data;
-#
-##add wave -label reg_s_oam_cpy_cnt   sim:/testbench_motones_sim/sim_board/render_inst/reg_s_oam_cpy_cnt;
-##add wave -label reg_p_oam_cpy_cnt   sim:/testbench_motones_sim/sim_board/render_inst/reg_p_oam_cpy_cnt;
-##add wave -label reg_spr_eval_cnt    sim:/testbench_motones_sim/sim_board/render_inst/reg_spr_eval_cnt;
-#
-#add wave -label wr_spr_ce_n  sim:/testbench_motones_sim/sim_board/wr_spr_ce_n;
-#add wave -label wr_spr_rd_n  sim:/testbench_motones_sim/sim_board/wr_spr_rd_n;
-#add wave -label wr_spr_wr_n  sim:/testbench_motones_sim/sim_board/wr_spr_wr_n;
-#add wave -label wr_spr_addr -radix hex  sim:/testbench_motones_sim/sim_board/wr_spr_addr;
-#add wave -label wr_spr_data -radix hex  sim:/testbench_motones_sim/sim_board/wr_spr_data;
-#
-#add wave -label reg_spr_y_tmp -radix hex    sim:/testbench_motones_sim/sim_board/render_inst/reg_spr_y_tmp;
-#add wave -label reg_spr_tile_tmp -radix hex sim:/testbench_motones_sim/sim_board/render_inst/reg_spr_tile_tmp;
-#add wave -label reg_spr_attr -radix hex     sim:/testbench_motones_sim/sim_board/render_inst/reg_spr_attr;
-#add wave -label reg_spr_x -radix hex        sim:/testbench_motones_sim/sim_board/render_inst/reg_spr_x;
-#add wave -label reg_spr_ptn_sft_start -radix hex        sim:/testbench_motones_sim/sim_board/render_inst/reg_spr_ptn_sft_start;
-#add wave -label reg_spr_ptn_l -radix hex        sim:/testbench_motones_sim/sim_board/render_inst/reg_spr_ptn_l;
-#add wave -label reg_spr_ptn_h -radix hex        sim:/testbench_motones_sim/sim_board/render_inst/reg_spr_ptn_h;
+
+add wave -label disp_nt -radix hex sim:/testbench_motones_sim/sim_board/render_inst/reg_disp_nt;
+add wave -label disp_attr   -radix hex sim:/testbench_motones_sim/sim_board/render_inst/reg_disp_attr;
+add wave -label sft_ptn_l -radix hex sim:/testbench_motones_sim/sim_board/render_inst/reg_sft_ptn_l;
+add wave -label sft_ptn_h -radix hex sim:/testbench_motones_sim/sim_board/render_inst/reg_sft_ptn_h;
+
+add wave -divider sprite
+add wave -label reg_s_oam_cur_state sim:/testbench_motones_sim/sim_board/render_inst/reg_s_oam_cur_state;
+add wave -label reg_s_oam_ce_n  sim:/testbench_motones_sim/sim_board/render_inst/reg_s_oam_ce_n;
+add wave -label reg_s_oam_rd_n  sim:/testbench_motones_sim/sim_board/render_inst/reg_s_oam_rd_n;
+add wave -label reg_s_oam_wr_n  sim:/testbench_motones_sim/sim_board/render_inst/reg_s_oam_wr_n;
+add wave -label reg_s_oam_addr -radix hex  sim:/testbench_motones_sim/sim_board/render_inst/reg_s_oam_addr;
+add wave -label reg_s_oam_data -radix hex  sim:/testbench_motones_sim/sim_board/render_inst/reg_s_oam_data;
+
+#add wave -label reg_s_oam_cpy_cnt   sim:/testbench_motones_sim/sim_board/render_inst/reg_s_oam_cpy_cnt;
+#add wave -label reg_p_oam_cpy_cnt   sim:/testbench_motones_sim/sim_board/render_inst/reg_p_oam_cpy_cnt;
+#add wave -label reg_spr_eval_cnt    sim:/testbench_motones_sim/sim_board/render_inst/reg_spr_eval_cnt;
+
+add wave -label wr_spr_ce_n  sim:/testbench_motones_sim/sim_board/wr_spr_ce_n;
+add wave -label wr_spr_rd_n  sim:/testbench_motones_sim/sim_board/wr_spr_rd_n;
+add wave -label wr_spr_wr_n  sim:/testbench_motones_sim/sim_board/wr_spr_wr_n;
+add wave -label wr_spr_addr -radix hex  sim:/testbench_motones_sim/sim_board/wr_spr_addr;
+add wave -label wr_spr_data -radix hex  sim:/testbench_motones_sim/sim_board/wr_spr_data;
+
+add wave -label reg_spr_y_tmp -radix hex    sim:/testbench_motones_sim/sim_board/render_inst/reg_spr_y_tmp;
+add wave -label reg_spr_tile_tmp -radix hex sim:/testbench_motones_sim/sim_board/render_inst/reg_spr_tile_tmp;
+add wave -label reg_spr_attr -radix hex     sim:/testbench_motones_sim/sim_board/render_inst/reg_spr_attr;
+add wave -label reg_spr_x -radix hex        sim:/testbench_motones_sim/sim_board/render_inst/reg_spr_x;
+add wave -label reg_spr_ptn_sft_start -radix hex        sim:/testbench_motones_sim/sim_board/render_inst/reg_spr_ptn_sft_start;
+add wave -label reg_spr_ptn_l -radix hex        sim:/testbench_motones_sim/sim_board/render_inst/reg_spr_ptn_l;
+add wave -label reg_spr_ptn_h -radix hex        sim:/testbench_motones_sim/sim_board/render_inst/reg_spr_ptn_h;
 #
 #add wave -divider palette
 #add wave -label plt_addr -radix hex sim:/testbench_motones_sim/sim_board/render_inst/reg_plt_addr;
