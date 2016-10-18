@@ -1,0 +1,7 @@
+http://www.alteraforum.com/forum/showthread.php?t=51663
+
+I found configuration ROM is not EPCS64 in the DE0-CV circuit.
+DE0-CV User's Manual is wrriten with the EPCS64.
+However, it was S25FL064P on the board.
+I set "Disable EPCS ID check" on the Convert Programming File.
+
