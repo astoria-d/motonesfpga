@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="US-ASCII" standalone="yes"?>
 <cof>
-	<eprom_name>EPCQ64</eprom_name>
+	<eprom_name>EPCS64</eprom_name>
 	<output_filename>output_files/output_file.pof</output_filename>
 	<n_pages>1</n_pages>
 	<width>1</width>

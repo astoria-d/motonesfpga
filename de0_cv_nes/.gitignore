@@ -32,3 +32,6 @@ undo_redo.txt
 serv_req_info.txt
 *_dump.txt
 de0_cv_nes_assignment_defaults.qdf
+*.map
+*.bak
+*.ddb
